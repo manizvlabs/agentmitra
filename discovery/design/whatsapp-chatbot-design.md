@@ -186,7 +186,7 @@ Core Capabilities:
 - Policy Information Retrieval
 - Payment Guidance & Troubleshooting
 - Video Tutorial Recommendations
-- Human Agent Escalation
+- Agent Callback Request (Actionable Reports)
 ```
 
 #### Conversation Flow Architecture
@@ -212,11 +212,11 @@ Core Capabilities:
 │  ├── Watch Progress Tracking                         │
 │  └── Learning Path Recommendations                   │
 ├─────────────────────────────────────────────────────────┤
-│  🆘 Smart Escalation                                  │
+│  📞 Agent Callback Request                            │
 │  ├── Query Complexity Assessment                     │
-│  ├── Agent Availability Checking                     │
-│  ├── Seamless Handoff to Human Agent                │
-│  └── Context Transfer to WhatsApp                   │
+│  ├── Actionable Report Generation                    │
+│  ├── Agent Notification System                       │
+│  └── User Follow-up Promise                          │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -253,18 +253,19 @@ Core Capabilities:
 │  │ 🎤 Voice Input • 📎 Attach File                 │   │
 │  └─────────────────────────────────────────────────┘   │
 ├─────────────────────────────────────────────────────────┤
-│  🆘 Smart Help Options                                 │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐      │
-│  │ 💬 Continue  │ │ 📞 Call      │ │ 🔄 Switch   │      │
-│  │   Chat       │ │   Agent      │ │   to WhatsApp│      │
-│  └─────────────┘ └─────────────┘ └─────────────┘      │
+│  📞 Agent Assistance                                   │
+│  ┌─────────────────┐                                   │
+│  │ 📞 Call Agent     │                                   │
+│  │ "Agent will call   │                                   │
+│  │   you back soon"  │                                   │
+│  └─────────────────┘                                   │
 └─────────────────────────────────────────────────────────┘
 
 Feature Flag Dependencies:
 - chatbot_assistance_enabled (Main chatbot feature)
 - voice_input_enabled (Voice interaction)
 - file_attachment_enabled (Document sharing)
-- whatsapp_escalation_enabled (WhatsApp handoff)
+- agent_callback_enabled (Agent callback request feature)
 ```
 
 ### 3.3 Knowledge Base & Response System
@@ -328,12 +329,51 @@ class ChatbotService {
       enrichedContext
     );
 
-    // 5. Response Generation
+    // 5. Complexity Assessment
+    final complexityScore = await ComplexityAssessmentService.evaluateComplexity(
+      intent,
+      enrichedContext,
+      userMessage
+    );
+
+    // 6. Agent Callback Check
+    if (complexityScore > 0.8 || intent.intentType == 'agent_request') {
+      // Create actionable report for agent
+      await ActionableReportService.createCallbackRequest(
+        context.userId,
+        context.agentId,
+        {
+          'conversation_history': enrichedContext.conversationHistory,
+          'current_query': userMessage,
+          'intent': intent,
+          'complexity_score': complexityScore,
+          'suggested_priority': _determinePriority(complexityScore, intent)
+        }
+      );
+
+      // Return callback confirmation message
+      return await ResponseGenerationService.generateCallbackConfirmation(
+        enrichedContext,
+        complexityScore
+      );
+    }
+
+    // 7. Standard Response Generation
     return await ResponseGenerationService.generateResponse(
       knowledgeResponse,
       videoSuggestions,
       enrichedContext
     );
+  }
+
+  Priority _determinePriority(double complexityScore, Intent intent) {
+    if (complexityScore > 0.9 || intent.intentType == 'urgent_claim') {
+      return Priority.HIGH;
+    } else if (complexityScore > 0.7 || intent.intentType == 'payment_issue') {
+      return Priority.MEDIUM;
+    } else {
+      return Priority.LOW;
+    }
   }
 }
 ```
@@ -412,39 +452,44 @@ class ChatbotService {
 └─────────────────────────────────────────────────────────┘
 ```
 
-#### Chatbot to WhatsApp Escalation
+#### Agent Callback Request System
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  🤖 CHATBOT TO WHATSAPP ESCALATION                     │
+│  🤖 AGENT CALLBACK REQUEST SYSTEM                       │
 │  ┌─────────────────────────────────────────────────┐   │
 │  │ 👤 Customer: "This is complex, need human help" │   │
-│  │ 🤖 Chatbot: "I'll connect you with your agent!" │   │
+│  │ 🤖 Chatbot: "I'll have your agent call you back!" │ │
 │  └─────────────────────────────────────────────────┘   │
-│  🔄 Smart Context Sharing                              │
+│  📋 Actionable Report Creation                         │
 │  • Complete conversation history                    │
 │  • Identified issues and attempted solutions        │
 │  • Customer policy information                     │
-│  • Agent availability and contact details           │
+│  • Urgency level and priority assessment           │
 ├─────────────────────────────────────────────────────────┤
-│  📱 WhatsApp Message                                   │
+│  📊 Agent Dashboard Notification                        │
 │  ┌─────────────────────────────────────────────────┐   │
-│  │ 👤 Agent: "Hi Amit! I see you've been chatting  │   │
-│  │           with our assistant about your claim.   │   │
-│  │           How can I assist you further?"        │   │
+│  │ 🔴 PRIORITY: HIGH                               │   │
+│  │ 👤 Amit Sharma - LIC123456789                   │   │
+│  │ 📞 Requested callback for claim assistance      │   │
+│  │ ⏰ Respond within 2 hours                       │   │
 │  └─────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ### 4.2 Context Sharing Architecture
 
-#### Smart Context Injection
+#### Actionable Report Generation
 ```json
 {
-  "whatsapp_context": {
+  "actionable_report": {
+    "report_id": "ar_123456789",
     "customer_id": "cust_123456",
     "customer_name": "Amit Sharma",
     "agent_id": "agent_789",
     "agent_name": "Rajesh Kumar",
+    "priority": "HIGH",
+    "urgency": "ASAP",
+    "category": "callback_request",
     "policy_context": {
       "policy_number": "LIC123456789",
       "policy_type": "LIC Jeevan Anand",
@@ -453,34 +498,48 @@ class ChatbotService {
       "policy_status": "Active"
     },
     "conversation_context": {
-      "previous_queries": ["premium payment", "policy status"],
-      "chatbot_responses": ["payment_guidance", "status_check"],
-      "identified_issues": ["payment_method_confusion"]
+      "total_messages": 12,
+      "conversation_duration": "15 minutes",
+      "previous_queries": ["premium payment", "policy status", "claim process"],
+      "chatbot_responses": ["payment_guidance", "status_check", "claim_assistance"],
+      "identified_issues": ["payment_method_confusion", "document_requirements"],
+      "escalation_reason": "Complex claim assistance required"
     },
-    "agent_availability": {
-      "status": "online",
-      "preferred_contact": "whatsapp",
-      "response_time": "< 5 minutes"
+    "customer_feedback": {
+      "satisfaction_score": 7,
+      "urgency_level": "high",
+      "preferred_contact_time": "evening",
+      "additional_notes": "Customer seems confused about claim documents"
+    },
+    "action_required": {
+      "type": "phone_callback",
+      "sla_hours": 2,
+      "suggested_script": "Hi Amit, I see you were chatting with our assistant about filing a claim...",
+      "required_documents": ["policy_copy", "medical_reports", "discharge_summary"]
     }
   }
 }
 ```
 
-#### Pre-filled WhatsApp Messages
+#### User Confirmation Messages
 ```
-💬 SMART WHATSAPP MESSAGE TEMPLATES
+💬 AGENT CALLBACK CONFIRMATION MESSAGES
 
-📋 Payment Related:
-"Hi Rajesh, I need help with premium payment for my LIC Jeevan Anand policy (LIC123456789). The due date is 15/03/2024 and amount is ₹25,000. I tried the chatbot but need clarification on payment methods."
+📋 Immediate Confirmation:
+"Thank you for using Agent Mitra! Your request has been forwarded to your LIC agent.
+They will call you back within 2 hours during business hours."
 
-📋 Policy Inquiry:
-"Hi Rajesh, I'm inquiring about my LIC Jeevan Anand policy details. I need information about maturity benefits and nominee details. The chatbot provided some info but I have specific questions."
+📋 After-Hours Request:
+"Thank you! Your request has been noted. Your agent will call you back tomorrow
+during business hours (9 AM - 6 PM). Reference ID: AR-123456"
 
-📋 Claim Assistance:
-"Hi Rajesh, I need help with filing a claim for my LIC Money Back policy. The chatbot guided me through the process but I need help with document requirements and claim status tracking."
+📋 High Priority Callback:
+"Urgent assistance requested! Your LIC agent has been notified and will call you
+back as soon as possible. Expected wait time: < 30 minutes."
 
-📋 General Support:
-"Hi Rajesh, I was chatting with the Agent Mitra assistant about [specific topic]. They suggested I contact you directly for [specific issue]. Can you help me with this?"
+📋 Follow-up Confirmation:
+"Your callback request has been added to the agent's priority list.
+They will review your conversation and call you back soon."
 ```
 
 ## 5. Multi-Language Support & Localization
@@ -542,7 +601,7 @@ English: "Here's how to pay your premium online..."
 🎯 Intent Analysis:
 • Most Common Queries: Premium Payment (45%), Policy Status (28%), Claims (15%)
 • Query Resolution Rate: 87% (Successfully handled by chatbot)
-• Escalation Rate: 13% (Required human agent assistance)
+• Callback Request Rate: 13% (Forwarded to agent for follow-up)
 • Average Response Time: 2.3 seconds
 
 📈 User Engagement Metrics:
@@ -653,7 +712,7 @@ KNOWLEDGE_BASE_LANGUAGE_SUPPORT=en,hi,te
 CHATBOT_ANALYTICS_ENABLED=true
 CHATBOT_INTENT_TRACKING=true
 CHATBOT_RESPONSE_ACCURACY_TRACKING=true
-CHATBOT_ESCALATION_TRACKING=true
+CHATBOT_CALLBACK_REQUEST_TRACKING=true
 
 # Video Integration
 VIDEO_TUTORIAL_INTEGRATION=youtube
@@ -669,7 +728,7 @@ VIDEO_ANALYTICS_TRACKING=true
 - WhatsApp Business API setup
 - Basic template message sending
 - Simple chatbot with FAQ responses
-- Manual agent escalation
+- Agent callback request system
 
 #### Phase 2: Advanced Chatbot Features (Growth)
 - Natural language processing
@@ -711,6 +770,6 @@ VIDEO_ANALYTICS_TRACKING=true
 - **Analytics Pipeline**: Conversation and performance tracking
 - **Monitoring**: Real-time system health and performance
 
-This WhatsApp integration and smart chatbot design provides a comprehensive, intelligent, and user-friendly communication system for Agent Mitra, bridging the gap between automated assistance and human agent support while maintaining the highest standards of security and compliance.
+This WhatsApp integration and smart chatbot design provides a comprehensive, intelligent, and user-friendly communication system for Agent Mitra, seamlessly handling customer queries while providing an agent callback mechanism for complex issues, maintaining the highest standards of security and compliance.
 
 **Ready for your review! Please let me know if you'd like me to proceed with the remaining deliverables or make any adjustments to this WhatsApp and chatbot design.**
