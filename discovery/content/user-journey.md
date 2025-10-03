@@ -97,7 +97,7 @@ flowchart TD
 
     P --> R{How did customer get app?}
     R -->|Agent referral link| S[Check agent database]
-    R -->|Direct download| T[Manual policy entry]
+    R -->|Direct download| T[Manual policy entry or agent discovery]
     R -->|Unknown source| U[Contact agent option]
 
     S --> V{Agent relationship found?}
@@ -154,6 +154,48 @@ flowchart TD
     RR --> JJJ[Show limited functionality]
     JJJ --> KKK[Basic app access only]
     KKK --> LLL[Periodic agent contact reminders]
+
+    T --> MMM[Agent discovery flow]
+    MMM --> NNN[How to find your agent?]
+    NNN --> OOO[Check policy document]
+    NNN --> PPP[Contact LIC customer care]
+    NNN --> QQQ[Search online directories]
+    NNN --> RRR[Ask other policyholders]
+
+    OOO --> SSS[Look for agent code/name on policy]
+    PPP --> TTT[Call LIC helpline for agent details]
+    QQQ --> UUU[Search LIC agent directory online]
+    RRR --> VVV[Ask fellow customers for agent info]
+
+    SSS --> WWW[Found agent information]
+    TTT --> WWW
+    UUU --> WWW
+    VVV --> WWW
+
+    WWW --> XXX[Add agent in Agent Mitra settings]
+    XXX --> YYY[Enter agent details]
+    YYY --> ZZZ[Agent code, name, contact info]
+    ZZZ --> AAAA[Verify agent identity]
+    AAAA --> BBBB{Agent verified?}
+    BBBB -->|No| CCCC[Try different agent or contact support]
+    BBBB -->|Yes| DDDD[Send notification to agent]
+    DDDD --> EEEE[Agent receives data request]
+    EEEE --> FFFF[Agent verifies customer identity]
+    FFFF --> GGGG{Identity confirmed?}
+    GGGG -->|No| HHHH[Request additional verification]
+    HHHH --> IIII[Customer provides verification docs]
+    IIII --> FFFF
+    GGGG -->|Yes| JJJJ[Agent uploads customer data to config portal]
+    JJJJ --> KKKK[Background data processing]
+    KKKK --> LLLL[Data validation and import]
+    LLLL --> MMMM{Import successful?}
+    MMMM -->|Yes| NNNN[Customer data becomes available]
+    MMMM -->|No| OOOO[Agent corrects data and re-uploads]
+    OOOO --> JJJJ
+    NNNN --> PPPP[Mobile app sync notification]
+    PPPP --> QQQQ[Customer sees data available]
+    QQQQ --> RRRR[Resume onboarding flow]
+    RRRR --> FF
 ```
 
 #### Profile Completion & Verification
@@ -270,6 +312,143 @@ flowchart TD
     RR -->|No| UU[No action required]
     UU --> VV[Schedule next sync check]
 ```
+
+### Excel Template Definition for Agent Data Import
+
+#### TODO: Create Comprehensive Excel Template Specification
+
+**📋 Task Title:** Define Excel Template for LIC Agent Data Import to Agent Mitra Configuration Portal
+
+**🎯 Objective:** Create a standardized, user-friendly Excel template that agents can use to import customer and policy data from the official LIC Agent Mobile App to the Agent Mitra Configuration Portal.
+
+**⏰ Priority:** High
+**👥 Owner:** Product Manager + Data Analyst
+**📅 Due Date:** Sprint 2, Week 1
+**🔗 Dependencies:** Database schema finalized, Agent Configuration Portal UI designed
+
+#### 📋 Detailed Checklist
+
+**✅ 1. Template Structure Analysis**
+- [ ] Review LIC Agent Mobile App export capabilities
+- [ ] Analyze existing customer data fields in LIC systems
+- [ ] Map LIC data fields to Agent Mitra database schema
+- [ ] Identify mandatory vs optional fields
+- [ ] Define data validation rules for each field
+
+**✅ 2. Excel Template Design**
+- [ ] Create multiple worksheet structure:
+  - [ ] Customer Information sheet
+  - [ ] Policy Details sheet
+  - [ ] Contact History sheet (optional)
+  - [ ] Instructions sheet
+- [ ] Design column headers with clear naming conventions
+- [ ] Add data type indicators (Text, Number, Date, etc.)
+- [ ] Include field descriptions and examples
+- [ ] Create dropdown lists for categorical fields (Policy Type, Gender, etc.)
+
+**✅ 3. Data Validation Rules**
+- [ ] Implement Excel data validation for:
+  - [ ] Phone number format validation
+  - [ ] Email format validation
+  - [ ] Date format validation (DD/MM/YYYY)
+  - [ ] Policy number format validation
+  - [ ] Required field indicators
+  - [ ] Data range validation (age, premium amounts)
+- [ ] Add conditional formatting for data quality indicators
+- [ ] Create error highlighting for invalid data
+
+**✅ 4. Template Features**
+- [ ] Add data entry guidelines and examples
+- [ ] Include sample data rows for reference
+- [ ] Create macro-free template (for security)
+- [ ] Add version control information
+- [ ] Include template update notification system
+
+**✅ 5. Field Mapping Specification**
+
+**Customer Information Sheet:**
+```
+Column A: Customer_ID (Text, Max 50 chars) - LIC Customer ID
+Column B: Full_Name (Text, Max 255 chars) - Customer Full Name *
+Column C: Phone_Number (Text, Format: +91XXXXXXXXXX) - Primary Phone *
+Column D: Alternate_Phone (Text, Optional) - Secondary Phone
+Column E: Email (Text, Valid email format) - Email Address
+Column F: Date_of_Birth (Date, DD/MM/YYYY) - DOB *
+Column G: Gender (Dropdown: Male/Female/Other) - Gender
+Column H: Address_Line1 (Text, Max 500 chars) - Address Line 1 *
+Column I: Address_Line2 (Text, Max 500 chars) - Address Line 2
+Column J: City (Text, Max 100 chars) - City *
+Column K: State (Text, Max 100 chars) - State *
+Column L: Pincode (Number, 6 digits) - PIN Code *
+Column M: Occupation (Text, Max 100 chars) - Occupation
+Column N: Annual_Income (Number, INR) - Annual Income
+Column O: Marital_Status (Dropdown: Single/Married/Divorced/Widowed)
+Column P: Nominee_Name (Text, Max 255 chars) - Policy Nominee
+Column Q: Nominee_Relationship (Text, Max 50 chars) - Relationship to Nominee
+Column R: Emergency_Contact_Name (Text, Max 255 chars)
+Column S: Emergency_Contact_Phone (Text, Format: +91XXXXXXXXXX)
+```
+
+**Policy Details Sheet:**
+```
+Column A: Policy_Number (Text, Max 50 chars) - LIC Policy Number *
+Column B: Customer_ID (Text) - Link to Customer *
+Column C: Policy_Type (Dropdown: Term/Whole_Life/ULIP/Endowment/Other) *
+Column D: Plan_Name (Text, Max 255 chars) - LIC Plan Name *
+Column E: Sum_Assured (Number, INR) - Sum Assured Amount *
+Column F: Premium_Amount (Number, INR) - Regular Premium *
+Column G: Premium_Frequency (Dropdown: Monthly/Quarterly/Half-Yearly/Yearly) *
+Column H: Premium_Mode (Dropdown: Regular/Single_Pay/Limited_Pay)
+Column I: Issue_Date (Date, DD/MM/YYYY) - Policy Issue Date *
+Column J: Maturity_Date (Date, DD/MM/YYYY) - Maturity Date
+Column K: Next_Premium_Due (Date, DD/MM/YYYY) - Next Due Date
+Column L: Policy_Status (Dropdown: Active/Lapsed/Surrendered/Matured/Claimed)
+Column M: Agent_Code (Text, Max 20 chars) - LIC Agent Code *
+Column N: Branch_Code (Text, Max 10 chars) - LIC Branch Code
+Column O: Rider_Details (Text, Max 1000 chars) - Additional Riders
+Column P: Last_Premium_Paid (Date, DD/MM/YYYY) - Last Payment Date
+Column Q: Outstanding_Amount (Number, INR) - Due Amount
+```
+
+**✅ 6. Import Processing Logic**
+- [ ] Define data transformation rules
+- [ ] Create field mapping configuration
+- [ ] Implement data quality checks
+- [ ] Design error reporting format
+- [ ] Create duplicate detection logic
+
+**✅ 7. Testing & Validation**
+- [ ] Test template with real LIC data samples
+- [ ] Validate import processing for all field types
+- [ ] Test error handling and reporting
+- [ ] Performance test with large datasets (1000+ records)
+- [ ] Cross-browser compatibility testing
+
+**✅ 8. Documentation & Training**
+- [ ] Create template usage guide for agents
+- [ ] Develop video tutorial for data import process
+- [ ] Create troubleshooting guide for common issues
+- [ ] Design in-app help system for template usage
+
+**✅ 9. Deployment & Support**
+- [ ] Deploy template to Agent Configuration Portal
+- [ ] Set up template version control
+- [ ] Create template update mechanism
+- [ ] Establish support channels for template issues
+
+#### 📊 Success Metrics
+- **Template Adoption Rate:** >90% of agents use the standardized template
+- **Import Success Rate:** >95% of valid imports succeed without errors
+- **Data Accuracy:** >98% of imported data matches source accuracy
+- **Agent Satisfaction:** >4.5/5 rating for template usability
+- **Import Time:** <5 minutes for 100 customer records
+
+#### 🔗 Related Deliverables
+- [ ] Agent Configuration Portal UI updates
+- [ ] Backend data import service enhancements
+- [ ] Agent training materials
+- [ ] Support documentation updates
+- [ ] API documentation for template integration
 
 ### 2.2 Policy Management Journey
 
