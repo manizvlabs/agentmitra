@@ -41,6 +41,745 @@
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+## 1.5 CDN-Based Multilingual Support & Localization
+
+### Flutter Internationalization Architecture
+```
+🌐 CDN-BASED MULTILINGUAL SUPPORT ARCHITECTURE
+
+📁 Project Structure:
+├── lib/
+│   ├── services/
+│   │   ├── localization_service.dart    # CDN localization loader
+│   │   └── cdn_service.dart              # CDN communication service
+│   ├── generated/
+│   │   └── l10n/
+│   │       ├── app_localizations.dart   # Generated fallback
+│   │       └── app_localizations_en.dart
+│   └── main.dart
+
+🔧 Dependencies (pubspec.yaml):
+dependencies:
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.19.0
+  http: ^1.1.0
+  shared_preferences: ^2.2.0
+
+flutter:
+  generate: true
+  assets:
+    - assets/l10n/  # Fallback ARB files for offline
+
+🌐 CDN Architecture:
+├── CDN URLs:
+│   ├── https://cdn.agentmitra.com/l10n/v1/app_en.arb
+│   ├── https://cdn.agentmitra.com/l10n/v1/app_hi.arb
+│   └── https://cdn.agentmitra.com/l10n/v1/app_te.arb
+├── Cache Strategy: Local storage with version checking
+├── Update Mechanism: Background sync with app updates
+└── Fallback: Bundled ARB files for offline/critical strings
+```
+
+### ARB File Structure & CDN Content Keys
+
+#### Base ARB File Structure
+```json
+// https://cdn.agentmitra.com/l10n/v1/app_en.arb
+{
+  "@@locale": "en",
+  "@@lastModified": "2025-01-03T10:00:00Z",
+  "@@version": "1.0.0",
+
+  // App Common Strings
+  "appName": "Agent Mitra",
+  "@appName": {
+    "description": "Application name displayed in app",
+    "type": "text"
+  },
+
+  "tagline": "Friend of Agents",
+  "@tagline": {
+    "description": "App tagline",
+    "type": "text"
+  },
+
+  // Navigation & Common UI
+  "home": "Home",
+  "@home": {
+    "description": "Home navigation label",
+    "type": "text"
+  },
+
+  "policies": "My Policies",
+  "@policies": {
+    "description": "Policies section label",
+    "type": "text"
+  },
+
+  "chat": "Chat",
+  "@chat": {
+    "description": "Chat section label",
+    "type": "text"
+  },
+
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings section label",
+    "type": "text"
+  },
+
+  // Authentication Strings
+  "welcomeBack": "Welcome back, {name}!",
+  "@welcomeBack": {
+    "description": "Welcome message with user name",
+    "type": "text",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Rajesh"
+      }
+    }
+  },
+
+  "login": "Login",
+  "@login": {
+    "description": "Login button text",
+    "type": "text"
+  },
+
+  "phoneNumber": "Phone Number",
+  "@phoneNumber": {
+    "description": "Phone number input label",
+    "type": "text"
+  },
+
+  // Dashboard Strings
+  "totalRevenue": "Total Revenue",
+  "@totalRevenue": {
+    "description": "Revenue metric label",
+    "type": "text"
+  },
+
+  "activePolicies": "Active Policies",
+  "@activePolicies": {
+    "description": "Active policies count label",
+    "type": "text"
+  },
+
+  // Chatbot Strings
+  "chatbotGreeting": "Hi! I'm your Policy Assistant. How can I help?",
+  "@chatbotGreeting": {
+    "description": "Chatbot welcome message",
+    "type": "text"
+  },
+
+  "callAgent": "Call Agent",
+  "@callAgent": {
+    "description": "Agent callback request button",
+    "type": "text"
+  },
+
+  "agentWillCallBack": "Agent will call you back soon",
+  "@agentWillCallBack": {
+    "description": "Callback confirmation message",
+    "type": "text"
+  },
+
+  // Error Messages
+  "networkError": "Network connection error. Please try again.",
+  "@networkError": {
+    "description": "Network error message",
+    "type": "text"
+  },
+
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button text",
+    "type": "text"
+  }
+}
+```
+
+#### Hindi ARB File (app_hi.arb)
+```json
+{
+  "@@locale": "hi",
+  "@@lastModified": "2025-01-03T10:00:00Z",
+  "@@version": "1.0.0",
+
+  "appName": "एजेंट मित्र",
+  "@appName": {
+    "description": "एप्लिकेशन का नाम",
+    "type": "text"
+  },
+
+  "tagline": "एजेंटों का दोस्त",
+  "@tagline": {
+    "description": "एप्लिकेशन का टैगलाइन",
+    "type": "text"
+  },
+
+  "home": "होम",
+  "@home": {
+    "description": "होम नेविगेशन लेबल",
+    "type": "text"
+  },
+
+  "policies": "मेरी पॉलिसियां",
+  "@policies": {
+    "description": "पॉलिसी सेक्शन लेबल",
+    "type": "text"
+  },
+
+  "welcomeBack": "वापसी पर स्वागत है, {name}!",
+  "@welcomeBack": {
+    "description": "उपयोगकर्ता नाम के साथ स्वागत संदेश",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "राजेश"
+      }
+    }
+  }
+}
+```
+
+#### Telugu ARB File (app_te.arb)
+```json
+{
+  "@@locale": "te",
+  "@@lastModified": "2025-01-03T10:00:00Z",
+  "@@version": "1.0.0",
+
+  "appName": "ఏజెంట్ మిత్ర",
+  "@appName": {
+    "description": "అప్లికేషన్ పేరు",
+    "type": "text"
+  },
+
+  "tagline": "ఏజెంట్ల మిత్రుడు",
+  "@tagline": {
+    "description": "అప్ ట్యాగ్‌లైన్",
+    "type": "text"
+  },
+
+  "home": "హోమ్",
+  "@home": {
+    "description": "హోమ్ నావిగేషన్ లేబుల్",
+    "type": "text"
+  },
+
+  "policies": "నా పాలసీలు",
+  "@policies": {
+    "description": "పాలసీ విభాగం లేబుల్",
+    "type": "text"
+  }
+}
+```
+
+### CDN Localization Service Implementation
+
+#### Localization Service Architecture
+```dart
+// lib/services/localization_service.dart
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart' show rootBundle;
+
+class LocalizationService {
+  static const String cdnBaseUrl = 'https://cdn.agentmitra.com/l10n/v1';
+  static const String versionKey = 'localization_version';
+  static const String cacheKeyPrefix = 'l10n_cache_';
+
+  static final LocalizationService _instance = LocalizationService._internal();
+  factory LocalizationService() => _instance;
+  LocalizationService._internal();
+
+  final Map<String, Map<String, String>> _localizedStrings = {};
+  final Map<String, String> _fallbackStrings = {};
+
+  // CDN version checking
+  Future<bool> checkForUpdates(String locale) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final currentVersion = prefs.getString('$versionKey_$locale') ?? '0.0.0';
+
+      final response = await http.get(
+        Uri.parse('$cdnBaseUrl/app_$locale.arb'),
+        headers: {'Cache-Control': 'no-cache'},
+      );
+
+      if (response.statusCode == 200) {
+        final arbData = json.decode(response.body);
+        final cdnVersion = arbData['@@version'] ?? '1.0.0';
+
+        return _isNewerVersion(cdnVersion, currentVersion);
+      }
+    } catch (e) {
+      debugPrint('Failed to check localization updates: $e');
+    }
+    return false;
+  }
+
+  // Load localization from CDN with fallback
+  Future<Map<String, String>> loadLocalization(String locale) async {
+    // Try CDN first
+    try {
+      final cdnStrings = await _loadFromCDN(locale);
+      if (cdnStrings.isNotEmpty) {
+        _localizedStrings[locale] = cdnStrings;
+        await _cacheLocalization(locale, cdnStrings);
+        return cdnStrings;
+      }
+    } catch (e) {
+      debugPrint('CDN load failed, using cache: $e');
+    }
+
+    // Try cache
+    try {
+      final cachedStrings = await _loadFromCache(locale);
+      if (cachedStrings.isNotEmpty) {
+        _localizedStrings[locale] = cachedStrings;
+        return cachedStrings;
+      }
+    } catch (e) {
+      debugPrint('Cache load failed, using fallback: $e');
+    }
+
+    // Use bundled fallback
+    return await _loadFallbackLocalization(locale);
+  }
+
+  Future<Map<String, String>> _loadFromCDN(String locale) async {
+    final response = await http.get(
+      Uri.parse('$cdnBaseUrl/app_$locale.arb'),
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Accept': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final arbData = json.decode(response.body);
+      final strings = <String, String>{};
+
+      arbData.forEach((key, value) {
+        if (!key.startsWith('@')) {
+          strings[key] = value.toString();
+        }
+      });
+
+      // Cache version info
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('$versionKey_$locale', arbData['@@version'] ?? '1.0.0');
+
+      return strings;
+    }
+
+    throw Exception('Failed to load from CDN');
+  }
+
+  Future<Map<String, String>> _loadFromCache(String locale) async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedData = prefs.getString('$cacheKeyPrefix$locale');
+
+    if (cachedData != null) {
+      return Map<String, String>.from(json.decode(cachedData));
+    }
+
+    return {};
+  }
+
+  Future<Map<String, String>> _loadFallbackLocalization(String locale) async {
+    try {
+      final jsonString = await rootBundle.loadString('assets/l10n/app_$locale.arb');
+      final arbData = json.decode(jsonString);
+      final strings = <String, String>{};
+
+      arbData.forEach((key, value) {
+        if (!key.startsWith('@')) {
+          strings[key] = value.toString();
+        }
+      });
+
+      _fallbackStrings.addAll(strings);
+      return strings;
+    } catch (e) {
+      debugPrint('Fallback localization failed: $e');
+      return {};
+    }
+  }
+
+  Future<void> _cacheLocalization(String locale, Map<String, String> strings) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('$cacheKeyPrefix$locale', json.encode(strings));
+  }
+
+  // Get localized string with fallback
+  String getString(String key, {String? locale, Map<String, String>? placeholders}) {
+    final currentLocale = locale ?? 'en'; // Default fallback
+
+    // Try current locale
+    var localizedString = _localizedStrings[currentLocale]?[key];
+
+    // Try fallback strings
+    localizedString ??= _fallbackStrings[key];
+
+    // Try English fallback
+    localizedString ??= _localizedStrings['en']?[key] ?? key;
+
+    // Apply placeholders
+    if (placeholders != null && localizedString != null) {
+      placeholders.forEach((placeholder, value) {
+        localizedString = localizedString!.replaceAll('{$placeholder}', value);
+      });
+    }
+
+    return localizedString ?? key;
+  }
+
+  // Background sync for updates
+  Future<void> syncLocalizations(List<String> locales) async {
+    for (final locale in locales) {
+      if (await checkForUpdates(locale)) {
+        await loadLocalization(locale);
+      }
+    }
+  }
+
+  bool _isNewerVersion(String newVersion, String currentVersion) {
+    final newParts = newVersion.split('.').map(int.parse).toList();
+    final currentParts = currentVersion.split('.').map(int.parse).toList();
+
+    for (var i = 0; i < 3; i++) {
+      if (newParts[i] > currentParts[i]) return true;
+      if (newParts[i] < currentParts[i]) return false;
+    }
+    return false;
+  }
+}
+```
+
+### App-Level Localization Integration
+
+#### Main.dart Localization Setup
+```dart
+// lib/main.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
+import 'services/localization_service.dart';
+import 'services/auth_service.dart';
+import 'app_router.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize localization service
+  final localizationService = LocalizationService();
+
+  // Pre-load common locales
+  await Future.wait([
+    localizationService.loadLocalization('en'),
+    localizationService.loadLocalization('hi'),
+    localizationService.loadLocalization('te'),
+  ]);
+
+  // Background sync for updates
+  localizationService.syncLocalizations(['en', 'hi', 'te']);
+
+  runApp(
+    MultiProvider(
+      providers: [
+        Provider<LocalizationService>.value(value: localizationService),
+        ChangeNotifierProvider(create: (_) => AuthService()),
+      ],
+      child: const AgentMitraApp(),
+    ),
+  );
+}
+
+class AgentMitraApp extends StatefulWidget {
+  const AgentMitraApp({Key? key}) : super(key: key);
+
+  @override
+  State<AgentMitraApp> createState() => _AgentMitraAppState();
+}
+
+class _AgentMitraAppState extends State<AgentMitraApp> {
+  Locale _locale = const Locale('en');
+
+  void _changeLocale(Locale locale) {
+    setState(() => _locale = locale);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Agent Mitra',
+      locale: _locale,
+      supportedLocales: const [
+        Locale('en', ''), // English
+        Locale('hi', ''), // Hindi
+        Locale('te', ''), // Telugu
+      ],
+      localizationsDelegates: const [
+        // Use custom localization delegate
+        AppLocalizationsDelegate(),
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      localeResolutionCallback: (locale, supportedLocales) {
+        // CDN-based locale resolution
+        for (final supportedLocale in supportedLocales) {
+          if (supportedLocale.languageCode == locale?.languageCode) {
+            return supportedLocale;
+          }
+        }
+        return supportedLocales.first; // Default to English
+      },
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        fontFamily: 'Roboto',
+      ),
+      darkTheme: ThemeData.dark(),
+      themeMode: ThemeMode.system,
+      onGenerateRoute: AppRouter.generateRoute,
+      initialRoute: AppRoutes.welcome,
+    );
+  }
+}
+
+// Custom localization delegate for CDN integration
+class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+  const AppLocalizationsDelegate();
+
+  @override
+  bool isSupported(Locale locale) => ['en', 'hi', 'te'].contains(locale.languageCode);
+
+  @override
+  Future<AppLocalizations> load(Locale locale) async {
+    final localizationService = LocalizationService();
+    final strings = await localizationService.loadLocalization(locale.languageCode);
+    return AppLocalizations(locale, strings);
+  }
+
+  @override
+  bool shouldReload(AppLocalizationsDelegate old) => false;
+}
+
+// App localizations wrapper
+class AppLocalizations {
+  final Locale locale;
+  final Map<String, String> _localizedStrings;
+  final LocalizationService _service;
+
+  AppLocalizations(this.locale, this._localizedStrings)
+      : _service = LocalizationService();
+
+  static AppLocalizations? of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations);
+  }
+
+  String getString(String key, {Map<String, String>? placeholders}) {
+    return _service.getString(key, locale: locale.languageCode, placeholders: placeholders);
+  }
+
+  // Convenience getters for common strings
+  String get appName => getString('appName');
+  String get home => getString('home');
+  String get policies => getString('policies');
+  String get chat => getString('chat');
+  String get settings => getString('settings');
+
+  String welcomeBack(String name) => getString('welcomeBack', placeholders: {'name': name});
+  String get login => getString('login');
+  String get callAgent => getString('callAgent');
+  String get agentWillCallBack => getString('agentWillCallBack');
+}
+```
+
+### Widget-Level Localization Usage
+
+#### Localized Widget Examples
+```dart
+// lib/widgets/localized_text.dart
+import 'package:flutter/material.dart';
+import '../main.dart';
+
+class LocalizedText extends StatelessWidget {
+  final String key;
+  final Map<String, String>? placeholders;
+  final TextStyle? style;
+  final TextAlign? textAlign;
+
+  const LocalizedText(
+    this.key, {
+    this.placeholders,
+    this.style,
+    this.textAlign,
+    Key? super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    final text = localizations?.getString(key, placeholders: placeholders) ?? key;
+
+    return Text(
+      text,
+      style: style,
+      textAlign: textAlign,
+    );
+  }
+}
+
+// Usage in pages
+class WelcomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: LocalizedText('appName'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            LocalizedText(
+              'welcomeBack',
+              placeholders: {'name': 'Rajesh'},
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            const SizedBox(height: 20),
+            LocalizedText('tagline'),
+            const SizedBox(height: 40),
+            ElevatedButton(
+              onPressed: () {},
+              child: LocalizedText('login'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Chatbot interface with localization
+class ChatbotInterface extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(
+          child: ListView(
+            children: [
+              // Chat messages would go here
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: AppLocalizations.of(context)?.getString('typeMessage') ?? 'Type your message...',
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () {
+                  // Trigger agent callback
+                },
+                child: LocalizedText('callAgent'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+```
+
+### CDN Configuration & Management
+
+#### Localization Configuration
+```yaml
+# config/localization_config.yaml
+cdn:
+  base_url: "https://cdn.agentmitra.com/l10n"
+  version: "v1"
+  cache_ttl_hours: 24
+
+locales:
+  - code: "en"
+    name: "English"
+    flag: "🇺🇸"
+    rtl: false
+  - code: "hi"
+    name: "हिन्दी"
+    flag: "🇮🇳"
+    rtl: false
+  - code: "te"
+    name: "తెలుగు"
+    flag: "🇮🇳"
+    rtl: false
+
+features:
+  auto_update: true
+  background_sync: true
+  offline_fallback: true
+  version_checking: true
+```
+
+#### CDN Deployment Strategy
+```
+🌐 CDN LOCALIZATION DEPLOYMENT
+
+📦 Content Management:
+├── ARB File Generation: Automated from CMS
+├── Version Control: Semantic versioning (1.0.0, 1.0.1, etc.)
+├── CDN Invalidation: Automatic on updates
+└── Rollback Support: Version-based file serving
+
+🔄 Update Flow:
+├── CMS Update → ARB Generation → CDN Upload
+├── App Version Check → Background Download
+├── Cache Update → UI Refresh (if needed)
+└── Offline Fallback → Bundled Files
+
+📊 Monitoring:
+├── Download Success Rate
+├── Cache Hit Ratio
+├── Update Adoption Rate
+└── Error Reporting
+```
+
+### Feature Flag Integration
+
+#### Localization Feature Flags
+```dart
+// Feature flags for localization
+const localizationFeatureFlags = {
+  'cdn_localization_enabled': true,           // Enable CDN-based localization
+  'background_sync_enabled': true,            // Background localization updates
+  'offline_fallback_enabled': true,           // Offline ARB file fallback
+  'multi_language_chatbot': true,              // Chatbot language switching
+  'dynamic_content_updates': true,            // Real-time content updates
+  'locale_persistence': true,                 // Remember user language choice
+};
+```
+
 ## 2. Authentication & Onboarding Pages
 
 ### 2.1 Authentication Flow Pages
