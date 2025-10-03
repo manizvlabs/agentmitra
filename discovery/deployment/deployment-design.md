@@ -38,96 +38,239 @@
 
 ### 2.1 Overall Architecture Diagram
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    AGENT MITRA - CLOUD ARCHITECTURE             │
-├─────────────────────────────────────────────────────────────────┤
-│  🌐 GLOBAL LOAD BALANCER (AWS CloudFront)                      │
-│  ├── CDN for static assets (Images, Videos, JS/CSS)           │
-│  ├── SSL Termination & DDoS Protection                        │
-│  └── Geographic routing for optimal performance               │
-├─────────────────────────────────────────────────────────────────┤
-│  🚀 APPLICATION LAYER (AWS ECS Fargate)                       │
-│  ├── Flutter Mobile App (Client-side)                         │
-│  ├── Python FastAPI Backend (Serverless)                      │
-│  ├── WhatsApp Webhook Handler (Event-driven)                  │
-│  ├── Video Processing Queue (Async)                           │
-│  └── Real-time WebSocket Server (Live updates)                │
-├─────────────────────────────────────────────────────────────────┤
-│  💾 DATA LAYER (Multi-Region PostgreSQL + Redis)              │
-│  ├── Primary DB: Aurora PostgreSQL (Auto-scaling)             │
-│  ├── Read Replicas: 2 regions for performance                 │
-│  ├── Redis Cluster: Session storage & caching                 │
-│  └── Backup: Automated daily with 30-day retention           │
-├─────────────────────────────────────────────────────────────────┤
-│  🤖 AI/ML LAYER (Serverless Functions)                        │
-│  ├── OpenAI API Integration (Chatbot responses)               │
-│  ├── Video Analysis (Content moderation & tagging)            │
-│  ├── Predictive Analytics (Churn & revenue forecasting)       │
-│  └── Recommendation Engine (Personalized content)             │
-├─────────────────────────────────────────────────────────────────┤
-│  📊 ANALYTICS & MONITORING (Integrated Stack)                 │
-│  ├── Application Performance Monitoring (APM)                 │
-│  ├── Real User Monitoring (RUM)                              │
-│  ├── Error Tracking & Alerting                               │
-│  └── Business Intelligence Dashboard                         │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    %% User Layer
+    subgraph "📱 End Users"
+        Mobile[Flutter Mobile App<br/>iOS + Android]
+        WhatsApp[WhatsApp Business<br/>Customer Communication]
+    end
+
+    %% Global Edge
+    subgraph "🌐 Global Edge (CloudFront)"
+        CDN[CloudFront CDN<br/>Global Distribution<br/>310+ Edge Locations]
+        WAF[WAF & Shield<br/>DDoS Protection<br/>SSL Termination]
+        Route53[Route 53<br/>Global DNS<br/>Health Checks]
+    end
+
+    %% Application Layer
+    subgraph "🚀 Application Layer (ECS Fargate)"
+        ALB[Application Load Balancer<br/>Auto Scaling<br/>SSL Termination]
+
+        subgraph "Microservices"
+            API[FastAPI Backend<br/>REST APIs<br/>GraphQL]
+            Chatbot[Chatbot Service<br/>NLP Processing<br/>Intent Recognition]
+            WhatsAppSvc[WhatsApp Service<br/>Message Processing<br/>Template Management]
+            VideoSvc[Video Processing<br/>Content Moderation<br/>YouTube Integration]
+            RealtimeSvc[WebSocket Server<br/>Real-time Updates<br/>Live Dashboards]
+        end
+    end
+
+    %% AI/ML Layer
+    subgraph "🤖 AI/ML Layer (Lambda + External APIs)"
+        OpenAI[OpenAI API<br/>Chatbot Responses<br/>Content Generation]
+        Perplexity[Perplexity API<br/>Enhanced Search<br/>Knowledge Base]
+        AWSComprehend[AWS Comprehend<br/>Text Analysis<br/>Sentiment Analysis]
+        CustomML[Custom ML Models<br/>Predictive Analytics<br/>Recommendation Engine]
+    end
+
+    %% Data Layer
+    subgraph "💾 Data Layer (Multi-Region)"
+        subgraph "Primary Region (Mumbai)"
+            AuroraPrimary[Aurora PostgreSQL<br/>Primary DB<br/>Auto-scaling]
+            RedisPrimary[Redis Cluster<br/>Session Cache<br/>Application Cache]
+        end
+
+        subgraph "Secondary Region (Singapore)"
+            AuroraReplica[Aurora Read Replicas<br/>Performance Optimization<br/>Disaster Recovery]
+            RedisReplica[Redis Replica<br/>Global Cache<br/>Failover Support]
+        end
+
+        S3[S3 Storage<br/>File Storage<br/>CDN Origin<br/>Lifecycle Policies]
+    end
+
+    %% Monitoring & Analytics
+    subgraph "📊 Monitoring & Analytics"
+        CloudWatch[CloudWatch<br/>Metrics & Logs<br/>Custom Dashboards]
+        NewRelic[New Relic APM<br/>Performance Monitoring<br/>Distributed Tracing]
+        Sentry[Sentry<br/>Error Tracking<br/>Release Health]
+        Mixpanel[Mixpanel<br/>User Analytics<br/>Behavioral Insights]
+    end
+
+    %% Connections
+    Mobile --> CDN
+    WhatsApp --> WhatsAppSvc
+    CDN --> WAF
+    WAF --> ALB
+    ALB --> API
+    ALB --> Chatbot
+    ALB --> WhatsAppSvc
+    ALB --> VideoSvc
+    ALB --> RealtimeSvc
+
+    API --> AuroraPrimary
+    API --> RedisPrimary
+    Chatbot --> OpenAI
+    Chatbot --> Perplexity
+    VideoSvc --> AWSComprehend
+    VideoSvc --> CustomML
+
+    AuroraPrimary --> AuroraReplica
+    RedisPrimary --> RedisReplica
+
+    API --> S3
+    VideoSvc --> S3
+
+    API --> CloudWatch
+    Chatbot --> CloudWatch
+    WhatsAppSvc --> CloudWatch
+    VideoSvc --> CloudWatch
+
+    CloudWatch --> NewRelic
+    CloudWatch --> Sentry
+    CloudWatch --> Mixpanel
+
+    %% Styling
+    classDef primary fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef secondary fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef infra fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef monitoring fill:#fff3e0,stroke:#e65100,stroke-width:2px
+
+    class Mobile,WhatsApp primary
+    class CDN,WAF,Route53,ALB secondary
+    class API,Chatbot,WhatsAppSvc,VideoSvc,RealtimeSvc infra
+    class OpenAI,Perplexity,AWSComprehend,CustomML infra
+    class AuroraPrimary,RedisPrimary,AuroraReplica,RedisReplica,S3 infra
+    class CloudWatch,NewRelic,Sentry,Mixpanel monitoring
 ```
 
 ### 2.2 Cost-Optimized Infrastructure Components
 
 #### AWS Service Selection (Cost-Focused)
+
+```mermaid
+pie title AWS Cost Distribution (₹15,000/month)
+    "Compute (ECS Fargate, Lambda)" : 40
+    "Storage (Aurora, S3, EFS)" : 25
+    "Network & CDN (CloudFront, ALB)" : 20
+    "Monitoring (CloudWatch, X-Ray)" : 15
 ```
-💰 COST-EFFECTIVE AWS SERVICES
 
-🏗️ Compute (40% of infra cost):
-├── ECS Fargate: ₹8,000/month (Serverless containers)
-├── Lambda: ₹2,000/month (Event-driven functions)
-├── EC2 Reserved: ₹3,000/month (Predictable workloads)
-└── Batch: ₹500/month (Video processing)
+```mermaid
+graph TD
+    subgraph "🏗️ Compute Layer (₹13,500/month)"
+        ECS[ECS Fargate<br/>₹8,000/month<br/>Auto-scaling containers]
+        Lambda[Lambda Functions<br/>₹2,000/month<br/>Event-driven processing]
+        EC2[EC2 Reserved<br/>₹3,000/month<br/>Predictable workloads]
+        Batch[AWS Batch<br/>₹500/month<br/>Video processing]
+    end
 
-💾 Storage (25% of infra cost):
-├── S3 Standard: ₹1,500/month (App assets)
-├── S3 IA: ₹800/month (Infrequent access)
-├── Aurora Serverless: ₹4,000/month (Database)
-└── EFS: ₹1,000/month (Shared file storage)
+    subgraph "💾 Storage Layer (₹7,300/month)"
+        Aurora[Aurora PostgreSQL<br/>₹4,000/month<br/>Primary database]
+        S3Std[S3 Standard<br/>₹1,500/month<br/>App assets & media]
+        S3IA[S3 Infrequent Access<br/>₹800/month<br/>Archive data]
+        EFS[EFS<br/>₹1,000/month<br/>Shared file storage]
+    end
 
-🌐 Network & CDN (20% of infra cost):
-├── CloudFront: ₹2,500/month (Global CDN)
-├── Route 53: ₹200/month (DNS & routing)
-├── ALB: ₹1,000/month (Load balancing)
-└── NAT Gateway: ₹500/month (Outbound traffic)
+    subgraph "🌐 Network & CDN (₹4,200/month)"
+        CloudFront[CloudFront CDN<br/>₹2,500/month<br/>Global distribution]
+        ALB[Application Load Balancer<br/>₹1,000/month<br/>Traffic routing]
+        Route53[Route 53<br/>₹200/month<br/>DNS management]
+        NAT[NAT Gateway<br/>₹500/month<br/>Outbound traffic]
+    end
 
-📊 Monitoring (15% of infra cost):
-├── CloudWatch: ₹800/month (Metrics & logs)
-├── X-Ray: ₹400/month (Distributed tracing)
-├── Sentry: ₹1,200/month (Error tracking)
-└── Custom Dashboards: ₹600/month (Business metrics)
+    subgraph "📊 Monitoring (₹3,000/month)"
+        CloudWatch[CloudWatch<br/>₹800/month<br/>Metrics & logs]
+        XRay[X-Ray<br/>₹400/month<br/>Distributed tracing]
+        Sentry[Sentry<br/>₹1,200/month<br/>Error tracking]
+        Dashboards[Custom Dashboards<br/>₹600/month<br/>Business metrics]
+    end
 
-TOTAL MONTHLY ESTIMATE: ₹15,000 - ₹20,000
+    %% Cost optimization arrows
+    ECS -.->|"Auto-scaling"| CostOpt[Cost Optimization]
+    Aurora -.->|"Serverless"| CostOpt
+    CloudFront -.->|"Edge caching"| CostOpt
+    CloudWatch -.->|"Usage monitoring"| CostOpt
+
+    classDef compute fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef storage fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef network fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef monitoring fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef optimization fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+
+    class ECS,Lambda,EC2,Batch compute
+    class Aurora,S3Std,S3IA,EFS storage
+    class CloudFront,ALB,Route53,NAT network
+    class CloudWatch,XRay,Sentry,Dashboards monitoring
+    class CostOpt optimization
 ```
 
 #### Multi-Region Deployment Strategy
-```
-🌍 MULTI-REGION DEPLOYMENT (HIGH AVAILABILITY)
 
-📍 Primary Region: Asia Pacific (Mumbai) - ap-south-1
-├── Closest to Indian users (Latency: <50ms)
-├── Local compliance (IRDAI data residency)
-├── Cost-effective for Indian traffic (90%)
-└── Primary database and application servers
+```mermaid
+graph TD
+    subgraph "🌏 Global Users"
+        India[🇮🇳 Indian Users<br/>90% traffic<br/>Mumbai latency: <50ms]
+        Global[🌍 Global Users<br/>10% traffic<br/>CDN optimized]
+    end
 
-📍 Secondary Region: Asia Pacific (Singapore) - ap-southeast-1
-├── Disaster recovery and failover
-├── Global user support (10% international traffic)
-├── Read replicas for performance
-└── Backup and analytics processing
+    subgraph "📍 Primary Region: Mumbai (ap-south-1)"
+        MumbaiECS[ECS Fargate<br/>Primary Application<br/>Auto-scaling]
+        MumbaiDB[(Aurora PostgreSQL<br/>Primary Database<br/>ACUs: 2-16)]
+        MumbaiRedis[(Redis Cluster<br/>Primary Cache<br/>Session storage)]
+        MumbaiS3[S3 Bucket<br/>Primary Storage<br/>Media & Assets]
+    end
 
-🔄 Cross-Region Features:
-├── Database replication (Aurora Global Database)
-├── CDN edge locations (CloudFront global distribution)
-├── DNS failover (Route 53 health checks)
-└── Monitoring and alerting (Multi-region CloudWatch)
+    subgraph "📍 Secondary Region: Singapore (ap-southeast-1)"
+        SingaporeECS[ECS Fargate<br/>Failover Application<br/>On-demand scaling]
+        SingaporeDB[(Aurora Read Replicas<br/>Disaster Recovery<br/>Read performance)]
+        SingaporeRedis[(Redis Replica<br/>Global Cache<br/>Failover support)]
+        SingaporeS3[S3 Cross-Region<br/>Replication<br/>Backup storage]
+    end
+
+    subgraph "🌐 Global Infrastructure"
+        CloudFront[CloudFront CDN<br/>310+ Edge Locations<br/>Global Distribution]
+        Route53[Route 53<br/>Global DNS<br/>Health-based routing]
+        CloudWatch[CloudWatch<br/>Multi-region monitoring<br/>Centralized alerts]
+    end
+
+    %% Traffic flow
+    India --> CloudFront
+    Global --> CloudFront
+    CloudFront --> Route53
+
+    Route53 -->|"Primary (90%)"| MumbaiECS
+    Route53 -->|"Failover (10%)"| SingaporeECS
+
+    MumbaiECS --> MumbaiDB
+    MumbaiECS --> MumbaiRedis
+    MumbaiECS --> MumbaiS3
+
+    SingaporeECS --> SingaporeDB
+    SingaporeECS --> SingaporeRedis
+    SingaporeECS --> SingaporeS3
+
+    %% Cross-region replication
+    MumbaiDB -.->|"Aurora Global DB"| SingaporeDB
+    MumbaiRedis -.->|"Redis replication"| SingaporeRedis
+    MumbaiS3 -.->|"Cross-region replication"| SingaporeS3
+
+    %% Monitoring connections
+    MumbaiECS --> CloudWatch
+    MumbaiDB --> CloudWatch
+    SingaporeECS --> CloudWatch
+    SingaporeDB --> CloudWatch
+
+    %% Styling
+    classDef primary fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px
+    classDef secondary fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef global fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef users fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+
+    class MumbaiECS,MumbaiDB,MumbaiRedis,MumbaiS3 primary
+    class SingaporeECS,SingaporeDB,SingaporeRedis,SingaporeS3 secondary
+    class CloudFront,Route53,CloudWatch global
+    class India,Global users
 ```
 
 ## 3. Local Development Environment Setup
@@ -341,34 +484,88 @@ export class AgentMitraStack extends cdk.Stack {
 ### 4.2 Deployment Pipeline (CI/CD)
 
 #### Automated Deployment Pipeline
-```
-🚀 CI/CD PIPELINE ARCHITECTURE
 
-🔧 Build Stage (GitHub Actions):
-├── Code Quality Checks (ESLint, Prettier, SonarQube)
-├── Unit Tests (Jest, Pytest)
-├── Integration Tests (Database, API endpoints)
-├── Security Scanning (SAST, Dependency checks)
-└── Build Artifacts (Flutter APK/AAB, Docker images)
+```mermaid
+graph LR
+    subgraph "👨‍💻 Developer"
+        Push[Git Push<br/>feature/* → main]
+        PR[Pull Request<br/>Code Review]
+    end
 
-📦 Container Stage:
-├── Multi-stage Docker builds (Development/Production)
-├── Security scanning (Trivy, Docker Scout)
-├── Vulnerability assessment (Grype)
-└── Image signing and attestation
+    subgraph "🔧 Build Stage (GitHub Actions)"
+        Lint[Code Quality<br/>ESLint, Prettier<br/>SonarQube]
+        Test[Testing Suite<br/>Unit Tests<br/>Integration Tests]
+        Security[Security Scan<br/>SAST, Dependencies<br/>Container Scan]
+        Build[Build Artifacts<br/>Flutter APK/AAB<br/>Docker Images]
+    end
 
-🚀 Deployment Stage:
-├── Blue-Green deployments (Zero-downtime)
-├── Database migrations (Automated rollbacks)
-├── Feature flag updates (Gradual rollouts)
-├── Performance testing (Load and stress tests)
-└── Monitoring setup (Metrics and alerting)
+    subgraph "📦 Container Stage"
+        MultiStage[Multi-stage<br/>Docker Build<br/>Dev/Prod Images]
+        Scan[Security Scan<br/>Trivy, Docker Scout<br/>Vulnerability Check]
+        Sign[Image Signing<br/>Attestation<br/>SBOM Generation]
+    end
 
-🔍 Post-Deployment:
-├── Health checks (API endpoints, database connectivity)
-├── Performance validation (Response times, error rates)
-├── User acceptance testing (Automated smoke tests)
-└── Rollback capability (If issues detected)
+    subgraph "🚀 Deployment Stage"
+        BlueGreen[Blue-Green<br/>Deployment<br/>Zero Downtime]
+        Migrate[Database<br/>Migration<br/>Automated Rollback]
+        FeatureFlags[Feature Flags<br/>Gradual Rollout<br/>A/B Testing]
+        LoadTest[Performance<br/>Load Testing<br/>Stress Testing]
+    end
+
+    subgraph "🔍 Post-Deployment"
+        Health[Health Checks<br/>API Endpoints<br/>Database Connectivity]
+        Validate[Performance<br/>Validation<br/>Response Times]
+        Smoke[Smoke Tests<br/>Critical Paths<br/>User Journeys]
+        Rollback[Rollback Ready<br/>Automated<br/>One-Click]
+    end
+
+    subgraph "📊 Production"
+        ECS[ECS Fargate<br/>Application<br/>Running]
+        Aurora[(Aurora DB<br/>Migrated<br/>Healthy)]
+        CloudWatch[Monitoring<br/>Active<br/>Alerting]
+    end
+
+    %% Flow connections
+    Push --> Lint
+    PR --> Lint
+
+    Lint --> Test
+    Test --> Security
+    Security --> Build
+
+    Build --> MultiStage
+    MultiStage --> Scan
+    Scan --> Sign
+
+    Sign --> BlueGreen
+    BlueGreen --> Migrate
+    Migrate --> FeatureFlags
+    FeatureFlags --> LoadTest
+
+    LoadTest --> Health
+    Health --> Validate
+    Validate --> Smoke
+
+    Smoke --> ECS
+    Rollback -.->|"If issues"| BlueGreen
+
+    ECS --> CloudWatch
+    Aurora --> CloudWatch
+
+    %% Styling
+    classDef dev fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef build fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef container fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef deploy fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef post fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef prod fill:#e0f2f1,stroke:#00695c,stroke-width:2px
+
+    class Push,PR dev
+    class Lint,Test,Security,Build build
+    class MultiStage,Scan,Sign container
+    class BlueGreen,Migrate,FeatureFlags,LoadTest deploy
+    class Health,Validate,Smoke,Rollback post
+    class ECS,Aurora,CloudWatch prod
 ```
 
 #### Deployment Configuration
@@ -493,21 +690,84 @@ info_alerts:
 ### 5.1 Database Design Philosophy
 
 #### Multi-Tenant Architecture
-```
-🏢 MULTI-TENANT DATABASE DESIGN
 
-🎯 Tenant Isolation Strategy:
-├── Separate Databases (Strong isolation)
-├── Shared Database with tenant_id (Cost-effective)
-├── Schema-based separation (Balanced approach)
-└── Row-level security (Granular access control)
+```mermaid
+graph TD
+    subgraph "🏢 Multi-Tenant Database Design"
+        subgraph "Option 1: Separate Databases"
+            DB1[(Database 1<br/>LIC Insurance<br/>tenant_lic)]
+            DB2[(Database 2<br/>HDFC Insurance<br/>tenant_hdfc)]
+            DB3[(Database 3<br/>ICICI Insurance<br/>tenant_icici)]
+        end
 
-📊 Scaling Strategy:
-├── Read Replicas (Performance optimization)
-├── Partitioning (Large dataset management)
-├── Indexing (Query performance)
-└── Caching (Response time optimization)
+        subgraph "Option 2: Shared Database + tenant_id"
+            SharedDB[(Shared PostgreSQL<br/>All Tenants<br/>Single Database)]
+            TenantTable1[users<br/>tenant_id: 1<br/>LIC data]
+            TenantTable2[users<br/>tenant_id: 2<br/>HDFC data]
+            TenantTable3[users<br/>tenant_id: 3<br/>ICICI data]
+        end
+
+        subgraph "Option 3: Schema-based (Chosen)"
+            Schema1[lic_schema<br/>users, policies<br/>agent_lic_*]
+            Schema2[hdfc_schema<br/>users, policies<br/>agent_hdfc_*]
+            Schema3[icici_schema<br/>users, policies<br/>agent_icici_*]
+            SharedSchema[shared_schema<br/>reference data<br/>countries, etc.]
+        end
+    end
+
+    subgraph "🔒 Security & Isolation"
+        RLS[Row Level Security<br/>tenant_id filtering<br/>Automatic enforcement]
+        Audit[Audit Logging<br/>All data changes<br/>Compliance tracking]
+        Encryption[Encryption at Rest<br/>AES-256<br/>Transparent encryption]
+    end
+
+    subgraph "⚡ Performance & Scaling"
+        ReadReplicas[(Read Replicas<br/>Performance<br/>Load distribution)]
+        Partitioning[Table Partitioning<br/>Time-based<br/>Provider-based]
+        Indexing[Composite Indexes<br/>Query optimization<br/>Covering indexes]
+        Redis[(Redis Cache<br/>Session storage<br/>Query caching)]
+    end
+
+    %% Connections
+    DB1 --> RLS
+    DB2 --> RLS
+    DB3 --> RLS
+
+    SharedDB --> TenantTable1
+    SharedDB --> TenantTable2
+    SharedDB --> TenantTable3
+    TenantTable1 --> RLS
+    TenantTable2 --> RLS
+    TenantTable3 --> RLS
+
+    Schema1 --> RLS
+    Schema2 --> RLS
+    Schema3 --> RLS
+    SharedSchema --> RLS
+
+    RLS --> Audit
+    Audit --> Encryption
+
+    RLS --> ReadReplicas
+    ReadReplicas --> Partitioning
+    Partitioning --> Indexing
+    Indexing --> Redis
+
+    %% Styling
+    classDef database fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef security fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef performance fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+
+    class DB1,DB2,DB3,SharedDB,Schema1,Schema2,Schema3,SharedSchema,TenantTable1,TenantTable2,TenantTable3 database
+    class RLS,Audit,Encryption security
+    class ReadReplicas,Partitioning,Indexing,Redis performance
 ```
+
+**🎯 Selected Approach: Schema-based separation with tenant_id**
+- ✅ Strong isolation between insurance providers
+- ✅ Cost-effective (single database instance)
+- ✅ Flexible scaling and maintenance
+- ✅ Row-level security for granular access control
 
 #### Data Modeling Principles
 ```
@@ -914,64 +1174,100 @@ TOTAL ONE-TIME SOFTWARE COST: ₹50,000 - ₹80,000
 
 ### 7.1 Environment Specifications
 
-#### Local Development Environment (MacBook)
+```mermaid
+graph TD
+    subgraph "💻 Local Development (MacBook Pro M2)"
+        subgraph "🖥️ Hardware"
+            CPU[Apple M2<br/>8-core CPU<br/>10-core GPU]
+            RAM[16GB Unified Memory]
+            Storage[512GB SSD]
+            Display[16-inch Retina Display]
+        end
+
+        subgraph "📦 Local Services (Docker)"
+            PostgresLocal[(PostgreSQL 15<br/>Database<br/>Local data)]
+            RedisLocal[(Redis 7<br/>Caching<br/>Session store)]
+            NginxLocal[Nginx<br/>Reverse Proxy<br/>Port 8080]
+            ElasticLocal[(Elasticsearch<br/>Search<br/>Optional)]
+            MinIOLocal[MinIO<br/>Object Storage<br/>S3 compatible]
+        end
+
+        subgraph "🔧 Development Tools"
+            FlutterSDK[Flutter SDK<br/>Latest stable<br/>Hot reload]
+            Python311[Python 3.11<br/>Backend dev<br/>Virtual env]
+            Node18[Node.js 18<br/>Build tools<br/>npm/yarn]
+            VSCode[VS Code<br/>Primary IDE<br/>Extensions]
+            Git[Git & GitHub<br/>Version control<br/>Collaboration]
+        end
+    end
+
+    subgraph "☁️ Production Environment (AWS)"
+        subgraph "🏗️ Infrastructure Scale"
+            ECSProd[ECS Fargate<br/>4-8 vCPU containers<br/>Auto-scaling]
+            AuroraProd[(Aurora PostgreSQL<br/>2-16 ACUs<br/>Auto-scaling)]
+            RedisProd[(Redis ElastiCache<br/>2-8 nodes cluster<br/>High availability)]
+            CloudFrontProd[CloudFront CDN<br/>310+ Edge Locations<br/>Global distribution]
+            Route53Prod[Route 53<br/>Global DNS<br/>Health checks]
+        end
+
+        subgraph "📊 Production Services"
+            ALB[Application Load Balancer<br/>4-8 instances<br/>Traffic routing]
+            ASG[Auto Scaling Groups<br/>2-10 instances<br/>Demand scaling]
+            ReadReplicas[(Read Replicas<br/>2-4 replicas<br/>Performance boost)]
+            EdgeLocations[CDN Edge Locations<br/>50+ locations<br/>Low latency]
+            MonitoringStack[Monitoring Stack<br/>10+ services<br/>Observability]
+        end
+    end
+
+    subgraph "⚡ Performance Comparison"
+        LocalPerf[Local Performance<br/>Database: <10ms<br/>API: <50ms<br/>Build: 2-3 min<br/>Tests: 30-60s<br/>Memory: 8-12GB]
+        ProdPerf[Production Performance<br/>Database: <20ms<br/>API: <100ms global<br/>CDN: <50ms global<br/>Uptime: 99.9%<br/>Users: 10,000+ concurrent]
+    end
+
+    %% Connections for local environment
+    FlutterSDK --> NginxLocal
+    Python311 --> PostgresLocal
+    Python311 --> RedisLocal
+    VSCode --> FlutterSDK
+    VSCode --> Python311
+    VSCode --> Git
+
+    NginxLocal --> PostgresLocal
+    NginxLocal --> RedisLocal
+
+    %% Connections for production environment
+    ECSProd --> AuroraProd
+    ECSProd --> RedisProd
+    ALB --> ECSProd
+    CloudFrontProd --> ALB
+    Route53Prod --> CloudFrontProd
+
+    AuroraProd --> ReadReplicas
+    RedisProd --> MonitoringStack
+
+    ASG --> ECSProd
+
+    %% Styling
+    classDef local fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef prod fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef perf fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+
+    class CPU,RAM,Storage,Display,PostgresLocal,RedisLocal,NginxLocal,ElasticLocal,MinIOLocal,FlutterSDK,Python311,Node18,VSCode,Git local
+    class ECSProd,AuroraProd,RedisProd,CloudFrontProd,Route53Prod,ALB,ASG,ReadReplicas,EdgeLocations,MonitoringStack prod
+    class LocalPerf,ProdPerf perf
 ```
-💻 LOCAL DEVELOPMENT (MacBook Pro M2)
 
-🖥️ Hardware Specifications:
-├── MacBook Pro M2 (16GB RAM, 512GB SSD)
-├── Processor: Apple M2 (8-core CPU, 10-core GPU)
-├── Memory: 16GB Unified Memory
-├── Storage: 512GB SSD
-└── Display: 16-inch Retina display
-
-📦 Local Services (Docker Containers):
-├── PostgreSQL 15 (Database)
-├── Redis 7 (Caching)
-├── Nginx (Reverse proxy)
-├── Elasticsearch (Search)
-└── MinIO (Object storage)
-
-🔧 Development Tools:
-├── Flutter SDK (Latest)
-├── Python 3.11 (Backend)
-├── Node.js 18 (Build tools)
-├── Git & GitHub Desktop
-└── VS Code with extensions
-
-⚡ Performance Characteristics:
-├── Database Response: <10ms (Local)
-├── API Response: <50ms (Local)
-├── Build Time: 2-3 minutes (Flutter)
-├── Test Execution: 30-60 seconds
-└── Memory Usage: 8-12GB during development
-```
-
-#### Production Environment (AWS)
-```
-☁️ PRODUCTION ENVIRONMENT (AWS Cloud)
-
-🏗️ Infrastructure Scale:
-├── ECS Fargate: 4-8 vCPU containers
-├── Aurora PostgreSQL: 2-16 ACUs (Auto-scaling)
-├── Redis ElastiCache: 2-8 nodes cluster
-├── CloudFront: Global CDN with 310+ PoPs
-└── Route 53: Global DNS with health checks
-
-📊 Production Services:
-├── Load Balancer (ALB): 4-8 instances
-├── Auto Scaling Groups: 2-10 instances
-├── Read Replicas: 2-4 database replicas
-├── CDN Edge Locations: 50+ global locations
-└── Monitoring Stack: 10+ services
-
-⚡ Performance Characteristics:
-├── Database Response: <20ms (Primary region)
-├── API Response: <100ms (Global average)
-├── CDN Response: <50ms (Global)
-├── Uptime: 99.9% SLA
-└── Concurrent Users: 10,000+ (Horizontal scaling)
-```
+#### Performance Comparison Matrix
+| Metric | Local Development | Production (AWS) |
+|--------|------------------|------------------|
+| **Database Response** | <10ms (same machine) | <20ms (primary region) |
+| **API Response** | <50ms (localhost) | <100ms (global average) |
+| **CDN Response** | N/A | <50ms (global) |
+| **Build Time** | 2-3 minutes (Flutter) | 10-15 minutes (CI/CD) |
+| **Concurrent Users** | 1 (developer only) | 10,000+ (horizontal scaling) |
+| **Uptime SLA** | N/A | 99.9% |
+| **Memory Usage** | 8-12GB (development) | Auto-scaling (cost-optimized) |
+| **Storage** | 512GB SSD (local) | Unlimited (S3 + Aurora) |
 
 ### 7.2 Environment Configuration Management
 
@@ -1027,89 +1323,114 @@ WHATSAPP_ACCESS_TOKEN=prod_whatsapp_token
 
 ### 8.1 Phased Implementation Plan
 
+```mermaid
+gantt
+    title Agent Mitra Implementation Roadmap (24 months)
+    dateFormat YYYY-MM-DD
+    section Phase 1: MVP (Months 1-6)
+        Infrastructure Setup          :done, infra1, 2024-01-01, 2024-02-15
+        Flutter Mobile App            :done, app1, 2024-02-01, 2024-04-30
+        Basic Authentication          :done, auth1, 2024-02-15, 2024-03-15
+        Policy Management             :done, policy1, 2024-03-01, 2024-04-15
+        WhatsApp Integration          :done, whatsapp1, 2024-03-15, 2024-05-01
+        Video Upload (YouTube)        :done, video1, 2024-04-01, 2024-05-15
+        Customer Dashboard            :done, dashboard1, 2024-04-15, 2024-06-01
+        Testing & Launch              :active, test1, 2024-05-15, 2024-06-15
+
+    section Phase 2: Growth (Months 7-12)
+        Advanced Analytics           :analytics2, after test1, 30d
+        Real-time Dashboards         :realtime2, after analytics2, 45d
+        Marketing Campaigns          :campaigns2, after realtime2, 30d
+        Multi-tenant Features        :multitenant2, after campaigns2, 45d
+        Advanced Chatbot             :chatbot2, after multitenant2, 30d
+        Video Recommendations        :video2, after chatbot2, 30d
+        Performance Optimization     :perf2, after video2, 30d
+
+    section Phase 3: Enterprise (Months 13-24)
+        Global Multi-region          :global3, after perf2, 60d
+        Advanced Security            :security3, after global3, 45d
+        ERP/CRM Integrations         :integrations3, after security3, 60d
+        Enterprise Compliance        :compliance3, after integrations3, 45d
+        Real-time Collaboration      :collaboration3, after compliance3, 30d
+        Advanced BI                  :bi3, after collaboration3, 45d
+        Enterprise Launch            :launch3, after bi3, 30d
+```
+
 #### Phase 1: MVP Infrastructure (₹15,000/month)
+```mermaid
+pie title Phase 1 Cost Distribution (₹15,000/month)
+    "Compute (ECS)" : 53
+    "Database (Aurora)" : 27
+    "Network & CDN" : 17
+    "Monitoring" : 3
 ```
-🚀 PHASE 1: MINIMUM VIABLE INFRASTRUCTURE
 
-💰 Monthly Cost Breakdown:
-├── AWS ECS Fargate: ₹8,000 (Application hosting)
-├── Aurora PostgreSQL: ₹4,000 (Database)
-├── Redis ElastiCache: ₹1,500 (Caching)
-├── CloudFront CDN: ₹2,500 (Content delivery)
-├── Route 53 DNS: ₹200 (Domain management)
-└── Monitoring Basic: ₹800 (Essential monitoring)
+**🎯 Deliverables:**
+- ✅ Flutter mobile app (iOS + Android)
+- ✅ Basic authentication (OTP + Biometric)
+- ✅ Policy management (CRUD operations)
+- ✅ WhatsApp integration (Basic messaging)
+- ✅ Video upload (YouTube integration)
+- ✅ Customer dashboard (Essential metrics)
 
-🎯 Deliverables:
-├── Flutter mobile app (iOS + Android)
-├── Basic authentication (OTP + Biometric)
-├── Policy management (CRUD operations)
-├── WhatsApp integration (Basic messaging)
-├── Video upload (YouTube integration)
-└── Customer dashboard (Essential metrics)
-
-📈 Expected Performance:
-├── Response Time: <200ms average
-├── Concurrent Users: 1,000
-├── Uptime: 99.5%
-└── Monthly Active Users: 700 (Target)
-```
+**📈 Expected Performance:**
+- Response Time: <200ms average
+- Concurrent Users: 1,000
+- Uptime: 99.5%
+- Monthly Active Users: 700 (Target)
 
 #### Phase 2: Growth Infrastructure (₹45,000/month)
+```mermaid
+pie title Phase 2 Cost Distribution (₹45,000/month)
+    "Compute (ECS)" : 44
+    "Database (Aurora)" : 18
+    "Network & CDN" : 11
+    "Monitoring" : 9
+    "AI/ML Services" : 7
+    "Load Balancing" : 4
+    "Advanced Features" : 7
 ```
-📈 PHASE 2: SCALED INFRASTRUCTURE
 
-💰 Monthly Cost Breakdown:
-├── AWS ECS Fargate: ₹20,000 (Increased capacity)
-├── Aurora PostgreSQL: ₹8,000 (Read replicas)
-├── Redis ElastiCache: ₹3,000 (Cluster mode)
-├── CloudFront CDN: ₹5,000 (Global distribution)
-├── Load Balancer: ₹2,000 (High availability)
-├── Monitoring Advanced: ₹4,000 (APM + Analytics)
-└── AI/ML Services: ₹3,000 (OpenAI + Custom models)
+**🎯 Deliverables:**
+- Advanced analytics (Predictive modeling)
+- Real-time dashboards (WebSocket updates)
+- Marketing automation (Campaign management)
+- Multi-tenant features (Provider management)
+- Advanced chatbot (NLP capabilities)
+- Video recommendation engine (AI-powered)
 
-🎯 Deliverables:
-├── Advanced analytics (Predictive modeling)
-├── Real-time dashboards (WebSocket updates)
-├── Marketing automation (Campaign management)
-├── Multi-tenant features (Provider management)
-├── Advanced chatbot (NLP capabilities)
-└── Video recommendation engine (AI-powered)
-
-📈 Expected Performance:
-├── Response Time: <150ms average
-├── Concurrent Users: 5,000
-├── Uptime: 99.9%
-└── Monthly Active Users: 5,000
-```
+**📈 Expected Performance:**
+- Response Time: <150ms average
+- Concurrent Users: 5,000
+- Uptime: 99.9%
+- Monthly Active Users: 5,000
 
 #### Phase 3: Enterprise Infrastructure (₹150,000/month)
+```mermaid
+pie title Phase 3 Cost Distribution (₹150,000/month)
+    "Compute (ECS Multi-region)" : 40
+    "Database (Global Aurora)" : 17
+    "Network & CDN" : 10
+    "Monitoring (Enterprise)" : 10
+    "AI/ML Services (Advanced)" : 8
+    "Security Services" : 3
+    "Load Balancing (Global)" : 5
+    "Caching (Multi-region)" : 7
 ```
-🏢 PHASE 3: ENTERPRISE-SCALE INFRASTRUCTURE
 
-💰 Monthly Cost Breakdown:
-├── AWS ECS Fargate: ₹60,000 (Multi-region deployment)
-├── Aurora PostgreSQL: ₹25,000 (Global database)
-├── Redis ElastiCache: ₹10,000 (Multi-region cluster)
-├── CloudFront CDN: ₹15,000 (Enterprise CDN)
-├── Load Balancer: ₹8,000 (Global load balancing)
-├── Monitoring Enterprise: ₹15,000 (Full observability)
-├── AI/ML Services: ₹12,000 (Advanced ML models)
-└── Security Services: ₹5,000 (Enterprise security)
+**🎯 Deliverables:**
+- Global multi-region deployment
+- Advanced security (Zero-trust architecture)
+- Enterprise integrations (ERP, CRM systems)
+- Advanced compliance (IRDAI enterprise features)
+- Real-time collaboration features
+- Advanced business intelligence
 
-🎯 Deliverables:
-├── Global multi-region deployment
-├── Advanced security (Zero-trust architecture)
-├── Enterprise integrations (ERP, CRM systems)
-├── Advanced compliance (IRDAI enterprise features)
-├── Real-time collaboration features
-└── Advanced business intelligence
-
-📈 Expected Performance:
-├── Response Time: <100ms average
-├── Concurrent Users: 50,000
-├── Uptime: 99.95%
-└── Monthly Active Users: 50,000
-```
+**📈 Expected Performance:**
+- Response Time: <100ms average
+- Concurrent Users: 50,000
+- Uptime: 99.95%
+- Monthly Active Users: 50,000
 
 ### 8.2 Cost Optimization Strategies
 
