@@ -235,68 +235,153 @@ flowchart TD
     TT --> UU[Complete onboarding flow]
 ```
 
-#### Agent Configuration Portal - Data Upload Process
+#### Agent Configuration Portal - Data Upload Process Journey
+
+**Sub-Journey 1: Portal Access & Preparation**
 ```mermaid
 flowchart TD
     A[Agent logs into Configuration Portal] --> B[Dashboard overview]
     B --> C[Customer data management section]
     C --> D[View existing customer data]
     D --> E[Check data sync status]
-    E --> F{New customer onboarding?}
-    F -->|Yes| G[Export data from LIC portal]
-    F -->|No| H[Regular data sync]
+    E --> F{What action needed?}
+    F -->|New customer onboarding| G[→ Continue to Sub-Journey 2]
+    F -->|Regular data sync| H[→ Continue to Sub-Journey 5]
+    F -->|Update existing data| I[→ Continue to Sub-Journey 2]
+    F -->|Check sync status| J[Review sync dashboard]
+    J --> K[View import history]
+    K --> L[Check error logs]
+    L --> M[Download error reports]
+    M --> N[→ Continue to Sub-Journey 4]
+```
 
-    G --> I[LIC Agent Policy Portal Login]
-    I --> J[Navigate to customer reports]
-    J --> K[Select customers to export]
+**Sub-Journey 2: Data Export from LIC Portal**
+```mermaid
+flowchart TD
+    A[← From Sub-Journey 1] --> B[Export data from LIC portal]
+    B --> C[LIC Agent Policy Portal Login]
+    C --> D{Login successful?}
+    D -->|No| E[Handle login errors]
+    E --> F[Reset password or contact support]
+    F --> C
+    D -->|Yes| G[Navigate to customer reports]
+    G --> H[Select customers to export]
+    H --> I[Choose export criteria]
+    I --> J[Date range selection]
+    J --> K[Customer status filters]
     K --> L[Generate Excel report]
-    L --> M[Download Excel file]
-    M --> N[Return to Agent Mitra Config Portal]
+    L --> M{Report generation successful?}
+    M -->|No| N[Show generation errors]
+    N --> O[Adjust criteria or retry]
+    O --> I
+    M -->|Yes| P[Report ready for download]
+    P --> Q[Download Excel file]
+    Q --> R[Save file locally]
+    R --> S[→ Continue to Sub-Journey 3]
+```
 
-    N --> O[Data Upload section]
-    O --> P[Select file upload]
-    P --> Q[Choose Excel file]
-    Q --> R[File validation]
-    R --> S{Valid format?}
-    S -->|No| T[Show validation errors]
-    T --> Q
-    S -->|Yes| U[Upload file to server]
+**Sub-Journey 3: File Upload & Initial Validation**
+```mermaid
+flowchart TD
+    A[← From Sub-Journey 2] --> B[Return to Agent Mitra Config Portal]
+    B --> C[Data Upload section]
+    C --> D[Select file upload]
+    D --> E[Choose Excel file from downloads]
+    E --> F[File selection dialog]
+    F --> G[Select downloaded LIC Excel file]
+    G --> H[File type validation]
+    H --> I{Valid Excel format?}
+    I -->|No| J[Show format error message]
+    J --> K[Suggest file conversion]
+    K --> L[Allow retry with correct file]
+    L --> E
+    I -->|Yes| M[File size check]
+    M --> N{File size acceptable?}
+    N -->|No| O[Show size limit exceeded]
+    O --> P[Suggest file splitting]
+    P --> Q[Return to file selection]
+    Q --> E
+    N -->|Yes| R[Upload file to server]
+    R --> S[Show upload progress]
+    S --> T[→ Continue to Sub-Journey 4]
+```
 
-    U --> V[File processing starts]
-    V --> W[Parse Excel data]
-    W --> X[Validate data integrity]
-    X --> Y{Data valid?}
-    Y -->|No| Z[Show processing errors]
-    Z --> AA[Request file correction]
-    AA --> Q
+**Sub-Journey 4: Data Processing & Import Validation**
+```mermaid
+flowchart TD
+    A[← From Sub-Journey 3] --> B[File processing starts]
+    B --> C[Parse Excel data structure]
+    C --> D[Validate column headers]
+    D --> E{Headers valid?}
+    E -->|No| F[Show header validation errors]
+    F --> G[List missing/incorrect columns]
+    G --> H[Suggest template download]
+    H --> I[→ Return to Sub-Journey 2]
 
-    Y -->|Yes| BB[Map data to database schema]
-    BB --> CC[Preview data before import]
-    CC --> DD[Show import summary]
-    DD --> EE{Confirm import?}
-    EE -->|No| FF[Cancel import]
-    FF --> O
-    EE -->|Yes| GG[Start background import job]
+    E -->|Yes| J[Validate data integrity]
+    J --> K[Check required fields]
+    K --> L[Validate data formats]
+    L --> M[Cross-reference validations]
+    M --> N{Data validation passed?}
+    N -->|No| O[Show validation errors]
+    O --> P[Categorize error types]
+    P --> Q[Field-specific error messages]
+    Q --> R[Row-by-row error listing]
+    R --> S[Download error report]
+    S --> T[Request file correction]
+    T --> U[→ Return to Sub-Journey 2]
 
-    GG --> HH[Job queued for processing]
-    HH --> II[Asynchronous data processing]
-    II --> JJ[Create/update customer records]
-    JJ --> KK[Create/update policy records]
-    KK --> LL[Update agent relationships]
-    LL --> MM[Send success notification]
+    N -->|Yes| V[Map data to database schema]
+    V --> W[Transform data formats]
+    W --> X[Generate import preview]
+    X --> Y[Show import summary]
+    Y --> Z[Records to be created/updated]
+    Z --> AA[Potential duplicates identified]
+    AA --> BB[Data conflicts highlighted]
+    BB --> CC{Agent confirms import?}
+    CC -->|No| DD[Cancel import]
+    DD --> EE[Return to upload section]
+    EE --> FF[→ Return to Sub-Journey 3]
+    CC -->|Yes| GG[Start background import job]
+    GG --> HH[→ Continue to Sub-Journey 5]
+```
 
-    MM --> NN[Update sync status]
-    NN --> OO[Trigger mobile app data refresh]
-    OO --> PP[Customer sees data in mobile app]
+**Sub-Journey 5: Import Completion & Synchronization**
+```mermaid
+flowchart TD
+    A[← From Sub-Journey 4] --> B[Job queued for processing]
+    B --> C[Show processing status]
+    C --> D[Real-time progress updates]
+    D --> E[Asynchronous data processing]
+    E --> F[Create/update customer records]
+    F --> G[Create/update policy records]
+    G --> H[Update agent relationships]
+    H --> I[Process completed successfully]
+    I --> J[Send success notification]
+    J --> K[Email notification to agent]
+    K --> L[In-portal success message]
+    L --> M[Update sync status]
+    M --> N[Mark records as synced]
+    N --> O[Trigger mobile app data refresh]
+    O --> P[Send push notification to customers]
+    P --> Q[Customer sees data in mobile app]
+    Q --> R[Customer onboarding completes]
 
-    H --> QQ[Check for data updates]
-    QQ --> RR{Updates available?}
-    RR -->|Yes| SS[Download latest data]
-    SS --> TT[Process incremental updates]
-    TT --> MM
+    E --> S{Processing errors?}
+    S -->|Yes| T[Log processing errors]
+    T --> U[Send error notification]
+    U --> V[Show error details in portal]
+    V --> W[Provide error resolution steps]
+    W --> X[Allow retry or manual correction]
+    X --> Y{Retry requested?}
+    Y -->|Yes| Z[Re-queue processing job]
+    Z --> E
+    Y -->|No| AA[Mark as failed import]
+    AA --> BB[Archive failed records]
+    BB --> CC[Send failure report]
 
-    RR -->|No| UU[No action required]
-    UU --> VV[Schedule next sync check]
+    S -->|No| DD[Continue to success path]
+    DD --> I
 ```
 
 ### Excel Template Definition for Agent Data Import
