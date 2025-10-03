@@ -72,7 +72,9 @@ flowchart TD
     O --> P[Welcome screen with key benefits]
 ```
 
-#### Registration & Profile Setup
+#### Registration & Profile Setup Journey
+
+**Sub-Journey 1: Customer Acquisition & Initial Setup**
 ```mermaid
 flowchart TD
     A[Welcome Screen] --> B[Click 'Get Started']
@@ -92,161 +94,145 @@ flowchart TD
     L --> M[Enter full name]
     M --> N[Select user type: Policyholder/Agent]
     N --> O{Selected Policyholder?}
-    O -->|Yes| P[Policyholder onboarding]
-    O -->|No| Q[Agent onboarding]
-
-    P --> R{How did customer get app?}
-    R -->|Agent referral link| S[Check agent database]
-    R -->|Direct download| T[Manual policy entry or agent discovery]
-    R -->|Unknown source| U[Contact agent option]
-
-    S --> V{Agent relationship found?}
-    V -->|Yes| W[Auto-populate profile data]
-    V -->|No| X[Show 'Contact agent' CTA]
-    X --> Y[Agent uploads customer data]
-    Y --> Z[Background job processes data]
-    Z --> AA[Customer data becomes available]
-    AA --> BB[Resume onboarding flow]
-
-    W --> CC[Show pre-filled profile]
-    CC --> DD[Verify/correct details]
-    DD --> EE{Details correct?}
-    EE -->|Yes| FF[Confirm profile]
-    EE -->|No| GG[Edit profile details]
-    GG --> FF
-
-    T --> HH[Manual data entry]
-    HH --> II[Enter personal details]
-    II --> JJ[Policy search by number]
-    JJ --> KK{Policy data available?}
-    KK -->|No| LL[Show data upload pending]
-    LL --> MM[Contact agent for data upload]
-
-    U --> NN[Contact agent screen]
-    NN --> OO[Show agent contact options]
-    OO --> PP{Agent provides data?}
-    PP -->|Yes| QQ[Agent uploads to config portal]
-    PP -->|No| RR[Onboarding blocked]
-
-    QQ --> SS[Background data sync job]
-    SS --> TT[Customer data loaded]
-    TT --> UU[Onboarding unblocked]
-
-    FF --> VV[Policy data check]
-    VV --> WW{Policy data available?}
-    WW -->|Yes| XX[Show policy summary]
-    WW -->|No| YY[Show data loading status]
-    YY --> ZZ[Periodic data check]
-
-    XX --> AAA[Set preferences]
-    AAA --> BBB[Language, notifications, theme]
-    BBB --> CCC[Security setup]
-    CCC --> DDD[Biometric/PIN setup]
-    DDD --> EEE[Onboarding complete]
-    EEE --> FFF[Dashboard tour starts]
-
-    ZZ --> GGG{Data now available?}
-    GGG -->|Yes| XX
-    GGG -->|No| HHH[Show loading animation]
-    HHH --> III[Retry after delay]
-    III --> ZZ
-
-    RR --> JJJ[Show limited functionality]
-    JJJ --> KKK[Basic app access only]
-    KKK --> LLL[Periodic agent contact reminders]
-
-    T --> MMM[Agent discovery flow]
-    MMM --> NNN[How to find your agent?]
-    NNN --> OOO[Check policy document]
-    NNN --> PPP[Contact LIC customer care]
-    NNN --> QQQ[Search online directories]
-    NNN --> RRR[Ask other policyholders]
-
-    OOO --> SSS[Look for agent code/name on policy]
-    PPP --> TTT[Call LIC helpline for agent details]
-    QQQ --> UUU[Search LIC agent directory online]
-    RRR --> VVV[Ask fellow customers for agent info]
-
-    SSS --> WWW[Found agent information]
-    TTT --> WWW
-    UUU --> WWW
-    VVV --> WWW
-
-    WWW --> XXX[Add agent in Agent Mitra settings]
-    XXX --> YYY[Enter agent details]
-    YYY --> ZZZ[Agent code, name, contact info]
-    ZZZ --> AAAA[Verify agent identity]
-    AAAA --> BBBB{Agent verified?}
-    BBBB -->|No| CCCC[Try different agent or contact support]
-    BBBB -->|Yes| DDDD[Send notification to agent]
-    DDDD --> EEEE[Agent receives data request]
-    EEEE --> FFFF[Agent verifies customer identity]
-    FFFF --> GGGG{Identity confirmed?}
-    GGGG -->|No| HHHH[Request additional verification]
-    HHHH --> IIII[Customer provides verification docs]
-    IIII --> FFFF
-    GGGG -->|Yes| JJJJ[Agent uploads customer data to config portal]
-    JJJJ --> KKKK[Background data processing]
-    KKKK --> LLLL[Data validation and import]
-    LLLL --> MMMM{Import successful?}
-    MMMM -->|Yes| NNNN[Customer data becomes available]
-    MMMM -->|No| OOOO[Agent corrects data and re-uploads]
-    OOOO --> JJJJ
-    NNNN --> PPPP[Mobile app sync notification]
-    PPPP --> QQQQ[Customer sees data available]
-    QQQQ --> RRRR[Resume onboarding flow]
-    RRRR --> FF
+    O -->|Yes| P[→ Continue to Sub-Journey 2]
+    O -->|No| Q[→ Agent Onboarding Flow]
 ```
 
-#### Profile Completion & Verification
+**Sub-Journey 2: Agent Relationship Establishment**
 ```mermaid
 flowchart TD
-    A[Basic profile created] --> B[Document upload required]
-    B --> C[Choose document type]
-    C --> D{Government ID}
-    D --> E[Aadhaar Card]
-    D --> F[Voter ID]
-    D --> G[Driving License]
-    D --> H[Passport]
+    A[← From Sub-Journey 1] --> B{How did customer get app?}
+    B -->|Agent referral link| C[Check agent database]
+    B -->|Direct download| D[→ Agent Discovery Flow]
+    B -->|Unknown source| E[→ Agent Discovery Flow]
 
-    E --> I[Upload Aadhaar]
-    F --> I
-    G --> I
-    H --> I
+    C --> F{Agent relationship found?}
+    F -->|Yes| G[Auto-populate profile data]
+    F -->|No| H[Show 'Contact agent' CTA]
 
-    I --> J[Photo capture/upload]
-    J --> K[OCR processing]
-    K --> L{OCR successful?}
-    L -->|Yes| M[Auto-fill details]
-    L -->|No| N[Manual entry required]
+    G --> I[Show pre-filled profile]
+    I --> J[Verify/correct details]
+    J --> K{Details correct?}
+    K -->|Yes| L[→ Continue to Sub-Journey 3]
+    K -->|No| M[Edit profile details]
+    M --> L
 
-    M --> O[Address verification]
-    N --> O
-    O --> P[Current address]
-    P --> Q{Permanent address same?}
-    Q -->|Yes| R[Auto-copy address]
-    Q -->|No| S[Enter permanent address]
+    H --> N[Agent uploads customer data]
+    N --> O[Background job processes data]
+    O --> P[Customer data becomes available]
+    P --> Q[Resume onboarding flow]
+    Q --> L
 
-    R --> T[Bank details for payments]
-    S --> T
-    T --> U[Bank account number]
-    U --> V[IFSC code]
-    V --> W[UPI ID optional]
+    D --> R[Agent Discovery Methods]
+    R --> S[Check policy document]
+    R --> T[Contact LIC customer care]
+    R --> U[Search online directories]
+    R --> V[Ask other policyholders]
 
-    W --> X[Emergency contact]
-    X --> Y[Relationship & phone]
-    Y --> Z[KYC verification starts]
+    S --> W[Look for agent code/name]
+    T --> X[Call LIC helpline]
+    U --> Y[Search agent directory]
+    V --> Z[Ask fellow customers]
 
-    Z --> AA[Manual review queue]
-    AA --> BB{Approved?}
-    BB -->|Yes| CC[Profile fully verified]
-    BB -->|No| DD[Rejection reason sent]
-    DD --> EE[Re-upload corrected documents]
+    W --> AA[Found agent information]
+    X --> AA
+    Y --> AA
+    Z --> AA
 
-    CC --> FF[Full app access unlocked]
-    FF --> GG[Welcome email sent]
-    GG --> HH[Push notification]
-    HH --> II[Complete onboarding flow]
+    AA --> BB[Add agent in settings]
+    BB --> CC[Enter agent details]
+    CC --> DD[Agent code, name, contact]
+    DD --> EE[Verify agent identity]
+    EE --> FF{Agent verified?}
+    FF -->|No| GG[Try different agent]
+    FF -->|Yes| HH[Send notification to agent]
+    HH --> II[Agent receives data request]
+    II --> JJ[Agent verifies customer identity]
+    JJ --> KK{Identity confirmed?}
+    KK -->|No| LL[Request additional verification]
+    LL --> MM[Customer provides docs]
+    MM --> JJ
+    KK -->|Yes| NN[Agent uploads data to portal]
+    NN --> OO[Background processing]
+    OO --> PP{Import successful?}
+    PP -->|Yes| QQ[Data becomes available]
+    PP -->|No| RR[Agent corrects data]
+    RR --> NN
+    QQ --> SS[Mobile app sync notification]
+    SS --> TT[Customer sees data available]
+    TT --> L
+
+    GG --> UU[Show contact support option]
+    UU --> VV[Onboarding blocked temporarily]
+    VV --> WW[Show limited functionality]
+    WW --> XX[Periodic agent contact reminders]
+```
+
+**Sub-Journey 3: Profile Completion & Verification**
+```mermaid
+flowchart TD
+    A[← From Sub-Journey 2] --> B[Profile data available]
+    B --> C{Policy data available?}
+    C -->|Yes| D[Show policy summary]
+    C -->|No| E[Show data loading status]
+    E --> F[Periodic data check]
+    F --> G{Data now available?}
+    G -->|Yes| D
+    G -->|No| H[Show loading animation]
+    H --> I[Retry after delay]
+    I --> F
+
+    D --> J[Set user preferences]
+    J --> K[Language, notifications, theme]
+    K --> L[Security setup]
+    L --> M[Biometric/PIN setup]
+    M --> N[Onboarding complete]
+    N --> O[Dashboard tour starts]
+
+    O --> P[Document verification required]
+    P --> Q[Choose document type]
+    Q --> R{Government ID}
+    R --> S[Aadhaar Card]
+    R --> T[Voter ID]
+    R --> U[Driving License]
+    R --> V[Passport]
+
+    S --> W[Upload document]
+    T --> W
+    U --> W
+    V --> W
+
+    W --> X[OCR processing]
+    X --> Y{OCR successful?}
+    Y -->|Yes| Z[Auto-fill details]
+    Y -->|No| AA[Manual entry required]
+
+    Z --> BB[Address verification]
+    AA --> BB
+    BB --> CC[Current address]
+    CC --> DD{Permanent address same?}
+    DD -->|Yes| EE[Auto-copy address]
+    DD -->|No| FF[Enter permanent address]
+
+    EE --> GG[Bank details setup]
+    FF --> GG
+    GG --> HH[Bank account number]
+    HH --> II[IFSC code]
+    II --> JJ[UPI ID optional]
+
+    JJ --> KK[Emergency contact]
+    KK --> LL[Relationship & phone]
+    LL --> MM[KYC verification starts]
+
+    MM --> NN[Manual review queue]
+    NN --> OO{Approved?}
+    OO -->|Yes| PP[Full app access unlocked]
+    OO -->|No| QQ[Rejection reason sent]
+    QQ --> RR[Re-upload corrected documents]
+
+    PP --> SS[Welcome email sent]
+    SS --> TT[Push notification]
+    TT --> UU[Complete onboarding flow]
 ```
 
 #### Agent Configuration Portal - Data Upload Process
