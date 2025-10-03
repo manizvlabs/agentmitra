@@ -305,44 +305,667 @@ graph TD
 └── monitoring-local/          # Local monitoring setup
 ```
 
+#### Docker Compose Configuration
+```yaml
+# docker-compose.yml - Local Development Environment
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: agentmitra-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - agentmitra-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  agentmitra-network:
+    driver: bridge
+```
+
+#### Local Services Verification (MacBook Native)
+```bash
+#!/bin/bash
+# verify-local-services.sh
+
+echo "🔍 Verifying Agent Mitra local services on MacBook..."
+
+# 1. Verify PostgreSQL 16 is running
+echo "🐘 Checking PostgreSQL 16..."
+if pg_isready -h localhost -p 5432 >/dev/null 2>&1; then
+    echo "✅ PostgreSQL ready on port 5432"
+
+    # Check if database exists, create if not
+    if ! psql -h localhost -p 5432 -U $(whoami) -lqt | cut -d \| -f 1 | grep -qw agent_mitra_local; then
+        echo "🗄️ Creating database..."
+        createdb -U $(whoami) agent_mitra_local 2>/dev/null || echo "Database already exists"
+        echo "✅ Database 'agent_mitra_local' created"
+    else
+        echo "✅ Database 'agent_mitra_local' exists"
+    fi
+else
+    echo "❌ PostgreSQL not ready on port 5432"
+    echo "💡 Please ensure PostgreSQL 16 is running:"
+    echo "   brew services start postgresql@16"
+    exit 1
+fi
+
+# 2. Verify Redis is running
+echo "🔴 Checking Redis..."
+if redis-cli ping >/dev/null 2>&1; then
+    echo "✅ Redis ready on port 6379"
+else
+    echo "❌ Redis not ready on port 6379"
+    echo "💡 Please ensure Redis is running:"
+    echo "   brew services start redis"
+    exit 1
+fi
+
+echo ""
+echo "✅ All local services verified!"
+echo "📊 PostgreSQL: localhost:5432/agent_mitra_local"
+echo "🔴 Redis: localhost:6379"
+```
+
+#### Database Creation with Flyway
+```bash
+#!/bin/bash
+# setup-database-flyway.sh
+
+echo "🗃️ Setting up Agent Mitra database with Flyway..."
+
+# 1. Install Flyway CLI
+echo "📦 Installing Flyway CLI..."
+brew install flyway
+
+# 2. Create Flyway configuration
+echo "⚙️ Creating Flyway configuration..."
+cat > flyway.conf << EOF
+flyway.url=jdbc:postgresql://localhost:5432/agent_mitra_local
+flyway.user=$(whoami)
+flyway.password=
+flyway.schemas=shared,lic_schema,hdfc_schema,icici_schema,audit
+flyway.locations=filesystem:db/migration
+flyway.baselineOnMigrate=true
+flyway.validateOnMigrate=true
+flyway.outOfOrder=false
+EOF
+
+# 3. Create migration directory structure
+echo "📁 Creating migration directories..."
+mkdir -p db/migration
+
+# 4. Create initial schema migrations based on database-design.md
+echo "📋 Creating initial schema migrations..."
+
+# V1__Create_shared_schema.sql
+cat > db/migration/V1__Create_shared_schema.sql << 'EOF'
+-- Create shared reference schema for multi-tenant data
+CREATE SCHEMA IF NOT EXISTS shared AUTHORIZATION CURRENT_USER;
+
+-- Countries reference table
+CREATE TABLE shared.countries (
+    country_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    country_code VARCHAR(3) UNIQUE NOT NULL,
+    country_name VARCHAR(100) NOT NULL,
+    currency_code VARCHAR(3),
+    phone_code VARCHAR(5),
+    timezone VARCHAR(50),
+    status VARCHAR(20) DEFAULT 'active'
+);
+
+-- Languages reference table
+CREATE TABLE shared.languages (
+    language_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    language_code VARCHAR(10) UNIQUE NOT NULL,
+    language_name VARCHAR(100) NOT NULL,
+    native_name VARCHAR(100),
+    rtl BOOLEAN DEFAULT false,
+    status VARCHAR(20) DEFAULT 'active'
+);
+
+-- Insurance categories
+CREATE TABLE shared.insurance_categories (
+    category_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    category_code VARCHAR(20) UNIQUE NOT NULL,
+    category_name VARCHAR(100) NOT NULL,
+    category_type VARCHAR(50),
+    description TEXT,
+    status VARCHAR(20) DEFAULT 'active'
+);
+
+-- Tenant registry
+CREATE TABLE shared.tenants (
+    tenant_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_code VARCHAR(20) UNIQUE NOT NULL,
+    tenant_name VARCHAR(255) NOT NULL,
+    tenant_type VARCHAR(50) NOT NULL,
+    schema_name VARCHAR(100) UNIQUE,
+    parent_tenant_id UUID REFERENCES shared.tenants(tenant_id),
+    status VARCHAR(20) DEFAULT 'active',
+    subscription_plan VARCHAR(50),
+    trial_end_date TIMESTAMP,
+    max_users INTEGER DEFAULT 1000,
+    storage_limit_gb INTEGER DEFAULT 10,
+    api_rate_limit INTEGER DEFAULT 1000,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Tenant configuration
+CREATE TABLE shared.tenant_config (
+    config_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID REFERENCES shared.tenants(tenant_id),
+    config_key VARCHAR(100) NOT NULL,
+    config_value JSONB,
+    config_type VARCHAR(50) DEFAULT 'string',
+    is_encrypted BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(tenant_id, config_key)
+);
+
+-- Insurance providers
+CREATE TABLE shared.insurance_providers (
+    provider_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    provider_code VARCHAR(20) UNIQUE NOT NULL,
+    provider_name VARCHAR(255) NOT NULL,
+    provider_type VARCHAR(50),
+    description TEXT,
+    api_endpoint VARCHAR(500),
+    api_credentials JSONB,
+    webhook_url VARCHAR(500),
+    webhook_secret VARCHAR(255),
+    license_number VARCHAR(100),
+    regulatory_authority VARCHAR(100),
+    established_year INTEGER,
+    headquarters JSONB,
+    supported_languages TEXT[] DEFAULT ARRAY['en'],
+    business_hours JSONB,
+    service_regions TEXT[],
+    commission_structure JSONB,
+    status provider_status_enum DEFAULT 'active',
+    integration_status VARCHAR(50) DEFAULT 'pending',
+    last_sync_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- WhatsApp templates
+CREATE TABLE shared.whatsapp_templates (
+    template_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    template_name VARCHAR(100) UNIQUE NOT NULL,
+    category VARCHAR(50),
+    language VARCHAR(10) DEFAULT 'en',
+    content TEXT NOT NULL,
+    variables JSONB,
+    approval_status VARCHAR(50) DEFAULT 'pending',
+    whatsapp_template_id VARCHAR(255),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Create enums
+CREATE TYPE provider_status_enum AS ENUM ('active', 'inactive', 'suspended', 'under_maintenance');
+EOF
+
+# V2__Create_tenant_schemas.sql
+cat > db/migration/V2__Create_tenant_schemas.sql << 'EOF'
+-- Create tenant-specific schemas
+CREATE SCHEMA IF NOT EXISTS lic_schema AUTHORIZATION CURRENT_USER;
+CREATE SCHEMA IF NOT EXISTS hdfc_schema AUTHORIZATION CURRENT_USER;
+CREATE SCHEMA IF NOT EXISTS icici_schema AUTHORIZATION CURRENT_USER;
+CREATE SCHEMA IF NOT EXISTS audit AUTHORIZATION CURRENT_USER;
+
+-- Grant permissions
+GRANT ALL ON SCHEMA lic_schema TO CURRENT_USER;
+GRANT ALL ON SCHEMA hdfc_schema TO CURRENT_USER;
+GRANT ALL ON SCHEMA icici_schema TO CURRENT_USER;
+GRANT ALL ON SCHEMA audit TO CURRENT_USER;
+EOF
+
+# V3__Create_lic_schema_tables.sql
+cat > db/migration/V3__Create_lic_schema_tables.sql << 'EOF'
+-- Create LIC schema tables (referenced from database-design.md)
+
+-- User management
+CREATE TYPE user_role_enum AS ENUM (
+    'super_admin', 'insurance_provider_admin', 'regional_manager',
+    'senior_agent', 'junior_agent', 'policyholder', 'support_staff', 'guest'
+);
+
+CREATE TYPE user_status_enum AS ENUM (
+    'active', 'inactive', 'suspended', 'pending_verification', 'deactivated'
+);
+
+CREATE TABLE lic_schema.users (
+    user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL DEFAULT 'lic-tenant-id',
+    email VARCHAR(255) UNIQUE,
+    phone_number VARCHAR(15) UNIQUE,
+    username VARCHAR(100) UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    password_salt VARCHAR(255),
+    password_changed_at TIMESTAMP,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    display_name VARCHAR(255),
+    avatar_url VARCHAR(500),
+    date_of_birth DATE,
+    gender VARCHAR(20),
+    address JSONB,
+    emergency_contact JSONB,
+    language_preference VARCHAR(10) DEFAULT 'en',
+    timezone VARCHAR(50) DEFAULT 'Asia/Kolkata',
+    theme_preference VARCHAR(20) DEFAULT 'light',
+    notification_preferences JSONB,
+    email_verified BOOLEAN DEFAULT false,
+    phone_verified BOOLEAN DEFAULT false,
+    email_verification_token VARCHAR(255),
+    email_verification_expires TIMESTAMP,
+    password_reset_token VARCHAR(255),
+    password_reset_expires TIMESTAMP,
+    mfa_enabled BOOLEAN DEFAULT false,
+    mfa_secret VARCHAR(255),
+    biometric_enabled BOOLEAN DEFAULT false,
+    last_login_at TIMESTAMP,
+    login_attempts INTEGER DEFAULT 0,
+    locked_until TIMESTAMP,
+    role user_role_enum NOT NULL,
+    status user_status_enum DEFAULT 'active',
+    trial_end_date TIMESTAMP,
+    subscription_plan VARCHAR(50),
+    subscription_status VARCHAR(20) DEFAULT 'trial',
+    created_by UUID,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_by UUID,
+    updated_at TIMESTAMP DEFAULT NOW(),
+    deactivated_at TIMESTAMP,
+    deactivated_reason TEXT
+);
+
+-- Session management
+CREATE TABLE lic_schema.user_sessions (
+    session_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES lic_schema.users(user_id) ON DELETE CASCADE,
+    session_token VARCHAR(255) UNIQUE NOT NULL,
+    refresh_token VARCHAR(255) UNIQUE,
+    device_info JSONB,
+    ip_address INET,
+    user_agent TEXT,
+    location_info JSONB,
+    expires_at TIMESTAMP NOT NULL,
+    last_activity_at TIMESTAMP DEFAULT NOW(),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- RBAC system
+CREATE TABLE lic_schema.roles (
+    role_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    role_name VARCHAR(100) UNIQUE NOT NULL,
+    role_description TEXT,
+    is_system_role BOOLEAN DEFAULT false,
+    permissions JSONB,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE lic_schema.user_roles (
+    assignment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES lic_schema.users(user_id) ON DELETE CASCADE,
+    role_id UUID REFERENCES lic_schema.roles(role_id) ON DELETE CASCADE,
+    assigned_by UUID REFERENCES lic_schema.users(user_id),
+    assigned_at TIMESTAMP DEFAULT NOW(),
+    expires_at TIMESTAMP,
+    UNIQUE(user_id, role_id)
+);
+
+CREATE TABLE lic_schema.permissions (
+    permission_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    permission_name VARCHAR(100) UNIQUE NOT NULL,
+    permission_description TEXT,
+    resource_type VARCHAR(50),
+    action VARCHAR(50),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE lic_schema.role_permissions (
+    assignment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    role_id UUID REFERENCES lic_schema.roles(role_id) ON DELETE CASCADE,
+    permission_id UUID REFERENCES lic_schema.permissions(permission_id) ON DELETE CASCADE,
+    granted_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(role_id, permission_id)
+);
+
+-- Agents
+CREATE TYPE agent_status_enum AS ENUM ('active', 'inactive', 'suspended', 'pending_approval', 'rejected');
+
+CREATE TABLE lic_schema.agents (
+    agent_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES lic_schema.users(user_id) ON DELETE CASCADE,
+    provider_id UUID REFERENCES shared.insurance_providers(provider_id),
+    agent_code VARCHAR(50) UNIQUE NOT NULL,
+    license_number VARCHAR(100) UNIQUE,
+    license_expiry_date DATE,
+    license_issuing_authority VARCHAR(100),
+    business_name VARCHAR(255),
+    business_address JSONB,
+    gst_number VARCHAR(15),
+    pan_number VARCHAR(10),
+    territory VARCHAR(255),
+    operating_regions TEXT[],
+    experience_years INTEGER,
+    specializations TEXT[],
+    commission_rate DECIMAL(5,2),
+    commission_structure JSONB,
+    performance_bonus_structure JSONB,
+    whatsapp_business_number VARCHAR(15),
+    business_email VARCHAR(255),
+    website VARCHAR(500),
+    total_policies_sold INTEGER DEFAULT 0,
+    total_premium_collected DECIMAL(15,2) DEFAULT 0,
+    active_policyholders INTEGER DEFAULT 0,
+    customer_satisfaction_score DECIMAL(3,2),
+    parent_agent_id UUID REFERENCES lic_schema.agents(agent_id),
+    hierarchy_level INTEGER DEFAULT 1,
+    sub_agents_count INTEGER DEFAULT 0,
+    status agent_status_enum DEFAULT 'active',
+    verification_status VARCHAR(50) DEFAULT 'pending',
+    approved_at TIMESTAMP,
+    approved_by UUID REFERENCES lic_schema.users(user_id),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Policyholders
+CREATE TABLE lic_schema.policyholders (
+    policyholder_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES lic_schema.users(user_id) ON DELETE CASCADE,
+    agent_id UUID REFERENCES lic_schema.agents(agent_id),
+    customer_id VARCHAR(100),
+    salutation VARCHAR(10),
+    marital_status VARCHAR(20),
+    occupation VARCHAR(100),
+    annual_income DECIMAL(12,2),
+    education_level VARCHAR(50),
+    risk_profile JSONB,
+    investment_horizon VARCHAR(20),
+    communication_preferences JSONB,
+    marketing_consent BOOLEAN DEFAULT true,
+    family_members JSONB,
+    nominee_details JSONB,
+    bank_details JSONB,
+    investment_portfolio JSONB,
+    preferred_contact_time VARCHAR(20),
+    preferred_language VARCHAR(10) DEFAULT 'en',
+    digital_literacy_score INTEGER,
+    engagement_score DECIMAL(3,2),
+    onboarding_status VARCHAR(50) DEFAULT 'completed',
+    churn_risk_score DECIMAL(3,2),
+    last_interaction_at TIMESTAMP,
+    total_interactions INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Insurance policies
+CREATE TYPE policy_status_enum AS ENUM (
+    'draft', 'pending_approval', 'under_review', 'approved', 'active',
+    'lapsed', 'surrendered', 'matured', 'claimed', 'cancelled'
+);
+
+CREATE TABLE lic_schema.insurance_policies (
+    policy_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    policy_number VARCHAR(100) UNIQUE NOT NULL,
+    provider_policy_id VARCHAR(100),
+    policyholder_id UUID REFERENCES lic_schema.policyholders(policyholder_id),
+    agent_id UUID REFERENCES lic_schema.agents(agent_id),
+    provider_id UUID REFERENCES shared.insurance_providers(provider_id),
+    policy_type VARCHAR(100) NOT NULL,
+    plan_name VARCHAR(255) NOT NULL,
+    plan_code VARCHAR(50),
+    category VARCHAR(50),
+    sum_assured DECIMAL(15,2) NOT NULL,
+    premium_amount DECIMAL(12,2) NOT NULL,
+    premium_frequency VARCHAR(20) NOT NULL,
+    premium_mode VARCHAR(20),
+    application_date DATE NOT NULL,
+    approval_date DATE,
+    start_date DATE NOT NULL,
+    maturity_date DATE,
+    renewal_date DATE,
+    status policy_status_enum DEFAULT 'pending_approval',
+    sub_status VARCHAR(50),
+    payment_status VARCHAR(50) DEFAULT 'pending',
+    coverage_details JSONB,
+    exclusions JSONB,
+    terms_and_conditions JSONB,
+    policy_document_url VARCHAR(500),
+    application_form_url VARCHAR(500),
+    medical_reports JSONB,
+    nominee_details JSONB,
+    assignee_details JSONB,
+    created_by UUID REFERENCES lic_schema.users(user_id),
+    approved_by UUID REFERENCES lic_schema.users(user_id),
+    last_payment_date TIMESTAMP,
+    next_payment_date TIMESTAMP,
+    total_payments INTEGER DEFAULT 0,
+    outstanding_amount DECIMAL(12,2) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+EOF
+
+# 5. Run Flyway migrations
+echo "🚀 Running Flyway migrations..."
+flyway migrate
+
+# 6. Verify migrations
+echo "✅ Database setup complete!"
+echo "📊 Schemas created: shared, lic_schema, hdfc_schema, icici_schema, audit"
+echo "🗃️ Tables created as per database-design.md specifications"
+```
+
 #### One-Click Local Setup Script
 ```bash
 #!/bin/bash
 # setup-local-environment.sh
 
-echo "🚀 Setting up Agent Mitra local development environment..."
+echo "🚀 Setting up complete Agent Mitra local development environment..."
 
-# 1. Install Dependencies
-brew install flutter python@3.11 postgresql redis nginx docker
+# 1. Install Development Dependencies
+echo "📦 Installing development dependencies..."
+brew install flutter python@3.11 git nginx flyway
 
-# 2. Setup Flutter
+# 2. Verify Local Services are Running
+echo "🔍 Verifying local services..."
+./verify-local-services.sh
+
+# 3. Setup Flutter Project
+echo "📱 Setting up Flutter..."
 flutter doctor
+cd flutter-app
 flutter pub get
+cd ..
 
-# 3. Setup Python Backend
+# 4. Setup Python Backend
+echo "🐍 Setting up Python backend..."
 cd python-backend
-python -m venv venv
+python3.11 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+cd ..
 
-# 4. Start Local Services
-docker-compose up -d postgres redis nginx
+# 5. Setup Database with Flyway
+echo "🗃️ Setting up database..."
+./setup-database-flyway.sh
 
-# 5. Run Database Migrations
-python manage.py migrate
+# 6. Start Additional Services with Docker Compose
+echo "🐳 Starting additional services..."
+docker-compose up -d nginx
 
-# 6. Start Development Servers
-flutter run -d ios    # iOS development
-# OR
-flutter run -d android # Android development
+# 7. Start Development Servers
+echo "🚀 Starting development servers..."
 
-# 7. Backend Development Server
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+# Backend server in background
+cd python-backend
+source venv/bin/activate
+uvicorn main:app --reload --host 0.0.0.0 --port 8000 &
+BACKEND_PID=$!
+cd ..
+
+# Flutter development (choose one)
+echo "📱 Choose Flutter development target:"
+echo "1. iOS Simulator"
+echo "2. Android Emulator"
+echo "3. Web"
+read -p "Enter choice (1-3): " choice
+
+case $choice in
+    1)
+        cd flutter-app
+        flutter run -d ios
+        ;;
+    2)
+        cd flutter-app
+        flutter run -d android
+        ;;
+    3)
+        cd flutter-app
+        flutter run -d chrome
+        ;;
+    *)
+        echo "Invalid choice. Starting web development..."
+        cd flutter-app
+        flutter run -d chrome
+        ;;
+esac
+
+# Cleanup function
+cleanup() {
+    echo "🧹 Cleaning up..."
+    kill $BACKEND_PID 2>/dev/null
+    docker-compose down 2>/dev/null
+    exit 0
+}
+
+trap cleanup SIGINT SIGTERM
 
 echo "✅ Local development environment ready!"
-echo "📱 Flutter app: http://localhost:3000"
+echo "📱 Flutter app: http://localhost:3000 (web) or simulator"
 echo "🔗 Backend API: http://localhost:8000"
-echo "📊 Database: postgresql://localhost:5432/agent_mitra"
+echo "📊 Database: postgresql://localhost:5432/agent_mitra_local"
+echo "🔴 Redis: localhost:6379"
+echo "🌐 Nginx proxy: http://localhost:8080"
+echo ""
+echo "Press Ctrl+C to stop all services"
+wait
+```
+
+#### Nginx Configuration for Local Development
+```nginx
+# nginx.conf - Local Development Proxy
+events {
+    worker_connections 1024;
+}
+
+http {
+    upstream backend {
+        server localhost:8000;
+    }
+
+    server {
+        listen 80;
+        server_name localhost;
+
+        # API proxy
+        location /api/ {
+            proxy_pass http://backend;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # Static files (if needed)
+        location /static/ {
+            alias /app/static/;
+        }
+
+        # Health check
+        location /health {
+            access_log off;
+            return 200 "healthy\n";
+            add_header Content-Type text/plain;
+        }
+    }
+}
+```
+
+#### Database Initialization Script
+```sql
+-- init.sql - Database initialization
+-- Place this in ./init-scripts/ directory
+
+-- Create database and user (if using Docker)
+CREATE DATABASE IF NOT EXISTS agent_mitra_local;
+CREATE USER IF NOT EXISTS agentmitra WITH PASSWORD 'agentmitra123';
+GRANT ALL PRIVILEGES ON DATABASE agent_mitra_local TO agentmitra;
+
+-- Create extensions
+\c agent_mitra_local;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS "postgis";
+
+-- Create schema
+CREATE SCHEMA IF NOT EXISTS agentmitra;
+GRANT ALL ON SCHEMA agentmitra TO agentmitra;
+```
+
+#### Environment Configuration
+```bash
+# .env.local - Local Environment Variables
+# Database (PostgreSQL 16 running natively on MacBook)
+DATABASE_URL=postgresql://localhost:5432/agent_mitra_local
+DB_USER=$(whoami)  # Uses current MacBook user
+DB_PASSWORD=        # No password for local PostgreSQL
+DB_HOST=localhost
+DB_PORT=5432
+
+# Redis (Redis 7 running natively on MacBook)
+REDIS_URL=redis://localhost:6379
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# Backend
+BACKEND_URL=http://localhost:8000
+API_BASE_URL=http://localhost:8080/api
+
+# Flutter
+FLUTTER_ENV=development
+ENABLE_MOCK_DATA=true
+MOCK_DATA_PERCENTAGE=50
+
+# External Services (Development)
+OPENAI_API_KEY=your_dev_openai_key
+WHATSAPP_ACCESS_TOKEN=your_dev_whatsapp_token
+
+# Feature Flags
+FEATURE_FLAG_MOCK_DATA=true
+FEATURE_FLAG_ADVANCED_LOGGING=true
+FEATURE_FLAG_DEVELOPMENT_TOOLS=true
+
+# Database Schemas (as per database-design.md)
+DB_SCHEMAS=shared,lic_schema,hdfc_schema,icici_schema,audit
+FLYWAY_LOCATIONS=filesystem:db/migration
 ```
 
 ### 3.2 Development Workflow & Tools
@@ -1198,12 +1821,10 @@ graph TD
             Display[16-inch Retina Display]
         end
 
-        subgraph "📦 Local Services (Docker)"
-            PostgresLocal[(PostgreSQL 16<br/>Database<br/>Local data)]
-            RedisLocal[(Redis 7<br/>Caching<br/>Session store)]
-            NginxLocal[Nginx<br/>Reverse Proxy<br/>Port 8080]
-            ElasticLocal[(Elasticsearch<br/>Search<br/>Optional)]
-            MinIOLocal[MinIO<br/>Object Storage<br/>S3 compatible]
+        subgraph "📦 Local Services (MacBook Native)"
+            PostgresNative[(PostgreSQL 16<br/>Native Service<br/>Port 5432)]
+            RedisNative[(Redis 7<br/>Native Service<br/>Port 6379)]
+            NginxDocker[Nginx<br/>Docker Proxy<br/>Port 8080)]
         end
 
         subgraph "🔧 Development Tools"
@@ -1239,15 +1860,15 @@ graph TD
     end
 
     %% Connections for local environment
-    FlutterSDK --> NginxLocal
-    Python311 --> PostgresLocal
-    Python311 --> RedisLocal
+    FlutterSDK --> NginxDocker
+    Python311 --> PostgresNative
+    Python311 --> RedisNative
     VSCode --> FlutterSDK
     VSCode --> Python311
     VSCode --> Git
 
-    NginxLocal --> PostgresLocal
-    NginxLocal --> RedisLocal
+    NginxDocker --> PostgresNative
+    NginxDocker --> RedisNative
 
     %% Connections for production environment
     ECSProd --> AuroraProd
@@ -1266,7 +1887,7 @@ graph TD
     classDef prod fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
     classDef perf fill:#fff3e0,stroke:#f57c00,stroke-width:2px
 
-    class CPU,RAM,Storage,Display,PostgresLocal,RedisLocal,NginxLocal,ElasticLocal,MinIOLocal,FlutterSDK,Python311,Node18,VSCode,Git local
+    class CPU,RAM,Storage,Display,PostgresNative,RedisNative,NginxDocker,FlutterSDK,Python311,Node18,VSCode,Git local
     class ECSProd,AuroraProd,RedisProd,CloudFrontProd,Route53Prod,ALB,ASG,ReadReplicas,EdgeLocations,MonitoringStack prod
     class LocalPerf,ProdPerf perf
 ```
