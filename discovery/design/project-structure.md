@@ -28,7 +28,18 @@ agentmitra/
 ├── 📝 README.md                 # Project Documentation
 ├── 📋 CHANGELOG.md              # Version History
 ├── 🔐 .env.example              # Environment Variables Template
-└── 🛠️ Makefile                  # Development Commands
+├── 🛠️ Makefile                  # Development Commands
+├── 🐳 docker-compose.yml         # Local Nginx service
+├── 🔍 verify-local-services.sh   # Local services verification
+├── 🗃️ setup-database-flyway.sh   # Flyway database setup
+├── 🚀 setup-local-environment.sh # One-click development setup
+├── 🌐 nginx.conf                 # Nginx configuration
+├── 🗃️ flyway.conf                # Flyway configuration
+├── 🗂️ db/migration/               # Database migration scripts
+│   ├── 🗂️ V1__Create_shared_schema.sql
+│   ├── 🗂️ V2__Create_tenant_schemas.sql
+│   └── 🗂️ V3__Create_lic_schema_tables.sql
+└── 🔐 .env.local                 # Local environment variables
 ```
 
 ### 1.2 Development Environment Setup
@@ -36,13 +47,18 @@ agentmitra/
 #### Local Development Structure
 ```
 development/
-├── 🐳 docker-compose.yml         # Local services orchestration
-├── 📊 postgres-data/             # Local PostgreSQL data
-├── 🔴 redis-data/                # Local Redis data
-├── 🟢 nginx-config/              # Local reverse proxy config
+├── 🐘 PostgreSQL 16              # Native MacBook service (Port 5432)
+├── 🔴 Redis 7                    # Native MacBook service (Port 6379)
+├── 🐳 docker-compose.yml         # Nginx service orchestration
+├── 🟢 nginx.conf                 # Nginx reverse proxy config
 ├── 📁 flutter-hot-reload/        # Flutter development cache
 ├── 🐍 python-venv/                # Python virtual environment
-└── 📋 local-config/              # Local configuration files
+├── 🗃️ flyway.conf                # Database migration config
+├── 🗂️ db/migration/              # Flyway migration scripts
+├── 🔍 verify-local-services.sh   # Service verification script
+├── 🗃️ setup-database-flyway.sh   # Database setup script
+├── 🚀 setup-local-environment.sh # One-click setup script
+└── 🔐 .env.local                 # Local environment variables
 ```
 
 ## 2. Flutter Mobile Application Structure
