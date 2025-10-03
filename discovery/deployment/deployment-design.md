@@ -396,7 +396,7 @@ echo "📊 Database: postgresql://localhost:5432/agent_mitra"
 └── Black/Flake8 (Code formatting)
 
 📊 Database Development:
-├── PostgreSQL 15+ (Primary database)
+├── PostgreSQL 16+ (Primary database)
 ├── pgAdmin (Database management)
 ├── DBeaver (Query development)
 ├── Redis (Caching and sessions)
@@ -432,7 +432,7 @@ export class AgentMitraStack extends cdk.Stack {
     // 1. Aurora PostgreSQL Database (Serverless)
     const database = new rds.DatabaseCluster(this, 'AgentMitraDB', {
       engine: rds.DatabaseClusterEngine.auroraPostgres({
-        version: rds.AuroraPostgresEngineVersion.VER_15_3
+        version: rds.AuroraPostgresEngineVersion.VER_16_3
       }),
       serverlessV2MinCapacity: 0.5,
       serverlessV2MaxCapacity: 4,
@@ -623,10 +623,10 @@ jobs:
 📊 MONITORING & OBSERVABILITY ARCHITECTURE
 
 🎯 Application Performance Monitoring (APM):
-├── New Relic (Application performance)
-├── DataDog (Infrastructure monitoring)
-├── Sentry (Error tracking and alerting)
-└── Grafana (Custom dashboards and visualization)
+├── AWS CloudWatch (Application performance)
+├── AWS X-Ray (Distributed tracing)
+├── Prometheus + Grafana (Custom dashboards)
+└── Open-source error tracking (Custom solution)
 
 📈 Business Intelligence:
 ├── Mixpanel (User behavior analytics)
@@ -663,6 +663,12 @@ critical_alerts:
     channels: ["slack", "pagerduty"]
     escalation: "immediate"
 
+  - name: "AWS Cost Spike (>25% increase)"
+    condition: "aws_daily_cost > baseline_cost * 1.25"
+    channels: ["slack", "email", "sms"]
+    escalation: "1 hour"
+    frequency: "every hour"
+
 warning_alerts:
   - name: "High Memory Usage (>80%)"
     condition: "memory_usage > 80"
@@ -674,11 +680,23 @@ warning_alerts:
     channels: ["email", "slack"]
     escalation: "30 minutes"
 
+  - name: "AWS Cost Increase (>15% increase)"
+    condition: "aws_daily_cost > baseline_cost * 1.15"
+    channels: ["slack", "email"]
+    escalation: "4 hours"
+    frequency: "every hour"
+
 info_alerts:
   - name: "New User Registration Spike"
     condition: "new_users > 100"
     channels: ["slack"]
     escalation: "none"
+
+  - name: "AWS Cost Trend (>5% weekly increase)"
+    condition: "aws_weekly_cost_trend > 0.05"
+    channels: ["slack"]
+    escalation: "none"
+    frequency: "daily"
 ```
 
 ## 5. Database Architecture & Design
@@ -1048,11 +1066,11 @@ CREATE TABLE insurance_policies_partitioned (
 └── Domain Registration (₹800/year) - agentmitra.com
 
 📊 Monitoring & Analytics:
-├── New Relic (₹8,000/month) - APM and monitoring
-├── Sentry (₹3,000/month) - Error tracking
+├── AWS CloudWatch (₹2,000/month) - APM and monitoring
+├── AWS X-Ray (₹400/month) - Distributed tracing
 ├── Mixpanel (₹5,000/month) - User analytics
-├── CloudWatch (₹2,000/month) - AWS monitoring
-└── Grafana Cloud (₹1,500/month) - Dashboard hosting
+├── Prometheus + Grafana (₹500/month) - Self-hosted monitoring
+└── Open-source alerting (Free) - Custom error tracking
 
 🤖 AI/ML Services:
 ├── OpenAI API (₹15,000/month) - Chatbot and analytics
@@ -1063,7 +1081,7 @@ CREATE TABLE insurance_policies_partitioned (
 📱 Communication Services:
 ├── WhatsApp Business API (₹5,000/month) - Business messaging
 ├── Twilio (₹2,000/month) - SMS and voice (backup)
-├── SendGrid (₹1,500/month) - Email delivery
+├── Microsoft Graph API (Included in O365) - Email, calendar, and collaboration
 └── Push Notifications (₹500/month) - Mobile app notifications
 
 🎥 Content & Media:
@@ -1117,9 +1135,9 @@ TOTAL MONTHLY SUBSCRIPTION COST: ₹45,000 - ₹55,000
 └── Google Play Console (₹2,000/year) - Android publishing
 
 🎨 Design & UX Tools:
-├── Figma (₹10,000/year) - UI/UX design
-├── Adobe Creative Suite (₹40,000/year) - Asset creation
-└── Zeplin (₹8,000/year) - Design handoff
+├── Penpot (Free) - Open source UI/UX design
+├── Inkscape (Free) - Vector graphics and asset creation
+└── Direct integration (Free) - Design handoff via shared assets
 
 TOTAL ONE-TIME SOFTWARE COST: ₹50,000 - ₹80,000
 ```
@@ -1181,7 +1199,7 @@ graph TD
         end
 
         subgraph "📦 Local Services (Docker)"
-            PostgresLocal[(PostgreSQL 15<br/>Database<br/>Local data)]
+            PostgresLocal[(PostgreSQL 16<br/>Database<br/>Local data)]
             RedisLocal[(Redis 7<br/>Caching<br/>Session store)]
             NginxLocal[Nginx<br/>Reverse Proxy<br/>Port 8080]
             ElasticLocal[(Elasticsearch<br/>Search<br/>Optional)]
@@ -1297,10 +1315,10 @@ WHATSAPP_ACCESS_TOKEN=prod_whatsapp_token
 ├── Production (Live): Optimized, monitoring enabled
 
 🔧 Feature Flags:
-├── Database-driven configuration
-├── Real-time flag updates
-├── Gradual rollout capabilities
-└── Emergency kill switches
+├── Redis/CDN cached configuration (1-hour TTL)
+├── Real-time flag updates via cache invalidation
+├── Gradual rollout capabilities with percentage-based targeting
+└── Emergency kill switches with instant cache purge
 
 🌐 Localization:
 ├── CDN-hosted translation files
