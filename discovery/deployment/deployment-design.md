@@ -58,6 +58,7 @@ flowchart LR
         Chatbot["Chatbot Service<br>NLP Processing<br>Intent Recognition"]
         WhatsAppSvc["WhatsApp Service<br>Message Processing<br>Template Management"]
         VideoSvc["Video Processing<br>Content Moderation<br>YouTube Integration"]
+        DataImportSvc["Data Import Service<br>Excel Processing<br>Background Jobs"]
         RealtimeSvc["WebSocket Server<br>Real-time Updates<br>Live Dashboards"]
   end
  subgraph subGraph3["🚀 Application Layer (ECS Fargate)"]
@@ -93,10 +94,11 @@ flowchart LR
     WhatsApp --> WhatsAppSvc
     CDN --> WAF
     WAF --> ALB
-    ALB --> API & Chatbot & WhatsAppSvc & VideoSvc & RealtimeSvc
+    ALB --> API & Chatbot & WhatsAppSvc & VideoSvc & DataImportSvc & RealtimeSvc
     API --> AuroraPrimary & RedisPrimary & S3 & CloudWatch
     Chatbot --> OpenAI & Perplexity & CloudWatch
     VideoSvc --> AWSComprehend & CustomML & S3 & CloudWatch
+    DataImportSvc --> AuroraPrimary & S3 & CloudWatch
     AuroraPrimary --> AuroraReplica
     RedisPrimary --> RedisReplica
     WhatsAppSvc --> CloudWatch
@@ -110,6 +112,7 @@ flowchart LR
      Chatbot:::infra
      WhatsAppSvc:::infra
      VideoSvc:::infra
+     DataImportSvc:::infra
      RealtimeSvc:::infra
      ALB:::secondary
      OpenAI:::infra

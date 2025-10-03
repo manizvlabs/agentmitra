@@ -156,7 +156,73 @@ CREATE TABLE shared.insurance_categories (
     description TEXT,
     status VARCHAR(20) DEFAULT 'active'
 );
-```
+
+-- Data import/export tracking for agent configuration portal
+CREATE TABLE shared.data_imports (
+    import_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    agent_id UUID REFERENCES lic_schema.agents(agent_id),
+    file_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(500),
+    file_size_bytes BIGINT,
+    import_type VARCHAR(50) DEFAULT 'customer_data', -- 'customer_data', 'policy_data', 'bulk_update'
+    status VARCHAR(50) DEFAULT 'pending', -- 'pending', 'processing', 'completed', 'failed'
+    total_records INTEGER DEFAULT 0,
+    processed_records INTEGER DEFAULT 0,
+    error_records INTEGER DEFAULT 0,
+    error_details JSONB,
+    processing_started_at TIMESTAMP,
+    processing_completed_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Import job queue for background processing
+CREATE TABLE shared.import_jobs (
+    job_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    import_id UUID REFERENCES shared.data_imports(import_id),
+    job_type VARCHAR(50) NOT NULL, -- 'validate', 'process', 'cleanup'
+    priority INTEGER DEFAULT 1, -- 1=low, 5=high
+    status VARCHAR(50) DEFAULT 'queued', -- 'queued', 'processing', 'completed', 'failed'
+    retry_count INTEGER DEFAULT 0,
+    max_retries INTEGER DEFAULT 3,
+    error_message TEXT,
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Customer data mapping for Excel imports
+CREATE TABLE shared.customer_data_mapping (
+    mapping_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    import_id UUID REFERENCES shared.data_imports(import_id),
+    excel_row_number INTEGER NOT NULL,
+    customer_name VARCHAR(255),
+    phone_number VARCHAR(15),
+    email VARCHAR(255),
+    policy_number VARCHAR(100),
+    date_of_birth DATE,
+    address JSONB,
+    raw_excel_data JSONB, -- Complete row data for reference
+    mapping_status VARCHAR(50) DEFAULT 'pending', -- 'pending', 'mapped', 'error'
+    validation_errors JSONB,
+    created_customer_id UUID, -- References created customer record
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Data sync status tracking
+CREATE TABLE shared.data_sync_status (
+    sync_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    agent_id UUID REFERENCES lic_schema.agents(agent_id),
+    customer_id UUID REFERENCES lic_schema.policyholders(policyholder_id),
+    last_sync_at TIMESTAMP DEFAULT NOW(),
+    sync_status VARCHAR(50) DEFAULT 'pending', -- 'pending', 'in_progress', 'completed', 'failed'
+    sync_type VARCHAR(50) DEFAULT 'initial', -- 'initial', 'update', 'manual'
+    error_message TEXT,
+    retry_count INTEGER DEFAULT 0,
+    next_retry_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
 
 ### 2.2 User Management & Authentication
 

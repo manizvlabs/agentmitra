@@ -95,20 +95,65 @@ flowchart TD
     O -->|Yes| P[Policyholder onboarding]
     O -->|No| Q[Agent onboarding]
 
-    P --> R[Link existing policies]
-    R --> S[Search by policy number]
-    S --> T{Policy found?}
-    T -->|Yes| U[Auto-fill policy details]
-    T -->|No| V[Manual policy entry]
-    U --> W[Profile completion]
-    V --> W
+    P --> R{How did customer get app?}
+    R -->|Agent referral link| S[Check agent database]
+    R -->|Direct download| T[Manual policy entry]
+    R -->|Unknown source| U[Contact agent option]
 
-    W --> X[Set preferences]
-    X --> Y[Language, notifications, theme]
-    Y --> Z[Security setup]
-    Z --> AA[Biometric/PIN setup]
-    AA --> BB[Onboarding complete]
-    BB --> CC[Dashboard tour starts]
+    S --> V{Agent relationship found?}
+    V -->|Yes| W[Auto-populate profile data]
+    V -->|No| X[Show 'Contact agent' CTA]
+    X --> Y[Agent uploads customer data]
+    Y --> Z[Background job processes data]
+    Z --> AA[Customer data becomes available]
+    AA --> BB[Resume onboarding flow]
+
+    W --> CC[Show pre-filled profile]
+    CC --> DD[Verify/correct details]
+    DD --> EE{Details correct?}
+    EE -->|Yes| FF[Confirm profile]
+    EE -->|No| GG[Edit profile details]
+    GG --> FF
+
+    T --> HH[Manual data entry]
+    HH --> II[Enter personal details]
+    II --> JJ[Policy search by number]
+    JJ --> KK{Policy data available?}
+    KK -->|No| LL[Show data upload pending]
+    LL --> MM[Contact agent for data upload]
+
+    U --> NN[Contact agent screen]
+    NN --> OO[Show agent contact options]
+    OO --> PP{Agent provides data?}
+    PP -->|Yes| QQ[Agent uploads to config portal]
+    PP -->|No| RR[Onboarding blocked]
+
+    QQ --> SS[Background data sync job]
+    SS --> TT[Customer data loaded]
+    TT --> UU[Onboarding unblocked]
+
+    FF --> VV[Policy data check]
+    VV --> WW{Policy data available?}
+    WW -->|Yes| XX[Show policy summary]
+    WW -->|No| YY[Show data loading status]
+    YY --> ZZ[Periodic data check]
+
+    XX --> AAA[Set preferences]
+    AAA --> BBB[Language, notifications, theme]
+    BBB --> CCC[Security setup]
+    CCC --> DDD[Biometric/PIN setup]
+    DDD --> EEE[Onboarding complete]
+    EEE --> FFF[Dashboard tour starts]
+
+    ZZ --> GGG{Data now available?}
+    GGG -->|Yes| XX
+    GGG -->|No| HHH[Show loading animation]
+    HHH --> III[Retry after delay]
+    III --> ZZ
+
+    RR --> JJJ[Show limited functionality]
+    JJJ --> KKK[Basic app access only]
+    KKK --> LLL[Periodic agent contact reminders]
 ```
 
 #### Profile Completion & Verification
@@ -162,54 +207,123 @@ flowchart TD
     HH --> II[Complete onboarding flow]
 ```
 
+#### Agent Configuration Portal - Data Upload Process
+```mermaid
+flowchart TD
+    A[Agent logs into Configuration Portal] --> B[Dashboard overview]
+    B --> C[Customer data management section]
+    C --> D[View existing customer data]
+    D --> E[Check data sync status]
+    E --> F{New customer onboarding?}
+    F -->|Yes| G[Export data from LIC portal]
+    F -->|No| H[Regular data sync]
+
+    G --> I[LIC Agent Policy Portal Login]
+    I --> J[Navigate to customer reports]
+    J --> K[Select customers to export]
+    K --> L[Generate Excel report]
+    L --> M[Download Excel file]
+    M --> N[Return to Agent Mitra Config Portal]
+
+    N --> O[Data Upload section]
+    O --> P[Select file upload]
+    P --> Q[Choose Excel file]
+    Q --> R[File validation]
+    R --> S{Valid format?}
+    S -->|No| T[Show validation errors]
+    T --> Q
+    S -->|Yes| U[Upload file to server]
+
+    U --> V[File processing starts]
+    V --> W[Parse Excel data]
+    W --> X[Validate data integrity]
+    X --> Y{Data valid?}
+    Y -->|No| Z[Show processing errors]
+    Z --> AA[Request file correction]
+    AA --> Q
+
+    Y -->|Yes| BB[Map data to database schema]
+    BB --> CC[Preview data before import]
+    CC --> DD[Show import summary]
+    DD --> EE{Confirm import?}
+    EE -->|No| FF[Cancel import]
+    FF --> O
+    EE -->|Yes| GG[Start background import job]
+
+    GG --> HH[Job queued for processing]
+    HH --> II[Asynchronous data processing]
+    II --> JJ[Create/update customer records]
+    JJ --> KK[Create/update policy records]
+    KK --> LL[Update agent relationships]
+    LL --> MM[Send success notification]
+
+    MM --> NN[Update sync status]
+    NN --> OO[Trigger mobile app data refresh]
+    OO --> PP[Customer sees data in mobile app]
+
+    H --> QQ[Check for data updates]
+    QQ --> RR{Updates available?}
+    RR -->|Yes| SS[Download latest data]
+    SS --> TT[Process incremental updates]
+    TT --> MM
+
+    RR -->|No| UU[No action required]
+    UU --> VV[Schedule next sync check]
+```
+
 ### 2.2 Policy Management Journey
 
-#### Policy Discovery & Linking
+#### Policy Discovery & Data Availability
 ```mermaid
 flowchart TD
     A[User logs in] --> B[Dashboard loads]
-    B --> C[Policy overview widget]
-    C --> D{Existing policies linked?}
-    D -->|No| E[Show 'Link Policy' CTA]
-    D -->|Yes| F[Show policy summary]
+    B --> C[Check data availability status]
+    C --> D{Data uploaded by agent?}
+    D -->|Yes| E[Show policy overview widget]
+    D -->|No| F[Show data pending screen]
 
-    E --> G[Click 'Link Policy']
-    G --> H[Policy linking flow starts]
-    H --> I[Enter policy number]
-    I --> J{Valid format?}
-    J -->|No| K[Show format help]
-    K --> I
-    J -->|Yes| L[Search policy database]
+    E --> G[Display policy summary]
+    G --> H[Active policies count]
+    H --> I[Next premium due dates]
+    I --> J[Total coverage amount]
+    J --> K[Full policy management access]
 
-    L --> M{Policy found?}
-    M -->|No| N[Not found message]
-    N --> O{Suggestion available?}
-    O -->|Yes| P[Show similar policies]
-    O -->|No| Q[Contact agent CTA]
-    P --> R[User selects from suggestions]
-    Q --> S[Agent callback request]
+    F --> L[Data upload pending message]
+    L --> M[Explain agent upload process]
+    M --> N[Show agent contact options]
+    N --> O{User contacts agent?}
+    O -->|Yes| P[Agent receives notification]
+    O -->|No| Q[Show periodic reminders]
 
-    R --> T[Policy details verification]
-    T --> U[Show policy info]
-    U --> V{Details correct?}
-    V -->|No| W[Edit details option]
-    V -->|Yes| X[Confirm linking]
+    P --> R[Agent logs into config portal]
+    R --> S[Uploads customer Excel data]
+    S --> T[Background processing job]
+    T --> U[Data validation & import]
+    U --> V{Import successful?}
+    V -->|Yes| W[Customer data becomes available]
+    V -->|No| X[Show import errors to agent]
+    X --> Y[Agent corrects data]
+    Y --> S
 
-    W --> Y[Manual correction]
-    Y --> X
+    W --> Z[Mobile app data refresh]
+    Z --> AA[Push notification sent]
+    AA --> BB[User sees data available]
+    BB --> CC[Resume normal app usage]
 
-    X --> Z[OTP verification]
-    Z --> AA[Send OTP to registered phone]
-    AA --> BB[User enters OTP]
-    BB --> CC{OTP correct?}
-    CC -->|No| DD[Retry OTP]
-    DD --> BB
-    CC -->|Yes| EE[Policy successfully linked]
+    Q --> DD[Daily reminder notifications]
+    DD --> EE[Weekly agent contact prompts]
+    EE --> FF[Gradual onboarding limitations]
+    FF --> GG[Limited app functionality]
+    GG --> HH[Basic features only]
+    HH --> II[Full access after data upload]
 
-    EE --> FF[Update dashboard]
-    FF --> GG[Send confirmation notification]
-    GG --> HH[Policy visible in app]
-    HH --> II[Premium reminders activated]
+    K --> JJ[Policy management features]
+    JJ --> KK[Premium payments]
+    KK --> LL[Claims processing]
+    LL --> MM[Document access]
+    MM --> NN[Agent communication]
+
+    CC --> JJ
 ```
 
 #### Policy Details Exploration

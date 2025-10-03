@@ -18,6 +18,11 @@ agentmitra/
 ├── 🪟 windows/                  # Windows Platform (Future)
 ├── 🐧 linux/                    # Linux Platform (Future)
 ├── 🥧 macos/                    # macOS Platform (Future)
+├── 💼 config-portal/            # Agent Configuration Web Portal
+│   ├── 🎨 frontend/              # React/Angular Web App
+│   ├── 🔧 backend/               # Node.js/Express API
+│   ├── 📊 data-import/           # Excel Processing Service
+│   └── 🗃️ database/              # Portal Database Schema
 ├── 🔧 scripts/                  # Build & Deployment Scripts
 ├── 📊 docs/                     # Generated Documentation
 ├── 🧪 test/                     # Flutter Tests
