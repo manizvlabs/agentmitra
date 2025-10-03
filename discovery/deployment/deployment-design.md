@@ -39,109 +39,96 @@
 ### 2.1 Overall Architecture Diagram
 
 ```mermaid
-graph TB
-    %% User Layer
-    subgraph "📱 End Users"
-        Mobile[Flutter Mobile App<br/>iOS + Android]
-        WhatsApp[WhatsApp Business<br/>Customer Communication]
-    end
-
-    %% Global Edge
-    subgraph "🌐 Global Edge (CloudFront)"
-        CDN[CloudFront CDN<br/>Global Distribution<br/>310+ Edge Locations]
-        WAF[WAF & Shield<br/>DDoS Protection<br/>SSL Termination]
-        Route53[Route 53<br/>Global DNS<br/>Health Checks]
-    end
-
-    %% Application Layer
-    subgraph "🚀 Application Layer (ECS Fargate)"
-        ALB[Application Load Balancer<br/>Auto Scaling<br/>SSL Termination]
-
-        subgraph "Microservices"
-            API[FastAPI Backend<br/>REST APIs<br/>GraphQL]
-            Chatbot[Chatbot Service<br/>NLP Processing<br/>Intent Recognition]
-            WhatsAppSvc[WhatsApp Service<br/>Message Processing<br/>Template Management]
-            VideoSvc[Video Processing<br/>Content Moderation<br/>YouTube Integration]
-            RealtimeSvc[WebSocket Server<br/>Real-time Updates<br/>Live Dashboards]
-        end
-    end
-
-    %% AI/ML Layer
-    subgraph "🤖 AI/ML Layer (Lambda + External APIs)"
-        OpenAI[OpenAI API<br/>Chatbot Responses<br/>Content Generation]
-        Perplexity[Perplexity API<br/>Enhanced Search<br/>Knowledge Base]
-        AWSComprehend[AWS Comprehend<br/>Text Analysis<br/>Sentiment Analysis]
-        CustomML[Custom ML Models<br/>Predictive Analytics<br/>Recommendation Engine]
-    end
-
-    %% Data Layer
-    subgraph "💾 Data Layer (Multi-Region)"
-        subgraph "Primary Region (Mumbai)"
-            AuroraPrimary[Aurora PostgreSQL<br/>Primary DB<br/>Auto-scaling]
-            RedisPrimary[Redis Cluster<br/>Session Cache<br/>Application Cache]
-        end
-
-        subgraph "Secondary Region (Singapore)"
-            AuroraReplica[Aurora Read Replicas<br/>Performance Optimization<br/>Disaster Recovery]
-            RedisReplica[Redis Replica<br/>Global Cache<br/>Failover Support]
-        end
-
-        S3[S3 Storage<br/>File Storage<br/>CDN Origin<br/>Lifecycle Policies]
-    end
-
-    %% Monitoring & Analytics
-    subgraph "📊 Monitoring & Analytics"
-        CloudWatch[CloudWatch<br/>Metrics & Logs<br/>Custom Dashboards]
-        NewRelic[New Relic APM<br/>Performance Monitoring<br/>Distributed Tracing]
-        Sentry[Sentry<br/>Error Tracking<br/>Release Health]
-        Mixpanel[Mixpanel<br/>User Analytics<br/>Behavioral Insights]
-    end
-
-    %% Connections
+---
+config:
+  layout: elk
+---
+flowchart LR
+ subgraph subGraph0["📱 End Users"]
+        Mobile["Flutter Mobile App<br>iOS + Android"]
+        WhatsApp["WhatsApp Business<br>Customer Communication"]
+  end
+ subgraph subGraph1["🌐 Global Edge (CloudFront)"]
+        CDN["CloudFront CDN<br>Global Distribution<br>310+ Edge Locations"]
+        WAF["WAF &amp; Shield<br>DDoS Protection<br>SSL Termination"]
+        Route53["Route 53<br>Global DNS<br>Health Checks"]
+  end
+ subgraph Microservices["Microservices"]
+        API["FastAPI Backend<br>REST APIs<br>GraphQL"]
+        Chatbot["Chatbot Service<br>NLP Processing<br>Intent Recognition"]
+        WhatsAppSvc["WhatsApp Service<br>Message Processing<br>Template Management"]
+        VideoSvc["Video Processing<br>Content Moderation<br>YouTube Integration"]
+        RealtimeSvc["WebSocket Server<br>Real-time Updates<br>Live Dashboards"]
+  end
+ subgraph subGraph3["🚀 Application Layer (ECS Fargate)"]
+        ALB["Application Load Balancer<br>Auto Scaling<br>SSL Termination"]
+        Microservices
+  end
+ subgraph subGraph4["🤖 AI/ML Layer (Lambda + External APIs)"]
+        OpenAI["OpenAI API<br>Chatbot Responses<br>Content Generation"]
+        Perplexity["Perplexity API<br>Enhanced Search<br>Knowledge Base"]
+        AWSComprehend["AWS Comprehend<br>Text Analysis<br>Sentiment Analysis"]
+        CustomML["Custom ML Models<br>Predictive Analytics<br>Recommendation Engine"]
+  end
+ subgraph subGraph5["Primary Region (Mumbai)"]
+        AuroraPrimary["Aurora PostgreSQL<br>Primary DB<br>Auto-scaling"]
+        RedisPrimary["Redis Cluster<br>Session Cache<br>Application Cache"]
+  end
+ subgraph subGraph6["Secondary Region (Singapore)"]
+        AuroraReplica["Aurora Read Replicas<br>Performance Optimization<br>Disaster Recovery"]
+        RedisReplica["Redis Replica<br>Global Cache<br>Failover Support"]
+  end
+ subgraph subGraph7["💾 Data Layer (Multi-Region)"]
+        subGraph5
+        subGraph6
+        S3["S3 Storage<br>File Storage<br>CDN Origin<br>Lifecycle Policies"]
+  end
+ subgraph subGraph8["📊 Monitoring & Analytics"]
+        CloudWatch["CloudWatch<br>Metrics &amp; Logs<br>Custom Dashboards"]
+        NewRelic["New Relic APM<br>Performance Monitoring<br>Distributed Tracing"]
+        Sentry["Sentry<br>Error Tracking<br>Release Health"]
+        Mixpanel["Mixpanel<br>User Analytics<br>Behavioral Insights"]
+  end
     Mobile --> CDN
     WhatsApp --> WhatsAppSvc
     CDN --> WAF
     WAF --> ALB
-    ALB --> API
-    ALB --> Chatbot
-    ALB --> WhatsAppSvc
-    ALB --> VideoSvc
-    ALB --> RealtimeSvc
-
-    API --> AuroraPrimary
-    API --> RedisPrimary
-    Chatbot --> OpenAI
-    Chatbot --> Perplexity
-    VideoSvc --> AWSComprehend
-    VideoSvc --> CustomML
-
+    ALB --> API & Chatbot & WhatsAppSvc & VideoSvc & RealtimeSvc
+    API --> AuroraPrimary & RedisPrimary & S3 & CloudWatch
+    Chatbot --> OpenAI & Perplexity & CloudWatch
+    VideoSvc --> AWSComprehend & CustomML & S3 & CloudWatch
     AuroraPrimary --> AuroraReplica
     RedisPrimary --> RedisReplica
-
-    API --> S3
-    VideoSvc --> S3
-
-    API --> CloudWatch
-    Chatbot --> CloudWatch
     WhatsAppSvc --> CloudWatch
-    VideoSvc --> CloudWatch
-
-    CloudWatch --> NewRelic
-    CloudWatch --> Sentry
-    CloudWatch --> Mixpanel
-
-    %% Styling
+    CloudWatch --> NewRelic & Sentry & Mixpanel
+     Mobile:::primary
+     WhatsApp:::primary
+     CDN:::secondary
+     WAF:::secondary
+     Route53:::secondary
+     API:::infra
+     Chatbot:::infra
+     WhatsAppSvc:::infra
+     VideoSvc:::infra
+     RealtimeSvc:::infra
+     ALB:::secondary
+     OpenAI:::infra
+     Perplexity:::infra
+     AWSComprehend:::infra
+     CustomML:::infra
+     AuroraPrimary:::infra
+     RedisPrimary:::infra
+     AuroraReplica:::infra
+     RedisReplica:::infra
+     S3:::infra
+     CloudWatch:::monitoring
+     NewRelic:::monitoring
+     Sentry:::monitoring
+     Mixpanel:::monitoring
     classDef primary fill:#e1f5fe,stroke:#01579b,stroke-width:2px
     classDef secondary fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
     classDef infra fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
     classDef monitoring fill:#fff3e0,stroke:#e65100,stroke-width:2px
-
-    class Mobile,WhatsApp primary
-    class CDN,WAF,Route53,ALB secondary
-    class API,Chatbot,WhatsAppSvc,VideoSvc,RealtimeSvc infra
-    class OpenAI,Perplexity,AWSComprehend,CustomML infra
-    class AuroraPrimary,RedisPrimary,AuroraReplica,RedisReplica,S3 infra
-    class CloudWatch,NewRelic,Sentry,Mixpanel monitoring
 ```
 
 ### 2.2 Cost-Optimized Infrastructure Components
@@ -157,52 +144,61 @@ pie title AWS Cost Distribution (₹15,000/month)
 ```
 
 ```mermaid
-graph TD
-    subgraph "🏗️ Compute Layer (₹13,500/month)"
-        ECS[ECS Fargate<br/>₹8,000/month<br/>Auto-scaling containers]
-        Lambda[Lambda Functions<br/>₹2,000/month<br/>Event-driven processing]
-        EC2[EC2 Reserved<br/>₹3,000/month<br/>Predictable workloads]
-        Batch[AWS Batch<br/>₹500/month<br/>Video processing]
-    end
-
-    subgraph "💾 Storage Layer (₹7,300/month)"
-        Aurora[Aurora PostgreSQL<br/>₹4,000/month<br/>Primary database]
-        S3Std[S3 Standard<br/>₹1,500/month<br/>App assets & media]
-        S3IA[S3 Infrequent Access<br/>₹800/month<br/>Archive data]
-        EFS[EFS<br/>₹1,000/month<br/>Shared file storage]
-    end
-
-    subgraph "🌐 Network & CDN (₹4,200/month)"
-        CloudFront[CloudFront CDN<br/>₹2,500/month<br/>Global distribution]
-        ALB[Application Load Balancer<br/>₹1,000/month<br/>Traffic routing]
-        Route53[Route 53<br/>₹200/month<br/>DNS management]
-        NAT[NAT Gateway<br/>₹500/month<br/>Outbound traffic]
-    end
-
-    subgraph "📊 Monitoring (₹3,000/month)"
-        CloudWatch[CloudWatch<br/>₹800/month<br/>Metrics & logs]
-        XRay[X-Ray<br/>₹400/month<br/>Distributed tracing]
-        Sentry[Sentry<br/>₹1,200/month<br/>Error tracking]
-        Dashboards[Custom Dashboards<br/>₹600/month<br/>Business metrics]
-    end
-
-    %% Cost optimization arrows
-    ECS -.->|"Auto-scaling"| CostOpt[Cost Optimization]
-    Aurora -.->|"Serverless"| CostOpt
-    CloudFront -.->|"Edge caching"| CostOpt
-    CloudWatch -.->|"Usage monitoring"| CostOpt
-
+---
+config:
+  layout: elk
+---
+flowchart TB
+ subgraph Compute["🏗️ Compute Layer (₹13,500/month)"]
+        ECS["ECS Fargate<br>₹8,000/month<br>Auto-scaling containers"]
+        Lambda["Lambda Functions<br>₹2,000/month<br>Event-driven processing"]
+        EC2["EC2 Reserved<br>₹3,000/month<br>Predictable workloads"]
+        Batch["AWS Batch<br>₹500/month<br>Video processing"]
+  end
+ subgraph Storage["💾 Storage Layer (₹7,300/month)"]
+        Aurora["Aurora PostgreSQL<br>₹4,000/month<br>Primary database"]
+        S3Std["S3 Standard<br>₹1,500/month<br>App assets &amp; media"]
+        S3IA["S3 Infrequent Access<br>₹800/month<br>Archive data"]
+        EFS["EFS<br>₹1,000/month<br>Shared file storage"]
+  end
+ subgraph Network["🌐 Network & CDN (₹4,200/month)"]
+        CloudFront["CloudFront CDN<br>₹2,500/month<br>Global distribution"]
+        ALB["Application Load Balancer<br>₹1,000/month<br>Traffic routing"]
+        Route53["Route 53<br>₹200/month<br>DNS management"]
+        NAT["NAT Gateway<br>₹500/month<br>Outbound traffic"]
+  end
+ subgraph Monitoring["📊 Monitoring (₹3,000/month)"]
+        CloudWatch["CloudWatch<br>₹800/month<br>Metrics &amp; logs"]
+        XRay["X-Ray<br>₹400/month<br>Distributed tracing"]
+        Sentry["Sentry<br>₹1,200/month<br>Error tracking"]
+        Dashboards["Custom Dashboards<br>₹600/month<br>Business metrics"]
+  end
+    ECS -. "Auto-scaling" .-> CostOpt["💡 Cost Optimization"]
+    Aurora -. Serverless .-> CostOpt
+    CloudFront -. Edge caching .-> CostOpt
+    CloudWatch -. Usage monitoring .-> CostOpt
+     ECS:::compute
+     Lambda:::compute
+     EC2:::compute
+     Batch:::compute
+     Aurora:::storage
+     S3Std:::storage
+     S3IA:::storage
+     EFS:::storage
+     CloudFront:::network
+     ALB:::network
+     Route53:::network
+     NAT:::network
+     CloudWatch:::monitoring
+     XRay:::monitoring
+     Sentry:::monitoring
+     Dashboards:::monitoring
+     CostOpt:::optimization
     classDef compute fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
     classDef storage fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
     classDef network fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
     classDef monitoring fill:#fff3e0,stroke:#f57c00,stroke-width:2px
     classDef optimization fill:#fce4ec,stroke:#c2185b,stroke-width:2px
-
-    class ECS,Lambda,EC2,Batch compute
-    class Aurora,S3Std,S3IA,EFS storage
-    class CloudFront,ALB,Route53,NAT network
-    class CloudWatch,XRay,Sentry,Dashboards monitoring
-    class CostOpt optimization
 ```
 
 #### Multi-Region Deployment Strategy
