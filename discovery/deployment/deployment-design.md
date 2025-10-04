@@ -177,85 +177,83 @@ Agent Mitra consists of **two separate applications** with distinct deployment s
 **Technology:** Flutter (Cross-platform iOS/Android) + Firebase Backend
 
 ```mermaid
-graph TD
-    subgraph "📱 Mobile App Development"
-        Flutter[Flutter SDK<br/>Dart Codebase<br/>Cross-platform]
-        FirebaseCore[Firebase Core<br/>App Initialization<br/>Configuration]
-        FirebaseAuth[Firebase Auth<br/>Phone/Email Auth<br/>Biometric Support]
-        FirebaseFCM[Firebase Cloud Messaging<br/>Push Notifications<br/>Real-time Updates]
-        Firestore[Cloud Firestore<br/>Offline Data Sync<br/>Real-time Updates]
-        FirebaseStorage[Firebase Storage<br/>File Uploads<br/>Media Assets]
-    end
-
-    subgraph "🏪 App Store Distribution"
-        AppStore[Apple App Store<br/>iOS Distribution<br/>App Review Process]
-        PlayStore[Google Play Store<br/>Android Distribution<br/>Automated Review]
-        TestFlight[TestFlight<br/>iOS Beta Testing<br/>Internal Distribution]
-        PlayBeta[Play Store Beta<br/>Android Testing<br/>Open Testing]
-    end
-
-    subgraph "🔥 Firebase Backend Services"
-        FirebaseAnalytics[Firebase Analytics<br/>User Behavior<br/>Event Tracking]
-        FirebaseCrashlytics[Firebase Crashlytics<br/>Crash Reporting<br/>Error Tracking]
-        FirebasePerformance[Firebase Performance<br/>App Performance<br/>Monitoring]
-        FirebaseRemoteConfig[Firebase Remote Config<br/>Feature Flags<br/>Dynamic Updates]
-        FirebaseAppCheck[Firebase App Check<br/>Security Validation<br/>Fraud Prevention]
-    end
-
-    subgraph "📊 Third-Party Analytics & Monitoring"
-        Mixpanel[Mixpanel<br/>Advanced Analytics<br/>Conversion Tracking]
-        Sentry[Sentry<br/>Error Tracking<br/>Release Health]
-        NewRelic[New Relic<br/>Mobile Monitoring<br/>Performance Insights]
-    end
-
-    subgraph "💬 Communication Services"
-        WhatsAppAPI[WhatsApp Business API<br/>Agent Communication<br/>Template Messages]
-        TwilioSMS[Twilio SMS<br/>OTP & Notifications<br/>Transactional SMS]
-        SendGrid[SendGrid<br/>Email Service<br/>Transactional Emails]
-    end
-
-    subgraph "🤖 AI/ML Services"
-        OpenAI[OpenAI API<br/>Chatbot Responses<br/>Content Generation]
-        Perplexity[Perplexity API<br/>Enhanced Search<br/>Knowledge Base]
-        AWSComprehend[AWS Comprehend<br/>Text Analysis<br/>Sentiment Analysis]
-    end
-
-    subgraph "🌐 Content Delivery & Storage"
-        CloudFrontCDN[CloudFront CDN<br/>Global Distribution<br/>Media Assets]
-        S3Storage[S3 Storage<br/>File Storage<br/>Backup & Archive]
-    end
-
-    Flutter --> FirebaseCore
-    FirebaseCore --> FirebaseAuth
-    FirebaseCore --> FirebaseFCM
-    FirebaseCore --> Firestore
-    FirebaseCore --> FirebaseStorage
-    FirebaseCore --> FirebaseAnalytics
-    FirebaseCore --> FirebaseCrashlytics
-    FirebaseCore --> FirebasePerformance
-    FirebaseCore --> FirebaseRemoteConfig
-    FirebaseCore --> FirebaseAppCheck
-
-    Flutter --> AppStore
-    Flutter --> PlayStore
-    Flutter --> TestFlight
-    Flutter --> PlayBeta
-
-    FirebaseAnalytics --> Mixpanel
-    FirebaseCrashlytics --> Sentry
-    FirebasePerformance --> NewRelic
-
-    Flutter --> WhatsAppAPI
-    Flutter --> TwilioSMS
-    Flutter --> SendGrid
-
-    Flutter --> OpenAI
-    Flutter --> Perplexity
-    Flutter --> AWSComprehend
-
-    FirebaseStorage --> CloudFrontCDN
-    FirebaseStorage --> S3Storage
-
+---
+config:
+  layout: elk
+---
+flowchart TB
+ subgraph subGraph0["📱 Mobile App Development"]
+        Flutter["Flutter SDK<br>Dart Codebase<br>Cross-platform"]
+        FirebaseCore["Firebase Core<br>App Initialization<br>Configuration"]
+        FirebaseAuth["Firebase Auth<br>Phone/Email Auth<br>Biometric Support"]
+        FirebaseFCM["Firebase Cloud Messaging<br>Push Notifications<br>Real-time Updates"]
+        Firestore["Cloud Firestore<br>Offline Data Sync<br>Real-time Updates"]
+        FirebaseStorage["Firebase Storage<br>File Uploads<br>Media Assets"]
+  end
+ subgraph subGraph1["🏪 App Store Distribution"]
+        AppStore["Apple App Store<br>iOS Distribution<br>App Review Process"]
+        PlayStore["Google Play Store<br>Android Distribution<br>Automated Review"]
+        TestFlight["TestFlight<br>iOS Beta Testing<br>Internal Distribution"]
+        PlayBeta["Play Store Beta<br>Android Testing<br>Open Testing"]
+  end
+ subgraph subGraph2["🔥 Firebase Backend Services"]
+        FirebaseAnalytics["Firebase Analytics<br>User Behavior<br>Event Tracking"]
+        FirebaseCrashlytics["Firebase Crashlytics<br>Crash Reporting<br>Error Tracking"]
+        FirebasePerformance["Firebase Performance<br>App Performance<br>Monitoring"]
+        FirebaseRemoteConfig["Firebase Remote Config<br>Feature Flags<br>Dynamic Updates"]
+        FirebaseAppCheck["Firebase App Check<br>Security Validation<br>Fraud Prevention"]
+  end
+  subgraph subGraph3["📊 Open-Source Analytics & Monitoring"]
+        Prometheus["Prometheus<br>Metrics Collection<br>Alerting Rules"]
+        Grafana["Grafana<br>Dashboards<br>Visualization"]
+        Loki["Loki<br>Log Aggregation<br>Query Language"]
+  end
+ subgraph subGraph4["💬 Communication Services"]
+        WhatsAppAPI["WhatsApp Business API<br>Agent Communication<br>Template Messages"]
+        TwilioSMS["Twilio SMS<br>OTP &amp; Notifications<br>Transactional SMS"]
+        SendGrid["SendGrid<br>Email Service<br>Transactional Emails"]
+  end
+ subgraph subGraph5["🤖 AI/ML Services"]
+        OpenAI["OpenAI API<br>Chatbot Responses<br>Content Generation"]
+        Perplexity["Perplexity API<br>Enhanced Search<br>Knowledge Base"]
+        AWSComprehend["AWS Comprehend<br>Text Analysis<br>Sentiment Analysis"]
+  end
+ subgraph subGraph6["🌐 Content Delivery & Storage"]
+        CloudFrontCDN["CloudFront CDN<br>Global Distribution<br>Media Assets"]
+        S3Storage["S3 Storage<br>File Storage<br>Backup &amp; Archive"]
+  end
+    Flutter --> FirebaseCore & AppStore & PlayStore & TestFlight & PlayBeta & WhatsAppAPI & TwilioSMS & SendGrid & OpenAI & Perplexity & AWSComprehend
+    FirebaseCore --> FirebaseAuth & FirebaseFCM & Firestore & FirebaseStorage & FirebaseAnalytics & FirebaseCrashlytics & FirebasePerformance & FirebaseRemoteConfig & FirebaseAppCheck
+    FirebaseAnalytics --> Prometheus
+    FirebaseCrashlytics --> Loki
+    FirebasePerformance --> Grafana
+    FirebaseStorage --> CloudFrontCDN & S3Storage
+     Flutter:::dev
+     FirebaseCore:::dev
+     FirebaseAuth:::firebase
+     FirebaseFCM:::firebase
+     Firestore:::firebase
+     FirebaseStorage:::firebase
+     AppStore:::dist
+     PlayStore:::dist
+     TestFlight:::dist
+     PlayBeta:::dist
+     FirebaseAnalytics:::firebase
+     FirebaseCrashlytics:::firebase
+     FirebasePerformance:::firebase
+     FirebaseRemoteConfig:::firebase
+     FirebaseAppCheck:::firebase
+    Prometheus:::analytics
+    Grafana:::analytics
+    Loki:::analytics
+     WhatsAppAPI:::comm
+     TwilioSMS:::comm
+     SendGrid:::comm
+     OpenAI:::ai
+     Perplexity:::ai
+     AWSComprehend:::ai
+     CloudFrontCDN:::infra
+     S3Storage:::infra
     classDef dev fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
     classDef dist fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
     classDef firebase fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
@@ -263,14 +261,6 @@ graph TD
     classDef comm fill:#fce4ec,stroke:#c2185b,stroke-width:2px
     classDef ai fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
     classDef infra fill:#f3e5f5,stroke:#ba68c8,stroke-width:2px
-
-    class Flutter,FirebaseCore dev
-    class AppStore,PlayStore,TestFlight,PlayBeta dist
-    class FirebaseAuth,FirebaseFCM,Firestore,FirebaseStorage,FirebaseAnalytics,FirebaseCrashlytics,FirebasePerformance,FirebaseRemoteConfig,FirebaseAppCheck firebase
-    class Mixpanel,Sentry,NewRelic analytics
-    class WhatsAppAPI,TwilioSMS,SendGrid comm
-    class OpenAI,Perplexity,AWSComprehend ai
-    class CloudFrontCDN,S3Storage infra
 ```
 
 **Comprehensive Deployment Characteristics:**
