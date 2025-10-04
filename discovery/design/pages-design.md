@@ -1,6 +1,6 @@
 # Agent Mitra - Complete Pages & Screens Design
 
-> **Note:** This document demonstrates [Separation of Concerns](./glossary.md#separation-of-concerns) through distinct UI/UX designs for mobile app, configuration portal, and LIC system interfaces.
+> **Note:** This document demonstrates [Separation of Concerns](./glossary.md#separation-of-concerns) through distinct UI/UX designs for Agent Mitra Mobile App, Agent Mitra Config Portal/Website, and Official LIC Systems.
 
 ## 1. Pages Design Philosophy & Architecture
 

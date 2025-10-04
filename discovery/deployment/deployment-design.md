@@ -1,6 +1,6 @@
 # Agent Mitra - Deployment Design & Infrastructure Architecture
 
-> **Note:** This document demonstrates [Separation of Concerns](../design/glossary.md#separation-of-concerns) through independent deployment strategies for mobile app, configuration portal, and LIC system integrations.
+> **Note:** This document demonstrates [Separation of Concerns](../design/glossary.md#separation-of-concerns) through independent deployment strategies for Agent Mitra Mobile App, Agent Mitra Config Portal/Website, and Official LIC Systems.
 
 ## 1. Deployment Philosophy & Cost Optimization Strategy
 
@@ -47,7 +47,7 @@ config:
 ---
 flowchart LR
  subgraph subGraph0["📱 End Users"]
-        Mobile["Flutter Mobile App<br>iOS + Android"]
+        Mobile["Agent Mitra Mobile App<br>iOS + Android"]
         Portal["Agent Mitra Config Portal<br>Web Portal<br>Data Management"]
         WhatsApp["WhatsApp Business<br>Customer Communication"]
   end
@@ -2022,7 +2022,7 @@ pie title Phase 1 Cost Distribution (₹15,000/month)
 ```
 
 **🎯 Deliverables:**
-- ✅ Flutter mobile app (iOS + Android)
+- ✅ Agent Mitra Mobile App (iOS + Android)
 - ✅ Basic authentication (OTP + Biometric)
 - ✅ Policy management (CRUD operations)
 - ✅ WhatsApp integration (Basic messaging)
