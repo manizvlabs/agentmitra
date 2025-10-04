@@ -422,8 +422,8 @@ graph TD
     classDef security fill:#fce4ec,stroke:#c2185b,stroke-width:2px
     classDef analytics fill:#fff3e0,stroke:#f57c00,stroke-width:2px
 
-    class Frontend,PortalBackend web
-    class CloudFront,S3Static,ECSBackend,ALBPortal aws
+    class Frontend,PythonBackend web
+    class CloudFront,S3Static,ECSBackend,ALB aws
     class Cognito,WAF security
     class CloudWatch,Mixpanel analytics
 ```
@@ -436,7 +436,7 @@ graph TD
 - **Security**: Dedicated WAF rules for admin portal
 - **Domain**: Subdomain (portal.agentmitra.com) with agent-specific routing
 
-#### 2.2.3 Python Backend Microservices (API Layer)
+#### 2.2.3 Unified Python Backend (API Layer)
 **Target Users:** All applications (Mobile App + Portal + External)  
 **Deployment Target:** AWS ECS Fargate (Microservices)  
 **Technology:** FastAPI + Python microservices
@@ -583,7 +583,7 @@ graph TD
     classDef shared fill:#fff3e0,stroke:#f57c00,stroke-width:2px
 
     class FlutterApp mobile
-    class ReactFrontend,NodeBackend portal
+    class ReactFrontend portal
     class APIGateway,CoreAPI,ChatbotAPI,WhatsAppAPI,VideoAPI,ImportAPI,AnalyticsAPI api
     class Database,Cache,Storage,Auth shared
 ```
@@ -2491,7 +2491,7 @@ CREATE TABLE insurance_policies_partitioned (
 ├── Redis ElastiCache (₹1,500/month) - Session caching
 ├── CloudFront CDN (₹2,500/month) - Global distribution
 ├── Application Load Balancer (₹1,000/month) - Mobile/Python traffic
-├── ALB Portal (₹300/month) - Config portal traffic
+├── ALB Portal Traffic (₹300/month) - Additional config portal routing
 ├── ECS Fargate Portal (₹800/month) - Python backend APIs
 ├── S3 Storage (₹800/month) - File storage and backups
 └── Route 53 (₹200/month) - DNS management
@@ -2784,14 +2784,14 @@ pie title Phase 1 Cost Distribution (₹26,300/month)
     "AWS Infrastructure" : 35
     "Firebase Services" : 18
     "Third-Party APIs" : 28
-    "Config Portal Node.js" : 5
+    "Config Portal (Python APIs)" : 5
     "App Store Fees" : 4
     "Security & Monitoring" : 10
 ```
 
 **🎯 Deliverables:**
 - ✅ Agent Mitra Mobile App (Flutter - iOS + Android)
-- ✅ Agent Mitra Config Portal (React + Node.js)
+- ✅ Agent Mitra Config Portal (React + Python APIs)
 - ✅ Python Backend Microservices (FastAPI)
 - ✅ Basic authentication (OTP + Biometric)
 - ✅ Policy management (CRUD operations)
@@ -2942,7 +2942,7 @@ class CostOptimizer:
 
 **✅ Active Features:**
 - 📱 Agent Mitra Mobile App (Flutter - Customer-facing)
-- 🌐 Agent Mitra Config Portal (React + Node.js - Agent-facing)
+- 🌐 Agent Mitra Config Portal (React + Python APIs - Agent-facing)
 - 🐍 Python Backend Microservices (FastAPI - API layer)
 - Official LIC Systems integration
 - WhatsApp Business communication
