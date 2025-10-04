@@ -1,5 +1,7 @@
 # Agent Mitra - ROI Dashboards & Actionable Reports Design
 
+> **Note:** This document applies [Separation of Concerns](./glossary.md#separation-of-concerns) by providing analytics through the configuration portal while maintaining secure data isolation from customer-facing mobile app.
+
 ## 1. ROI Dashboard Architecture Overview
 
 ### 1.1 ROI Dashboard Philosophy

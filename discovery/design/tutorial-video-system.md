@@ -1,5 +1,7 @@
 # Agent Mitra - Tutorial Video System Design
 
+> **Note:** This document follows [Separation of Concerns](./glossary.md#separation-of-concerns) by delivering educational content through the mobile app while managing video administration through the configuration portal.
+
 ## 1. Video System Philosophy & Architecture
 
 ### 1.1 Core Design Principles

@@ -1,5 +1,7 @@
 # Agent Mitra - Python Backend Design
 
+> **Note:** This document follows the [Separation of Concerns](./glossary.md#separation-of-concerns) principle by designing independent services for the mobile app, configuration portal, and LIC system integrations.
+
 ## 1. Backend Architecture Overview
 
 ### 1.1 Technology Stack & Philosophy

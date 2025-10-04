@@ -1,5 +1,7 @@
 # Agent Mitra - Deployment Design & Infrastructure Architecture
 
+> **Note:** This document demonstrates [Separation of Concerns](../design/glossary.md#separation-of-concerns) through independent deployment strategies for mobile app, configuration portal, and LIC system integrations.
+
 ## 1. Deployment Philosophy & Cost Optimization Strategy
 
 ### 1.1 Core Deployment Principles

@@ -1,5 +1,7 @@
 # Agent Mitra - WhatsApp Integration & Smart Chatbot Design
 
+> **Note:** This document implements [Separation of Concerns](./glossary.md#separation-of-concerns) by providing communication channels through WhatsApp while maintaining core business logic in the mobile app and configuration portal.
+
 ## 1. WhatsApp Integration Philosophy & Architecture
 
 ### 1.1 Integration Strategy

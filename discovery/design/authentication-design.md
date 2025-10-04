@@ -1,5 +1,7 @@
 # Agent Mitra - Authentication & Security Architecture Design
 
+> **Note:** This document implements [Separation of Concerns](./glossary.md#separation-of-concerns) by maintaining independent authentication domains for mobile app users, agents, and LIC system integrations.
+
 ## 1. Authentication Philosophy & Architecture
 
 ### 1.1 Core Security Principles

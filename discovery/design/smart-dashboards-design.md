@@ -1,5 +1,7 @@
 # Agent Mitra - Smart Dashboards & Deep Insights Design
 
+> **Note:** This document embodies [Separation of Concerns](./glossary.md#separation-of-concerns) by providing agent analytics through the configuration portal while ensuring customer data privacy in the mobile application.
+
 ## 1. Dashboard Philosophy & Architecture
 
 ### 1.1 Design Principles for Smart Dashboards

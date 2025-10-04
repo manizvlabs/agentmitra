@@ -1,5 +1,7 @@
 # LIC Agent Mobile App - Role-Based Access Control (RBAC) Design
 
+> **Note:** This document applies [Separation of Concerns](./glossary.md#separation-of-concerns) by implementing distinct access control mechanisms for mobile app users, configuration portal agents, and LIC system administrators.
+
 ## 1. RBAC Philosophy & Architecture
 
 ### 1.1 Core Principles

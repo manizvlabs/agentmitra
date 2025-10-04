@@ -1,5 +1,7 @@
 # Agent Mitra - Multitenant Architecture Design
 
+> **Note:** This document implements the [Separation of Concerns](./glossary.md#separation-of-concerns) principle by maintaining clear boundaries between tenant data while enabling cross-system integration.
+
 ## 1. Multitenant Architecture Overview
 
 ### 1.1 Architecture Philosophy

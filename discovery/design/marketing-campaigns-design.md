@@ -1,5 +1,7 @@
 # Agent Mitra - Marketing Campaigns System Design
 
+> **Note:** This document implements [Separation of Concerns](./glossary.md#separation-of-concerns) by providing marketing tools through the configuration portal while keeping customer data secure and compliant.
+
 ## 1. Marketing Campaigns Architecture Overview
 
 ### 1.1 Campaign System Philosophy

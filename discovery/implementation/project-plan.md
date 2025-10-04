@@ -1,5 +1,7 @@
 # Agent Mitra - Comprehensive Project Implementation Plan
 
+> **Note:** This implementation follows the [Separation of Concerns](../design/glossary.md#separation-of-concerns) principle with independent development tracks for mobile app, configuration portal, and LIC system integrations.
+
 ## Table of Contents
 
 - [1. Executive Summary](#1-executive-summary)

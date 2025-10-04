@@ -1,5 +1,7 @@
 # Agent Mitra - Comprehensive Database Design
 
+> **Note:** This document adheres to the [Separation of Concerns](./glossary.md#separation-of-concerns) principle by maintaining clear data boundaries between the mobile app, configuration portal, and LIC systems.
+
 ## 1. Database Architecture Overview
 
 ### 1.1 Database Philosophy & Principles

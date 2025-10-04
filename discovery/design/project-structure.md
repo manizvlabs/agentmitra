@@ -1,5 +1,7 @@
 # Agent Mitra - Comprehensive Project Structure
 
+> **Note:** This document follows the architectural principles outlined in the [Glossary](./glossary.md#separation-of-concerns), implementing Separation of Concerns across the mobile app, configuration portal, and LIC system integrations.
+
 ## 1. Repository Organization Overview
 
 ### 1.1 Root Directory Structure
