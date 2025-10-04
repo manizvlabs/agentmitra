@@ -2001,33 +2001,209 @@ jobs:
 
 ### 4.3 Monitoring & Observability Setup
 
-#### Comprehensive Monitoring Stack
+#### Comprehensive Monitoring Stack (Open-Source First)
 ```
 📊 MONITORING & OBSERVABILITY ARCHITECTURE
 
 🎯 Application Performance Monitoring (APM):
-├── AWS CloudWatch (Application performance)
-├── AWS X-Ray (Distributed tracing)
-├── Prometheus + Grafana (Custom dashboards)
-└── Open-source error tracking (Custom solution)
+├── Prometheus (Metrics collection & alerting)
+├── Grafana (Visualization & dashboards)
+├── Loki (Log aggregation & querying)
+├── Tempo (Distributed tracing)
+└── AlertManager (Alert routing & management)
 
 📈 Business Intelligence:
-├── Mixpanel (User behavior analytics)
-├── Amplitude (Product analytics)
-├── Hotjar (User experience insights)
-└── Google Analytics (Marketing attribution)
+├── Matomo (Self-hosted analytics - Open-source Google Analytics alternative)
+├── Plausible (Privacy-focused web analytics)
+├── Umami (Simple web analytics)
+└── Custom event tracking (Built-in application metrics)
 
 🔍 Security Monitoring:
 ├── AWS GuardDuty (Threat detection)
 ├── AWS Security Hub (Security posture)
 ├── CloudTrail (API activity logging)
-└── Custom SIEM (Security events correlation)
+├── Wazuh (Open-source SIEM & XDR)
+└── OSSEC (Host-based intrusion detection)
 
 💰 Cost Monitoring:
 ├── AWS Cost Explorer (Cost analysis)
 ├── CloudWatch Cost and Usage Reports
-├── Custom cost dashboards (Business-specific)
-└── Budget alerts and anomaly detection
+├── OpenCost (Kubernetes cost monitoring)
+└── Custom cost dashboards with Grafana
+```
+
+#### Open-Source Monitoring Infrastructure
+```mermaid
+graph TB
+    subgraph "📊 Metrics & Monitoring"
+        Prometheus[Prometheus<br/>Metrics Collection<br/>Alerting Rules]
+        Grafana[Grafana<br/>Dashboards<br/>Visualization]
+        AlertManager[AlertManager<br/>Alert Routing<br/>Notification]
+    end
+
+    subgraph "📝 Log Aggregation"
+        Loki[Loki<br/>Log Storage<br/>Query Language]
+        Promtail[Promtail<br/>Log Shipping<br/>Labeling]
+    end
+
+    subgraph "🔍 Distributed Tracing"
+        Tempo[Tempo<br/>Trace Storage<br/>Jaeger Compatible]
+        Jaeger[Jaeger<br/>Trace UI<br/>OpenTelemetry]
+    end
+
+    subgraph "🔐 Security Monitoring"
+        Wazuh[Wazuh<br/>SIEM<br/>Intrusion Detection]
+        OSSEC[OSSEC<br/>Host IDS<br/>Log Analysis]
+    end
+
+    subgraph "📈 Business Analytics"
+        Matomo[Matomo<br/>Web Analytics<br/>Self-hosted]
+        Plausible[Plausible<br/>Privacy Analytics<br/>GDPR Compliant]
+    end
+
+    subgraph "☁️ AWS Integration"
+        CloudWatch[CloudWatch<br/>AWS Metrics<br/>Container Insights]
+        XRay[X-Ray<br/>AWS Tracing<br/>Service Map]
+    end
+
+    Prometheus --> Grafana
+    Grafana --> Loki
+    Tempo --> Jaeger
+    CloudWatch --> Prometheus
+    XRay --> Tempo
+    Wazuh --> Loki
+    OSSEC --> Loki
+
+    classDef opensource fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    classDef aws fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+
+    class Prometheus,Grafana,Loki,Promtail,Tempo,Jaeger,Wazuh,OSSEC,Matomo,Plausible opensource
+    class CloudWatch,XRay aws
+```
+
+#### Open-Source Monitoring Deployment
+```yaml
+# docker-compose.monitoring.yml - Self-hosted monitoring stack
+version: '3.8'
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: agentmitra-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: agentmitra-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+
+  loki:
+    image: grafana/loki:latest
+    container_name: agentmitra-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki_data:/loki
+      - ./monitoring/loki-config.yml:/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - monitoring
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: agentmitra-promtail
+    volumes:
+      - /var/log:/var/log
+      - ./monitoring/promtail-config.yml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - monitoring
+    depends_on:
+      - loki
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: agentmitra-tempo
+    ports:
+      - "3200:3200"
+      - "9411:9411"
+    volumes:
+      - tempo_data:/tmp/tempo
+      - ./monitoring/tempo-config.yml:/etc/tempo-config.yml
+    command: -config.file=/etc/tempo-config.yml
+    networks:
+      - monitoring
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: agentmitra-alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    networks:
+      - monitoring
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+  tempo_data:
+  alertmanager_data:
+
+networks:
+  monitoring:
+    driver: bridge
+```
+
+#### Cost Savings Analysis
+```
+💰 MONITORING COST COMPARISON
+
+❌ Previous (Proprietary Tools):
+├── New Relic APM: ₹3,000/year → ₹250/month
+├── Sentry Error Tracking: ₹1,500/year → ₹125/month
+├── Mixpanel Analytics: ₹2,000/year → ₹167/month
+├── AWS X-Ray Tracing: ₹400/month
+├── AWS CloudWatch Logs: ₹800/month (full)
+└── **Total: ~₹2,109/month**
+
+✅ New (Open-Source Stack):
+├── Grafana + Prometheus: ₹200/month (hosting)
+├── Loki Log Aggregation: ₹100/month
+├── Tempo Distributed Tracing: ₹50/month
+├── Wazuh SIEM: ₹150/month
+├── Matomo Analytics: ₹500/year → ₹42/month
+├── AWS CloudWatch (basic): ₹200/month
+└── **Total: ~₹542/month**
+
+💾 SAVINGS: ₹1,567/month (74% reduction)
+📈 Annual Savings: ₹18,804/year
 ```
 
 #### Alert Configuration
@@ -2452,11 +2628,12 @@ CREATE TABLE insurance_policies_partitioned (
 ├── Firebase Remote Config (Free) - Feature flags
 └── Firebase App Check (Free) - Security validation
 
-📊 Third-Party Analytics & Monitoring:
-├── Mixpanel (₹2,000/year) - Advanced analytics
-├── Sentry (₹1,500/year) - Error tracking
-├── New Relic (₹3,000/year) - Mobile performance monitoring
-└── Slack (₹800/year) - Team notifications
+📊 Open-Source Analytics & Monitoring:
+├── Matomo (₹500/year) - Self-hosted web analytics (Open-source GA alternative)
+├── Grafana (Free) - Dashboards and visualization (Open-source)
+├── Prometheus (Free) - Metrics collection and alerting (Open-source)
+├── Loki (Free) - Log aggregation (Open-source)
+└── AlertManager (Free) - Alert routing (Open-source)
 
 🤖 AI/ML Services:
 ├── OpenAI API (₹3,000/year) - Chatbot responses
@@ -2481,10 +2658,12 @@ CREATE TABLE insurance_policies_partitioned (
 ├── SSL Certificates (₹100/month) - HTTPS encryption
 └── Domain Registration (₹800/year) - agentmitra.com
 
-📊 AWS Monitoring & Observability:
-├── AWS CloudWatch (₹800/month) - Metrics and logs
-├── AWS X-Ray (₹400/month) - Distributed tracing
-└── AWS Config (₹300/month) - Configuration monitoring
+📊 Open-Source Monitoring Infrastructure:
+├── Prometheus + Grafana (₹200/month) - Self-hosted metrics & dashboards
+├── Loki (₹100/month) - Self-hosted log aggregation
+├── Tempo (₹50/month) - Self-hosted distributed tracing
+├── Wazuh (₹150/month) - Self-hosted SIEM & security monitoring
+└── AWS CloudWatch (₹200/month) - Basic AWS service monitoring
 
 💾 AWS Infrastructure:
 ├── Aurora PostgreSQL (₹4,000/month) - Primary database
@@ -2501,8 +2680,8 @@ CREATE TABLE insurance_policies_partitioned (
 ├── AWS Elemental MediaConvert (₹300/month) - Video processing
 └── Content Moderation (₹200/month) - AI content filtering
 
-TOTAL MONTHLY SUBSCRIPTION COST: ₹26,300 - ₹36,300 (Phase 1)
-TOTAL ANNUAL SUBSCRIPTION COST: ₹3,15,600 - ₹4,35,600
+TOTAL MONTHLY SUBSCRIPTION COST: ₹24,700 - ₹34,700 (Phase 1) - **₹1,600/month savings with open-source monitoring**
+TOTAL ANNUAL SUBSCRIPTION COST: ₹2,96,400 - ₹4,16,400 - **₹19,200/year savings**
 ```
 
 ### 6.2 Development Tools & Software
@@ -2778,15 +2957,15 @@ gantt
         Enterprise Launch            :launch3, after bi3, 30d
 ```
 
-#### Phase 1: MVP Infrastructure (₹26,300/month)
+#### Phase 1: MVP Infrastructure (₹24,700/month) - Open-Source Optimized
 ```mermaid
-pie title Phase 1 Cost Distribution (₹26,300/month)
-    "AWS Infrastructure" : 35
-    "Firebase Services" : 18
-    "Third-Party APIs" : 28
+pie title Phase 1 Cost Distribution (₹24,700/month) - Open-Source Savings
+    "AWS Infrastructure" : 38
+    "Firebase Services" : 19
+    "Third-Party APIs" : 29
     "Config Portal (Python APIs)" : 5
     "App Store Fees" : 4
-    "Security & Monitoring" : 10
+    "Security & Monitoring" : 5
 ```
 
 **🎯 Deliverables:**
