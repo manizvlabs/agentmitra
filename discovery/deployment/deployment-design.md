@@ -511,6 +511,168 @@ graph TD
 - **Database**: Shared Aurora PostgreSQL with schema separation
 - **Caching**: Shared Redis cluster for all services
 
+### 2.3 Authentication Synchronization Strategy
+
+#### Firebase ↔ Cognito User Session Synchronization
+
+**Challenge:** Mobile app uses Firebase Auth (customers) while Config Portal uses Cognito (agents), requiring secure session synchronization.
+
+##### Option 1: Federated Identity with Cognito as Identity Broker
+```mermaid
+graph TD
+    subgraph "🔐 Identity Broker (Cognito)"
+        CognitoFederation[Cognito Identity Pool<br/>Federated Identities<br/>JWT Token Exchange]
+        UserPool[User Pool<br/>Central User Registry<br/>Shared Sessions]
+    end
+
+    subgraph "📱 Mobile App (Firebase)"
+        FirebaseAuth[Firebase Auth<br/>Customer Login<br/>JWT Tokens]
+        FirebaseSession[Firebase Sessions<br/>Local Storage<br/>Auto-refresh]
+    end
+
+    subgraph "🌐 Config Portal (Cognito)"
+        CognitoPortal[Cognito Auth<br/>Agent Login<br/>Direct Sessions]
+        PortalSession[Portal Sessions<br/>Browser Storage<br/>SSO Support]
+    end
+
+    subgraph "🐍 Backend APIs"
+        TokenValidation[JWT Validation<br/>Cross-platform<br/>Session Management]
+        SessionSync[Session Synchronization<br/>Redis Cache<br/>Event-driven]
+    end
+
+    FirebaseAuth --> CognitoFederation
+    CognitoPortal --> UserPool
+    CognitoFederation --> UserPool
+    UserPool --> TokenValidation
+    TokenValidation --> SessionSync
+
+    FirebaseSession -.->|"Token Exchange"| SessionSync
+    PortalSession -.->|"Direct"| SessionSync
+
+    classDef firebase fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef cognito fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef backend fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+
+    class FirebaseAuth,FirebaseSession firebase
+    class CognitoFederation,CognitoPortal,PortalSession,UserPool cognito
+    class TokenValidation,SessionSync backend
+```
+
+**Implementation:**
+- **Cognito Identity Pool** as federation hub
+- **Firebase Auth** configured as external identity provider
+- **JWT token exchange** between systems
+- **Redis-backed session store** for cross-platform sync
+
+##### Option 2: API Gateway Token Translation
+```mermaid
+graph TD
+    subgraph "📱 Firebase User Journey"
+        FirebaseLogin[Firebase Login<br/>Phone/Email + OTP]
+        FirebaseToken[Firebase JWT<br/>Custom Claims<br/>Firebase UID]
+        MobileAPI[API Gateway<br/>Token Translation<br/>Firebase → Cognito]
+    end
+
+    subgraph "🌐 Portal User Journey"
+        CognitoLogin[Cognito Login<br/>Username/Password<br/>MFA Required]
+        CognitoToken[Cognito JWT<br/>Standard Claims<br/>Cognito Sub]
+        PortalAPI[Direct API Access<br/>Cognito Tokens<br/>Standard Flow]
+    end
+
+    subgraph "🔄 Token Translation Service"
+        TokenMapper[Token Mapper<br/>UID Mapping<br/>Claims Translation]
+        SessionBridge[Session Bridge<br/>Cross-platform<br/>Cache Sync]
+        UserRegistry[User Registry<br/>Unified Profiles<br/>Role Mapping]
+    end
+
+    FirebaseToken --> MobileAPI
+    MobileAPI --> TokenMapper
+    TokenMapper --> SessionBridge
+    CognitoToken --> PortalAPI
+    PortalAPI --> SessionBridge
+    SessionBridge --> UserRegistry
+
+    classDef mobile fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef portal fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef bridge fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+
+    class FirebaseLogin,FirebaseToken,MobileAPI mobile
+    class CognitoLogin,CognitoToken,PortalAPI portal
+    class TokenMapper,SessionBridge,UserRegistry bridge
+```
+
+**Implementation:**
+- **API Gateway** with custom authorizers
+- **Token translation** at API layer
+- **Unified user registry** in PostgreSQL
+- **Session cache** in Redis
+
+##### Option 3: Event-Driven Session Synchronization
+```mermaid
+graph TD
+    subgraph "📱 Firebase Events"
+        FirebaseAuthEvent[Auth Events<br/>user.created<br/>user.signed_in]
+        FirebaseTokenEvent[Token Events<br/>token.refresh<br/>token.revoke]
+    end
+
+    subgraph "🌐 Cognito Events"
+        CognitoAuthEvent[Auth Events<br/>PostAuthentication<br/>PostConfirmation]
+        CognitoTokenEvent[Token Events<br/>TokenGeneration<br/>CustomMessage]
+    end
+
+    subgraph "⚡ Event Processing"
+        EventBridge[EventBridge<br/>Cross-service Events<br/>Event Bus]
+        LambdaSync[Sync Lambda<br/>Session Updates<br/>Cache Invalidation]
+        DynamoDB[DynamoDB<br/>Session Store<br/>TTL-enabled]
+    end
+
+    subgraph "🔄 Sync Services"
+        RedisSync[Redis Cache<br/>Session Data<br/>Cross-platform]
+        PostgresSync[PostgreSQL<br/>User Profiles<br/>Master Data]
+    end
+
+    FirebaseAuthEvent --> EventBridge
+    FirebaseTokenEvent --> EventBridge
+    CognitoAuthEvent --> EventBridge
+    CognitoTokenEvent --> EventBridge
+
+    EventBridge --> LambdaSync
+    LambdaSync --> DynamoDB
+    LambdaSync --> RedisSync
+    LambdaSync --> PostgresSync
+
+    classDef firebase fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef cognito fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef events fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef sync fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+
+    class FirebaseAuthEvent,FirebaseTokenEvent firebase
+    class CognitoAuthEvent,CognitoTokenEvent cognito
+    class EventBridge,LambdaSync events
+    class RedisSync,PostgresSync,DynamoDB sync
+```
+
+#### Recommended Implementation: Option 1 (Federated Identity)
+
+**Why Federated Identity?**
+- **Single source of truth** for user identities
+- **Automatic token exchange** between Firebase and Cognito
+- **Unified session management** across platforms
+- **Scalable architecture** with AWS native services
+
+**Configuration Steps:**
+1. **Setup Cognito Identity Pool** with Firebase as identity provider
+2. **Configure Firebase Auth** to use Cognito as backend
+3. **Implement token exchange** at API Gateway level
+4. **Setup Redis cache** for session synchronization
+5. **Create unified user profiles** in PostgreSQL
+
+**Security Considerations:**
+- **Token validation** at API layer
+- **Session timeout** synchronization
+- **Cross-platform logout** handling
+- **Audit logging** for compliance
+
 ### 2.3 Integration Points Between Components
 
 ```mermaid
