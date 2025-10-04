@@ -93,11 +93,12 @@ flowchart LR
         subGraph6
         S3["S3 Storage<br>File Storage<br>CDN Origin<br>Lifecycle Policies"]
   end
- subgraph subGraph8["📊 Monitoring & Analytics"]
-        CloudWatch["CloudWatch<br>Metrics &amp; Logs<br>Custom Dashboards"]
-        NewRelic["New Relic APM<br>Performance Monitoring<br>Distributed Tracing"]
-        Sentry["Sentry<br>Error Tracking<br>Release Health"]
-        Mixpanel["Mixpanel<br>User Analytics<br>Behavioral Insights"]
+ subgraph subGraph8["📊 Monitoring & Analytics (Open-Source)"]
+        Prometheus["Prometheus<br>Metrics Collection<br>Alerting Rules"]
+        Grafana["Grafana<br>Dashboards<br>Visualization"]
+        Loki["Loki<br>Log Aggregation<br>Query Language"]
+        Matomo["Matomo<br>Web Analytics<br>Privacy-Focused"]
+        Wazuh["Wazuh<br>SIEM<br>Security Monitoring"]
   end
     Mobile --> CDNMobile
     Portal --> CDNPortal
@@ -122,7 +123,10 @@ flowchart LR
     AuroraPrimary --> AuroraReplica
     RedisPrimary --> RedisReplica
     WhatsAppSvc --> CloudWatch
-    CloudWatch --> NewRelic & Sentry & Mixpanel
+    CloudWatch --> Prometheus
+    Prometheus --> Grafana & Loki
+    Loki --> Wazuh
+    Matomo --> Grafana
      Mobile:::primary
      Portal:::primary
      WhatsApp:::primary
@@ -152,9 +156,11 @@ flowchart LR
      RedisReplica:::infra
      S3:::infra
      CloudWatch:::monitoring
-     NewRelic:::monitoring
-     Sentry:::monitoring
-     Mixpanel:::monitoring
+     Prometheus:::monitoring
+     Grafana:::monitoring
+     Loki:::monitoring
+     Matomo:::monitoring
+     Wazuh:::monitoring
     classDef primary fill:#e1f5fe,stroke:#01579b,stroke-width:2px
     classDef secondary fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
     classDef infra fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
