@@ -48,6 +48,7 @@ config:
 flowchart LR
  subgraph subGraph0["📱 End Users"]
         Mobile["Flutter Mobile App<br>iOS + Android"]
+        Portal["Agent Mitra Config Portal<br>Web Portal<br>Data Management"]
         WhatsApp["WhatsApp Business<br>Customer Communication"]
   end
  subgraph subGraph1["🌐 Global Edge (CloudFront)"]
@@ -61,6 +62,9 @@ flowchart LR
         WhatsAppSvc["WhatsApp Service<br>Message Processing<br>Template Management"]
         VideoSvc["Video Processing<br>Content Moderation<br>YouTube Integration"]
         DataImportSvc["Data Import Service<br>Excel Processing<br>Background Jobs"]
+        CallbackSvc["Callback Management<br>Priority Queue<br>Agent Assignment"]
+        CampaignSvc["Campaign Analytics<br>Performance Tracking<br>ROI Analysis"]
+        ContentSvc["Content Analytics<br>Video Performance<br>Engagement Metrics"]
         RealtimeSvc["WebSocket Server<br>Real-time Updates<br>Live Dashboards"]
   end
  subgraph subGraph3["🚀 Application Layer (ECS Fargate)"]
@@ -93,19 +97,24 @@ flowchart LR
         Mixpanel["Mixpanel<br>User Analytics<br>Behavioral Insights"]
   end
     Mobile --> CDN
+    Portal --> CDN
     WhatsApp --> WhatsAppSvc
     CDN --> WAF
     WAF --> ALB
-    ALB --> API & Chatbot & WhatsAppSvc & VideoSvc & DataImportSvc & RealtimeSvc
+    ALB --> API & Chatbot & WhatsAppSvc & VideoSvc & DataImportSvc & CallbackSvc & CampaignSvc & ContentSvc & RealtimeSvc
     API --> AuroraPrimary & RedisPrimary & S3 & CloudWatch
     Chatbot --> OpenAI & Perplexity & CloudWatch
     VideoSvc --> AWSComprehend & CustomML & S3 & CloudWatch
     DataImportSvc --> AuroraPrimary & S3 & CloudWatch
+    CallbackSvc --> AuroraPrimary & RedisPrimary & CloudWatch
+    CampaignSvc --> AuroraPrimary & RedisPrimary & CloudWatch
+    ContentSvc --> AuroraPrimary & RedisPrimary & CloudWatch
     AuroraPrimary --> AuroraReplica
     RedisPrimary --> RedisReplica
     WhatsAppSvc --> CloudWatch
     CloudWatch --> NewRelic & Sentry & Mixpanel
      Mobile:::primary
+     Portal:::primary
      WhatsApp:::primary
      CDN:::secondary
      WAF:::secondary
@@ -115,6 +124,9 @@ flowchart LR
      WhatsAppSvc:::infra
      VideoSvc:::infra
      DataImportSvc:::infra
+     CallbackSvc:::infra
+     CampaignSvc:::infra
+     ContentSvc:::infra
      RealtimeSvc:::infra
      ALB:::secondary
      OpenAI:::infra
@@ -1970,15 +1982,19 @@ gantt
     section Phase 1: MVP (Months 1-6)
         Infrastructure Setup          :done, infra1, 2024-01-01, 2024-02-15
         Flutter Mobile App            :done, app1, 2024-02-01, 2024-04-30
+        Agent Mitra Config Portal     :done, portal1, 2024-02-01, 2024-04-15
         Basic Authentication          :done, auth1, 2024-02-15, 2024-03-15
         Policy Management             :done, policy1, 2024-03-01, 2024-04-15
         WhatsApp Integration          :done, whatsapp1, 2024-03-15, 2024-05-01
         Video Upload (YouTube)        :done, video1, 2024-04-01, 2024-05-15
-        Customer Dashboard            :done, dashboard1, 2024-04-15, 2024-06-01
+        Customer Onboarding           :done, onboarding1, 2024-04-15, 2024-06-01
         Testing & Launch              :active, test1, 2024-05-15, 2024-06-15
 
     section Phase 2: Growth (Months 7-12)
-        Advanced Analytics           :analytics2, after test1, 30d
+        Callback Request Management  :callback2, after test1, 30d
+        Campaign Performance Analytics:campaign_analytics2, after callback2, 30d
+        Content Performance Analytics :content_analytics2, after campaign_analytics2, 30d
+        Advanced Analytics           :analytics2, after content_analytics2, 45d
         Real-time Dashboards         :realtime2, after analytics2, 45d
         Marketing Campaigns          :campaigns2, after realtime2, 30d
         Multi-tenant Features        :multitenant2, after campaigns2, 45d
@@ -2129,6 +2145,44 @@ class CostOptimizer:
         elif optimization.type == "reserved_instances":
             await self.purchase_reserved_capacity(optimization.requirements)
 ```
+
+## 9. Regulatory Compliance & Feature Status
+
+### 9.1 Premium Payment Processing - DEFERRED
+
+> **⚠️ REGULATORY COMPLIANCE NOTICE**
+>
+> **Premium Payment Processing** has been marked as **DEFERRED** due to LIC policy restrictions on third-party payment processing. This feature will not be implemented in the initial phases of Agent Mitra.
+
+**Current Status:** DEFERRED - Not included in MVP or Phase 2 development
+
+**Reason:** LIC regulations prohibit third-party applications from handling premium payments directly. All payment processing must occur through official LIC channels.
+
+**Alternative Implementation:**
+- Payment reminders and notifications (allowed)
+- Payment status tracking and history (allowed)
+- Payment method registration guidance (allowed)
+- Integration with LIC payment portals (allowed)
+
+**Timeline:** To be re-evaluated after Phase 2 completion and regulatory approval from IRDAI and LIC.
+
+### 9.2 Implemented Features Status
+
+**✅ Active Features:**
+- Agent Mitra Mobile App (Customer-facing Flutter application)
+- Agent Mitra Config Portal (Agent-facing web portal)
+- Official LIC Systems integration
+- WhatsApp Business communication
+- Video content management
+- Customer onboarding workflows
+- Callback request management
+- Campaign performance analytics
+- Content performance analytics
+
+**🔄 Future Considerations:**
+- Direct premium payment processing (subject to regulatory approval)
+- Advanced payment gateway integrations
+- Third-party payment processor partnerships
 
 This deployment design provides a comprehensive, cost-effective, and scalable infrastructure for Agent Mitra while ensuring high performance, security compliance, and excellent developer experience. The architecture supports your growth from 700 users to enterprise scale while maintaining cost efficiency through intelligent optimization strategies.
 

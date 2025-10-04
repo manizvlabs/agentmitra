@@ -3612,9 +3612,3929 @@ class _AgentDashboardPageState extends State<AgentDashboardPage> {
 }
 ```
 
-## 5. WhatsApp Integration Pages
+## 5. Agent Configuration Portal Wireframes
 
-### 5.1 WhatsApp Chat Interface
+### 5.1 Agent Configuration Portal Overview
+
+The Agent Configuration Portal provides a comprehensive web interface for agents to manage customer data, import policies, and access administrative functions. The portal follows a clean, professional design optimized for desktop usage with responsive mobile support.
+
+### 5.2 Data Import Dashboard Wireframe
+
+```dart
+class DataImportDashboard extends StatefulWidget {
+  @override
+  _DataImportDashboardState createState() => _DataImportDashboardState();
+}
+
+class _DataImportDashboardState extends State<DataImportDashboard> {
+  late List<ImportJob> _importJobs;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadImportJobs();
+  }
+
+  Future<void> _loadImportJobs() async {
+    try {
+      _importJobs = await ImportService.getImportJobs();
+      setState(() => _isLoading = false);
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Data Import Dashboard'),
+        elevation: 0,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Quick Actions
+                  _buildQuickActions(),
+                  const SizedBox(height: 24),
+
+                  // Import Statistics
+                  _buildImportStatistics(),
+                  const SizedBox(height: 24),
+
+                  // Recent Imports
+                  _buildRecentImports(),
+                  const SizedBox(height: 24),
+
+                  // Bulk Actions
+                  _buildBulkActions(),
+                ],
+              ),
+            ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _startNewImport,
+        icon: const Icon(Icons.upload_file),
+        label: const Text('New Import'),
+        backgroundColor: Theme.of(context).primaryColor,
+      ),
+    );
+  }
+
+  Widget _buildQuickActions() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Quick Actions',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildQuickActionButton(
+                    'Excel Import',
+                    Icons.table_chart,
+                    Colors.green,
+                    _importFromExcel,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildQuickActionButton(
+                    'LIC API Sync',
+                    Icons.sync,
+                    Colors.blue,
+                    _syncWithLIC,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildQuickActionButton(
+                    'Bulk Update',
+                    Icons.edit,
+                    Colors.orange,
+                    _bulkUpdate,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionButton(String title, IconData icon, Color color, VoidCallback onPressed) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 24),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImportStatistics() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Import Statistics',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatCard('Total Records', '125,430', Icons.data_usage, Colors.blue),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildStatCard('Success Rate', '98.7%', Icons.check_circle, Colors.green),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildStatCard('Active Jobs', '3', Icons.schedule, Colors.orange),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 32),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              color: color.withOpacity(0.8),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentImports() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Recent Imports',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () => Navigator.pushNamed(context, '/import-history'),
+                  child: const Text('View All'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ..._importJobs.take(5).map((job) => _buildImportJobCard(job)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImportJobCard(ImportJob job) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: _getStatusColor(job.status),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  job.fileName,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '${job.recordsProcessed} records • ${job.successRate}%',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            job.status.toUpperCase(),
+            style: TextStyle(
+              color: _getStatusColor(job.status),
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return Colors.green;
+      case 'processing':
+        return Colors.blue;
+      case 'failed':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Widget _buildBulkActions() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Bulk Actions',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _exportData,
+                    icon: const Icon(Icons.download),
+                    label: const Text('Export Data'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _validateData,
+                    icon: const Icon(Icons.verified),
+                    label: const Text('Validate'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _startNewImport() {
+    Navigator.pushNamed(context, '/new-import');
+  }
+
+  void _importFromExcel() {
+    // Navigate to Excel import screen
+  }
+
+  void _syncWithLIC() {
+    // Start LIC API sync
+  }
+
+  void _bulkUpdate() {
+    // Navigate to bulk update screen
+  }
+
+  void _exportData() {
+    // Export data functionality
+  }
+
+  void _validateData() {
+    // Data validation functionality
+  }
+}
+```
+
+### 5.3 Excel Template Configuration Wireframe
+
+```dart
+class ExcelTemplateConfigPage extends StatefulWidget {
+  @override
+  _ExcelTemplateConfigPageState createState() => _ExcelTemplateConfigPageState();
+}
+
+class _ExcelTemplateConfigPageState extends State<ExcelTemplateConfigPage> {
+  final _formKey = GlobalKey<FormState>();
+  Map<String, String> _columnMappings = {};
+  List<String> _availableColumns = ['Policy Number', 'Customer Name', 'Phone', 'Email', 'Address'];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Excel Template Configuration'),
+        elevation: 0,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Template Preview
+              _buildTemplatePreview(),
+              const SizedBox(height: 24),
+
+              // Column Mapping
+              _buildColumnMapping(),
+              const SizedBox(height: 24),
+
+              // Data Validation Rules
+              _buildValidationRules(),
+              const SizedBox(height: 24),
+
+              // Save Template
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _saveTemplate,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('Save Template'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTemplatePreview() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Template Preview',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              height: 200,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: const Center(
+                child: Text('Excel Template Preview\n(Download template to see structure)'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _downloadTemplate,
+                    icon: const Icon(Icons.download),
+                    label: const Text('Download Template'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _uploadSample,
+                    icon: const Icon(Icons.upload),
+                    label: const Text('Upload Sample'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildColumnMapping() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Column Mapping',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ..._availableColumns.map((column) => _buildMappingRow(column)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMappingRow(String column) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              column,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 3,
+            child: TextFormField(
+              decoration: InputDecoration(
+                hintText: 'Enter Excel column (e.g., A, B, C)',
+                border: const OutlineInputBorder(),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+              onChanged: (value) => _columnMappings[column] = value,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildValidationRules() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Data Validation Rules',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            SwitchListTile(
+              title: const Text('Required Fields Validation'),
+              subtitle: const Text('Ensure all required fields are present'),
+              value: true,
+              onChanged: (value) {},
+            ),
+            SwitchListTile(
+              title: const Text('Data Type Validation'),
+              subtitle: const Text('Validate phone numbers, emails, dates'),
+              value: true,
+              onChanged: (value) {},
+            ),
+            SwitchListTile(
+              title: const Text('Duplicate Detection'),
+              subtitle: const Text('Check for duplicate policy numbers'),
+              value: true,
+              onChanged: (value) {},
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _downloadTemplate() {
+    // Download Excel template
+  }
+
+  void _uploadSample() {
+    // Upload sample file for testing
+  }
+
+  void _saveTemplate() {
+    if (_formKey.currentState?.validate() ?? false) {
+      // Save template configuration
+      Navigator.pop(context);
+    }
+  }
+}
+```
+
+### 5.4 Customer Data Management Wireframe
+
+```dart
+class CustomerDataManagementPage extends StatefulWidget {
+  @override
+  _CustomerDataManagementPageState createState() => _CustomerDataManagementPageState();
+}
+
+class _CustomerDataManagementPageState extends State<CustomerDataManagementPage> {
+  late List<Customer> _customers;
+  String _searchQuery = '';
+  String _filterStatus = 'all';
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCustomers();
+  }
+
+  Future<void> _loadCustomers() async {
+    try {
+      _customers = await CustomerService.getCustomers(
+        search: _searchQuery,
+        status: _filterStatus,
+      );
+      setState(() => _isLoading = false);
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Customer Data Management'),
+        elevation: 0,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: _showSearchDialog,
+          ),
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: _showFilterDialog,
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                // Search and Filter Bar
+                _buildSearchBar(),
+                // Customer List
+                Expanded(child: _buildCustomerList()),
+              ],
+            ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _addNewCustomer,
+        icon: const Icon(Icons.person_add),
+        label: const Text('Add Customer'),
+        backgroundColor: Theme.of(context).primaryColor,
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: Colors.grey.shade50,
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: 'Search customers...',
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    setState(() => _searchQuery = '');
+                    _loadCustomers();
+                  },
+                )
+              : null,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          filled: true,
+          fillColor: Colors.white,
+        ),
+        onChanged: (value) {
+          setState(() => _searchQuery = value);
+          // Debounced search
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (_searchQuery == value) {
+              _loadCustomers();
+            }
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _buildCustomerList() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _customers.length,
+      itemBuilder: (context, index) {
+        return _buildCustomerCard(_customers[index]);
+      },
+    );
+  }
+
+  Widget _buildCustomerCard(Customer customer) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: InkWell(
+        onTap: () => _viewCustomerDetails(customer),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              // Customer Avatar
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                child: Text(
+                  customer.name.substring(0, 1).toUpperCase(),
+                  style: TextStyle(
+                    color: Theme.of(context).primaryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+
+              // Customer Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      customer.name,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Phone: ${customer.phone}',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    if (customer.email != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        'Email: ${customer.email}',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(customer.status).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: _getStatusColor(customer.status)),
+                          ),
+                          child: Text(
+                            customer.status.toUpperCase(),
+                            style: TextStyle(
+                              color: _getStatusColor(customer.status),
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${customer.policiesCount} policies',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Action Menu
+              PopupMenuButton<String>(
+                onSelected: (action) => _handleCustomerAction(customer, action),
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'view',
+                    child: Text('View Details'),
+                  ),
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: Text('Edit Customer'),
+                  ),
+                  const PopupMenuItem(
+                    value: 'policies',
+                    child: Text('Manage Policies'),
+                  ),
+                  const PopupMenuItem(
+                    value: 'deactivate',
+                    child: Text('Deactivate'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return Colors.green;
+      case 'inactive':
+        return Colors.grey;
+      case 'pending':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  void _showSearchDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Advanced Search'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              decoration: const InputDecoration(
+                labelText: 'Customer Name',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              decoration: const InputDecoration(
+                labelText: 'Phone Number',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              decoration: const InputDecoration(
+                labelText: 'Policy Number',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // Perform advanced search
+              Navigator.pop(context);
+            },
+            child: const Text('Search'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Filter Customers'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioListTile<String>(
+              title: const Text('All Customers'),
+              value: 'all',
+              groupValue: _filterStatus,
+              onChanged: (value) => setState(() => _filterStatus = value!),
+            ),
+            RadioListTile<String>(
+              title: const Text('Active Only'),
+              value: 'active',
+              groupValue: _filterStatus,
+              onChanged: (value) => setState(() => _filterStatus = value!),
+            ),
+            RadioListTile<String>(
+              title: const Text('Inactive Only'),
+              value: 'inactive',
+              groupValue: _filterStatus,
+              onChanged: (value) => setState(() => _filterStatus = value!),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _loadCustomers();
+            },
+            child: const Text('Apply'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addNewCustomer() {
+    Navigator.pushNamed(context, '/add-customer');
+  }
+
+  void _viewCustomerDetails(Customer customer) {
+    Navigator.pushNamed(context, '/customer-details', arguments: customer);
+  }
+
+  void _handleCustomerAction(Customer customer, String action) {
+    switch (action) {
+      case 'view':
+        _viewCustomerDetails(customer);
+        break;
+      case 'edit':
+        Navigator.pushNamed(context, '/edit-customer', arguments: customer);
+        break;
+      case 'policies':
+        Navigator.pushNamed(context, '/customer-policies', arguments: customer);
+        break;
+      case 'deactivate':
+        _deactivateCustomer(customer);
+        break;
+    }
+  }
+
+  void _deactivateCustomer(Customer customer) {
+    // Deactivate customer logic
+  }
+}
+```
+
+### 5.5 Reporting Dashboard Wireframe
+
+```dart
+class ReportingDashboardPage extends StatefulWidget {
+  @override
+  _ReportingDashboardPageState createState() => _ReportingDashboardPageState();
+}
+
+class _ReportingDashboardPageState extends State<ReportingDashboardPage> {
+  late Map<String, dynamic> _reportData;
+  String _selectedPeriod = '30d';
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReportData();
+  }
+
+  Future<void> _loadReportData() async {
+    try {
+      _reportData = await ReportService.getDashboardData(period: _selectedPeriod);
+      setState(() => _isLoading = false);
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Reporting Dashboard'),
+        elevation: 0,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (period) {
+              setState(() => _selectedPeriod = period);
+              _loadReportData();
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: '7d', child: Text('Last 7 days')),
+              const PopupMenuItem(value: '30d', child: Text('Last 30 days')),
+              const PopupMenuItem(value: '90d', child: Text('Last 90 days')),
+              const PopupMenuItem(value: '1y', child: Text('Last year')),
+            ],
+          ),
+          IconButton(
+            icon: const Icon(Icons.download),
+            onPressed: _exportReport,
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Key Metrics
+                  _buildKeyMetrics(),
+                  const SizedBox(height: 24),
+
+                  // Charts Section
+                  _buildChartsSection(),
+                  const SizedBox(height: 24),
+
+                  // Detailed Reports
+                  _buildDetailedReports(),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildKeyMetrics() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildMetricCard(
+            'Total Customers',
+            _reportData['totalCustomers'].toString(),
+            Icons.people,
+            Colors.blue,
+            '+${_reportData['customerGrowth']}%',
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildMetricCard(
+            'Active Policies',
+            _reportData['activePolicies'].toString(),
+            Icons.policy,
+            Colors.green,
+            '${_reportData['policyGrowth']}%',
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMetricCard(String title, String value, IconData icon, Color color, String change) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: color, size: 32),
+                const Spacer(),
+                Text(
+                  change,
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChartsSection() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Performance Charts',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              height: 300,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Center(
+                child: Text('Interactive Charts\n(Customer growth, Policy trends, Revenue metrics)'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailedReports() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Detailed Reports',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildReportButton(
+                'Customer Report',
+                Icons.people,
+                Colors.blue,
+                _generateCustomerReport,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildReportButton(
+                'Policy Report',
+                Icons.policy,
+                Colors.green,
+                _generatePolicyReport,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildReportButton(
+                'Revenue Report',
+                Icons.currency_rupee,
+                Colors.orange,
+                _generateRevenueReport,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildReportButton(
+                'Agent Performance',
+                Icons.trending_up,
+                Colors.purple,
+                _generateAgentReport,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReportButton(String title, IconData icon, Color color, VoidCallback onPressed) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 24),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _exportReport() {
+    // Export report functionality
+  }
+
+  void _generateCustomerReport() {
+    // Generate customer report
+  }
+
+  void _generatePolicyReport() {
+    // Generate policy report
+  }
+
+  void _generateRevenueReport() {
+    // Generate revenue report
+  }
+
+  void _generateAgentReport() {
+    // Generate agent performance report
+  }
+}
+```
+
+### 5.6 User Management Wireframe
+
+```dart
+class UserManagementPage extends StatefulWidget {
+  @override
+  _UserManagementPageState createState() => _UserManagementPageState();
+}
+
+class _UserManagementPageState extends State<UserManagementPage> {
+  late List<User> _users;
+  String _searchQuery = '';
+  String _filterRole = 'all';
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsers();
+  }
+
+  Future<void> _loadUsers() async {
+    try {
+      _users = await UserService.getUsers(
+        search: _searchQuery,
+        role: _filterRole,
+      );
+      setState(() => _isLoading = false);
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('User Management'),
+        elevation: 0,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: _showFilterDialog,
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                // Search Bar
+                _buildSearchBar(),
+                // User List
+                Expanded(child: _buildUserList()),
+              ],
+            ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _addNewUser,
+        icon: const Icon(Icons.person_add),
+        label: const Text('Add User'),
+        backgroundColor: Theme.of(context).primaryColor,
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: Colors.grey.shade50,
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: 'Search users...',
+          prefixIcon: const Icon(Icons.search),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          filled: true,
+          fillColor: Colors.white,
+        ),
+        onChanged: (value) {
+          setState(() => _searchQuery = value);
+          // Debounced search
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (_searchQuery == value) {
+              _loadUsers();
+            }
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _buildUserList() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _users.length,
+      itemBuilder: (context, index) {
+        return _buildUserCard(_users[index]);
+      },
+    );
+  }
+
+  Widget _buildUserCard(User user) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            // User Avatar
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+              child: Text(
+                user.name.substring(0, 1).toUpperCase(),
+                style: TextStyle(
+                  color: Theme.of(context).primaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+
+            // User Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    user.name,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    user.email,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: _getRoleColor(user.role).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: _getRoleColor(user.role)),
+                        ),
+                        child: Text(
+                          user.role.toUpperCase(),
+                          style: TextStyle(
+                            color: _getRoleColor(user.role),
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(user.status).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: _getStatusColor(user.status)),
+                        ),
+                        child: Text(
+                          user.status.toUpperCase(),
+                          style: TextStyle(
+                            color: _getStatusColor(user.status),
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Action Menu
+            PopupMenuButton<String>(
+              onSelected: (action) => _handleUserAction(user, action),
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: Text('Edit User'),
+                ),
+                const PopupMenuItem(
+                  value: 'permissions',
+                  child: Text('Manage Permissions'),
+                ),
+                const PopupMenuItem(
+                  value: 'reset_password',
+                  child: Text('Reset Password'),
+                ),
+                const PopupMenuItem(
+                  value: 'deactivate',
+                  child: Text('Deactivate'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getRoleColor(String role) {
+    switch (role.toLowerCase()) {
+      case 'super_admin':
+        return Colors.red;
+      case 'insurance_provider_admin':
+        return Colors.purple;
+      case 'regional_manager':
+        return Colors.orange;
+      case 'senior_agent':
+        return Colors.blue;
+      case 'junior_agent':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return Colors.green;
+      case 'inactive':
+        return Colors.grey;
+      case 'pending':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  void _showFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Filter Users'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioListTile<String>(
+              title: const Text('All Roles'),
+              value: 'all',
+              groupValue: _filterRole,
+              onChanged: (value) => setState(() => _filterRole = value!),
+            ),
+            RadioListTile<String>(
+              title: const Text('Agents'),
+              value: 'agent',
+              groupValue: _filterRole,
+              onChanged: (value) => setState(() => _filterRole = value!),
+            ),
+            RadioListTile<String>(
+              title: const Text('Admins'),
+              value: 'admin',
+              groupValue: _filterRole,
+              onChanged: (value) => setState(() => _filterRole = value!),
+            ),
+            RadioListTile<String>(
+              title: const Text('Customers'),
+              value: 'customer',
+              groupValue: _filterRole,
+              onChanged: (value) => setState(() => _filterRole = value!),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _loadUsers();
+            },
+            child: const Text('Apply'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addNewUser() {
+    Navigator.pushNamed(context, '/add-user');
+  }
+
+  void _handleUserAction(User user, String action) {
+    switch (action) {
+      case 'edit':
+        Navigator.pushNamed(context, '/edit-user', arguments: user);
+        break;
+      case 'permissions':
+        Navigator.pushNamed(context, '/user-permissions', arguments: user);
+        break;
+      case 'reset_password':
+        _resetUserPassword(user);
+        break;
+      case 'deactivate':
+        _deactivateUser(user);
+        break;
+    }
+  }
+
+  void _resetUserPassword(User user) {
+    // Reset password logic
+  }
+
+  void _deactivateUser(User user) {
+    // Deactivate user logic
+  }
+}
+```
+
+## 6. Customer Onboarding Wireframes
+
+### 6.1 Customer Onboarding Overview
+
+The Customer Onboarding flow provides a comprehensive 5-step guided process for new customers to join Agent Mitra. This includes agent discovery, document verification, KYC compliance, and emergency contact setup. The flow is designed to be accessible for elderly users with large touch targets, clear instructions, and step-by-step guidance.
+
+### 6.2 Agent Discovery & Selection Wireframe
+
+```dart
+class AgentDiscoveryPage extends StatefulWidget {
+  @override
+  _AgentDiscoveryPageState createState() => _AgentDiscoveryPageState();
+}
+
+class _AgentDiscoveryPageState extends State<AgentDiscoveryPage> {
+  late List<Agent> _agents;
+  String _searchQuery = '';
+  String _selectedRegion = 'all';
+  String _selectedSpecialization = 'all';
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAgents();
+  }
+
+  Future<void> _loadAgents() async {
+    try {
+      _agents = await AgentService.getAgents(
+        search: _searchQuery,
+        region: _selectedRegion,
+        specialization: _selectedSpecialization,
+      );
+      setState(() => _isLoading = false);
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Find Your Insurance Agent'),
+        elevation: 0,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: _showFilterDialog,
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                // Search and Filter Bar
+                _buildSearchBar(),
+                // Agent List
+                Expanded(child: _buildAgentList()),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: Colors.grey.shade50,
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: 'Search by name, location, or specialization...',
+          prefixIcon: const Icon(Icons.search),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          filled: true,
+          fillColor: Colors.white,
+        ),
+        onChanged: (value) {
+          setState(() => _searchQuery = value);
+          // Debounced search
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (_searchQuery == value) {
+              _loadAgents();
+            }
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _buildAgentList() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _agents.length,
+      itemBuilder: (context, index) {
+        return _buildAgentCard(_agents[index]);
+      },
+    );
+  }
+
+  Widget _buildAgentCard(Agent agent) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 3,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: InkWell(
+        onTap: () => _viewAgentDetails(agent),
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Agent Header
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                    child: Text(
+                      agent.name.substring(0, 1).toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          agent.name,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(Icons.location_on, size: 16, color: Colors.grey.shade600),
+                            const SizedBox(width: 4),
+                            Text(
+                              agent.location,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.verified,
+                    color: Colors.green.shade600,
+                    size: 24,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Agent Stats
+              Row(
+                children: [
+                  _buildStatItem('${agent.experienceYears}y', 'Experience'),
+                  _buildStatItem('${agent.customerCount}+', 'Customers'),
+                  _buildStatItem('${agent.rating}', 'Rating'),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Specializations
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: agent.specializations.take(3).map((spec) =>
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.3)),
+                    ),
+                    child: Text(
+                      spec,
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ).toList(),
+              ),
+              const SizedBox(height: 16),
+
+              // Action Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.call),
+                      label: const Text('Call Now'),
+                      onPressed: () => _callAgent(agent),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: BorderSide(color: Theme.of(context).primaryColor),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.person_add),
+                      label: const Text('Select Agent'),
+                      onPressed: () => _selectAgent(agent),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String value, String label) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).primaryColor,
+            ),
+          ),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.grey.shade600,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Filter Agents'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButtonFormField<String>(
+              decoration: const InputDecoration(labelText: 'Region'),
+              value: _selectedRegion,
+              items: const [
+                DropdownMenuItem(value: 'all', child: Text('All Regions')),
+                DropdownMenuItem(value: 'mumbai', child: Text('Mumbai')),
+                DropdownMenuItem(value: 'delhi', child: Text('Delhi')),
+                DropdownMenuItem(value: 'bangalore', child: Text('Bangalore')),
+              ],
+              onChanged: (value) => setState(() => _selectedRegion = value!),
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              decoration: const InputDecoration(labelText: 'Specialization'),
+              value: _selectedSpecialization,
+              items: const [
+                DropdownMenuItem(value: 'all', child: Text('All Types')),
+                DropdownMenuItem(value: 'life', child: Text('Life Insurance')),
+                DropdownMenuItem(value: 'health', child: Text('Health Insurance')),
+                DropdownMenuItem(value: 'general', child: Text('General Insurance')),
+              ],
+              onChanged: (value) => setState(() => _selectedSpecialization = value!),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _loadAgents();
+            },
+            child: const Text('Apply Filters'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _viewAgentDetails(Agent agent) {
+    Navigator.pushNamed(context, '/agent-details', arguments: agent);
+  }
+
+  void _callAgent(Agent agent) {
+    // Implement phone call functionality
+  }
+
+  void _selectAgent(Agent agent) {
+    Navigator.pushNamed(context, '/onboarding-step-2', arguments: agent);
+  }
+}
+```
+
+### 6.3 Document Upload & Verification Wireframe
+
+```dart
+class DocumentUploadPage extends StatefulWidget {
+  final Agent selectedAgent;
+
+  const DocumentUploadPage({Key? key, required this.selectedAgent}) : super(key: key);
+
+  @override
+  _DocumentUploadPageState createState() => _DocumentUploadPageState();
+}
+
+class _DocumentUploadPageState extends State<DocumentUploadPage> {
+  final Map<String, File?> _uploadedDocuments = {
+    'aadhar_card': null,
+    'pan_card': null,
+    'address_proof': null,
+    'bank_statement': null,
+  };
+
+  final Map<String, bool> _documentVerified = {
+    'aadhar_card': false,
+    'pan_card': false,
+    'address_proof': false,
+    'bank_statement': false,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Document Verification'),
+        elevation: 0,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Progress Indicator
+            _buildProgressIndicator(),
+            const SizedBox(height: 24),
+
+            // Instructions
+            _buildInstructions(),
+            const SizedBox(height: 24),
+
+            // Document Upload Sections
+            _buildDocumentSection('Aadhaar Card', 'aadhar_card', 'Government issued ID proof'),
+            const SizedBox(height: 20),
+            _buildDocumentSection('PAN Card', 'pan_card', 'Tax identification number'),
+            const SizedBox(height: 20),
+            _buildDocumentSection('Address Proof', 'address_proof', 'Utility bill or bank statement'),
+            const SizedBox(height: 20),
+            _buildDocumentSection('Bank Statement', 'bank_statement', 'Recent 3 months statement'),
+            const SizedBox(height: 32),
+
+            // Submit Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _canSubmit() ? _submitDocuments : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Submit for Verification',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProgressIndicator() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _buildStepIndicator(1, 'Agent Selection', true),
+              _buildStepConnector(true),
+              _buildStepIndicator(2, 'Documents', true),
+              _buildStepConnector(false),
+              _buildStepIndicator(3, 'Verification', false),
+              _buildStepConnector(false),
+              _buildStepIndicator(4, 'Complete', false),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Step 2 of 5: Document Upload',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).primaryColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepIndicator(int step, String label, bool isActive) {
+    return Expanded(
+      child: Column(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: isActive ? Theme.of(context).primaryColor : Colors.grey.shade300,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                step.toString(),
+                style: TextStyle(
+                  color: isActive ? Colors.white : Colors.grey.shade600,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: isActive ? Theme.of(context).primaryColor : Colors.grey.shade600,
+              fontWeight: isActive ? FontWeight.w500 : FontWeight.normal,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepConnector(bool isActive) {
+    return Container(
+      width: 20,
+      height: 2,
+      color: isActive ? Theme.of(context).primaryColor : Colors.grey.shade300,
+    );
+  }
+
+  Widget _buildInstructions() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.info_outline, color: Theme.of(context).primaryColor),
+                const SizedBox(width: 8),
+                Text(
+                  'Document Requirements',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Please upload clear, high-quality images of the following documents. All documents will be securely encrypted and verified.',
+              style: TextStyle(fontSize: 14, height: 1.5),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.amber.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.warning, color: Colors.amber.shade700, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Ensure all text is clearly visible and documents are not expired.',
+                      style: TextStyle(
+                        color: Colors.amber.shade800,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDocumentSection(String title, String documentKey, String description) {
+    final hasDocument = _uploadedDocuments[documentKey] != null;
+    final isVerified = _documentVerified[documentKey] ?? false;
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        description,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isVerified)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.green.shade300),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.green.shade700, size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Verified',
+                          style: TextStyle(
+                            color: Colors.green.shade700,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (hasDocument)
+              _buildDocumentPreview(documentKey)
+            else
+              _buildUploadArea(documentKey),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUploadArea(String documentKey) {
+    return Container(
+      height: 120,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300, style: BorderStyle.dashed),
+      ),
+      child: InkWell(
+        onTap: () => _uploadDocument(documentKey),
+        borderRadius: BorderRadius.circular(8),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.cloud_upload,
+              size: 32,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Tap to upload',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'JPG, PNG, PDF up to 5MB',
+              style: TextStyle(
+                color: Colors.grey.shade500,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDocumentPreview(String documentKey) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.green.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.green.shade200),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.description, color: Colors.green.shade600, size: 32),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Document uploaded successfully',
+                  style: TextStyle(
+                    color: Colors.green.shade800,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  'Ready for verification',
+                  style: TextStyle(
+                    color: Colors.green.shade600,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.edit, color: Colors.green.shade600),
+            onPressed: () => _uploadDocument(documentKey),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _canSubmit() {
+    return _uploadedDocuments.values.every((doc) => doc != null);
+  }
+
+  void _uploadDocument(String documentKey) {
+    // Implement document upload functionality
+    // This would typically use image_picker or file_picker
+  }
+
+  void _submitDocuments() {
+    // Submit documents for verification
+    Navigator.pushNamed(context, '/onboarding-step-3');
+  }
+}
+```
+
+### 6.4 KYC Verification & Biometric Setup Wireframe
+
+```dart
+class KYCVerificationPage extends StatefulWidget {
+  @override
+  _KYCVerificationPageState createState() => _KYCVerificationPageState();
+}
+
+class _KYCVerificationPageState extends State<KYCVerificationPage> {
+  bool _biometricEnabled = false;
+  bool _kycCompleted = false;
+  String _verificationStatus = 'pending';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Identity Verification'),
+        elevation: 0,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Progress Indicator
+            _buildProgressIndicator(),
+            const SizedBox(height: 24),
+
+            // KYC Status
+            _buildKYCStatus(),
+            const SizedBox(height: 24),
+
+            // Biometric Setup
+            _buildBiometricSetup(),
+            const SizedBox(height: 24),
+
+            // Security Features
+            _buildSecurityFeatures(),
+            const SizedBox(height: 32),
+
+            // Continue Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _kycCompleted ? _continueToNextStep : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  _kycCompleted ? 'Continue to Emergency Contacts' : 'Complete Verification',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProgressIndicator() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _buildStepIndicator(1, 'Agent', true),
+              _buildStepConnector(true),
+              _buildStepIndicator(2, 'Documents', true),
+              _buildStepConnector(true),
+              _buildStepIndicator(3, 'KYC', true),
+              _buildStepConnector(false),
+              _buildStepIndicator(4, 'Contacts', false),
+              _buildStepConnector(false),
+              _buildStepIndicator(5, 'Complete', false),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Step 3 of 5: Identity Verification',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).primaryColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepIndicator(int step, String label, bool isActive) {
+    return Expanded(
+      child: Column(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: isActive ? Theme.of(context).primaryColor : Colors.grey.shade300,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                step.toString(),
+                style: TextStyle(
+                  color: isActive ? Colors.white : Colors.grey.shade600,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: isActive ? Theme.of(context).primaryColor : Colors.grey.shade600,
+              fontWeight: isActive ? FontWeight.w500 : FontWeight.normal,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepConnector(bool isActive) {
+    return Container(
+      width: 20,
+      height: 2,
+      color: isActive ? Theme.of(context).primaryColor : Colors.grey.shade300,
+    );
+  }
+
+  Widget _buildKYCStatus() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'KYC Verification Status',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(_verificationStatus).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: _getStatusColor(_verificationStatus)),
+                  ),
+                  child: Text(
+                    _verificationStatus.toUpperCase(),
+                    style: TextStyle(
+                      color: _getStatusColor(_verificationStatus),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (_verificationStatus == 'pending')
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.hourglass_top, color: Colors.orange.shade700),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Your documents are being verified. This usually takes 5-10 minutes.',
+                        style: TextStyle(color: Colors.orange.shade800),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else if (_verificationStatus == 'completed')
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.green.shade700),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'KYC verification completed successfully. Your identity has been verified.',
+                        style: TextStyle(color: Colors.green.shade800),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBiometricSetup() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Biometric Authentication',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                Switch(
+                  value: _biometricEnabled,
+                  onChanged: (value) => setState(() => _biometricEnabled = value),
+                  activeColor: Theme.of(context).primaryColor,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Enable fingerprint or face unlock for quick and secure access to your account.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            if (_biometricEnabled)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.fingerprint, color: Colors.blue.shade700, size: 32),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Set up Biometric Login',
+                            style: TextStyle(
+                              color: Colors.blue.shade800,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Touch the fingerprint sensor or look at the camera to set up biometric authentication.',
+                            style: TextStyle(
+                              color: Colors.blue.shade700,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: _setupBiometric,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade600,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Setup'),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSecurityFeatures() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Security Features',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildSecurityFeature(
+              'Two-Factor Authentication',
+              'Add an extra layer of security with SMS verification',
+              Icons.security,
+              true,
+            ),
+            const SizedBox(height: 12),
+            _buildSecurityFeature(
+              'Transaction Alerts',
+              'Get notified of all account activities',
+              Icons.notifications,
+              true,
+            ),
+            const SizedBox(height: 12),
+            _buildSecurityFeature(
+              'Session Management',
+              'Automatically log out after inactivity',
+              Icons.timer,
+              true,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSecurityFeature(String title, String description, IconData icon, bool enabled) {
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: enabled ? Colors.green.shade100 : Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            icon,
+            color: enabled ? Colors.green.shade700 : Colors.grey.shade500,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: enabled ? Colors.black : Colors.grey.shade600,
+                ),
+              ),
+              Text(
+                description,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: enabled ? Colors.grey.shade600 : Colors.grey.shade500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Icon(
+          enabled ? Icons.check_circle : Icons.radio_button_unchecked,
+          color: enabled ? Colors.green.shade600 : Colors.grey.shade400,
+        ),
+      ],
+    );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return Colors.green;
+      case 'pending':
+        return Colors.orange;
+      case 'failed':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  void _setupBiometric() {
+    // Implement biometric setup
+    setState(() => _biometricEnabled = true);
+  }
+
+  void _continueToNextStep() {
+    Navigator.pushNamed(context, '/onboarding-step-4');
+  }
+}
+```
+
+### 6.5 Emergency Contact Setup Wireframe
+
+```dart
+class EmergencyContactSetupPage extends StatefulWidget {
+  @override
+  _EmergencyContactSetupPageState createState() => _EmergencyContactSetupPageState();
+}
+
+class _EmergencyContactSetupPageState extends State<EmergencyContactSetupPage> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _relationshipController = TextEditingController();
+
+  String _selectedRelationship = 'family_member';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Emergency Contacts'),
+        elevation: 0,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Progress Indicator
+              _buildProgressIndicator(),
+              const SizedBox(height: 24),
+
+              // Instructions
+              _buildInstructions(),
+              const SizedBox(height: 24),
+
+              // Contact Form
+              _buildContactForm(),
+              const SizedBox(height: 24),
+
+              // Additional Contacts (Optional)
+              _buildAdditionalContacts(),
+              const SizedBox(height: 32),
+
+              // Complete Setup Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _completeOnboarding,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Complete Setup',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProgressIndicator() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _buildStepIndicator(1, 'Agent', true),
+              _buildStepConnector(true),
+              _buildStepIndicator(2, 'Documents', true),
+              _buildStepConnector(true),
+              _buildStepIndicator(3, 'KYC', true),
+              _buildStepConnector(true),
+              _buildStepIndicator(4, 'Contacts', true),
+              _buildStepConnector(false),
+              _buildStepIndicator(5, 'Complete', false),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Step 4 of 5: Emergency Contacts',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).primaryColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepIndicator(int step, String label, bool isActive) {
+    return Expanded(
+      child: Column(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: isActive ? Theme.of(context).primaryColor : Colors.grey.shade300,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                step.toString(),
+                style: TextStyle(
+                  color: isActive ? Colors.white : Colors.grey.shade600,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: isActive ? Theme.of(context).primaryColor : Colors.grey.shade600,
+              fontWeight: isActive ? FontWeight.w500 : FontWeight.normal,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepConnector(bool isActive) {
+    return Container(
+      width: 20,
+      height: 2,
+      color: isActive ? Theme.of(context).primaryColor : Colors.grey.shade300,
+    );
+  }
+
+  Widget _buildInstructions() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.contact_emergency, color: Theme.of(context).primaryColor),
+                const SizedBox(width: 8),
+                Text(
+                  'Emergency Contact Setup',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Add trusted contacts who can be reached in case of emergency or if we need to contact someone on your behalf.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info, color: Colors.blue.shade700, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'This information is securely encrypted and will only be used in genuine emergency situations.',
+                      style: TextStyle(
+                        color: Colors.blue.shade800,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContactForm() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Primary Emergency Contact',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Full Name
+            TextFormField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'Full Name',
+                hintText: 'Enter contact person\'s full name',
+                border: OutlineInputBorder(),
+              ),
+              validator: (value) {
+                if (value?.isEmpty ?? true) {
+                  return 'Please enter the contact person\'s name';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // Phone Number
+            TextFormField(
+              controller: _phoneController,
+              decoration: const InputDecoration(
+                labelText: 'Phone Number',
+                hintText: '+91 98765 43210',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.phone),
+              ),
+              keyboardType: TextInputType.phone,
+              validator: (value) {
+                if (value?.isEmpty ?? true) {
+                  return 'Please enter a phone number';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // Email (Optional)
+            TextFormField(
+              controller: _emailController,
+              decoration: const InputDecoration(
+                labelText: 'Email Address (Optional)',
+                hintText: 'contact@example.com',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.email),
+              ),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 16),
+
+            // Relationship
+            DropdownButtonFormField<String>(
+              value: _selectedRelationship,
+              decoration: const InputDecoration(
+                labelText: 'Relationship',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(value: 'spouse', child: Text('Spouse')),
+                DropdownMenuItem(value: 'child', child: Text('Child')),
+                DropdownMenuItem(value: 'parent', child: Text('Parent')),
+                DropdownMenuItem(value: 'sibling', child: Text('Sibling')),
+                DropdownMenuItem(value: 'family_member', child: Text('Family Member')),
+                DropdownMenuItem(value: 'friend', child: Text('Friend')),
+                DropdownMenuItem(value: 'other', child: Text('Other')),
+              ],
+              onChanged: (value) => setState(() => _selectedRelationship = value!),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdditionalContacts() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Additional Emergency Contacts',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: _addAdditionalContact,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add Contact'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).primaryColor,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300, style: BorderStyle.dashed),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.contact_phone,
+                    size: 48,
+                    color: Colors.grey.shade400,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No additional contacts added',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Add family members or trusted friends for additional emergency contacts',
+                    style: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _addAdditionalContact() {
+    // Navigate to add additional contact screen
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add Emergency Contact'),
+        content: const Text('This feature allows you to add multiple emergency contacts for enhanced safety and communication.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // Navigate to add contact form
+            },
+            child: const Text('Add Contact'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _completeOnboarding() {
+    if (_formKey.currentState?.validate() ?? false) {
+      // Complete onboarding process
+      Navigator.pushReplacementNamed(context, '/onboarding-complete');
+    }
+  }
+}
+```
+
+### 6.6 Onboarding Completion Wireframe
+
+```dart
+class OnboardingCompletePage extends StatefulWidget {
+  @override
+  _OnboardingCompletePageState createState() => _OnboardingCompletePageState();
+}
+
+class _OnboardingCompletePageState extends State<OnboardingCompletePage>
+    with TickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
+    );
+    _animationController.forward();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Theme.of(context).primaryColor,
+              Theme.of(context).primaryColor.withOpacity(0.8),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                // Progress Complete
+                _buildProgressComplete(),
+                const Spacer(),
+
+                // Success Animation
+                _buildSuccessAnimation(),
+                const Spacer(),
+
+                // Welcome Message
+                _buildWelcomeMessage(),
+                const Spacer(),
+
+                // Action Buttons
+                _buildActionButtons(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProgressComplete() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          _buildStepIndicator(1, true),
+          _buildStepConnector(true),
+          _buildStepIndicator(2, true),
+          _buildStepConnector(true),
+          _buildStepIndicator(3, true),
+          _buildStepConnector(true),
+          _buildStepIndicator(4, true),
+          _buildStepConnector(true),
+          _buildStepIndicator(5, true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepIndicator(int step, bool isCompleted) {
+    return Expanded(
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: isCompleted ? Colors.white : Colors.white.withOpacity(0.3),
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: Icon(
+            isCompleted ? Icons.check : Icons.circle,
+            color: Theme.of(context).primaryColor,
+            size: 16,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStepConnector(bool isCompleted) {
+    return Container(
+      width: 20,
+      height: 2,
+      color: isCompleted ? Colors.white : Colors.white.withOpacity(0.3),
+    );
+  }
+
+  Widget _buildSuccessAnimation() {
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: Container(
+        width: 120,
+        height: 120,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Icon(
+          Icons.check_circle,
+          color: Theme.of(context).primaryColor,
+          size: 60,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWelcomeMessage() {
+    return Column(
+      children: [
+        Text(
+          'Welcome to Agent Mitra! 🎉',
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Your account has been successfully set up and verified. You can now explore all the features and start your insurance journey with confidence.',
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            color: Colors.white.withOpacity(0.9),
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: _startExploring,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Theme.of(context).primaryColor,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 2,
+            ),
+            child: const Text(
+              'Start Exploring',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: _scheduleAgentCall,
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Colors.white),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              'Schedule a Call with Your Agent',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              onPressed: _shareSuccess,
+              icon: const Icon(Icons.share, color: Colors.white),
+              tooltip: 'Share your success',
+            ),
+            IconButton(
+              onPressed: _downloadWelcomeKit,
+              icon: const Icon(Icons.download, color: Colors.white),
+              tooltip: 'Download welcome kit',
+            ),
+            IconButton(
+              onPressed: _contactSupport,
+              icon: const Icon(Icons.support, color: Colors.white),
+              tooltip: 'Contact support',
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  void _startExploring() {
+    Navigator.pushReplacementNamed(context, '/home');
+  }
+
+  void _scheduleAgentCall() {
+    // Navigate to agent scheduling
+    Navigator.pushNamed(context, '/schedule-agent-call');
+  }
+
+  void _shareSuccess() {
+    // Implement share functionality
+  }
+
+  void _downloadWelcomeKit() {
+    // Download welcome kit
+  }
+
+  void _contactSupport() {
+    // Contact support
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+}
+```
+
+## 7. Agent Portal Enhanced Wireframes
+
+### 7.1 Callback Request Management Dashboard Wireframe
+
+```dart
+class CallbackManagementDashboardPage extends StatefulWidget {
+  @override
+  _CallbackManagementDashboardPageState createState() => _CallbackManagementDashboardPageState();
+}
+
+class _CallbackManagementDashboardPageState extends State<CallbackManagementDashboardPage> {
+  late List<CallbackRequest> _requests;
+  String _selectedPriority = 'all';
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCallbackRequests();
+  }
+
+  Future<void> _loadCallbackRequests() async {
+    try {
+      _requests = await CallbackService.getCallbackRequests(priority: _selectedPriority);
+      setState(() => _isLoading = false);
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Callback Management'),
+        elevation: 0,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: _showFilterDialog,
+          ),
+          IconButton(
+            icon: const Icon(Icons.more_vert),
+            onPressed: _showMoreOptions,
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                // Priority Tabs
+                _buildPriorityTabs(),
+                // Requests List
+                Expanded(child: _buildRequestsList()),
+              ],
+            ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _createNewCallback,
+        icon: const Icon(Icons.add_call),
+        label: const Text('New Callback'),
+        backgroundColor: Theme.of(context).primaryColor,
+      ),
+    );
+  }
+
+  Widget _buildPriorityTabs() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      color: Colors.grey.shade50,
+      child: Row(
+        children: [
+          _buildPriorityTab('All', 'all', Colors.grey, _getTotalCount()),
+          const SizedBox(width: 8),
+          _buildPriorityTab('High', 'high', Colors.red, _getPriorityCount('high')),
+          const SizedBox(width: 8),
+          _buildPriorityTab('Medium', 'medium', Colors.orange, _getPriorityCount('medium')),
+          const SizedBox(width: 8),
+          _buildPriorityTab('Low', 'low', Colors.green, _getPriorityCount('low')),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriorityTab(String label, String priority, Color color, int count) {
+    final isSelected = _selectedPriority == priority;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() {
+          _selectedPriority = priority;
+          _loadCallbackRequests();
+        }),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? color.withOpacity(0.1) : Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isSelected ? color : Colors.grey.shade300,
+            ),
+          ),
+          child: Column(
+            children: [
+              Text(
+                count.toString(),
+                style: TextStyle(
+                  color: isSelected ? color : Colors.grey.shade600,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? color : Colors.grey.shade600,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRequestsList() {
+    final filteredRequests = _selectedPriority == 'all'
+        ? _requests
+        : _requests.where((request) => request.priority == _selectedPriority).toList();
+
+    if (filteredRequests.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: filteredRequests.length,
+      itemBuilder: (context, index) {
+        return _buildCallbackCard(filteredRequests[index]);
+      },
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.phone_callback,
+            size: 64,
+            color: Colors.grey.shade300,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No callback requests',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'All caught up! No pending callback requests.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Colors.grey.shade500,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCallbackCard(CallbackRequest request) {
+    final isOverdue = request.isOverdue;
+    final timeRemaining = request.timeRemaining;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isOverdue ? Colors.red.shade300 : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: InkWell(
+          onTap: () => _viewCallbackDetails(request),
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with priority and status
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _getPriorityColor(request.priority).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: _getPriorityColor(request.priority)),
+                      ),
+                      child: Text(
+                        request.priority.toUpperCase(),
+                        style: TextStyle(
+                          color: _getPriorityColor(request.priority),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    if (isOverdue)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.red.shade300),
+                        ),
+                        child: Text(
+                          'OVERDUE',
+                          style: TextStyle(
+                            color: Colors.red.shade700,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _formatTimeAgo(request.createdAt),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Customer information
+                Text(
+                  request.customerName,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.phone, size: 16, color: Colors.grey.shade600),
+                    const SizedBox(width: 4),
+                    Text(
+                      request.customerPhone,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+                if (request.customerEmail != null) ...[
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(Icons.email, size: 16, color: Colors.grey.shade600),
+                      const SizedBox(width: 4),
+                      Text(
+                        request.customerEmail!,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 8),
+
+                // Request details
+                Text(
+                  'Request: ${request.requestType}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  request.description,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.shade700,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 12),
+
+                // SLA and time information
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.timer,
+                        size: 16,
+                        color: isOverdue ? Colors.red.shade600 : Colors.blue.shade600,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        timeRemaining,
+                        style: TextStyle(
+                          color: isOverdue ? Colors.red.shade600 : Colors.blue.shade600,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        'SLA: ${request.slaHours}h',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Action buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.call),
+                        label: const Text('Call Now'),
+                        onPressed: () => _initiateCall(request),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).primaryColor,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.schedule),
+                        label: const Text('Schedule'),
+                        onPressed: () => _scheduleCallback(request),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _getPriorityColor(String priority) {
+    switch (priority.toLowerCase()) {
+      case 'high':
+        return Colors.red;
+      case 'medium':
+        return Colors.orange;
+      case 'low':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  int _getTotalCount() {
+    return _requests.length;
+  }
+
+  int _getPriorityCount(String priority) {
+    return _requests.where((request) => request.priority == priority).length;
+  }
+
+  String _formatTimeAgo(DateTime timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
+  }
+
+  void _showFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Filter Requests'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioListTile<String>(
+              title: const Text('All Requests'),
+              value: 'all',
+              groupValue: _selectedPriority,
+              onChanged: (value) => setState(() => _selectedPriority = value!),
+            ),
+            RadioListTile<String>(
+              title: const Text('High Priority'),
+              value: 'high',
+              groupValue: _selectedPriority,
+              onChanged: (value) => setState(() => _selectedPriority = value!),
+            ),
+            RadioListTile<String>(
+              title: const Text('Medium Priority'),
+              value: 'medium',
+              groupValue: _selectedPriority,
+              onChanged: (value) => setState(() => _selectedPriority = value!),
+            ),
+            RadioListTile<String>(
+              title: const Text('Low Priority'),
+              value: 'low',
+              groupValue: _selectedPriority,
+              onChanged: (value) => setState(() => _selectedPriority = value!),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _loadCallbackRequests();
+            },
+            child: const Text('Apply'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMoreOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.analytics),
+            title: const Text('View Analytics'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/callback-analytics');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title: const Text('SLA Settings'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/callback-settings');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.download),
+            title: const Text('Export Data'),
+            onTap: () {
+              Navigator.pop(context);
+              _exportCallbackData();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _viewCallbackDetails(CallbackRequest request) {
+    Navigator.pushNamed(context, '/callback-details', arguments: request);
+  }
+
+  void _initiateCall(CallbackRequest request) {
+    // Implement phone call functionality
+  }
+
+  void _scheduleCallback(CallbackRequest request) {
+    Navigator.pushNamed(context, '/schedule-callback', arguments: request);
+  }
+
+  void _createNewCallback() {
+    Navigator.pushNamed(context, '/create-callback');
+  }
+
+  void _exportCallbackData() {
+    // Export callback data
+  }
+}
+```
+
+## 8. WhatsApp Integration Pages
 
 #### WhatsApp Chat Page
 ```dart
@@ -3974,9 +7894,9 @@ class _WhatsAppChatPageState extends State<WhatsAppChatPage> {
 }
 ```
 
-## 6. Error Handling & Edge Cases
+## 9. Error Handling & Edge Cases
 
-### 6.1 Error Pages
+### 9.1 Error Pages
 
 #### Network Error Page
 ```dart
@@ -4188,7 +8108,7 @@ class TrialExpiredPage extends StatelessWidget {
 }
 ```
 
-### 6.2 Loading & Empty States
+### 9.2 Loading & Empty States
 
 #### Loading State Components
 ```dart
@@ -4297,9 +8217,9 @@ class EmptyStateCard extends StatelessWidget {
 }
 ```
 
-## 7. Feature Flag Integration in Pages
+## 10. Feature Flag Integration in Pages
 
-### 7.1 Conditional Page Rendering
+### 10.1 Conditional Page Rendering
 
 #### Feature Flag-Aware Page Builder
 ```dart
@@ -4391,7 +8311,7 @@ class FeatureDisabledPage extends StatelessWidget {
 }
 ```
 
-### 7.2 Real-Time Feature Flag Updates
+### 10.2 Real-Time Feature Flag Updates
 
 #### Background Feature Flag Sync
 ```dart
@@ -4445,7 +8365,7 @@ class FeatureFlagSyncService {
 }
 ```
 
-## 8. Implementation Summary
+## 11. Implementation Summary
 
 This comprehensive pages design provides:
 

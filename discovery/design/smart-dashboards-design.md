@@ -583,6 +583,1447 @@ FEATURE_VOICE_DASHBOARD_CONTROLS=true
 FEATURE_OFFLINE_DASHBOARD_MODE=true
 ```
 
+## 6. Campaign Performance Analytics
+
+### 6.1 Campaign Analytics Dashboard Architecture
+
+The Campaign Performance Analytics dashboard provides comprehensive insights into marketing campaign effectiveness, ROI tracking, and customer engagement metrics through the Agent Configuration Portal.
+
+#### Campaign Performance Dashboard Implementation
+```dart
+class CampaignPerformanceDashboard extends StatefulWidget {
+  @override
+  _CampaignPerformanceDashboardState createState() => _CampaignPerformanceDashboardState();
+}
+
+class _CampaignPerformanceDashboardState extends State<CampaignPerformanceDashboard> {
+  late Map<String, dynamic> _campaignData;
+  String _selectedTimeframe = '30d';
+  String _selectedCampaignType = 'all';
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCampaignData();
+  }
+
+  Future<void> _loadCampaignData() async {
+    try {
+      _campaignData = await CampaignAnalyticsService.getCampaignPerformanceData(
+        timeframe: _selectedTimeframe,
+        campaignType: _selectedCampaignType,
+      );
+      setState(() => _isLoading = false);
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Campaign Performance Analytics'),
+        elevation: 0,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (timeframe) {
+              setState(() => _selectedTimeframe = timeframe);
+              _loadCampaignData();
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: '7d', child: Text('Last 7 days')),
+              const PopupMenuItem(value: '30d', child: Text('Last 30 days')),
+              const PopupMenuItem(value: '90d', child: Text('Last 90 days')),
+              const PopupMenuItem(value: '1y', child: Text('Last year')),
+            ],
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Key Performance Metrics
+                  _buildKPIMetrics(),
+                  const SizedBox(height: 24),
+
+                  // Campaign Performance Chart
+                  _buildCampaignPerformanceChart(),
+                  const SizedBox(height: 24),
+
+                  // Campaign Type Breakdown
+                  _buildCampaignTypeBreakdown(),
+                  const SizedBox(height: 24),
+
+                  // Top Performing Campaigns
+                  _buildTopPerformingCampaigns(),
+                  const SizedBox(height: 24),
+
+                  // ROI Analysis
+                  _buildROIAnalysis(),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildKPIMetrics() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Key Performance Indicators',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildKPICard(
+                    'Total Campaigns',
+                    _campaignData['totalCampaigns'].toString(),
+                    Icons.campaign,
+                    Colors.blue,
+                    '+${_campaignData['campaignGrowth']}%',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildKPICard(
+                    'Total Reach',
+                    _formatNumber(_campaignData['totalReach']),
+                    Icons.people,
+                    Colors.green,
+                    '+${_campaignData['reachGrowth']}%',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildKPICard(
+                    'Conversion Rate',
+                    '${_campaignData['conversionRate']}%',
+                    Icons.trending_up,
+                    Colors.orange,
+                    '+${_campaignData['conversionGrowth']}%',
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildKPICard(String title, String value, IconData icon, Color color, String change) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 32),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              color: color.withOpacity(0.8),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            change,
+            style: TextStyle(
+              fontSize: 10,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCampaignPerformanceChart() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Campaign Performance Trend',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                DropdownButton<String>(
+                  value: _selectedCampaignType,
+                  items: const [
+                    DropdownMenuItem(value: 'all', child: Text('All Campaigns')),
+                    DropdownMenuItem(value: 'whatsapp', child: Text('WhatsApp')),
+                    DropdownMenuItem(value: 'email', child: Text('Email')),
+                    DropdownMenuItem(value: 'sms', child: Text('SMS')),
+                  ],
+                  onChanged: (value) {
+                    setState(() => _selectedCampaignType = value!);
+                    _loadCampaignData();
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              height: 300,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Center(
+                child: Text('Interactive Line Chart\n(Reach, Engagement, Conversions over time)'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCampaignTypeBreakdown() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Campaign Type Performance',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              height: 250,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Center(
+                child: Text('Pie Chart & Bar Chart\n(Breakdown by campaign type)'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopPerformingCampaigns() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Top Performing Campaigns',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ..._campaignData['topCampaigns'].map<Widget>((campaign) =>
+              Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.star, color: Colors.green.shade600),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            campaign['name'],
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green.shade800,
+                            ),
+                          ),
+                          Text(
+                            '${campaign['reach']} reach • ${campaign['conversionRate']}% conversion',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.green.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'ROI: ${campaign['roi']}x',
+                        style: TextStyle(
+                          color: Colors.green.shade800,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildROIAnalysis() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'ROI Analysis',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              height: 200,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Center(
+                child: Text('ROI Scatter Plot\n(Campaign cost vs. revenue generated)'),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildROIInsight('Average ROI', '${_campaignData['averageROI']}x', Colors.blue),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildROIInsight('Best Performer', _campaignData['bestCampaign'], Colors.green),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildROIInsight('Total Investment', '₹${_formatNumber(_campaignData['totalInvestment'])}', Colors.orange),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildROIInsight(String title, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              color: color.withOpacity(0.8),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatNumber(int number) {
+    if (number >= 1000000) {
+      return '${(number / 1000000).toStringAsFixed(1)}M';
+    } else if (number >= 1000) {
+      return '${(number / 1000).toStringAsFixed(1)}K';
+    }
+    return number.toString();
+  }
+}
+```
+
+### 6.2 Campaign Effectiveness Metrics
+
+#### Key Performance Indicators (KPIs)
+```typescript
+interface CampaignKPIs {
+  // Reach & Engagement
+  totalReach: number;
+  uniqueImpressions: number;
+  engagementRate: number;
+  clickThroughRate: number;
+
+  // Conversion Metrics
+  conversionRate: number;
+  costPerAcquisition: number;
+  customerLifetimeValue: number;
+
+  // Financial Metrics
+  totalInvestment: number;
+  revenueGenerated: number;
+  returnOnInvestment: number;
+  profitMargin: number;
+
+  // Time-based Metrics
+  campaignDuration: number;
+  timeToFirstConversion: number;
+  peakPerformanceTime: string;
+
+  // Quality Metrics
+  customerSatisfaction: number;
+  repeatPurchaseRate: number;
+  churnRate: number;
+}
+```
+
+#### Campaign Analytics Service Implementation
+```python
+# portal_service/app/analytics/campaign_analytics.py
+"""
+Campaign Performance Analytics Service
+Provides comprehensive analytics for marketing campaign effectiveness
+"""
+
+from typing import Dict, List, Optional, Any
+from datetime import datetime, timedelta
+from sqlalchemy.ext.asyncio import AsyncSession
+import logging
+
+from ..models import Campaign, CampaignMetric, CustomerInteraction
+from ...database import get_db
+
+logger = logging.getLogger(__name__)
+
+class CampaignAnalyticsService:
+    """Service for campaign performance analytics"""
+
+    @staticmethod
+    async def get_campaign_performance_data(
+        db: AsyncSession,
+        timeframe: str = '30d',
+        campaign_type: Optional[str] = None,
+        agent_id: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """
+        Get comprehensive campaign performance data
+        """
+        try:
+            # Parse timeframe
+            days = CampaignAnalyticsService._parse_timeframe(timeframe)
+            start_date = datetime.utcnow() - timedelta(days=days)
+
+            # Build filters
+            filters = [Campaign.created_at >= start_date]
+            if campaign_type and campaign_type != 'all':
+                filters.append(Campaign.campaign_type == campaign_type)
+            if agent_id:
+                filters.append(Campaign.agent_id == agent_id)
+
+            # Get campaign data
+            campaigns_query = db.query(Campaign).filter(*filters)
+            campaigns = await db.execute(campaigns_query)
+            campaigns = campaigns.scalars().all()
+
+            # Calculate metrics
+            total_campaigns = len(campaigns)
+            total_reach = sum(c.reach for c in campaigns)
+            total_investment = sum(c.budget for c in campaigns)
+            total_revenue = sum(c.revenue_generated for c in campaigns)
+
+            # Calculate conversion rate
+            total_conversions = sum(c.conversions for c in campaigns)
+            conversion_rate = (total_conversions / total_reach * 100) if total_reach > 0 else 0
+
+            # Calculate ROI
+            roi = (total_revenue / total_investment) if total_investment > 0 else 0
+
+            # Get top performing campaigns
+            top_campaigns = sorted(
+                campaigns,
+                key=lambda c: c.roi if c.roi else 0,
+                reverse=True
+            )[:5]
+
+            return {
+                'totalCampaigns': total_campaigns,
+                'totalReach': total_reach,
+                'totalInvestment': total_investment,
+                'totalRevenue': total_revenue,
+                'conversionRate': round(conversion_rate, 2),
+                'roi': round(roi, 2),
+                'campaignGrowth': CampaignAnalyticsService._calculate_growth(db, 'campaigns', days),
+                'reachGrowth': CampaignAnalyticsService._calculate_growth(db, 'reach', days),
+                'conversionGrowth': CampaignAnalyticsService._calculate_growth(db, 'conversions', days),
+                'topCampaigns': [
+                    {
+                        'name': c.name,
+                        'reach': c.reach,
+                        'conversionRate': round((c.conversions / c.reach * 100) if c.reach > 0 else 0, 1),
+                        'roi': round(c.roi, 1) if c.roi else 0
+                    }
+                    for c in top_campaigns
+                ],
+                'averageROI': round(roi, 1),
+                'bestCampaign': top_campaigns[0].name if top_campaigns else 'N/A'
+            }
+
+        except Exception as e:
+            logger.error(f"Campaign analytics error: {str(e)}")
+            return CampaignAnalyticsService._get_empty_analytics()
+
+    @staticmethod
+    async def get_campaign_type_breakdown(
+        db: AsyncSession,
+        timeframe: str = '30d'
+    ) -> Dict[str, Any]:
+        """
+        Get campaign performance breakdown by type
+        """
+        try:
+            days = CampaignAnalyticsService._parse_timeframe(timeframe)
+            start_date = datetime.utcnow() - timedelta(days=days)
+
+            # Group campaigns by type
+            type_breakdown = await db.execute("""
+                SELECT
+                    campaign_type,
+                    COUNT(*) as count,
+                    SUM(reach) as total_reach,
+                    SUM(conversions) as total_conversions,
+                    SUM(budget) as total_budget,
+                    SUM(revenue_generated) as total_revenue
+                FROM campaigns
+                WHERE created_at >= :start_date
+                GROUP BY campaign_type
+            """, {'start_date': start_date})
+
+            breakdown = {}
+            for row in type_breakdown:
+                campaign_type = row[0] or 'other'
+                breakdown[campaign_type] = {
+                    'count': row[1],
+                    'reach': row[2] or 0,
+                    'conversions': row[3] or 0,
+                    'budget': row[4] or 0,
+                    'revenue': row[5] or 0,
+                    'conversionRate': round((row[3] / row[2] * 100) if row[2] and row[2] > 0 else 0, 2),
+                    'roi': round((row[5] / row[4]) if row[4] and row[4] > 0 else 0, 2)
+                }
+
+            return breakdown
+
+        except Exception as e:
+            logger.error(f"Campaign type breakdown error: {str(e)}")
+            return {}
+
+    @staticmethod
+    async def get_campaign_trends(
+        db: AsyncSession,
+        timeframe: str = '30d'
+    ) -> List[Dict[str, Any]]:
+        """
+        Get campaign performance trends over time
+        """
+        try:
+            days = CampaignAnalyticsService._parse_timeframe(timeframe)
+            start_date = datetime.utcnow() - timedelta(days=days)
+
+            # Get daily metrics
+            trends_query = await db.execute("""
+                SELECT
+                    DATE(created_at) as date,
+                    COUNT(*) as campaigns_created,
+                    SUM(reach) as daily_reach,
+                    SUM(conversions) as daily_conversions,
+                    SUM(budget) as daily_budget,
+                    SUM(revenue_generated) as daily_revenue
+                FROM campaigns
+                WHERE created_at >= :start_date
+                GROUP BY DATE(created_at)
+                ORDER BY date
+            """, {'start_date': start_date})
+
+            trends = []
+            for row in trends_query:
+                date, campaigns, reach, conversions, budget, revenue = row
+                trends.append({
+                    'date': date.isoformat(),
+                    'campaignsCreated': campaigns,
+                    'reach': reach or 0,
+                    'conversions': conversions or 0,
+                    'budget': budget or 0,
+                    'revenue': revenue or 0,
+                    'conversionRate': round((conversions / reach * 100) if reach and reach > 0 else 0, 2),
+                    'roi': round((revenue / budget) if budget and budget > 0 else 0, 2)
+                })
+
+            return trends
+
+        except Exception as e:
+            logger.error(f"Campaign trends error: {str(e)}")
+            return []
+
+    @staticmethod
+    def _parse_timeframe(timeframe: str) -> int:
+        """Parse timeframe string to days"""
+        timeframe_map = {
+            '7d': 7,
+            '30d': 30,
+            '90d': 90,
+            '1y': 365
+        }
+        return timeframe_map.get(timeframe, 30)
+
+    @staticmethod
+    async def _calculate_growth(db: AsyncSession, metric: str, days: int) -> float:
+        """Calculate growth percentage for a metric"""
+        try:
+            current_period_start = datetime.utcnow() - timedelta(days=days)
+            previous_period_start = datetime.utcnow() - timedelta(days=days * 2)
+
+            # This is a simplified implementation
+            # In practice, you'd query actual metrics for both periods
+            return 12.5  # Placeholder growth percentage
+
+        except Exception:
+            return 0.0
+
+    @staticmethod
+    def _get_empty_analytics() -> Dict[str, Any]:
+        """Return empty analytics structure"""
+        return {
+            'totalCampaigns': 0,
+            'totalReach': 0,
+            'totalInvestment': 0,
+            'totalRevenue': 0,
+            'conversionRate': 0,
+            'roi': 0,
+            'campaignGrowth': 0,
+            'reachGrowth': 0,
+            'conversionGrowth': 0,
+            'topCampaigns': [],
+            'averageROI': 0,
+            'bestCampaign': 'N/A'
+        }
+```
+
+## 7. Content Performance Analytics
+
+### 7.1 Content Analytics Dashboard Architecture
+
+The Content Performance Analytics dashboard provides detailed insights into educational content effectiveness, user engagement patterns, and learning outcomes through the Agent Configuration Portal.
+
+#### Content Performance Dashboard Implementation
+```dart
+class ContentPerformanceDashboard extends StatefulWidget {
+  @override
+  _ContentPerformanceDashboardState createState() => _ContentPerformanceDashboardState();
+}
+
+class _ContentPerformanceDashboardState extends State<ContentPerformanceDashboard> {
+  late Map<String, dynamic> _contentData;
+  String _selectedTimeframe = '30d';
+  String _selectedContentType = 'all';
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadContentData();
+  }
+
+  Future<void> _loadContentData() async {
+    try {
+      _contentData = await ContentAnalyticsService.getContentPerformanceData(
+        timeframe: _selectedTimeframe,
+        contentType: _selectedContentType,
+      );
+      setState(() => _isLoading = false);
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Content Performance Analytics'),
+        elevation: 0,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (timeframe) {
+              setState(() => _selectedTimeframe = timeframe);
+              _loadContentData();
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: '7d', child: Text('Last 7 days')),
+              const PopupMenuItem(value: '30d', child: Text('Last 30 days')),
+              const PopupMenuItem(value: '90d', child: Text('Last 90 days')),
+              const PopupMenuItem(value: '1y', child: Text('Last year')),
+            ],
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Key Content Metrics
+                  _buildContentKPIMetrics(),
+                  const SizedBox(height: 24),
+
+                  // Content Engagement Chart
+                  _buildContentEngagementChart(),
+                  const SizedBox(height: 24),
+
+                  // Content Type Performance
+                  _buildContentTypeBreakdown(),
+                  const SizedBox(height: 24),
+
+                  // Top Performing Content
+                  _buildTopPerformingContent(),
+                  const SizedBox(height: 24),
+
+                  // User Engagement Analysis
+                  _buildUserEngagementAnalysis(),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildContentKPIMetrics() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Content Performance Metrics',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildContentKPICard(
+                    'Total Views',
+                    _formatNumber(_contentData['totalViews']),
+                    Icons.visibility,
+                    Colors.blue,
+                    '+${_contentData['viewsGrowth']}%',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildContentKPICard(
+                    'Avg. Watch Time',
+                    '${_contentData['avgWatchTime']}min',
+                    Icons.access_time,
+                    Colors.green,
+                    '+${_contentData['watchTimeGrowth']}%',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildContentKPICard(
+                    'Completion Rate',
+                    '${_contentData['completionRate']}%',
+                    Icons.check_circle,
+                    Colors.orange,
+                    '+${_contentData['completionGrowth']}%',
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContentKPICard(String title, String value, IconData icon, Color color, String change) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 32),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              color: color.withOpacity(0.8),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            change,
+            style: TextStyle(
+              fontSize: 10,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContentEngagementChart() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Content Engagement Trends',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                DropdownButton<String>(
+                  value: _selectedContentType,
+                  items: const [
+                    DropdownMenuItem(value: 'all', child: Text('All Content')),
+                    DropdownMenuItem(value: 'video', child: Text('Videos')),
+                    DropdownMenuItem(value: 'article', child: Text('Articles')),
+                    DropdownMenuItem(value: 'quiz', child: Text('Quizzes')),
+                    DropdownMenuItem(value: 'tutorial', child: Text('Tutorials')),
+                  ],
+                  onChanged: (value) {
+                    setState(() => _selectedContentType = value!);
+                    _loadContentData();
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              height: 300,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Center(
+                child: Text('Interactive Multi-line Chart\n(Views, Watch Time, Completion Rate over time)'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContentTypeBreakdown() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Content Type Performance',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              height: 250,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Center(
+                child: Text('Stacked Bar Chart\n(Performance by content type)'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopPerformingContent() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Top Performing Content',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ..._contentData['topContent'].map<Widget>((content) =>
+              Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.purple.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.purple.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.purple.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        _getContentTypeIcon(content['type']),
+                        color: Colors.purple.shade700,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            content['title'],
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.purple.shade800,
+                            ),
+                          ),
+                          Text(
+                            '${_formatNumber(content['views'])} views • ${content['completionRate']}% completion',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.purple.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.purple.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${content['engagementScore']}/10',
+                        style: TextStyle(
+                          color: Colors.purple.shade800,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserEngagementAnalysis() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'User Engagement Analysis',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              height: 200,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Center(
+                child: Text('Heat Map\n(User engagement by time of day and content type)'),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildEngagementInsight('Peak Engagement Time', _contentData['peakTime'], Colors.blue),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildEngagementInsight('Most Popular Type', _contentData['popularType'], Colors.green),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildEngagementInsight('Avg. Session Time', '${_contentData['avgSessionTime']}min', Colors.orange),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEngagementInsight(String title, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              color: color.withOpacity(0.8),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getContentTypeIcon(String contentType) {
+    switch (contentType.toLowerCase()) {
+      case 'video':
+        return Icons.video_library;
+      case 'article':
+        return Icons.article;
+      case 'quiz':
+        return Icons.quiz;
+      case 'tutorial':
+        return Icons.school;
+      default:
+        return Icons.content_copy;
+    }
+  }
+
+  String _formatNumber(int number) {
+    if (number >= 1000000) {
+      return '${(number / 1000000).toStringAsFixed(1)}M';
+    } else if (number >= 1000) {
+      return '${(number / 1000).toStringAsFixed(1)}K';
+    }
+    return number.toString();
+  }
+}
+```
+
+### 7.2 Content Effectiveness Metrics
+
+#### Content Performance Indicators
+```typescript
+interface ContentPerformanceMetrics {
+  // Consumption Metrics
+  totalViews: number;
+  uniqueViewers: number;
+  averageWatchTime: number;
+  completionRate: number;
+  dropOffRate: number;
+
+  // Engagement Metrics
+  likesCount: number;
+  sharesCount: number;
+  commentsCount: number;
+  bookmarksCount: number;
+  engagementRate: number;
+
+  // Learning Outcomes
+  quizScores: number[];
+  averageQuizScore: number;
+  certificationRate: number;
+  knowledgeRetentionRate: number;
+
+  // User Behavior
+  returnVisitorRate: number;
+  contentDiscoveryRate: number;
+  sessionDuration: number;
+  pagesPerSession: number;
+
+  // Technical Metrics
+  loadTime: number;
+  bufferingRate: number;
+  errorRate: number;
+  deviceBreakdown: Record<string, number>;
+}
+```
+
+#### Content Analytics Service Implementation
+```python
+# portal_service/app/analytics/content_analytics.py
+"""
+Content Performance Analytics Service
+Provides detailed analytics for educational content effectiveness
+"""
+
+from typing import Dict, List, Optional, Any
+from datetime import datetime, timedelta
+from sqlalchemy.ext.asyncio import AsyncSession
+import logging
+
+from ..models import Content, ContentView, ContentEngagement, UserLearningProgress
+from ...database import get_db
+
+logger = logging.getLogger(__name__)
+
+class ContentAnalyticsService:
+    """Service for content performance analytics"""
+
+    @staticmethod
+    async def get_content_performance_data(
+        db: AsyncSession,
+        timeframe: str = '30d',
+        content_type: Optional[str] = None,
+        agent_id: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """
+        Get comprehensive content performance data
+        """
+        try:
+            # Parse timeframe
+            days = ContentAnalyticsService._parse_timeframe(timeframe)
+            start_date = datetime.utcnow() - timedelta(days=days)
+
+            # Build filters
+            filters = [Content.created_at >= start_date]
+            if content_type and content_type != 'all':
+                filters.append(Content.content_type == content_type)
+            if agent_id:
+                filters.append(Content.agent_id == agent_id)
+
+            # Get content data
+            content_query = db.query(Content).filter(*filters)
+            content_items = await db.execute(content_query)
+            content_items = content_items.scalars().all()
+
+            # Calculate aggregate metrics
+            total_views = sum(c.views_count for c in content_items)
+            total_watch_time = sum(c.total_watch_time for c in content_items)
+            total_completions = sum(c.completions_count for c in content_items)
+
+            # Calculate averages
+            avg_watch_time = (total_watch_time / total_views / 60) if total_views > 0 else 0  # in minutes
+            completion_rate = (total_completions / total_views * 100) if total_views > 0 else 0
+
+            # Get top performing content
+            top_content = sorted(
+                content_items,
+                key=lambda c: c.engagement_score if c.engagement_score else 0,
+                reverse=True
+            )[:5]
+
+            return {
+                'totalViews': total_views,
+                'avgWatchTime': round(avg_watch_time, 1),
+                'completionRate': round(completion_rate, 1),
+                'viewsGrowth': ContentAnalyticsService._calculate_growth(db, 'content_views', days),
+                'watchTimeGrowth': ContentAnalyticsService._calculate_growth(db, 'watch_time', days),
+                'completionGrowth': ContentAnalyticsService._calculate_growth(db, 'completions', days),
+                'topContent': [
+                    {
+                        'title': c.title,
+                        'type': c.content_type,
+                        'views': c.views_count,
+                        'completionRate': round((c.completions_count / c.views_count * 100) if c.views_count > 0 else 0, 1),
+                        'engagementScore': round(c.engagement_score, 1) if c.engagement_score else 0
+                    }
+                    for c in top_content
+                ],
+                'peakTime': ContentAnalyticsService._get_peak_engagement_time(db, days),
+                'popularType': ContentAnalyticsService._get_most_popular_type(content_items),
+                'avgSessionTime': round(ContentAnalyticsService._calculate_avg_session_time(db, days), 1)
+            }
+
+        except Exception as e:
+            logger.error(f"Content analytics error: {str(e)}")
+            return ContentAnalyticsService._get_empty_analytics()
+
+    @staticmethod
+    async def get_content_type_breakdown(
+        db: AsyncSession,
+        timeframe: str = '30d'
+    ) -> Dict[str, Any]:
+        """
+        Get content performance breakdown by type
+        """
+        try:
+            days = ContentAnalyticsService._parse_timeframe(timeframe)
+            start_date = datetime.utcnow() - timedelta(days=days)
+
+            # Group content by type
+            type_breakdown = await db.execute("""
+                SELECT
+                    content_type,
+                    COUNT(*) as count,
+                    SUM(views_count) as total_views,
+                    SUM(completions_count) as total_completions,
+                    AVG(engagement_score) as avg_engagement
+                FROM content
+                WHERE created_at >= :start_date
+                GROUP BY content_type
+            """, {'start_date': start_date})
+
+            breakdown = {}
+            for row in type_breakdown:
+                content_type = row[0] or 'other'
+                breakdown[content_type] = {
+                    'count': row[1],
+                    'views': row[2] or 0,
+                    'completions': row[3] or 0,
+                    'avgEngagement': round(row[4], 1) if row[4] else 0,
+                    'completionRate': round((row[3] / row[2] * 100) if row[2] and row[2] > 0 else 0, 1)
+                }
+
+            return breakdown
+
+        except Exception as e:
+            logger.error(f"Content type breakdown error: {str(e)}")
+            return {}
+
+    @staticmethod
+    async def get_content_engagement_trends(
+        db: AsyncSession,
+        timeframe: str = '30d'
+    ) -> List[Dict[str, Any]]:
+        """
+        Get content engagement trends over time
+        """
+        try:
+            days = ContentAnalyticsService._parse_timeframe(timeframe)
+            start_date = datetime.utcnow() - timedelta(days=days)
+
+            # Get daily engagement metrics
+            trends_query = await db.execute("""
+                SELECT
+                    DATE(cv.created_at) as date,
+                    COUNT(cv.id) as daily_views,
+                    AVG(cv.watch_time_seconds) as avg_watch_time,
+                    COUNT(CASE WHEN cv.completed THEN 1 END) as daily_completions
+                FROM content_views cv
+                WHERE cv.created_at >= :start_date
+                GROUP BY DATE(cv.created_at)
+                ORDER BY date
+            """, {'start_date': start_date})
+
+            trends = []
+            for row in trends_query:
+                date, views, avg_watch_time, completions = row
+                trends.append({
+                    'date': date.isoformat(),
+                    'views': views,
+                    'avgWatchTime': round((avg_watch_time or 0) / 60, 1),  # Convert to minutes
+                    'completions': completions or 0,
+                    'completionRate': round((completions / views * 100) if views and views > 0 else 0, 1)
+                })
+
+            return trends
+
+        except Exception as e:
+            logger.error(f"Content engagement trends error: {str(e)}")
+            return []
+
+    @staticmethod
+    def _parse_timeframe(timeframe: str) -> int:
+        """Parse timeframe string to days"""
+        timeframe_map = {
+            '7d': 7,
+            '30d': 30,
+            '90d': 90,
+            '1y': 365
+        }
+        return timeframe_map.get(timeframe, 30)
+
+    @staticmethod
+    async def _calculate_growth(db: AsyncSession, metric: str, days: int) -> float:
+        """Calculate growth percentage for a metric"""
+        try:
+            # Simplified growth calculation
+            return 15.3  # Placeholder growth percentage
+        except Exception:
+            return 0.0
+
+    @staticmethod
+    async def _get_peak_engagement_time(db: AsyncSession, days: int) -> str:
+        """Get peak engagement time"""
+        try:
+            # Simplified implementation
+            return "2:00 PM - 4:00 PM"
+        except Exception:
+            return "N/A"
+
+    @staticmethod
+    def _get_most_popular_type(content_items: List[Any]) -> str:
+        """Get most popular content type"""
+        try:
+            type_counts = {}
+            for item in content_items:
+                content_type = item.content_type or 'other'
+                type_counts[content_type] = type_counts.get(content_type, 0) + item.views_count
+
+            if not type_counts:
+                return 'N/A'
+
+            return max(type_counts.items(), key=lambda x: x[1])[0].title()
+        except Exception:
+            return 'N/A'
+
+    @staticmethod
+    async def _calculate_avg_session_time(db: AsyncSession, days: int) -> float:
+        """Calculate average session time"""
+        try:
+            # Simplified implementation
+            return 8.5  # minutes
+        except Exception:
+            return 0.0
+
+    @staticmethod
+    def _get_empty_analytics() -> Dict[str, Any]:
+        """Return empty analytics structure"""
+        return {
+            'totalViews': 0,
+            'avgWatchTime': 0,
+            'completionRate': 0,
+            'viewsGrowth': 0,
+            'watchTimeGrowth': 0,
+            'completionGrowth': 0,
+            'topContent': [],
+            'peakTime': 'N/A',
+            'popularType': 'N/A',
+            'avgSessionTime': 0
+        }
+```
+
 ## 7. Implementation Recommendations
 
 ### 7.1 Development Phases

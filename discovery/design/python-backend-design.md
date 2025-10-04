@@ -3952,4 +3952,1333 @@ class MonitoringService:
 monitoring = MonitoringService()
 ```
 
+## 4. Agent Configuration Portal Backend Requirements
+
+### 4.1 Agent Configuration Portal Architecture
+
+The Agent Configuration Portal requires a dedicated backend service to handle administrative functions, data import workflows, and agent management operations. This service operates independently from the mobile app backend while maintaining secure data synchronization.
+
+#### Portal Service Architecture
+```python
+# portal_service/
+# ├── app/
+# │   ├── __init__.py
+# │   ├── main.py
+# │   ├── config.py
+# │   ├── database.py
+# │   ├── auth/
+# │   │   ├── __init__.py
+# │   │   ├── models.py
+# │   │   ├── routes.py
+# │   │   ├── dependencies.py
+# │   │   └── utils.py
+# │   ├── data_import/
+# │   │   ├── __init__.py
+# │   │   ├── models.py
+# │   │   ├── routes.py
+# │   │   ├── processors/
+# │   │   │   ├── excel_processor.py
+# │   │   │   ├── lic_api_processor.py
+# │   │   │   └── bulk_processor.py
+# │   │   └── validators/
+# │   ├── customer_management/
+# │   │   ├── __init__.py
+# │   │   ├── models.py
+# │   │   ├── routes.py
+# │   │   └── services.py
+# │   ├── reporting/
+# │   │   ├── __init__.py
+# │   │   ├── models.py
+# │   │   ├── routes.py
+# │   │   ├── analytics.py
+# │   │   └── exporters/
+# │   └── user_management/
+# │       ├── __init__.py
+# │       ├── models.py
+# │       ├── routes.py
+# │       └── services.py
+# ├── tests/
+# ├── alembic/
+# ├── requirements.txt
+# ├── Dockerfile
+# └── docker-compose.yml
+```
+
+### 4.2 Data Import Service Implementation
+
+#### Excel Import Processor
+```python
+# portal_service/app/data_import/processors/excel_processor.py
+"""
+Excel Data Import Processor for Agent Configuration Portal
+Handles Excel file uploads, validation, and data processing
+"""
+
+import pandas as pd
+import asyncio
+from typing import Dict, List, Optional, Any
+from datetime import datetime
+from pydantic import BaseModel, validator
+from sqlalchemy.ext.asyncio import AsyncSession
+import logging
+
+from ..models import ImportJob, ImportRecord, Customer, Policy
+from ..validators.data_validator import DataValidator
+from ...database import get_db
+
+logger = logging.getLogger(__name__)
+
+class ExcelImportProcessor:
+    """Handles Excel file processing for data imports"""
+
+    def __init__(self, template_config: Dict[str, Any]):
+        self.template_config = template_config
+        self.validator = DataValidator()
+
+    async def process_excel_file(
+        self,
+        file_path: str,
+        agent_id: int,
+        db: AsyncSession
+    ) -> Dict[str, Any]:
+        """
+        Process Excel file and import data
+        Returns processing results and statistics
+        """
+        try:
+            # Read Excel file
+            df = pd.read_excel(file_path, engine='openpyxl')
+
+            # Validate column mappings
+            validation_result = await self._validate_columns(df)
+            if not validation_result['valid']:
+                return {
+                    'success': False,
+                    'error': 'Column validation failed',
+                    'details': validation_result['errors']
+                }
+
+            # Create import job
+            import_job = ImportJob(
+                agent_id=agent_id,
+                file_name=file_path.split('/')[-1],
+                total_records=len(df),
+                status='processing',
+                created_at=datetime.utcnow()
+            )
+            db.add(import_job)
+            await db.commit()
+
+            # Process records in batches
+            results = await self._process_records_batch(df, import_job.id, db)
+
+            # Update job status
+            import_job.processed_records = results['processed']
+            import_job.successful_records = results['successful']
+            import_job.failed_records = results['failed']
+            import_job.status = 'completed' if results['failed'] == 0 else 'completed_with_errors'
+            import_job.completed_at = datetime.utcnow()
+            await db.commit()
+
+            return {
+                'success': True,
+                'job_id': import_job.id,
+                'total_records': len(df),
+                'successful': results['successful'],
+                'failed': results['failed'],
+                'errors': results['errors']
+            }
+
+        except Exception as e:
+            logger.error(f"Excel processing error: {str(e)}")
+            return {
+                'success': False,
+                'error': f'Processing failed: {str(e)}'
+            }
+
+    async def _validate_columns(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Validate Excel columns against template configuration"""
+        required_columns = self.template_config.get('required_columns', [])
+        optional_columns = self.template_config.get('optional_columns', [])
+
+        missing_required = []
+        for col in required_columns:
+            if col not in df.columns:
+                missing_required.append(col)
+
+        if missing_required:
+            return {
+                'valid': False,
+                'errors': [f"Missing required columns: {', '.join(missing_required)}"]
+            }
+
+        return {'valid': True, 'errors': []}
+
+    async def _process_records_batch(
+        self,
+        df: pd.DataFrame,
+        job_id: int,
+        db: AsyncSession,
+        batch_size: int = 100
+    ) -> Dict[str, Any]:
+        """Process records in batches for better performance"""
+        total_processed = 0
+        total_successful = 0
+        total_failed = 0
+        errors = []
+
+        for i in range(0, len(df), batch_size):
+            batch = df.iloc[i:i+batch_size]
+
+            for _, row in batch.iterrows():
+                total_processed += 1
+
+                try:
+                    # Process individual record
+                    result = await self._process_single_record(row, db)
+
+                    if result['success']:
+                        total_successful += 1
+                    else:
+                        total_failed += 1
+                        errors.append({
+                            'row': total_processed,
+                            'error': result['error']
+                        })
+
+                    # Create import record
+                    import_record = ImportRecord(
+                        import_job_id=job_id,
+                        row_number=total_processed,
+                        data=row.to_dict(),
+                        status='success' if result['success'] else 'failed',
+                        error_message=result.get('error'),
+                        processed_at=datetime.utcnow()
+                    )
+                    db.add(import_record)
+
+                except Exception as e:
+                    total_failed += 1
+                    errors.append({
+                        'row': total_processed,
+                        'error': str(e)
+                    })
+
+            # Commit batch
+            await db.commit()
+
+        return {
+            'processed': total_processed,
+            'successful': total_successful,
+            'failed': total_failed,
+            'errors': errors
+        }
+
+    async def _process_single_record(self, row: pd.Series, db: AsyncSession) -> Dict[str, Any]:
+        """Process a single record from Excel"""
+        try:
+            # Extract customer data
+            customer_data = self._extract_customer_data(row)
+
+            # Validate customer data
+            validation_errors = await self.validator.validate_customer_data(customer_data)
+            if validation_errors:
+                return {
+                    'success': False,
+                    'error': f'Validation failed: {", ".join(validation_errors)}'
+                }
+
+            # Check for existing customer
+            existing_customer = await self._find_existing_customer(customer_data, db)
+
+            if existing_customer:
+                # Update existing customer
+                await self._update_customer(existing_customer, customer_data, db)
+            else:
+                # Create new customer
+                await self._create_customer(customer_data, db)
+
+            # Process associated policies
+            policy_data = self._extract_policy_data(row)
+            if policy_data:
+                await self._process_policy_data(policy_data, customer_data, db)
+
+            return {'success': True}
+
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+
+    def _extract_customer_data(self, row: pd.Series) -> Dict[str, Any]:
+        """Extract customer data from Excel row"""
+        column_mapping = self.template_config['column_mapping']
+
+        return {
+            'first_name': row.get(column_mapping.get('first_name', 'First Name'), ''),
+            'last_name': row.get(column_mapping.get('last_name', 'Last Name'), ''),
+            'phone': row.get(column_mapping.get('phone', 'Phone'), ''),
+            'email': row.get(column_mapping.get('email', 'Email'), ''),
+            'date_of_birth': row.get(column_mapping.get('date_of_birth', 'Date of Birth')),
+            'address_line1': row.get(column_mapping.get('address_line1', 'Address Line 1'), ''),
+            'address_line2': row.get(column_mapping.get('address_line2', 'Address Line 2'), ''),
+            'city': row.get(column_mapping.get('city', 'City'), ''),
+            'state': row.get(column_mapping.get('state', 'State'), ''),
+            'pincode': row.get(column_mapping.get('pincode', 'Pincode'), ''),
+        }
+
+    def _extract_policy_data(self, row: pd.Series) -> Optional[Dict[str, Any]]:
+        """Extract policy data from Excel row"""
+        column_mapping = self.template_config['column_mapping']
+
+        policy_number = row.get(column_mapping.get('policy_number', 'Policy Number'))
+        if not policy_number:
+            return None
+
+        return {
+            'policy_number': policy_number,
+            'policy_type': row.get(column_mapping.get('policy_type', 'Policy Type'), ''),
+            'sum_assured': row.get(column_mapping.get('sum_assured', 'Sum Assured')),
+            'premium_amount': row.get(column_mapping.get('premium_amount', 'Premium Amount')),
+            'premium_frequency': row.get(column_mapping.get('premium_frequency', 'Premium Frequency'), 'Monthly'),
+            'issue_date': row.get(column_mapping.get('issue_date', 'Issue Date')),
+            'maturity_date': row.get(column_mapping.get('maturity_date', 'Maturity Date')),
+            'status': row.get(column_mapping.get('status', 'Status'), 'Active'),
+        }
+
+    async def _find_existing_customer(self, customer_data: Dict[str, Any], db: AsyncSession) -> Optional[Customer]:
+        """Find existing customer by phone or email"""
+        from sqlalchemy import or_
+
+        phone = customer_data.get('phone')
+        email = customer_data.get('email')
+
+        if not phone and not email:
+            return None
+
+        query = db.query(Customer).filter(
+            or_(
+                Customer.phone == phone if phone else False,
+                Customer.email == email if email else False
+            )
+        )
+
+        result = await db.execute(query)
+        return result.scalar_one_or_none()
+
+    async def _create_customer(self, customer_data: Dict[str, Any], db: AsyncSession) -> Customer:
+        """Create new customer"""
+        customer = Customer(**customer_data)
+        db.add(customer)
+        await db.commit()
+        await db.refresh(customer)
+        return customer
+
+    async def _update_customer(self, customer: Customer, customer_data: Dict[str, Any], db: AsyncSession):
+        """Update existing customer"""
+        for key, value in customer_data.items():
+            if value is not None:
+                setattr(customer, key, value)
+
+        customer.updated_at = datetime.utcnow()
+        await db.commit()
+
+    async def _process_policy_data(self, policy_data: Dict[str, Any], customer_data: Dict[str, Any], db: AsyncSession):
+        """Process policy data for customer"""
+        # Implementation for policy processing
+        pass
+```
+
+#### LIC API Integration Processor
+```python
+# portal_service/app/data_import/processors/lic_api_processor.py
+"""
+LIC API Integration Processor
+Handles data synchronization with LIC systems
+"""
+
+import httpx
+import asyncio
+from typing import Dict, List, Optional, Any
+from datetime import datetime
+from pydantic import BaseModel
+import logging
+
+from ..models import SyncJob, Customer, Policy
+from ...database import get_db
+
+logger = logging.getLogger(__name__)
+
+class LICApiProcessor:
+    """Handles LIC API data synchronization"""
+
+    def __init__(self, api_config: Dict[str, Any]):
+        self.base_url = api_config['base_url']
+        self.api_key = api_config['api_key']
+        self.timeout = api_config.get('timeout', 30)
+
+    async def sync_agent_data(self, agent_id: int, db: AsyncSession) -> Dict[str, Any]:
+        """
+        Synchronize agent data from LIC systems
+        """
+        try:
+            # Create sync job
+            sync_job = SyncJob(
+                agent_id=agent_id,
+                sync_type='agent_data',
+                status='running',
+                started_at=datetime.utcnow()
+            )
+            db.add(sync_job)
+            await db.commit()
+
+            # Fetch agent data from LIC API
+            agent_data = await self._fetch_agent_policies(agent_id)
+
+            # Process and store data
+            results = await self._process_agent_data(agent_data, agent_id, db)
+
+            # Update sync job status
+            sync_job.status = 'completed'
+            sync_job.completed_at = datetime.utcnow()
+            sync_job.records_processed = results['total_records']
+            sync_job.records_updated = results['updated_records']
+            sync_job.records_created = results['created_records']
+            await db.commit()
+
+            return {
+                'success': True,
+                'job_id': sync_job.id,
+                'total_records': results['total_records'],
+                'updated_records': results['updated_records'],
+                'created_records': results['created_records']
+            }
+
+        except Exception as e:
+            logger.error(f"LIC API sync error: {str(e)}")
+
+            # Update sync job with error
+            sync_job.status = 'failed'
+            sync_job.error_message = str(e)
+            sync_job.completed_at = datetime.utcnow()
+            await db.commit()
+
+            return {
+                'success': False,
+                'error': f'Sync failed: {str(e)}'
+            }
+
+    async def _fetch_agent_policies(self, agent_id: int) -> List[Dict[str, Any]]:
+        """Fetch agent policies from LIC API"""
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            headers = {
+                'Authorization': f'Bearer {self.api_key}',
+                'Content-Type': 'application/json'
+            }
+
+            # LIC API endpoint for agent policies
+            url = f"{self.base_url}/agents/{agent_id}/policies"
+
+            response = await client.get(url, headers=headers)
+
+            if response.status_code != 200:
+                raise Exception(f"LIC API error: {response.status_code} - {response.text}")
+
+            data = response.json()
+            return data.get('policies', [])
+
+    async def _process_agent_data(
+        self,
+        agent_data: List[Dict[str, Any]],
+        agent_id: int,
+        db: AsyncSession
+    ) -> Dict[str, int]:
+        """Process agent data and update database"""
+        total_records = len(agent_data)
+        updated_records = 0
+        created_records = 0
+
+        for policy_data in agent_data:
+            try:
+                # Check if customer exists
+                customer_data = self._extract_customer_from_policy(policy_data)
+                customer = await self._find_or_create_customer(customer_data, db)
+
+                # Check if policy exists
+                policy = await self._find_policy(policy_data['policy_number'], db)
+
+                if policy:
+                    # Update existing policy
+                    await self._update_policy(policy, policy_data, customer.id, db)
+                    updated_records += 1
+                else:
+                    # Create new policy
+                    await self._create_policy(policy_data, customer.id, db)
+                    created_records += 1
+
+            except Exception as e:
+                logger.error(f"Error processing policy {policy_data.get('policy_number')}: {str(e)}")
+                continue
+
+        return {
+            'total_records': total_records,
+            'updated_records': updated_records,
+            'created_records': created_records
+        }
+
+    def _extract_customer_from_policy(self, policy_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract customer information from policy data"""
+        customer_info = policy_data.get('customer', {})
+
+        return {
+            'first_name': customer_info.get('first_name', ''),
+            'last_name': customer_info.get('last_name', ''),
+            'phone': customer_info.get('phone', ''),
+            'email': customer_info.get('email'),
+            'date_of_birth': customer_info.get('date_of_birth'),
+            'address_line1': customer_info.get('address_line1', ''),
+            'city': customer_info.get('city', ''),
+            'state': customer_info.get('state', ''),
+            'pincode': customer_info.get('pincode', ''),
+        }
+
+    async def _find_or_create_customer(self, customer_data: Dict[str, Any], db: AsyncSession) -> Customer:
+        """Find existing customer or create new one"""
+        # Implementation similar to Excel processor
+        pass
+
+    async def _find_policy(self, policy_number: str, db: AsyncSession) -> Optional[Policy]:
+        """Find existing policy by policy number"""
+        # Implementation for policy lookup
+        pass
+
+    async def _create_policy(self, policy_data: Dict[str, Any], customer_id: int, db: AsyncSession):
+        """Create new policy"""
+        # Implementation for policy creation
+        pass
+
+    async def _update_policy(self, policy: Policy, policy_data: Dict[str, Any], customer_id: int, db: AsyncSession):
+        """Update existing policy"""
+        # Implementation for policy update
+        pass
+```
+
+### 4.3 Customer Management API
+
+#### Customer Management Routes
+```python
+# portal_service/app/customer_management/routes.py
+"""
+Customer Management API Routes
+Provides endpoints for customer data management in the portal
+"""
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List, Optional
+from datetime import datetime
+
+from .models import CustomerFilter, CustomerUpdate
+from .services import CustomerService
+from ..auth.dependencies import get_current_user, require_role
+from ...database import get_db
+
+router = APIRouter(prefix="/api/v1/customers", tags=["customers"])
+
+@router.get("/")
+async def get_customers(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    search: Optional[str] = None,
+    status: Optional[str] = None,
+    agent_id: Optional[int] = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(["agent", "admin"]))
+):
+    """
+    Get paginated list of customers with filtering
+    """
+    try:
+        # Build filter
+        customer_filter = CustomerFilter(
+            search=search,
+            status=status,
+            agent_id=agent_id or current_user.get('agent_id')
+        )
+
+        # Get customers
+        customers, total = await CustomerService.get_customers_paginated(
+            db=db,
+            filter=customer_filter,
+            page=page,
+            limit=limit
+        )
+
+        return {
+            "success": True,
+            "data": {
+                "customers": customers,
+                "pagination": {
+                    "page": page,
+                    "limit": limit,
+                    "total": total,
+                    "pages": (total + limit - 1) // limit
+                }
+            }
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch customers: {str(e)}")
+
+@router.get("/{customer_id}")
+async def get_customer(
+    customer_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(["agent", "admin"]))
+):
+    """
+    Get detailed customer information
+    """
+    try:
+        customer = await CustomerService.get_customer_by_id(db, customer_id)
+
+        if not customer:
+            raise HTTPException(status_code=404, detail="Customer not found")
+
+        # Check access permissions
+        if current_user.get('role') != 'admin' and customer.agent_id != current_user.get('agent_id'):
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        return {
+            "success": True,
+            "data": customer
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch customer: {str(e)}")
+
+@router.put("/{customer_id}")
+async def update_customer(
+    customer_id: int,
+    customer_update: CustomerUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(["agent", "admin"]))
+):
+    """
+    Update customer information
+    """
+    try:
+        # Check access permissions
+        if current_user.get('role') != 'admin':
+            customer = await CustomerService.get_customer_by_id(db, customer_id)
+            if not customer or customer.agent_id != current_user.get('agent_id'):
+                raise HTTPException(status_code=403, detail="Access denied")
+
+        # Update customer
+        updated_customer = await CustomerService.update_customer(
+            db=db,
+            customer_id=customer_id,
+            update_data=customer_update
+        )
+
+        if not updated_customer:
+            raise HTTPException(status_code=404, detail="Customer not found")
+
+        return {
+            "success": True,
+            "data": updated_customer,
+            "message": "Customer updated successfully"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update customer: {str(e)}")
+
+@router.delete("/{customer_id}")
+async def deactivate_customer(
+    customer_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(["admin"]))
+):
+    """
+    Deactivate customer (admin only)
+    """
+    try:
+        success = await CustomerService.deactivate_customer(db, customer_id)
+
+        if not success:
+            raise HTTPException(status_code=404, detail="Customer not found")
+
+        return {
+            "success": True,
+            "message": "Customer deactivated successfully"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to deactivate customer: {str(e)}")
+
+@router.get("/{customer_id}/policies")
+async def get_customer_policies(
+    customer_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(["agent", "admin"]))
+):
+    """
+    Get all policies for a customer
+    """
+    try:
+        # Check access permissions
+        if current_user.get('role') != 'admin':
+            customer = await CustomerService.get_customer_by_id(db, customer_id)
+            if not customer or customer.agent_id != current_user.get('agent_id'):
+                raise HTTPException(status_code=403, detail="Access denied")
+
+        policies = await CustomerService.get_customer_policies(db, customer_id)
+
+        return {
+            "success": True,
+            "data": policies
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch customer policies: {str(e)}")
+```
+
+## 5. Callback Request Management APIs
+
+### 5.1 Callback Management Service Architecture
+
+#### Callback Service Implementation
+```python
+# portal_service/app/callback_service/
+# ├── __init__.py
+# ├── models.py
+# ├── routes.py
+# ├── services.py
+# ├── priority_manager.py
+# └── sla_tracker.py
+```
+
+#### Callback Models
+```python
+# portal_service/app/callback_service/models.py
+"""
+Callback Request Management Models
+"""
+
+from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean, ForeignKey, Float
+from sqlalchemy.orm import relationship
+from datetime import datetime
+from pydantic import BaseModel, validator
+from typing import Optional, Dict, Any
+from enum import Enum
+
+from ...database import Base
+
+class CallbackPriority(str, Enum):
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
+class CallbackStatus(str, Enum):
+    PENDING = "pending"
+    ASSIGNED = "assigned"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+    OVERDUE = "overdue"
+
+class CallbackRequest(Base):
+    """Callback request database model"""
+    __tablename__ = "callback_requests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    agent_id = Column(Integer, ForeignKey("agents.id"), nullable=True)
+    request_type = Column(String(100), nullable=False)
+    description = Column(Text, nullable=False)
+    priority = Column(String(20), nullable=False, default=CallbackPriority.LOW)
+    status = Column(String(20), nullable=False, default=CallbackStatus.PENDING)
+    priority_score = Column(Float, nullable=False, default=0.0)
+
+    # Customer contact information (cached for quick access)
+    customer_name = Column(String(200), nullable=False)
+    customer_phone = Column(String(20), nullable=False)
+    customer_email = Column(String(200), nullable=True)
+
+    # SLA tracking
+    sla_hours = Column(Integer, nullable=False, default=24)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    assigned_at = Column(DateTime, nullable=True)
+    scheduled_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    due_at = Column(DateTime, nullable=True)
+
+    # Additional metadata
+    source = Column(String(50), nullable=False, default="portal")  # portal, whatsapp, mobile
+    tags = Column(Text, nullable=True)  # JSON string of tags
+    notes = Column(Text, nullable=True)
+
+    # Relationships
+    customer = relationship("Customer", back_populates="callback_requests")
+    agent = relationship("Agent", back_populates="callback_requests")
+    activities = relationship("CallbackActivity", back_populates="callback_request")
+
+    def is_overdue(self) -> bool:
+        """Check if callback is overdue"""
+        if self.status in [CallbackStatus.COMPLETED, CallbackStatus.CANCELLED]:
+            return False
+        if not self.due_at:
+            return False
+        return datetime.utcnow() > self.due_at
+
+    def time_remaining(self) -> str:
+        """Get formatted time remaining until due"""
+        if self.status in [CallbackStatus.COMPLETED, CallbackStatus.CANCELLED]:
+            return "Completed"
+
+        if not self.due_at:
+            return "No due date"
+
+        now = datetime.utcnow()
+        if now >= self.due_at:
+            return "Overdue"
+
+        remaining = self.due_at - now
+        if remaining.days > 0:
+            return f"{remaining.days}d {remaining.seconds // 3600}h"
+        elif remaining.seconds >= 3600:
+            return f"{remaining.seconds // 3600}h {(remaining.seconds % 3600) // 60}m"
+        else:
+            return f"{remaining.seconds // 60}m"
+
+class CallbackActivity(Base):
+    """Callback activity log"""
+    __tablename__ = "callback_activities"
+
+    id = Column(Integer, primary_key=True, index=True)
+    callback_request_id = Column(Integer, ForeignKey("callback_requests.id"), nullable=False)
+    agent_id = Column(Integer, ForeignKey("agents.id"), nullable=True)
+    activity_type = Column(String(50), nullable=False)  # created, assigned, called, completed, etc.
+    description = Column(Text, nullable=False)
+    metadata = Column(Text, nullable=True)  # JSON string of additional data
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    # Relationships
+    callback_request = relationship("CallbackRequest", back_populates="activities")
+    agent = relationship("Agent", back_populates="callback_activities")
+
+# Pydantic models for API
+class CallbackRequestCreate(BaseModel):
+    customer_id: int
+    request_type: str
+    description: str
+    priority: Optional[CallbackPriority] = CallbackPriority.LOW
+    scheduled_at: Optional[datetime] = None
+    tags: Optional[List[str]] = None
+    notes: Optional[str] = None
+
+    @validator('request_type')
+    def validate_request_type(cls, v):
+        valid_types = [
+            'policy_issue', 'payment_problem', 'claim_assistance',
+            'general_inquiry', 'feedback', 'suggestion'
+        ]
+        if v not in valid_types:
+            raise ValueError(f'request_type must be one of: {", ".join(valid_types)}')
+        return v
+
+class CallbackRequestUpdate(BaseModel):
+    priority: Optional[CallbackPriority] = None
+    status: Optional[CallbackStatus] = None
+    agent_id: Optional[int] = None
+    scheduled_at: Optional[datetime] = None
+    notes: Optional[str] = None
+
+class CallbackActivityCreate(BaseModel):
+    activity_type: str
+    description: str
+    metadata: Optional[Dict[str, Any]] = None
+```
+
+#### Priority Management Service
+```python
+# portal_service/app/callback_service/priority_manager.py
+"""
+Callback Priority Management
+Calculates priority scores and manages SLA assignments
+"""
+
+from typing import Dict, List, Optional, Any
+from datetime import datetime, timedelta
+import logging
+
+from .models import CallbackRequest, CallbackPriority
+
+logger = logging.getLogger(__name__)
+
+class CallbackPriorityManager:
+    """Manages callback request prioritization"""
+
+    # Priority scoring weights
+    REQUEST_TYPE_WEIGHTS = {
+        'policy_issue': 90,
+        'payment_problem': 85,
+        'claim_assistance': 80,
+        'general_inquiry': 60,
+        'feedback': 40,
+        'suggestion': 30,
+    }
+
+    URGENCY_MODIFIERS = {
+        'critical': 20,
+        'high': 15,
+        'medium': 10,
+        'low': 0,
+    }
+
+    CUSTOMER_VALUE_MODIFIERS = {
+        'platinum': 15,
+        'gold': 10,
+        'silver': 5,
+        'bronze': 0,
+    }
+
+    @staticmethod
+    def calculate_priority_score(
+        customer_id: int,
+        request_type: str,
+        urgency_level: str = 'medium',
+        customer_value: str = 'bronze',
+        age_hours: int = 0
+    ) -> int:
+        """
+        Calculate priority score for callback requests
+        Returns score from 1-100 (higher = more urgent)
+        """
+        base_score = CallbackPriorityManager.REQUEST_TYPE_WEIGHTS.get(request_type, 50)
+
+        # Add urgency modifier
+        base_score += CallbackPriorityManager.URGENCY_MODIFIERS.get(urgency_level, 0)
+
+        # Add customer value modifier
+        base_score += CallbackPriorityManager.CUSTOMER_VALUE_MODIFIERS.get(customer_value, 0)
+
+        # Add age-based urgency (older requests get higher priority)
+        age_modifier = min(age_hours // 4, 10)  # Max 10 points for very old requests
+        base_score += age_modifier
+
+        return min(100, max(1, base_score))
+
+    @staticmethod
+    def assign_priority_category(score: int) -> CallbackPriority:
+        """Convert priority score to category"""
+        if score >= 85:
+            return CallbackPriority.HIGH
+        elif score >= 70:
+            return CallbackPriority.MEDIUM
+        else:
+            return CallbackPriority.LOW
+
+    @staticmethod
+    def get_sla_timeframes(priority: CallbackPriority) -> Dict[str, int]:
+        """Get SLA timeframes in minutes for different priorities"""
+        sla_times = {
+            CallbackPriority.HIGH: {
+                'first_response': 15,  # minutes
+                'resolution': 120,     # minutes (2 hours)
+            },
+            CallbackPriority.MEDIUM: {
+                'first_response': 60,  # minutes (1 hour)
+                'resolution': 480,     # minutes (8 hours)
+            },
+            CallbackPriority.LOW: {
+                'first_response': 240, # minutes (4 hours)
+                'resolution': 1440,    # minutes (24 hours)
+            },
+        }
+        return sla_times.get(priority, sla_times[CallbackPriority.LOW])
+
+    @staticmethod
+    def calculate_due_date(created_at: datetime, priority: CallbackPriority) -> datetime:
+        """Calculate due date based on priority"""
+        sla_times = CallbackPriorityManager.get_sla_timeframes(priority)
+        resolution_minutes = sla_times['resolution']
+        return created_at + timedelta(minutes=resolution_minutes)
+
+    @staticmethod
+    async def auto_assign_callbacks(db: Any) -> int:
+        """
+        Auto-assign pending callbacks to available agents
+        Returns number of callbacks assigned
+        """
+        # Implementation for auto-assignment logic
+        # This would consider agent availability, workload, expertise, etc.
+        pass
+
+    @staticmethod
+    def should_escalate(callback: CallbackRequest) -> bool:
+        """Check if callback should be escalated"""
+        if callback.status != 'pending':
+            return False
+
+        now = datetime.utcnow()
+        time_since_creation = now - callback.created_at
+
+        # Escalate if overdue or approaching due date
+        if callback.is_overdue():
+            return True
+
+        # Escalate high priority callbacks that are 75% through SLA
+        if callback.priority == CallbackPriority.HIGH:
+            sla_time = CallbackPriorityManager.get_sla_timeframes(callback.priority)['resolution']
+            elapsed_percentage = (time_since_creation.total_seconds() / 60) / sla_time
+            return elapsed_percentage >= 0.75
+
+        return False
+```
+
+#### Callback Management Routes
+```python
+# portal_service/app/callback_service/routes.py
+"""
+Callback Management API Routes
+Provides endpoints for callback request management
+"""
+
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List, Optional
+from datetime import datetime
+
+from .models import (
+    CallbackRequest, CallbackRequestCreate, CallbackRequestUpdate,
+    CallbackActivityCreate, CallbackPriority
+)
+from .services import CallbackService
+from .priority_manager import CallbackPriorityManager
+from ..auth.dependencies import get_current_user, require_role
+from ...database import get_db
+
+router = APIRouter(prefix="/api/v1/callbacks", tags=["callbacks"])
+
+@router.get("/")
+async def get_callbacks(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    agent_id: Optional[int] = None,
+    overdue_only: bool = False,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(["agent", "admin"]))
+):
+    """
+    Get paginated list of callback requests with filtering
+    """
+    try:
+        callbacks, total = await CallbackService.get_callbacks_paginated(
+            db=db,
+            status=status,
+            priority=priority,
+            agent_id=agent_id or (current_user.get('agent_id') if current_user.get('role') == 'agent' else None),
+            overdue_only=overdue_only,
+            page=page,
+            limit=limit
+        )
+
+        return {
+            "success": True,
+            "data": {
+                "callbacks": callbacks,
+                "pagination": {
+                    "page": page,
+                    "limit": limit,
+                    "total": total,
+                    "pages": (total + limit - 1) // limit
+                }
+            }
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch callbacks: {str(e)}")
+
+@router.post("/")
+async def create_callback(
+    callback_data: CallbackRequestCreate,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(["agent", "admin"]))
+):
+    """
+    Create a new callback request
+    """
+    try:
+        # Calculate priority score
+        priority_score = CallbackPriorityManager.calculate_priority_score(
+            customer_id=callback_data.customer_id,
+            request_type=callback_data.request_type,
+            urgency_level='medium',  # Default, could be made configurable
+        )
+
+        # Assign priority category
+        priority = CallbackPriorityManager.assign_priority_category(priority_score)
+
+        # Calculate due date
+        due_date = CallbackPriorityManager.calculate_due_date(datetime.utcnow(), priority)
+
+        # Create callback request
+        callback = await CallbackService.create_callback(
+            db=db,
+            callback_data=callback_data,
+            priority=priority,
+            priority_score=priority_score,
+            due_date=due_date,
+            created_by=current_user.get('id')
+        )
+
+        # Add to background tasks for auto-assignment
+        background_tasks.add_task(CallbackService.auto_assign_callback, db, callback.id)
+
+        return {
+            "success": True,
+            "data": callback,
+            "message": "Callback request created successfully"
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create callback: {str(e)}")
+
+@router.get("/{callback_id}")
+async def get_callback(
+    callback_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(["agent", "admin"]))
+):
+    """
+    Get detailed callback information
+    """
+    try:
+        callback = await CallbackService.get_callback_by_id(db, callback_id)
+
+        if not callback:
+            raise HTTPException(status_code=404, detail="Callback request not found")
+
+        # Check access permissions
+        if current_user.get('role') == 'agent' and callback.agent_id != current_user.get('agent_id'):
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        return {
+            "success": True,
+            "data": callback
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch callback: {str(e)}")
+
+@router.put("/{callback_id}")
+async def update_callback(
+    callback_id: int,
+    update_data: CallbackRequestUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(["agent", "admin"]))
+):
+    """
+    Update callback request
+    """
+    try:
+        # Check access permissions
+        callback = await CallbackService.get_callback_by_id(db, callback_id)
+        if not callback:
+            raise HTTPException(status_code=404, detail="Callback request not found")
+
+        if current_user.get('role') == 'agent' and callback.agent_id != current_user.get('agent_id'):
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        # Update callback
+        updated_callback = await CallbackService.update_callback(
+            db=db,
+            callback_id=callback_id,
+            update_data=update_data,
+            updated_by=current_user.get('id')
+        )
+
+        return {
+            "success": True,
+            "data": updated_callback,
+            "message": "Callback updated successfully"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update callback: {str(e)}")
+
+@router.post("/{callback_id}/assign")
+async def assign_callback(
+    callback_id: int,
+    agent_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(["admin"]))
+):
+    """
+    Assign callback to an agent (admin only)
+    """
+    try:
+        success = await CallbackService.assign_callback_to_agent(
+            db=db,
+            callback_id=callback_id,
+            agent_id=agent_id,
+            assigned_by=current_user.get('id')
+        )
+
+        if not success:
+            raise HTTPException(status_code=404, detail="Callback or agent not found")
+
+        return {
+            "success": True,
+            "message": "Callback assigned successfully"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to assign callback: {str(e)}")
+
+@router.post("/{callback_id}/complete")
+async def complete_callback(
+    callback_id: int,
+    notes: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(["agent", "admin"]))
+):
+    """
+    Mark callback as completed
+    """
+    try:
+        # Check access permissions
+        callback = await CallbackService.get_callback_by_id(db, callback_id)
+        if not callback:
+            raise HTTPException(status_code=404, detail="Callback request not found")
+
+        if current_user.get('role') == 'agent' and callback.agent_id != current_user.get('agent_id'):
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        # Complete callback
+        success = await CallbackService.complete_callback(
+            db=db,
+            callback_id=callback_id,
+            notes=notes,
+            completed_by=current_user.get('id')
+        )
+
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to complete callback")
+
+        return {
+            "success": True,
+            "message": "Callback completed successfully"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to complete callback: {str(e)}")
+
+@router.get("/{callback_id}/activities")
+async def get_callback_activities(
+    callback_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(["agent", "admin"]))
+):
+    """
+    Get callback activity history
+    """
+    try:
+        # Check access permissions
+        callback = await CallbackService.get_callback_by_id(db, callback_id)
+        if not callback:
+            raise HTTPException(status_code=404, detail="Callback request not found")
+
+        if current_user.get('role') == 'agent' and callback.agent_id != current_user.get('agent_id'):
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        activities = await CallbackService.get_callback_activities(db, callback_id)
+
+        return {
+            "success": True,
+            "data": activities
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch callback activities: {str(e)}")
+
+@router.post("/{callback_id}/activities")
+async def add_callback_activity(
+    callback_id: int,
+    activity_data: CallbackActivityCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(["agent", "admin"]))
+):
+    """
+    Add activity to callback request
+    """
+    try:
+        # Check access permissions
+        callback = await CallbackService.get_callback_by_id(db, callback_id)
+        if not callback:
+            raise HTTPException(status_code=404, detail="Callback request not found")
+
+        if current_user.get('role') == 'agent' and callback.agent_id != current_user.get('agent_id'):
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        # Add activity
+        activity = await CallbackService.add_callback_activity(
+            db=db,
+            callback_id=callback_id,
+            activity_data=activity_data,
+            agent_id=current_user.get('id')
+        )
+
+        return {
+            "success": True,
+            "data": activity,
+            "message": "Activity added successfully"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to add activity: {str(e)}")
+
+@router.get("/stats/overview")
+async def get_callback_stats(
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(["agent", "admin"]))
+):
+    """
+    Get callback statistics overview
+    """
+    try:
+        agent_id = current_user.get('agent_id') if current_user.get('role') == 'agent' else None
+        stats = await CallbackService.get_callback_stats(db, agent_id=agent_id)
+
+        return {
+            "success": True,
+            "data": stats
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch callback stats: {str(e)}")
+```
+
 This comprehensive Python backend design provides a solid foundation for the Agent Mitra platform with production-ready features, extensive testing, monitoring, and scalable architecture. The design supports microservices evolution, comprehensive security, and enterprise-grade reliability.

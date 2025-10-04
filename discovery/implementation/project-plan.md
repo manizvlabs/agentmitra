@@ -116,12 +116,14 @@ Agent Mitra is a comprehensive platform serving:
 - Implement complete project structure as per `project-structure.md`
 - Set up local development environment following `deployment-design.md`
 - Configure version control and CI/CD pipelines
+- Initialize Agent Configuration Portal foundation
 
 **Tasks:**
 1. **Day 1: Repository Setup**
    - Create complete directory structure
    - Initialize Flutter project with proper architecture
    - Set up Python backend project structure
+   - Initialize Agent Configuration Portal (React/Web) project
    - Configure Git workflows and branch protection
 
 2. **Day 2: Local Development Environment**
@@ -129,9 +131,10 @@ Agent Mitra is a comprehensive platform serving:
    - Configure PostgreSQL and Redis containers
    - Install Flutter development tools
    - Set up Python virtual environment
+   - Configure Portal development environment
 
 3. **Day 3: CI/CD Pipeline Setup**
-   - Configure GitHub Actions workflows
+   - Configure GitHub Actions workflows for Flutter, Python, and Portal
    - Set up automated testing pipelines
    - Configure code quality tools (SonarQube, ESLint)
    - Set up deployment pipelines for staging
@@ -146,12 +149,13 @@ Agent Mitra is a comprehensive platform serving:
    - Update project documentation
    - Create development guidelines
    - Set up monitoring and logging frameworks
-   - Plan Phase 2 development approach
+   - Plan Phase 2 development approach including Portal requirements
 
 **Deliverables:**
 - ✅ Complete project structure implemented
 - ✅ Local development environment running
-- ✅ CI/CD pipelines configured
+- ✅ CI/CD pipelines configured for all components
+- ✅ Agent Configuration Portal foundation initialized
 - ✅ Mock data system with feature flags
 - ✅ Development documentation updated
 
@@ -294,14 +298,15 @@ Agent Mitra is a comprehensive platform serving:
 
 **Documents Covered:** `python-backend-design.md`, `whatsapp-chatbot-design.md`, `smart-dashboards-design.md`
 
-#### Weeks 7-8: Flutter UI Development (Foundation)
-**Duration:** 10 days | **Effort:** 80 hours | **Resources:** 3 Flutter Developers
+#### Weeks 7-8: Flutter UI Development & Agent Portal Foundation
+**Duration:** 10 days | **Effort:** 80 hours | **Resources:** 3 Flutter Developers + 2 Portal Developers
 
 **Objectives:**
 - Create all UI pages with mock data as per `pages-design.md`
 - Implement responsive design following `wireframes.md`
 - Set up navigation and routing system from `navigation-hierarchy.md`
-- Integrate localization system from `pages-design.md`
+- Initialize Agent Configuration Portal with basic structure
+- Implement enhanced customer onboarding flow
 
 **Tasks:**
 1. **Project Structure & Setup (Week 7)**
@@ -309,29 +314,35 @@ Agent Mitra is a comprehensive platform serving:
    - Set up state management with Provider
    - Configure routing and navigation
    - Implement theme system with dark/light modes
+   - Set up Agent Portal React project structure
 
-2. **Authentication & Onboarding (Week 7)**
+2. **Authentication & Enhanced Onboarding (Week 7)**
    - Create login, registration, and OTP verification screens
    - Implement biometric authentication
-   - Set up onboarding flow with mock data
-   - Create profile setup screens
+   - Set up enhanced 5-step onboarding flow (agent discovery, document verification, KYC, emergency contacts)
+   - Create profile setup screens with new wireframes
 
-3. **Core UI Pages (Week 8)**
+3. **Core UI Pages & Portal Foundation (Week 8)**
    - Implement dashboard with mock analytics
    - Create policy management screens
-   - Set up payment screens with mock transactions
+   - Set up payment screens with mock transactions (DEFERRED)
    - Build settings and profile management pages
+   - Create Agent Portal basic layout and navigation
+   - Implement data import dashboard wireframe
+   - Set up Portal authentication and user management foundation
 
-4. **Mock Data Integration (Week 8)**
+4. **Mock Data Integration & Portal Setup (Week 8)**
    - Implement mock data toggle with environment variables
    - Add feature flag for mock data display
    - Create realistic mock data generators
-   - Set up conditional rendering based on flags
+   - Set up Portal mock data and API integration foundation
+   - Implement Portal Excel template configuration wireframe
 
 **Deliverables:**
-- ✅ Complete Flutter project structure
+- ✅ Complete Flutter project structure with enhanced onboarding
 - ✅ All core UI pages implemented with mock data
-- ✅ Navigation and routing functional
+- ✅ Agent Configuration Portal foundation with 6 core wireframes
+- ✅ Navigation and routing functional across both platforms
 - ✅ Mock data system with feature flag control
 - ✅ Responsive design across all screen sizes
 
@@ -427,48 +438,48 @@ Agent Mitra is a comprehensive platform serving:
 
 ### 4.4 Phase 4: Advanced Features (Weeks 13-16)
 
-#### Weeks 13-14: Marketing & Campaign Features
-**Duration:** 10 days | **Effort:** 80 hours | **Resources:** 3 Developers
+#### Weeks 13-14: Callback Management & Portal Expansion
+**Duration:** 10 days | **Effort:** 80 hours | **Resources:** 4 Developers (2 Backend + 2 Frontend)
 
 **Objectives:**
-- Implement marketing campaign system from `marketing-campaigns-design.md`
-- Create ROI dashboards from `roi-dashboards-design.md`
-- Set up tutorial video system from `tutorial-video-system.md`
-- Integrate advanced analytics features
+- Implement callback request management system from `marketing-campaigns-design.md`
+- Create campaign performance analytics from `smart-dashboards-design.md`
+- Expand Agent Configuration Portal with customer data management
+- Set up callback priority queue and SLA tracking
 
 **Tasks:**
-1. **Campaign Management System (Week 13)**
-   - Create campaign builder interface
-   - Implement customer segmentation
-   - Set up A/B testing framework
-   - Create campaign analytics and reporting
+1. **Callback Request Management System (Week 13)**
+   - Implement callback request priority scoring algorithm
+   - Create priority queue management with SLA tracking
+   - Build agent capacity and assignment logic
+   - Set up callback activity logging and escalation rules
 
-2. **ROI Dashboard Implementation (Week 13)**
-   - Build executive dashboard with KPIs
-   - Implement predictive analytics
-   - Create conversion funnel tracking
-   - Set up actionable insights generation
+2. **Agent Portal Enhanced Features (Week 13)**
+   - Implement customer data management wireframes
+   - Create reporting dashboard with analytics
+   - Set up user management and permissions
+   - Build Excel template configuration system
 
-3. **Video Tutorial System (Week 14)**
-   - Implement agent video upload functionality
-   - Create YouTube integration
-   - Set up smart recommendation engine
-   - Build video analytics and tracking
+3. **Campaign Performance Analytics (Week 14)**
+   - Create campaign performance dashboards
+   - Implement content performance analytics
+   - Set up agent productivity tracking
+   - Build ROI measurement and reporting
 
-4. **Advanced Analytics (Week 14)**
-   - Implement comprehensive business intelligence
-   - Create custom reporting dashboards
-   - Set up automated insights generation
-   - Integrate predictive modeling
+4. **Portal-Flutter Integration (Week 14)**
+   - Implement data synchronization between Portal and Mobile app
+   - Set up real-time callback notifications
+   - Create unified agent dashboard across platforms
+   - Integrate callback management with existing workflows
 
 **Deliverables:**
-- ✅ Marketing campaigns fully functional
-- ✅ ROI dashboards operational
-- ✅ Video tutorial system complete
-- ✅ Advanced analytics implemented
-- ✅ Business intelligence features working
+- ✅ Callback request management fully functional with priority queue
+- ✅ Agent Portal expanded with customer data management
+- ✅ Campaign and content performance analytics operational
+- ✅ Portal-Mobile app integration working
+- ✅ SLA tracking and escalation rules implemented
 
-**Documents Covered:** `marketing-campaigns-design.md`, `roi-dashboards-design.md`, `tutorial-video-system.md`, `smart-dashboards-design.md`
+**Documents Covered:** `marketing-campaigns-design.md`, `smart-dashboards-design.md`, `pages-design.md`
 
 #### Weeks 15-16: Multi-Tenant & Enterprise Features
 **Duration:** 10 days | **Effort:** 80 hours | **Resources:** 3 Developers
@@ -728,6 +739,7 @@ Agent Mitra is a comprehensive platform serving:
 ├── Technical Lead: 1 person (100% allocation)
 ├── Flutter Developers: 3 persons (100% allocation)
 ├── Backend Developers: 3 persons (100% allocation)
+├── Portal/Web Developers: 2 persons (100% allocation)
 ├── DevOps Engineer: 1 person (100% allocation)
 ├── QA Engineers: 2 persons (80% allocation)
 └── UI/UX Designer: 1 person (50% allocation)
@@ -739,10 +751,11 @@ Agent Mitra is a comprehensive platform serving:
 └── Business Analyst: 1 person (50% allocation)
 
 📈 Resource Loading:
-├── Peak Development: Weeks 9-16 (6 developers)
+├── Peak Development: Weeks 9-16 (8 developers)
+├── Portal Development: Weeks 7-14 (2 additional developers)
 ├── Testing Phase: Weeks 11-12 (2 QA engineers)
 ├── Deployment Phase: Weeks 17-20 (DevOps focus)
-└── Maintenance: Post-launch (1 developer)
+└── Maintenance: Post-launch (2 developers)
 ```
 
 ### 7.2 Infrastructure Resources
@@ -843,10 +856,11 @@ Agent Mitra is a comprehensive platform serving:
 ├── ✅ project-structure.md → Phase 1, Week 1
 ├── ✅ deployment-design.md → Phase 1, Week 1 & Phase 5
 ├── ✅ database-design.md → Phase 1, Week 2 & Phase 5
+├── ✅ glossary.md → All phases (Architecture Reference)
 └── ✅ python-backend-design.md → Phase 2, Weeks 3-6
 
 🎨 Design Documents:
-├── ✅ pages-design.md → Phase 2, Weeks 7-8 & Phase 3
+├── ✅ pages-design.md → Phase 2, Weeks 7-8 & Phase 3, Phase 4
 ├── ✅ wireframes.md → Phase 2, Weeks 7-8
 ├── ✅ navigation-hierarchy.md → Phase 2, Weeks 7-8
 ├── ✅ information-architecture.md → Phase 2, Weeks 7-8
@@ -854,10 +868,10 @@ Agent Mitra is a comprehensive platform serving:
 └── ✅ whatsapp-chatbot-design.md → Phase 2, Week 6
 
 🤖 Feature Documents:
-├── ✅ marketing-campaigns-design.md → Phase 4, Week 13
-├── ✅ roi-dashboards-design.md → Phase 4, Week 13
-├── ✅ tutorial-video-system.md → Phase 4, Week 14
-├── ✅ smart-dashboards-design.md → Phase 4, Week 14
+├── ✅ marketing-campaigns-design.md → Phase 4, Weeks 13-14
+├── ✅ smart-dashboards-design.md → Phase 4, Weeks 13-14
+├── ✅ roi-dashboards-design.md → Phase 4, Week 13 (Original)
+├── ✅ tutorial-video-system.md → Phase 4, Week 14 (Original)
 ├── ✅ multitenant-architecture-design.md → Phase 4, Week 15
 ├── ✅ role-based-access-control.md → Phase 4, Week 15
 └── ✅ content-structure.md → Phase 4, Week 16
@@ -885,15 +899,17 @@ Agent Mitra is a comprehensive platform serving:
 ├── Weeks 9-10: pages-design.md, python-backend-design.md
 └── Weeks 11-12: user-journey.md
 
-🔷 Phase 4: Advanced Features
-├── Week 13: marketing-campaigns-design.md, roi-dashboards-design.md
-├── Week 14: tutorial-video-system.md, smart-dashboards-design.md
+🔷 Phase 4: Advanced Features & Portal Expansion
+├── Weeks 13-14: marketing-campaigns-design.md, smart-dashboards-design.md, pages-design.md
 ├── Week 15: multitenant-architecture-design.md, role-based-access-control.md
 └── Week 16: content-structure.md
 
 🔷 Phase 5: Production & Optimization
 ├── Weeks 17-18: deployment-design.md
 └── Weeks 19-20: database-design.md, python-backend-design.md
+
+📋 Architecture Reference:
+└── All Phases: glossary.md (Separation of Concerns principle)
 ```
 
 ---
@@ -901,17 +917,27 @@ Agent Mitra is a comprehensive platform serving:
 ## Implementation Summary
 
 **Total Duration:** 20 weeks (5 months)
-**Total Effort:** 1,200+ developer hours
-**Team Size:** 6-8 developers + support staff
-**Documents Covered:** 16 comprehensive design documents
-**Key Deliverables:** Production-ready multi-tenant insurance platform
+**Total Effort:** 1,400+ developer hours
+**Team Size:** 8-10 developers + support staff (including 2 Portal developers)
+**Documents Covered:** 17 comprehensive design documents
+**Key Deliverables:** Production-ready multi-tenant insurance platform with Agent Configuration Portal
+
+**Updated Project Scope:**
+- ✅ Agent Mitra Mobile App (Flutter) - Customer-facing
+- ✅ Agent Mitra Config Portal (Web) - Agent-facing administrative platform
+- ✅ Official LIC Systems Integration - Existing infrastructure
+- ✅ Enhanced Customer Onboarding (5-step process)
+- ✅ Callback Request Management with priority queue
+- ✅ Campaign Performance Analytics
+- ✅ Content Performance Analytics
+- ⚠️ Premium Payment Processing - DEFERRED (Regulatory compliance)
 
 **Success Criteria:**
-- ✅ All 16 design documents implemented
-- ✅ Production deployment successful
-- ✅ Performance benchmarks met
-- ✅ Security and compliance validated
-- ✅ User acceptance testing passed
-- ✅ Comprehensive documentation delivered
+- ✅ All 17 design documents implemented with Separation of Concerns
+- ✅ Production deployment successful across all three components
+- ✅ Performance benchmarks met for mobile, web, and backend
+- ✅ Security and compliance validated (including RLS and audit)
+- ✅ User acceptance testing passed for all user journeys
+- ✅ Comprehensive documentation delivered with architectural references
 
-**Go-Live Readiness:** Complete implementation plan with detailed timelines, risk management, and quality assurance processes ensures successful delivery of the Agent Mitra platform.
+**Go-Live Readiness:** Complete implementation plan with detailed timelines, risk management, and quality assurance processes ensures successful delivery of the Agent Mitra platform with proper separation of concerns across mobile app, configuration portal, and LIC system integrations.

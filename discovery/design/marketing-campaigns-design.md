@@ -2309,7 +2309,414 @@ class _CampaignTemplateLibraryState extends State<CampaignTemplateLibrary> {
 }
 ```
 
-## 5. Campaign System Summary
+## 5. Callback Request Management System
+
+### 5.1 Callback Management Architecture
+
+#### Callback Request Flow Implementation
+```dart
+class CallbackRequestManagementPage extends StatefulWidget {
+  @override
+  _CallbackRequestManagementPageState createState() => _CallbackRequestManagementPageState();
+}
+
+class _CallbackRequestManagementPageState extends State<CallbackRequestManagementPage> {
+  late List<CallbackRequest> _requests;
+  String _selectedFilter = 'all';
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCallbackRequests();
+  }
+
+  Future<void> _loadCallbackRequests() async {
+    try {
+      _requests = await CallbackService.getCallbackRequests(filter: _selectedFilter);
+      setState(() => _isLoading = false);
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Callback Requests'),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Theme.of(context).primaryColor,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: _showFilterDialog,
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Priority queue tabs
+          _buildPriorityTabs(),
+          // Callback requests list
+          Expanded(child: _buildCallbackRequestsList()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriorityTabs() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          _buildPriorityTab('All', 'all', Colors.grey),
+          const SizedBox(width: 8),
+          _buildPriorityTab('High', 'high', Colors.red),
+          const SizedBox(width: 8),
+          _buildPriorityTab('Medium', 'medium', Colors.orange),
+          const SizedBox(width: 8),
+          _buildPriorityTab('Low', 'low', Colors.green),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriorityTab(String label, String priority, Color color) {
+    final isSelected = _selectedFilter == priority;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() {
+          _selectedFilter = priority;
+          _loadCallbackRequests();
+        }),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? color.withOpacity(0.1) : Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isSelected ? color : Colors.grey.shade300,
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? color : Colors.grey.shade600,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCallbackRequestsList() {
+    final filteredRequests = _selectedFilter == 'all'
+        ? _requests
+        : _requests.where((request) => request.priority == _selectedFilter).toList();
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: filteredRequests.length,
+      itemBuilder: (context, index) {
+        return _buildCallbackRequestCard(filteredRequests[index]);
+      },
+    );
+  }
+
+  Widget _buildCallbackRequestCard(CallbackRequest request) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with priority and timestamp
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _getPriorityColor(request.priority).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: _getPriorityColor(request.priority)),
+                  ),
+                  child: Text(
+                    request.priority.toUpperCase(),
+                    style: TextStyle(
+                      color: _getPriorityColor(request.priority),
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  _formatTimeAgo(request.createdAt),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Customer information
+            Text(
+              request.customerName,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Phone: ${request.customerPhone}',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            if (request.customerEmail != null) ...[
+              const SizedBox(height: 2),
+              Text(
+                'Email: ${request.customerEmail}',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+            const SizedBox(height: 8),
+
+            // Request details
+            Text(
+              'Request: ${request.requestType}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              request.description,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Action buttons
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.call),
+                    label: const Text('Call Now'),
+                    onPressed: () => _initiateCall(request),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Theme.of(context).primaryColor,
+                      side: BorderSide(color: Theme.of(context).primaryColor),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.schedule),
+                    label: const Text('Schedule'),
+                    onPressed: () => _scheduleCallback(request),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).primaryColor,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getPriorityColor(String priority) {
+    switch (priority.toLowerCase()) {
+      case 'high':
+        return Colors.red;
+      case 'medium':
+        return Colors.orange;
+      case 'low':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _formatTimeAgo(DateTime timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
+  }
+
+  void _showFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Filter Requests'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioListTile<String>(
+              title: const Text('All Requests'),
+              value: 'all',
+              groupValue: _selectedFilter,
+              onChanged: (value) => setState(() => _selectedFilter = value!),
+            ),
+            RadioListTile<String>(
+              title: const Text('High Priority'),
+              value: 'high',
+              groupValue: _selectedFilter,
+              onChanged: (value) => setState(() => _selectedFilter = value!),
+            ),
+            RadioListTile<String>(
+              title: const Text('Medium Priority'),
+              value: 'medium',
+              groupValue: _selectedFilter,
+              onChanged: (value) => setState(() => _selectedFilter = value!),
+            ),
+            RadioListTile<String>(
+              title: const Text('Low Priority'),
+              value: 'low',
+              groupValue: _selectedFilter,
+              onChanged: (value) => setState(() => _selectedFilter = value!),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _loadCallbackRequests();
+            },
+            child: const Text('Apply'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _initiateCall(CallbackRequest request) {
+    // Implement phone call functionality
+    // This would typically use url_launcher or platform-specific APIs
+  }
+
+  void _scheduleCallback(CallbackRequest request) {
+    // Navigate to callback scheduling screen
+    Navigator.pushNamed(context, '/schedule-callback', arguments: request);
+  }
+}
+```
+
+### 5.2 Callback Priority Management
+
+#### Priority Assignment Logic
+```python
+class CallbackPriorityManager:
+    """Manages callback request prioritization based on customer and request factors"""
+
+    @staticmethod
+    def calculate_priority_score(customer_id: int, request_type: str,
+                               urgency_level: str, customer_value: str) -> int:
+        """
+        Calculate priority score for callback requests
+        Returns score from 1-100 (higher = more urgent)
+        """
+        base_score = 0
+
+        # Request type weights
+        request_weights = {
+            'policy_issue': 90,
+            'payment_problem': 85,
+            'claim_assistance': 80,
+            'general_inquiry': 60,
+            'feedback': 40,
+            'suggestion': 30,
+        }
+        base_score += request_weights.get(request_type, 50)
+
+        # Urgency level modifiers
+        urgency_modifiers = {
+            'critical': 20,
+            'high': 15,
+            'medium': 10,
+            'low': 0,
+        }
+        base_score += urgency_modifiers.get(urgency_level, 0)
+
+        # Customer value modifiers
+        value_modifiers = {
+            'platinum': 15,
+            'gold': 10,
+            'silver': 5,
+            'bronze': 0,
+        }
+        base_score += value_modifiers.get(customer_value, 0)
+
+        # Time-based decay (older requests get higher priority)
+        # Implementation would consider request age
+
+        return min(100, max(1, base_score))
+
+    @staticmethod
+    def assign_priority_category(score: int) -> str:
+        """Convert priority score to category"""
+        if score >= 85:
+            return 'high'
+        elif score >= 70:
+            return 'medium'
+        else:
+            return 'low'
+
+    @staticmethod
+    def get_sla_timeframes(priority: str) -> Dict[str, int]:
+        """Get SLA timeframes in minutes for different priorities"""
+        sla_times = {
+            'high': {
+                'first_response': 15,  # minutes
+                'resolution': 120,     # minutes
+            },
+            'medium': {
+                'first_response': 60,  # minutes
+                'resolution': 480,     # minutes
+            },
+            'low': {
+                'first_response': 240, # minutes
+                'resolution': 1440,    # minutes (24 hours)
+            },
+        }
+        return sla_times.get(priority, sla_times['low'])
+```
+
+## 6. Campaign System Summary
 
 This comprehensive Marketing Campaigns system provides:
 
@@ -2318,6 +2725,7 @@ This comprehensive Marketing Campaigns system provides:
 - **Advanced targeting** with customer segmentation and behavioral rules
 - **Campaign automation** with smart triggers and personalized messaging
 - **Real-time analytics** with ROI tracking and performance insights
+- **Callback request management** with priority queue and SLA tracking
 - **A/B testing** for campaign optimization
 - **Template library** with proven campaign structures
 
@@ -2342,6 +2750,7 @@ This comprehensive Marketing Campaigns system provides:
 ### 🔧 **Technical Implementation**
 - **Template-based campaign creation** with drag-and-drop interface
 - **Advanced segmentation engine** with behavioral targeting
+- **Callback request management** with priority queue and SLA tracking
 - **Multi-channel delivery system** with failover mechanisms
 - **Real-time analytics dashboard** with predictive insights
 

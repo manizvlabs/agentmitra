@@ -1486,4 +1486,632 @@ END;
 $$ LANGUAGE plpgsql;
 ```
 
+## 6. Agent Configuration Portal Database Schemas
+
+### 6.1 Portal Service Database Design
+
+The Agent Configuration Portal requires dedicated database schemas to manage administrative functions, data import operations, and agent management. These schemas operate independently from the main application database while maintaining secure data synchronization.
+
+#### Portal Database Architecture
+```sql
+-- portal_service database schemas
+-- Separate database instance for portal operations
+
+-- =================================================
+-- AGENT CONFIGURATION PORTAL DATABASE SCHEMAS
+-- =================================================
+
+-- Portal users (agents and admins)
+CREATE TABLE portal_users (
+    user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL, -- Links to main app tenants
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    role VARCHAR(50) NOT NULL, -- 'super_admin', 'insurance_provider_admin', 'regional_manager', 'senior_agent', 'junior_agent'
+    agent_code VARCHAR(50) UNIQUE,
+    phone VARCHAR(20),
+    is_active BOOLEAN DEFAULT true,
+    last_login_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Agent hierarchy and relationships
+CREATE TABLE agent_hierarchy (
+    hierarchy_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    agent_id UUID REFERENCES portal_users(user_id),
+    manager_id UUID REFERENCES portal_users(user_id),
+    hierarchy_level INTEGER NOT NULL, -- 1 = junior, 2 = senior, 3 = manager, etc.
+    region VARCHAR(100),
+    territory VARCHAR(100),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Data import operations
+CREATE TABLE import_jobs (
+    import_job_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    agent_id UUID REFERENCES portal_users(user_id),
+    file_name VARCHAR(500) NOT NULL,
+    file_path VARCHAR(1000),
+    import_type VARCHAR(50) NOT NULL, -- 'excel', 'lic_api', 'bulk_update'
+    total_records INTEGER DEFAULT 0,
+    processed_records INTEGER DEFAULT 0,
+    successful_records INTEGER DEFAULT 0,
+    failed_records INTEGER DEFAULT 0,
+    status VARCHAR(50) DEFAULT 'pending', -- 'pending', 'processing', 'completed', 'failed'
+    error_message TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP
+);
+
+-- Individual import records for tracking
+CREATE TABLE import_records (
+    import_record_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    import_job_id UUID REFERENCES import_jobs(import_job_id),
+    row_number INTEGER NOT NULL,
+    data JSONB NOT NULL, -- Raw imported data
+    processed_data JSONB, -- Processed/cleaned data
+    status VARCHAR(50) DEFAULT 'pending', -- 'pending', 'success', 'failed', 'skipped'
+    error_message TEXT,
+    customer_id UUID, -- Link to created/updated customer
+    policy_id UUID, -- Link to created/updated policy
+    processed_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Excel template configurations
+CREATE TABLE excel_templates (
+    template_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    template_name VARCHAR(200) NOT NULL,
+    description TEXT,
+    column_mapping JSONB NOT NULL, -- Maps Excel columns to database fields
+    required_columns TEXT[] DEFAULT '{}', -- Array of required column names
+    optional_columns TEXT[] DEFAULT '{}', -- Array of optional column names
+    validation_rules JSONB DEFAULT '{}', -- Custom validation rules
+    is_active BOOLEAN DEFAULT true,
+    created_by UUID REFERENCES portal_users(user_id),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- LIC API synchronization jobs
+CREATE TABLE lic_sync_jobs (
+    sync_job_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    agent_id UUID REFERENCES portal_users(user_id),
+    sync_type VARCHAR(100) NOT NULL, -- 'policies', 'customers', 'claims', 'full_sync'
+    external_reference_id VARCHAR(200), -- LIC reference ID
+    records_processed INTEGER DEFAULT 0,
+    records_updated INTEGER DEFAULT 0,
+    records_created INTEGER DEFAULT 0,
+    records_failed INTEGER DEFAULT 0,
+    status VARCHAR(50) DEFAULT 'pending', -- 'pending', 'running', 'completed', 'failed'
+    error_message TEXT,
+    api_response JSONB, -- Store API response for debugging
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Portal activity audit log
+CREATE TABLE portal_audit_log (
+    audit_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    user_id UUID REFERENCES portal_users(user_id),
+    action VARCHAR(100) NOT NULL, -- 'login', 'import_data', 'update_customer', 'view_report', etc.
+    resource_type VARCHAR(100), -- 'customer', 'policy', 'import_job', 'report', etc.
+    resource_id UUID, -- ID of the affected resource
+    old_values JSONB, -- Previous state (for updates)
+    new_values JSONB, -- New state (for updates/creates)
+    ip_address INET,
+    user_agent TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Customer data management (portal view)
+CREATE TABLE portal_customers (
+    customer_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    external_customer_id UUID, -- Link to main app customer
+    agent_id UUID REFERENCES portal_users(user_id),
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    phone VARCHAR(20),
+    email VARCHAR(255),
+    date_of_birth DATE,
+    address_line1 VARCHAR(255),
+    address_line2 VARCHAR(255),
+    city VARCHAR(100),
+    state VARCHAR(100),
+    pincode VARCHAR(10),
+    aadhaar_number VARCHAR(12),
+    pan_number VARCHAR(10),
+    status VARCHAR(50) DEFAULT 'active', -- 'active', 'inactive', 'suspended'
+    risk_profile VARCHAR(50), -- 'low', 'medium', 'high'
+    customer_value VARCHAR(20) DEFAULT 'bronze', -- 'bronze', 'silver', 'gold', 'platinum'
+    tags TEXT[] DEFAULT '{}', -- Array of tags for segmentation
+    last_contacted_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    created_by UUID REFERENCES portal_users(user_id),
+    updated_by UUID REFERENCES portal_users(user_id)
+);
+
+-- Policy data management (portal view)
+CREATE TABLE portal_policies (
+    policy_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    customer_id UUID REFERENCES portal_customers(customer_id),
+    external_policy_id UUID, -- Link to main app policy
+    agent_id UUID REFERENCES portal_users(user_id),
+    policy_number VARCHAR(100) UNIQUE NOT NULL,
+    policy_type VARCHAR(100) NOT NULL, -- 'life', 'health', 'general', 'term', etc.
+    product_name VARCHAR(200),
+    sum_assured DECIMAL(15,2),
+    premium_amount DECIMAL(10,2),
+    premium_frequency VARCHAR(20) DEFAULT 'Monthly', -- 'Monthly', 'Quarterly', 'Half-Yearly', 'Yearly'
+    issue_date DATE,
+    maturity_date DATE,
+    status VARCHAR(50) DEFAULT 'active', -- 'active', 'lapsed', 'surrendered', 'matured', 'claimed'
+    payment_status VARCHAR(50) DEFAULT 'regular', -- 'regular', 'overdue', 'lapsed'
+    last_premium_date DATE,
+    next_premium_date DATE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Reporting and analytics data
+CREATE TABLE portal_reports (
+    report_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    report_type VARCHAR(100) NOT NULL, -- 'customer_summary', 'policy_performance', 'agent_productivity', etc.
+    report_name VARCHAR(200) NOT NULL,
+    parameters JSONB DEFAULT '{}', -- Report parameters
+    generated_by UUID REFERENCES portal_users(user_id),
+    generated_at TIMESTAMP DEFAULT NOW(),
+    file_path VARCHAR(1000), -- Path to generated report file
+    file_size INTEGER, -- Size in bytes
+    download_count INTEGER DEFAULT 0,
+    expires_at TIMESTAMP -- Report expiration date
+);
+
+-- Dashboard preferences per user
+CREATE TABLE dashboard_preferences (
+    preference_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES portal_users(user_id) UNIQUE,
+    layout_config JSONB DEFAULT '{}', -- Dashboard widget layout
+    visible_widgets TEXT[] DEFAULT '{}', -- Array of visible widget IDs
+    chart_preferences JSONB DEFAULT '{}', -- Chart display preferences
+    refresh_interval INTEGER DEFAULT 300, -- Auto-refresh interval in seconds
+    theme VARCHAR(20) DEFAULT 'light', -- 'light', 'dark', 'auto'
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Indexes for performance
+CREATE INDEX idx_portal_users_tenant_role ON portal_users(tenant_id, role);
+CREATE INDEX idx_portal_users_agent_code ON portal_users(agent_code);
+CREATE INDEX idx_import_jobs_tenant_agent ON import_jobs(tenant_id, agent_id);
+CREATE INDEX idx_import_jobs_status ON import_jobs(status);
+CREATE INDEX idx_import_records_job_id ON import_records(import_job_id);
+CREATE INDEX idx_lic_sync_jobs_tenant_agent ON lic_sync_jobs(tenant_id, agent_id);
+CREATE INDEX idx_lic_sync_jobs_status ON lic_sync_jobs(status);
+CREATE INDEX idx_portal_audit_log_tenant_user ON portal_audit_log(tenant_id, user_id);
+CREATE INDEX idx_portal_audit_log_action ON portal_audit_log(action);
+CREATE INDEX idx_portal_customers_tenant_agent ON portal_customers(tenant_id, agent_id);
+CREATE INDEX idx_portal_customers_phone ON portal_customers(phone);
+CREATE INDEX idx_portal_customers_email ON portal_customers(email);
+CREATE INDEX idx_portal_policies_customer ON portal_policies(customer_id);
+CREATE INDEX idx_portal_policies_agent ON portal_policies(agent_id);
+CREATE INDEX idx_portal_policies_policy_number ON portal_policies(policy_number);
+CREATE INDEX idx_portal_policies_status ON portal_policies(status);
+
+-- Row Level Security (RLS) policies
+ALTER TABLE portal_users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE portal_customers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE portal_policies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE import_jobs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE lic_sync_jobs ENABLE ROW LEVEL SECURITY;
+
+-- RLS policy for portal_users (users can only see their own tenant)
+CREATE POLICY portal_users_tenant_isolation ON portal_users
+    FOR ALL USING (tenant_id = current_setting('app.current_tenant_id')::UUID);
+
+-- RLS policy for portal_customers (users can only see customers in their tenant)
+CREATE POLICY portal_customers_tenant_isolation ON portal_customers
+    FOR ALL USING (tenant_id = current_setting('app.current_tenant_id')::UUID);
+
+-- Additional RLS policies for agent-specific access
+CREATE POLICY portal_customers_agent_access ON portal_customers
+    FOR ALL USING (agent_id = current_setting('app.current_user_id')::UUID OR
+                   current_setting('app.user_role') IN ('admin', 'manager'));
+
+-- RLS policy for portal_policies
+CREATE POLICY portal_policies_tenant_isolation ON portal_policies
+    FOR ALL USING (tenant_id = current_setting('app.current_tenant_id')::UUID);
+
+CREATE POLICY portal_policies_agent_access ON portal_policies
+    FOR ALL USING (agent_id = current_setting('app.current_user_id')::UUID OR
+                   current_setting('app.user_role') IN ('admin', 'manager'));
+```
+
+## 7. Callback Request Management Database Schemas
+
+### 7.1 Callback Management Database Design
+
+The callback management system requires dedicated tables to handle callback requests, priority management, SLA tracking, and agent assignments. These schemas integrate with the main application database.
+
+#### Callback Management Tables
+```sql
+-- =================================================
+-- CALLBACK REQUEST MANAGEMENT SCHEMAS
+-- =================================================
+
+-- Callback request priority levels
+CREATE TYPE callback_priority AS ENUM ('high', 'medium', 'low');
+
+-- Callback request status
+CREATE TYPE callback_status AS ENUM ('pending', 'assigned', 'in_progress', 'completed', 'cancelled', 'overdue');
+
+-- Main callback requests table
+CREATE TABLE callback_requests (
+    callback_request_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    customer_id UUID NOT NULL, -- References main app customers
+    agent_id UUID REFERENCES portal_users(user_id), -- Assigned agent (nullable)
+    request_type VARCHAR(100) NOT NULL, -- 'policy_issue', 'payment_problem', 'claim_assistance', etc.
+    description TEXT NOT NULL,
+    priority callback_priority DEFAULT 'low',
+    priority_score DECIMAL(5,2) DEFAULT 0.00, -- Calculated priority score 0-100
+    status callback_status DEFAULT 'pending',
+
+    -- Customer contact information (cached for performance)
+    customer_name VARCHAR(200) NOT NULL,
+    customer_phone VARCHAR(20) NOT NULL,
+    customer_email VARCHAR(255),
+
+    -- SLA and time management
+    sla_hours INTEGER DEFAULT 24, -- Service Level Agreement in hours
+    created_at TIMESTAMP DEFAULT NOW(),
+    assigned_at TIMESTAMP,
+    scheduled_at TIMESTAMP, -- When callback is scheduled
+    due_at TIMESTAMP, -- Calculated due date based on SLA
+    started_at TIMESTAMP, -- When agent starts working on callback
+    completed_at TIMESTAMP,
+
+    -- Source tracking
+    source VARCHAR(50) DEFAULT 'portal', -- 'portal', 'whatsapp', 'mobile', 'api'
+    source_reference_id VARCHAR(200), -- Reference ID from source system
+
+    -- Metadata and categorization
+    tags TEXT[] DEFAULT '{}', -- Array of tags for categorization
+    category VARCHAR(100), -- 'technical', 'billing', 'policy', 'general'
+    urgency_level VARCHAR(20) DEFAULT 'medium', -- 'critical', 'high', 'medium', 'low'
+    customer_value VARCHAR(20) DEFAULT 'bronze', -- 'bronze', 'silver', 'gold', 'platinum'
+
+    -- Resolution details
+    resolution TEXT, -- How the callback was resolved
+    resolution_category VARCHAR(100), -- 'resolved', 'escalated', 'transferred', 'cancelled'
+    satisfaction_rating INTEGER CHECK (satisfaction_rating >= 1 AND satisfaction_rating <= 5),
+
+    -- Audit fields
+    created_by UUID REFERENCES portal_users(user_id),
+    assigned_by UUID REFERENCES portal_users(user_id),
+    completed_by UUID REFERENCES portal_users(user_id),
+    last_updated_by UUID REFERENCES portal_users(user_id),
+    last_updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Callback activity log (tracks all interactions)
+CREATE TABLE callback_activities (
+    callback_activity_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    callback_request_id UUID REFERENCES callback_requests(callback_request_id) ON DELETE CASCADE,
+    agent_id UUID REFERENCES portal_users(user_id),
+    activity_type VARCHAR(50) NOT NULL, -- 'created', 'assigned', 'called', 'completed', 'escalated', 'cancelled', etc.
+    description TEXT NOT NULL,
+    duration_minutes INTEGER, -- Duration of the activity in minutes
+    contact_method VARCHAR(50), -- 'phone', 'whatsapp', 'email', 'sms', 'in_person'
+    contact_outcome VARCHAR(100), -- 'successful', 'no_answer', 'wrong_number', 'voicemail', etc.
+    notes TEXT, -- Additional notes from agent
+    metadata JSONB DEFAULT '{}', -- Flexible metadata storage
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Callback queue management
+CREATE TABLE callback_queues (
+    callback_queue_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    queue_name VARCHAR(100) NOT NULL,
+    queue_type VARCHAR(50) DEFAULT 'priority', -- 'priority', 'fifo', 'round_robin'
+    description TEXT,
+    is_active BOOLEAN DEFAULT true,
+    max_concurrent_callbacks INTEGER DEFAULT 5, -- Max callbacks an agent can handle simultaneously
+    sla_target_hours INTEGER DEFAULT 24,
+    auto_assignment_enabled BOOLEAN DEFAULT true,
+    assignment_rules JSONB DEFAULT '{}', -- Rules for auto-assignment
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Agent callback assignments and capacity
+CREATE TABLE agent_callback_capacity (
+    capacity_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    agent_id UUID REFERENCES portal_users(user_id) UNIQUE,
+    max_daily_callbacks INTEGER DEFAULT 50,
+    max_concurrent_callbacks INTEGER DEFAULT 3,
+    current_active_callbacks INTEGER DEFAULT 0,
+    specialties TEXT[] DEFAULT '{}', -- Types of callbacks this agent specializes in
+    availability_schedule JSONB DEFAULT '{}', -- Agent's availability schedule
+    is_available BOOLEAN DEFAULT true,
+    last_updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Callback escalation rules
+CREATE TABLE callback_escalation_rules (
+    escalation_rule_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    rule_name VARCHAR(200) NOT NULL,
+    priority callback_priority,
+    trigger_condition JSONB NOT NULL, -- When to trigger escalation
+    escalation_action VARCHAR(100) NOT NULL, -- 'notify_manager', 'reassign', 'increase_priority', etc.
+    escalation_target JSONB NOT NULL, -- Who/what to escalate to
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Callback templates for common responses
+CREATE TABLE callback_templates (
+    template_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    template_name VARCHAR(200) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    subject VARCHAR(500),
+    template_text TEXT NOT NULL,
+    variables TEXT[] DEFAULT '{}', -- Available variables for personalization
+    is_active BOOLEAN DEFAULT true,
+    created_by UUID REFERENCES portal_users(user_id),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Callback analytics and reporting tables
+CREATE TABLE callback_metrics_daily (
+    metric_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    date DATE NOT NULL,
+    total_callbacks INTEGER DEFAULT 0,
+    resolved_callbacks INTEGER DEFAULT 0,
+    avg_resolution_time_minutes DECIMAL(8,2),
+    avg_first_response_time_minutes DECIMAL(8,2),
+    sla_compliance_percentage DECIMAL(5,2),
+    customer_satisfaction_avg DECIMAL(3,2),
+    callbacks_by_priority JSONB DEFAULT '{}',
+    callbacks_by_type JSONB DEFAULT '{}',
+    callbacks_by_source JSONB DEFAULT '{}',
+    agent_performance JSONB DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT NOW(),
+
+    UNIQUE(tenant_id, date)
+);
+
+-- Callback performance tracking per agent
+CREATE TABLE agent_callback_performance (
+    performance_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    agent_id UUID REFERENCES portal_users(user_id),
+    tenant_id UUID NOT NULL,
+    date DATE NOT NULL,
+    total_assigned INTEGER DEFAULT 0,
+    total_resolved INTEGER DEFAULT 0,
+    avg_resolution_time_minutes DECIMAL(8,2),
+    sla_compliance_percentage DECIMAL(5,2),
+    customer_satisfaction_avg DECIMAL(3,2),
+    callbacks_by_priority JSONB DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT NOW(),
+
+    UNIQUE(agent_id, date)
+);
+
+-- Callback SLA tracking
+CREATE TABLE callback_sla_tracking (
+    sla_tracking_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    callback_request_id UUID REFERENCES callback_requests(callback_request_id),
+    sla_type VARCHAR(50) NOT NULL, -- 'first_response', 'resolution'
+    target_time TIMESTAMP NOT NULL,
+    actual_time TIMESTAMP,
+    is_met BOOLEAN GENERATED ALWAYS AS (actual_time <= target_time) STORED,
+    delay_minutes INTEGER GENERATED ALWAYS AS (
+        EXTRACT(EPOCH FROM (actual_time - target_time))/60
+    ) STORED,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Indexes for performance
+CREATE INDEX idx_callback_requests_tenant_status ON callback_requests(tenant_id, status);
+CREATE INDEX idx_callback_requests_tenant_priority ON callback_requests(tenant_id, priority);
+CREATE INDEX idx_callback_requests_customer ON callback_requests(customer_id);
+CREATE INDEX idx_callback_requests_agent ON callback_requests(agent_id);
+CREATE INDEX idx_callback_requests_due_at ON callback_requests(due_at);
+CREATE INDEX idx_callback_requests_created_at ON callback_requests(created_at);
+CREATE INDEX idx_callback_activities_callback ON callback_activities(callback_request_id);
+CREATE INDEX idx_callback_activities_agent ON callback_activities(agent_id);
+CREATE INDEX idx_callback_activities_created_at ON callback_activities(created_at);
+CREATE INDEX idx_callback_metrics_daily_tenant_date ON callback_metrics_daily(tenant_id, date);
+CREATE INDEX idx_agent_callback_performance_agent_date ON agent_callback_performance(agent_id, date);
+CREATE INDEX idx_callback_sla_tracking_callback ON callback_sla_tracking(callback_request_id);
+
+-- Partial indexes for common queries
+CREATE INDEX idx_callback_requests_pending ON callback_requests(callback_request_id) WHERE status = 'pending';
+CREATE INDEX idx_callback_requests_overdue ON callback_requests(callback_request_id)
+    WHERE status NOT IN ('completed', 'cancelled') AND due_at < NOW();
+CREATE INDEX idx_callback_requests_high_priority ON callback_requests(callback_request_id)
+    WHERE priority = 'high' AND status NOT IN ('completed', 'cancelled');
+
+-- Row Level Security policies
+ALTER TABLE callback_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE callback_activities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE agent_callback_capacity ENABLE ROW LEVEL SECURITY;
+ALTER TABLE callback_metrics_daily ENABLE ROW LEVEL SECURITY;
+ALTER TABLE agent_callback_performance ENABLE ROW LEVEL SECURITY;
+
+-- RLS policy for callback_requests (tenant isolation)
+CREATE POLICY callback_requests_tenant_isolation ON callback_requests
+    FOR ALL USING (tenant_id = current_setting('app.current_tenant_id')::UUID);
+
+-- Additional access control policies
+CREATE POLICY callback_requests_agent_access ON callback_requests
+    FOR ALL USING (agent_id = current_setting('app.current_user_id')::UUID OR
+                   current_setting('app.user_role') IN ('admin', 'manager'));
+
+-- RLS policy for callback_activities
+CREATE POLICY callback_activities_tenant_isolation ON callback_activities
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM callback_requests cr
+            WHERE cr.callback_request_id = callback_activities.callback_request_id
+            AND cr.tenant_id = current_setting('app.current_tenant_id')::UUID
+        )
+    );
+
+-- RLS policy for agent_callback_capacity
+CREATE POLICY agent_callback_capacity_tenant_isolation ON agent_callback_capacity
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM portal_users pu
+            WHERE pu.user_id = agent_callback_capacity.agent_id
+            AND pu.tenant_id = current_setting('app.current_tenant_id')::UUID
+        )
+    );
+
+-- Functions for callback management
+CREATE OR REPLACE FUNCTION calculate_callback_priority_score(
+    customer_id UUID,
+    request_type VARCHAR(100),
+    urgency_level VARCHAR(20),
+    customer_value VARCHAR(20),
+    age_hours INTEGER DEFAULT 0
+) RETURNS DECIMAL(5,2) AS $$
+DECLARE
+    base_score DECIMAL(5,2) := 0;
+    request_weights JSONB := '{
+        "policy_issue": 90,
+        "payment_problem": 85,
+        "claim_assistance": 80,
+        "general_inquiry": 60,
+        "feedback": 40,
+        "suggestion": 30
+    }';
+    urgency_modifiers JSONB := '{
+        "critical": 20,
+        "high": 15,
+        "medium": 10,
+        "low": 0
+    }';
+    value_modifiers JSONB := '{
+        "platinum": 15,
+        "gold": 10,
+        "silver": 5,
+        "bronze": 0
+    }';
+BEGIN
+    -- Get base score from request type
+    base_score := COALESCE((request_weights->>request_type)::DECIMAL, 50.0);
+
+    -- Add urgency modifier
+    base_score := base_score + COALESCE((urgency_modifiers->>urgency_level)::DECIMAL, 0);
+
+    -- Add customer value modifier
+    base_score := base_score + COALESCE((value_modifiers->>customer_value)::DECIMAL, 0);
+
+    -- Add age-based urgency
+    base_score := base_score + LEAST(age_hours::DECIMAL / 4, 10);
+
+    RETURN LEAST(100.0, GREATEST(1.0, base_score));
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to assign priority category based on score
+CREATE OR REPLACE FUNCTION get_callback_priority_category(score DECIMAL(5,2))
+RETURNS callback_priority AS $$
+BEGIN
+    IF score >= 85 THEN
+        RETURN 'high'::callback_priority;
+    ELSIF score >= 70 THEN
+        RETURN 'medium'::callback_priority;
+    ELSE
+        RETURN 'low'::callback_priority;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to calculate SLA due date
+CREATE OR REPLACE FUNCTION calculate_callback_due_date(
+    created_at TIMESTAMP,
+    priority callback_priority
+) RETURNS TIMESTAMP AS $$
+DECLARE
+    sla_hours INTEGER;
+BEGIN
+    -- Get SLA hours based on priority
+    CASE priority
+        WHEN 'high' THEN sla_hours := 2;    -- 2 hours for high priority
+        WHEN 'medium' THEN sla_hours := 8;  -- 8 hours for medium priority
+        WHEN 'low' THEN sla_hours := 24;    -- 24 hours for low priority
+        ELSE sla_hours := 24;
+    END CASE;
+
+    RETURN created_at + INTERVAL '1 hour' * sla_hours;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to automatically set due date when callback is created
+CREATE OR REPLACE FUNCTION set_callback_due_date()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.due_at IS NULL THEN
+        NEW.due_at := calculate_callback_due_date(NEW.created_at, NEW.priority);
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER callback_due_date_trigger
+    BEFORE INSERT ON callback_requests
+    FOR EACH ROW
+    EXECUTE FUNCTION set_callback_due_date();
+
+-- Function to update callback status timestamps
+CREATE OR REPLACE FUNCTION update_callback_timestamps()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Set assigned_at when status changes to assigned
+    IF NEW.status = 'assigned' AND OLD.status != 'assigned' THEN
+        NEW.assigned_at := NOW();
+    END IF;
+
+    -- Set started_at when status changes to in_progress
+    IF NEW.status = 'in_progress' AND OLD.status != 'in_progress' THEN
+        NEW.started_at := NOW();
+    END IF;
+
+    -- Set completed_at when status changes to completed
+    IF NEW.status = 'completed' AND OLD.status != 'completed' THEN
+        NEW.completed_at := NOW();
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER callback_timestamps_trigger
+    BEFORE UPDATE ON callback_requests
+    FOR EACH ROW
+    EXECUTE FUNCTION update_callback_timestamps();
+```
+
 This comprehensive database design provides a solid foundation for the Agent Mitra platform, ensuring scalability, security, performance, and compliance with industry standards. The schema supports multi-tenancy, advanced analytics, and complex business workflows while maintaining data integrity and regulatory compliance.
