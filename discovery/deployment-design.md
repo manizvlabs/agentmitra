@@ -300,8 +300,8 @@ flowchart TB
 - Apple App Store: $99/year (Developer Program)
 - Google Play Store: $25 one-time (Developer Account)
 
-**Firebase Services (Blaze Plan - Pay-as-you-use):**
-- Firebase Authentication: $0.0055 per successful verification
+**Firebase Services (Storage & Analytics Only):**
+- Custom OAuth2/JWT: Built-in authentication service
 - Cloud Firestore: $0.18/GB stored + $0.036/GB transferred
 - Firebase Storage: $0.026/GB stored + $0.12/GB downloaded
 - Firebase Cloud Messaging: $0.0005 per message (first 10M free)
@@ -318,7 +318,7 @@ flowchart TB
 - Built-in audit trails and monitoring
 - GDPR-compliant data handling
 - Scalable without vendor limitations
-- **Cost Savings**: ~$150/year (vs Firebase Auth)
+- **Cost Savings**: ~$150/year (vs third-party auth services)
 
 **Config Portal (Shared Python Backend):**
 - Frontend hosted on S3 (static hosting): ~$100/month (additional CloudFront data transfer)
@@ -387,7 +387,7 @@ graph TD
     end
 
     subgraph "🔐 Security & Access"
-        Cognito[Amazon Cognito<br/>Agent Authentication<br/>MFA Support]
+        OAuth2Svc[Custom OAuth2/JWT<br/>Agent Authentication<br/>MFA Support]
         WAF[WAF & Shield<br/>DDoS Protection<br/>Bot Management]
     end
 
@@ -402,10 +402,10 @@ graph TD
     ECSBackend --> ALB
     ALB --> CloudFront
     CloudFront --> WAF
-    WAF --> Cognito
+    WAF --> OAuth2Svc
     ECSBackend --> CloudWatch
     CloudFront --> CloudWatch
-    Cognito --> Matomo
+    OAuth2Svc --> Matomo
 
     classDef web fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
     classDef aws fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
@@ -414,14 +414,14 @@ graph TD
 
     class Frontend,PythonBackend web
     class CloudFront,S3Static,ECSBackend,ALB aws
-    class Cognito,WAF security
+    class OAuth2Svc,WAF security
     class CloudWatch,Matomo analytics
 ```
 
 **Deployment Characteristics:**
 - **Frontend**: Static hosting on S3 + CloudFront CDN
 - **Backend**: Containerized Python app on ECS Fargate
-- **Authentication**: Amazon Cognito for agent login
+- **Authentication**: Custom OAuth2/JWT service for agent login
 - **Scaling**: Auto-scaling based on portal usage
 - **Security**: Dedicated WAF rules for admin portal
 - **Domain**: Subdomain (portal.agentmitra.com) with agent-specific routing
@@ -508,7 +508,7 @@ graph TD
 
 #### Unified Authentication Architecture
 
-**Solution:** Single OAuth2/JWT authentication service in Python backend eliminates complex synchronization between Firebase and Cognito.
+**Solution:** Single OAuth2/JWT authentication service in Python backend eliminates need for third-party authentication services.
 
 ```mermaid
 graph TB
@@ -565,9 +565,9 @@ graph TB
 
 **Why Centralized Auth?**
 - ✅ **Single authentication system** for all platforms (mobile + web)
-- ✅ **No complex synchronization** between Firebase and Cognito
+- ✅ **No third-party dependencies** for authentication
 - ✅ **Full control** over authentication logic and security
-- ✅ **Cost-effective** - eliminates Firebase Auth and Cognito costs
+- ✅ **Cost-effective** - eliminates third-party auth service costs
 - ✅ **Scalable** - single service handles all authentication needs
 
 **Technical Implementation:**
@@ -715,7 +715,7 @@ flowchart TB
         Tempo["Tempo<br>₹50/month<br>Distributed tracing"]
   end
  subgraph ThirdParty["🔥 Third-Party Services (₹16,650/month)"]
-        Firebase["Firebase Services<br>₹1,050/year<br>Auth, Storage, Analytics"]
+        Firebase["Firebase Storage<br>₹900/year<br>Cloud Storage"]
         Matomo["Matomo<br>₹500/year<br>Privacy Analytics"]
         OpenAI["OpenAI API<br>₹3,000/year<br>Chatbot & Content"]
         WhatsApp["WhatsApp API<br>₹5,000/year<br>Business Messaging"]
@@ -1760,7 +1760,7 @@ graph LR
     end
 
     subgraph "🔐 Portal Security"
-        CognitoAuth[Cognito Update<br/>User Pools<br/>MFA Policies]
+        OAuth2Auth[OAuth2 Update<br/>User Management<br/>MFA Policies]
         WAFUpdate[WAF Rules<br/>Portal Security<br/>Rate Limiting]
     end
 
@@ -1786,11 +1786,11 @@ graph LR
     ALBRoute --> CDNUpdate
 
     CDNUpdate --> WAFUpdate
-    WAFUpdate --> CognitoAuth
+    WAFUpdate --> OAuth2Auth
 
     CDNUpdate --> CloudWatch
     ECSDeploy --> CloudWatch
-    CognitoAuth --> Matomo
+    OAuth2Auth --> Matomo
 
     %% Styling
     classDef dev fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
@@ -1802,7 +1802,7 @@ graph LR
     class PushBackend,PRBackend dev
     class LintBackend,TestBackend,SecurityBackend,BuildBackend build
     class ECSDeploy,ALBRoute,PortalDeploy,CDNUpdate aws
-    class CognitoAuth,WAFUpdate security
+    class OAuth2Auth,WAFUpdate security
     class CloudWatch,Matomo monitoring
 ```
 
@@ -3041,9 +3041,9 @@ gantt
 #### Phase 1: MVP Infrastructure (₹24,700/month) - Open-Source Optimized
 ```mermaid
 pie title Phase 1 Cost Distribution (₹24,700/month) - Open-Source Savings
-    "AWS Infrastructure" : 40
-    "Firebase Services" : 20
-    "Third-Party APIs" : 30
+    "AWS Infrastructure" : 42
+    "Firebase Services" : 15
+    "Third-Party APIs" : 32
     "Config Portal (Python APIs)" : 5
     "App Store Fees" : 4
     "Security & Monitoring" : 1
