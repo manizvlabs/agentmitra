@@ -282,10 +282,10 @@ flowchart TB
 - **TestFlight**: iOS beta testing, internal distribution, crash reporting
 - **Play Store Beta**: Android beta testing, open testing tracks, staged rollouts
 
-**📊 Analytics & Monitoring Services:**
-- **Mixpanel**: Advanced user analytics, cohort analysis, funnel optimization
-- **Sentry**: Error tracking, release health monitoring, issue alerting
-- **New Relic**: Mobile app performance monitoring, crash analysis, user experience metrics
+**📊 Open-Source Analytics & Monitoring Services:**
+- **Matomo**: Privacy-focused web analytics, user behavior tracking, GDPR compliant
+- **Grafana**: Custom dashboards and visualization, real-time monitoring, alerting
+- **Loki + Promtail**: Log aggregation and querying, error tracking, distributed logging
 
 **💬 Communication Services:**
 - **WhatsApp Business API**: Direct agent communication, template messages, media sharing
@@ -332,11 +332,12 @@ flowchart TB
 - Portal APIs served by unified Python backend: Included in core backend costs
 - **Total Portal Additional**: ~$100/month
 
-**Third-Party Analytics & Monitoring:**
-- Mixpanel: ~$2,000/year (Growth plan for 25K MTUs)
-- Sentry: ~$1,500/year (Team plan for error tracking)
-- New Relic: ~$3,000/year (Pro plan for mobile monitoring)
-- **Total Analytics**: ~$6,500/year
+**Open-Source Analytics & Monitoring:**
+- Matomo: ~$500/year (Self-hosted privacy analytics)
+- Grafana: Free (Open-source visualization platform)
+- Prometheus: Free (Open-source metrics collection)
+- Loki: ~$100/month (Self-hosted log aggregation)
+- **Total Analytics**: ~$1,700/year
 
 **Communication Services:**
 - WhatsApp Business API: ~$5,000/year (Meta Business API fees)
@@ -399,7 +400,7 @@ graph TD
 
     subgraph "📊 Portal Analytics"
         CloudWatch[CloudWatch<br/>Portal Performance<br/>Custom Dashboards]
-        Mixpanel[Mixpanel<br/>Agent Usage<br/>Feature Adoption]
+        Matomo[Matomo<br/>Agent Usage<br/>Feature Adoption]
     end
 
     Frontend --> S3Static
@@ -411,7 +412,7 @@ graph TD
     WAF --> Cognito
     ECSBackend --> CloudWatch
     CloudFront --> CloudWatch
-    Cognito --> Mixpanel
+    Cognito --> Matomo
 
     classDef web fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
     classDef aws fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
@@ -421,7 +422,7 @@ graph TD
     class Frontend,PythonBackend web
     class CloudFront,S3Static,ECSBackend,ALB aws
     class Cognito,WAF security
-    class CloudWatch,Mixpanel analytics
+    class CloudWatch,Matomo analytics
 ```
 
 **Deployment Characteristics:**
@@ -622,15 +623,17 @@ flowchart TB
         Route53["Route 53<br>₹200/month<br>DNS management"]
         NAT["NAT Gateway<br>₹800/month<br>Outbound traffic"]
   end
- subgraph Monitoring["📊 Monitoring (₹3,600/month)"]
-        CloudWatch["CloudWatch<br>₹800/month<br>Metrics &amp; logs"]
-        XRay["X-Ray<br>₹400/month<br>Distributed tracing"]
-        Sentry["Sentry<br>₹1,200/month<br>Error tracking"]
-        NewRelic["New Relic<br>₹1,200/month<br>Mobile monitoring"]
+ subgraph Monitoring["📊 Monitoring (₹1,050/month)"]
+        CloudWatch["CloudWatch<br>₹200/month<br>Basic monitoring"]
+        Prometheus["Prometheus<br>₹200/month<br>Metrics collection"]
+        Loki["Loki<br>₹100/month<br>Log aggregation"]
+        Grafana["Grafana<br>₹200/month<br>Dashboards"]
+        Wazuh["Wazuh<br>₹150/month<br>SIEM & security"]
+        Tempo["Tempo<br>₹50/month<br>Distributed tracing"]
   end
  subgraph ThirdParty["🔥 Third-Party Services (₹16,650/month)"]
         Firebase["Firebase Services<br>₹1,050/year<br>Auth, Storage, Analytics"]
-        Mixpanel["Mixpanel<br>₹2,000/year<br>Advanced Analytics"]
+        Matomo["Matomo<br>₹500/year<br>Privacy Analytics"]
         OpenAI["OpenAI API<br>₹3,000/year<br>Chatbot & Content"]
         WhatsApp["WhatsApp API<br>₹5,000/year<br>Business Messaging"]
         Twilio["Twilio SMS<br>₹500/year<br>OTP & Notifications"]
@@ -1610,7 +1613,7 @@ graph LR
 
     subgraph "📊 Mobile Analytics"
         Firebase[Firebase App Dist<br/>Crash Reporting<br/>Performance]
-        Mixpanel[Mixpanel<br/>User Behavior<br/>Conversion Tracking]
+        Matomo[Matomo<br/>User Behavior<br/>Privacy Analytics]
     end
 
     %% Flow connections
@@ -1629,7 +1632,7 @@ graph LR
 
     AppStoreRelease --> Firebase
     PlayStoreRelease --> Firebase
-    Firebase --> Mixpanel
+    Firebase --> Matomo
 
     %% Styling
     classDef dev fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
@@ -1640,7 +1643,7 @@ graph LR
     class PushMobile,PRMobile dev
     class LintMobile,TestMobile,SecurityMobile,BuildMobile build
     class TestFlight,PlayBeta,AppStoreRelease,PlayStoreRelease dist
-    class Firebase,Mixpanel analytics
+    class Firebase,Matomo analytics
 ```
 
 **Pipeline Characteristics:**
@@ -1680,7 +1683,7 @@ graph LR
 
     subgraph "📊 Portal Monitoring"
         CloudWatch[CloudWatch<br/>Portal Metrics<br/>Custom Dashboards]
-        Mixpanel[Mixpanel<br/>Agent Analytics<br/>Usage Tracking]
+        Matomo[Matomo<br/>Agent Analytics<br/>Usage Tracking]
     end
 
     %% Flow connections
@@ -1704,7 +1707,7 @@ graph LR
 
     CDNUpdate --> CloudWatch
     ECSDeploy --> CloudWatch
-    CognitoAuth --> Mixpanel
+    CognitoAuth --> Matomo
 
     %% Styling
     classDef dev fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
@@ -1717,7 +1720,7 @@ graph LR
     class LintBackend,TestBackend,SecurityBackend,BuildBackend build
     class ECSDeploy,ALBRoute,PortalDeploy,CDNUpdate aws
     class CognitoAuth,WAFUpdate security
-    class CloudWatch,Mixpanel monitoring
+    class CloudWatch,Matomo monitoring
 ```
 
 **Pipeline Characteristics:**
@@ -2956,12 +2959,12 @@ gantt
 #### Phase 1: MVP Infrastructure (₹24,700/month) - Open-Source Optimized
 ```mermaid
 pie title Phase 1 Cost Distribution (₹24,700/month) - Open-Source Savings
-    "AWS Infrastructure" : 38
-    "Firebase Services" : 19
-    "Third-Party APIs" : 29
+    "AWS Infrastructure" : 40
+    "Firebase Services" : 20
+    "Third-Party APIs" : 30
     "Config Portal (Python APIs)" : 5
     "App Store Fees" : 4
-    "Security & Monitoring" : 5
+    "Security & Monitoring" : 1
 ```
 
 **🎯 Deliverables:**
