@@ -18,7 +18,49 @@
 
 ## 2. Customer Portal Navigation (Simplified)
 
-### 2.1 Primary Navigation - Bottom Tab Bar (4-5 Tabs Maximum)
+### 2.1 Onboarding Navigation Flow
+```
+👋 CUSTOMER ONBOARDING - STEP-BY-STEP PROCESS
+
+Step 1: Welcome & Language Selection
+├── 🎯 App Introduction (Splash screen)
+├── 🌐 Language Choice (English/Hindi/Telugu)
+├── 🎁 Trial Information & Signup
+└── 🚀 Get Started → Phone Verification
+
+Step 2: Phone & Profile Setup
+├── 📞 Phone Number Input → OTP Verification
+├── ✅ OTP Confirmation → Profile Creation
+├── 👤 Personal Details (Name, Email)
+└── 🎭 User Type Selection → Agent Discovery
+
+Step 3: Agent Discovery & Connection
+├── 🔍 Agent Search Methods (Policy/LIC Helpline/Directory)
+├── 👤 Agent Information Form (Name, Code, Contact)
+├── ✅ Agent Verification Process (Call/Email)
+└── 🔗 Connection Establishment → Document Upload
+
+Step 4: Document & KYC Verification
+├── 📄 Government ID Upload (Aadhaar/Voter ID/Passport)
+├── 📸 Selfie Verification → OCR Processing
+├── 🔍 Address Verification → Manual Review
+└── ✅ KYC Approval → Emergency Contact Setup
+
+Step 5: Emergency Contact & Final Setup
+├── 🚨 Emergency Contact Details (Name, Phone, Relationship)
+├── 📍 Address Information (Optional)
+├── ⚙️ Preferences Setup (Notifications, Theme)
+└── 🎉 Onboarding Complete → Dashboard Access
+
+Navigation Flow:
+├── Linear progression with clear next/back buttons
+├── Progress indicator showing completion status
+├── Skip options for optional steps
+├── Help tooltips and contextual guidance
+└── Ability to resume incomplete onboarding
+```
+
+### 2.2 Primary Navigation - Bottom Tab Bar (4-5 Tabs Maximum)
 
 #### Tab 1: 🏠 Home (Dashboard)
 **Purpose**: Central hub for all critical policy information and actions
@@ -210,6 +252,74 @@ Policy Details > Premium Payments > Payment History
 └─────────────────────────────────────────────────────────┘
 ```
 
+## 2.3 Agent Configuration Portal Navigation (Data Management)
+
+### 2.3.1 Primary Navigation - Import Workflow
+```
+🏗️ AGENT CONFIGURATION PORTAL - DATA MANAGEMENT
+
+┌─────────────────────────────────────────────────────────┐
+│ 📊 Import Dashboard (Main Entry Point)                 │
+│ ┌─────────────────────────────────────────────────┐   │
+│ │ 📈 Import Statistics • Recent Activity          │   │
+│ │ 🎯 Quick Actions: Upload Data • View Reports   │   │
+│ └─────────────────────────────────────────────────┘   │
+├─────────────────────────────────────────────────────────┤
+│ 📤 Data Upload Section                                 │
+│ ┌─────────────────────────────────────────────────┐   │
+│ │ 📎 Drag & Drop Excel Files                      │   │
+│ │ 📋 File Validation & Preview                   │   │
+│ │ ✅ Upload & Process                            │   │
+│ └─────────────────────────────────────────────────┘   │
+├─────────────────────────────────────────────────────────┤
+│ 🔄 Import Processing                                  │
+│ ┌─────────────────────────────────────────────────┐   │
+│ │ ⏳ Real-time Progress Tracking                  │   │
+│ │ 📊 Live Statistics & Error Handling            │   │
+│ │ ✅ Completion Confirmation                      │   │
+│ └─────────────────────────────────────────────────┘   │
+├─────────────────────────────────────────────────────────┤
+│ 📋 Template & Guidelines                               │
+│ ┌─────────────────────────────────────────────────┐   │
+│ │ 📥 Download Excel Templates                     │   │
+│ │ 📖 Import Guidelines & Best Practices          │   │
+│ │ ❓ FAQ & Troubleshooting                        │   │
+│ └─────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Navigation Flow**:
+- **Import Dashboard** → Overview of all import activities and status
+- **Data Upload** → Step-by-step file upload and validation process
+- **Import Processing** → Real-time monitoring of data processing
+- **Templates** → Access to standardized templates and documentation
+
+### 2.3.2 Secondary Navigation - Settings & Support
+```
+🍔 MENU (Configuration Portal)
+
+📊 Analytics & Reporting
+├── 📈 Import History (Detailed logs)
+├── 📊 Data Quality Metrics (Success rates, error patterns)
+├── 📋 Error Reports (Downloadable summaries)
+└── 📊 Performance Analytics (Import efficiency)
+
+⚙️ Settings & Configuration
+├── 🔐 Authentication (LIC Portal credentials)
+├── 📋 Import Preferences (Validation rules, notifications)
+├── 🔔 Notification Settings (Status updates, alerts)
+└── 🌐 Localization (Language preferences)
+
+🆘 Help & Support
+├── 📚 Documentation (Import guides, best practices)
+├── ❓ FAQ (Common issues and solutions)
+├── 📞 Support Contact (Technical assistance)
+└── 🐛 Issue Reporting (Bug reports and feedback)
+
+🔙 Back to Agent Portal
+└── Return to main agent dashboard
+```
+
 ## 3. Agent Portal Navigation (Feature-Rich but Organized)
 
 ### 3.1 Primary Navigation - Bottom Tab Bar
@@ -343,6 +453,7 @@ Policy Details > Premium Payments > Payment History
 💼 Business Tools
 ├── 👥 Customer Segmentation (Advanced Filters)
 ├── 📞 Communication Center (Bulk Tools)
+├── 📞 Callback Request Management (Priority Queue)
 ├── 📈 Advanced Analytics (Custom Reports)
 └── 💰 Commission Calculator (Detailed Breakdown)
 
@@ -393,6 +504,22 @@ Policy Details > Premium Payments > Payment History
      ↑                     ↓                 ↓                   ↓
      Overview            Customer         Customer             Communication/
      Metrics             List             Details              Action
+```
+
+#### Agent Flow: Callback Request Management
+```
+📊 Dashboard → 🔔 Notifications → 📞 Callback Requests → 👤 Customer Details → 📞 Call/Respond
+     ↑                     ↓                 ↓                   ↓
+     Alerts              Priority          Customer             Resolution/
+     Check               Queue             Context              Follow-up
+```
+
+#### Agent Flow: Campaign Performance Analytics
+```
+📢 Campaigns → 📊 Campaign Details → 📈 Performance Analytics → 💡 Insights → 🎯 Optimization
+     ↑                     ↓                 ↓                   ↓
+     Campaign           Real-time         Audience              Actionable
+     List               Metrics           Analysis              Recommendations
 ```
 
 ### 4.2 Error Prevention & Recovery

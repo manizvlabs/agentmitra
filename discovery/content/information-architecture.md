@@ -41,6 +41,13 @@
 │   ├── 📚 Learning Center (Video tutorials)
 │   ├── 🔍 Smart Search (Sitewide + page-specific)
 │   └── ⚙️ Settings (Theme switcher, localization)
+├── 🏗️ Agent Configuration Portal (Data Management)
+│   ├── 📊 Import Dashboard (Status overview, statistics)
+│   ├── 📤 Data Upload (Excel file upload, validation)
+│   ├── 🔄 Import Processing (Progress tracking, error handling)
+│   ├── ✅ Import Results (Success confirmation, mobile sync)
+│   ├── 📋 Template Management (Download templates, guidelines)
+│   └── 🔍 Data Analytics (Import history, quality metrics)
 ├── 💼 Agent Portal (Insurance Agents)
 │   ├── 📊 Business Dashboard (Clean KPIs, minimal clutter)
 │   ├── 👥 Customer Management (Advanced CRM, search-enabled)
@@ -67,6 +74,49 @@
 ## 3. Detailed Content Structure
 
 ### 3.1 Customer Portal Content Hierarchy
+
+#### Onboarding & Setup
+```
+👋 Customer Onboarding
+├── 📱 Welcome & Language Selection
+│   ├── App Introduction
+│   ├── Language Choice (English/Hindi/Telugu)
+│   ├── Trial Information
+│   └── Getting Started Guide
+├── 📞 Phone Verification
+│   ├── Phone Number Input
+│   ├── OTP Verification
+│   └── Verification Success
+├── 👤 Basic Profile Setup
+│   ├── Personal Information
+│   ├── User Type Selection
+│   └── Preferences Setup
+├── 🔍 Agent Discovery & Connection
+│   ├── Agent Search Methods
+│   ├── Policy Document Lookup
+│   ├── LIC Helpline Integration
+│   ├── Online Directory Search
+│   └── Agent Verification Process
+├── 📄 Document Verification
+│   ├── Government ID Upload (Aadhaar/Voter ID/Passport)
+│   ├── Selfie Verification
+│   ├── OCR Processing & Validation
+│   └── Address Verification
+├── 🔍 KYC Verification
+│   ├── Verification Checklist
+│   ├── Processing Status
+│   ├── Manual Review Queue
+│   └── Approval Confirmation
+├── 🚨 Emergency Contact Setup
+│   ├── Contact Information
+│   ├── Relationship Selection
+│   └── Privacy & Security Info
+└── ⏳ Data Pending State
+    ├── Agent Upload Status
+    ├── Contact Options
+    ├── Limited Feature Access
+    └── Notification Preferences
+```
 
 #### Dashboard (Main Entry Point)
 ```
@@ -321,6 +371,56 @@
     ├── Response Templates
     ├── Learning Algorithms
     └── Performance Tuning
+```
+
+#### Callback Request Management
+```
+📞 Callback Management
+├── 📋 Request Queue
+│   ├── Priority-based Sorting
+│   ├── Request Status Tracking
+│   ├── Customer Information
+│   └── Request Context
+├── 📞 Communication Actions
+│   ├── Direct Calling
+│   ├── Message Responses
+│   ├── Status Updates
+│   └── Resolution Tracking
+├── 📊 Performance Metrics
+│   ├── Response Time Analytics
+│   ├── Resolution Rates
+│   ├── Customer Satisfaction
+│   └── Escalation Tracking
+└── 🎯 Follow-up Actions
+    ├── Task Assignment
+    ├── Reminder Scheduling
+    ├── Customer Outreach
+    └── Performance Reporting
+```
+
+#### Advanced Analytics & Reporting
+```
+📊 Advanced Analytics
+├── 📈 Campaign Performance Analytics
+│   ├── Real-time Performance Tracking
+│   ├── Audience Segmentation Analysis
+│   ├── Conversion Funnel Analytics
+│   └── Predictive Campaign Insights
+├── 📊 Content Performance Analytics
+│   ├── Engagement Metrics & KPIs
+│   ├── Audience Demographics
+│   ├── Content Effectiveness Scoring
+│   └── Optimization Recommendations
+├── 📋 Custom Reporting
+│   ├── Report Builder Tools
+│   ├── Scheduled Report Generation
+│   ├── Export & Sharing Options
+│   └── Historical Data Analysis
+└── 🔮 Predictive Intelligence
+    ├── Customer Behavior Prediction
+    ├── Churn Risk Assessment
+    ├── Upsell Opportunity Identification
+    └── Market Trend Analysis
 ```
 
 ## 4. Navigation Hierarchy & User Flows
