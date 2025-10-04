@@ -621,6 +621,8 @@ flowchart TD
 
 ### 2.3 Payment Processing Journey
 
+> **🚫 DEFERRED IMPLEMENTATION**: This feature is currently deferred as LIC (Life Insurance Corporation) does not allow third-party applications to accept premium payments on behalf of policyholder customers. Agent Mitra App cannot implement direct premium payment collection functionality at this time. Instead, users will be guided to make payments through official LIC channels.
+
 #### Premium Payment Flow
 ```mermaid
 flowchart TD
@@ -1116,56 +1118,52 @@ flowchart TD
 
 #### Payment Error Handling
 ```mermaid
-flowchart TD
-    A[Payment fails] --> B[Identify failure reason]
-    B --> C{Failure type}
-    C -->|Network| D[Network error handling]
-    C -->|Card| E[Card error handling]
-    C -->|Bank| F[Bank error handling]
-    C -->|Gateway| G[Gateway error handling]
-
-    D --> H[Check internet connection]
-    H --> I{Connected?}
-    I -->|No| J[Show offline payment option]
-    I -->|Yes| K[Retry payment automatically]
-
-    E --> L[Card validation errors]
-    L --> M{Error type}
-    M -->|Invalid card| N[Show card format help]
-    M -->|Insufficient funds| O[Show balance check option]
-    M -->|Expired card| P[Show card update flow]
-    M -->|Blocked card| Q[Show contact bank CTA]
-
-    F --> R[Bank-specific errors]
-    R --> S{Bank response}
-    S -->|Invalid credentials| T[Show re-enter credentials]
-    S -->|Account locked| U[Show unlock account steps]
-    S -->|Transaction limit| V[Show limit increase options]
-
-    G --> W[Payment gateway errors]
-    W --> X{Gateway status}
-    X -->|Under maintenance| Y[Show maintenance message]
-    X -->|Rate limited| Z[Implement backoff retry]
-    X -->|Configuration error| AA[Log for admin review]
-
-    K --> BB{Retry successful?}
-    BB -->|Yes| CC[Complete payment]
-    BB -->|No| DD[Show retry options]
-
-    N --> EE[User corrects card details]
-    O --> FF[User checks balance]
-    P --> GG[User updates card]
-    Q --> HH[User contacts bank]
-
-    T --> II[User re-enters details]
-    U --> JJ[User follows unlock steps]
-    V --> KK[User increases limits]
-
-    Y --> LL[Show estimated resolution time]
-    Z --> MM[Automatic retry with backoff]
-    AA --> NN[Show generic error, log details]
-
-    EE --> OO[Retry payment]
+---
+config:
+  layout: elk
+  theme: base
+---
+flowchart TB
+    A["Payment fails"] --> B["Identify failure reason"]
+    B --> C{"Failure type"}
+    C -- Network --> D["Network error handling"]
+    C -- Card --> E["Card error handling"]
+    C -- Bank --> F["Bank error handling"]
+    C -- Gateway --> G["Gateway error handling"]
+    D --> H["Check internet connection"]
+    H --> I{"Connected?"}
+    I -- No --> J["Show offline payment option"]
+    I -- Yes --> K["Retry payment automatically"]
+    E --> L["Card validation errors"]
+    L --> M{"Error type"}
+    M -- Invalid card --> N["Show card format help"]
+    M -- Insufficient funds --> O["Show balance check option"]
+    M -- Expired card --> P["Show card update flow"]
+    M -- Blocked card --> Q["Show contact bank CTA"]
+    F --> R["Bank-specific errors"]
+    R --> S{"Bank response"}
+    S -- Invalid credentials --> T["Show re-enter credentials"]
+    S -- Account locked --> U["Show unlock account steps"]
+    S -- Transaction limit --> V["Show limit increase options"]
+    G --> W["Payment gateway errors"]
+    W --> X{"Gateway status"}
+    X -- Under maintenance --> Y["Show maintenance message"]
+    X -- Rate limited --> Z["Implement backoff retry"]
+    X -- Configuration error --> AA["Log for admin review"]
+    K --> BB{"Retry successful?"}
+    BB -- Yes --> CC["Complete payment"]
+    BB -- No --> DD["Show retry options"]
+    N --> EE["User corrects card details"]
+    O --> FF["User checks balance"]
+    P --> GG["User updates card"]
+    Q --> HH["User contacts bank"]
+    T --> II["User re-enters details"]
+    U --> JJ["User follows unlock steps"]
+    V --> KK["User increases limits"]
+    Y --> LL["Show estimated resolution time"]
+    Z --> MM["Automatic retry with backoff"]
+    AA --> NN["Show generic error, log details"]
+    EE --> OO["Retry payment"]
     FF --> OO
     GG --> OO
     HH --> OO
@@ -1173,30 +1171,24 @@ flowchart TD
     JJ --> OO
     KK --> OO
     MM --> OO
-
-    OO --> PP{Second attempt successful?}
-    PP -->|Yes| CC
-    PP -->|No| QQ[Show alternative payment methods]
-
-    CC --> RR[Send success confirmation]
-    RR --> SS[Update payment status]
-    SS --> TT[Notify relevant parties]
-
-    QQ --> UU[User selects alternative method]
-    UU --> VV[Restart payment flow]
-    VV --> WW[Complete with new method]
-
-    DD --> XX[User chooses retry timing]
-    XX --> YY{Auto-retry or manual?}
-    YY -->|Auto| ZZ[Schedule automatic retry]
-    YY -->|Manual| AAA[Show manual retry button]
-
-    ZZ --> BBB[Wait for scheduled retry]
-    BBB --> CCC{Check payment status}
-    CCC -->|Success| CC
-    CCC -->|Failed| DDD[Show final failure message]
-
-    AAA --> EEE[User clicks retry manually]
+    OO --> PP{"Second attempt successful?"}
+    PP -- Yes --> CC
+    PP -- No --> QQ["Show alternative payment methods"]
+    CC --> RR["Send success confirmation"]
+    RR --> SS["Update payment status"]
+    SS --> TT["Notify relevant parties"]
+    QQ --> UU["User selects alternative method"]
+    UU --> VV["Restart payment flow"]
+    VV --> WW["Complete with new method"]
+    DD --> XX["User chooses retry timing"]
+    XX --> YY{"Auto-retry or manual?"}
+    YY -- Auto --> ZZ["Schedule automatic retry"]
+    YY -- Manual --> AAA["Show manual retry button"]
+    ZZ --> BBB["Wait for scheduled retry"]
+    BBB --> CCC{"Check payment status"}
+    CCC -- Success --> CC
+    CCC -- Failed --> DDD["Show final failure message"]
+    AAA --> EEE["User clicks retry manually"]
     EEE --> OO
 ```
 
@@ -1206,49 +1198,54 @@ flowchart TD
 
 #### Device Adaptation Flow
 ```mermaid
-flowchart TD
-    A[User opens app on device] --> B[Device detection]
-    B --> C{Device type}
-    C -->|Mobile Phone| D[Mobile layout]
-    C -->|Tablet| E[Tablet layout]
-    C -->|Web Browser| F[Web responsive layout]
+---
+config:
+  layout: elk
+  theme: base
+---
+flowchart TB
+    A["User opens app on device"] --> B["Device detection"]
+    B --> C{"Device type"}
+    C -- Mobile Phone --> D["Mobile layout"]
+    C -- Tablet --> E["Tablet layout"]
+    C -- Web Browser --> F["Web responsive layout"]
 
-    D --> G[Screen size detection]
+    D --> G["Screen size detection"]
     E --> G
     F --> G
 
-    G --> H{Screen size}
-    H -->|Small (<600px)| I[Single column layout]
-    H -->|Medium (600-1200px)| J[Two column layout]
-    H -->|Large (>1200px)| K[Multi-column layout]
+    G --> H{"Screen size"}
+    H -- "Small (<600px)" --> I["Single column layout"]
+    H -- "Medium (600-1200px)" --> J["Two column layout"]
+    H -- "Large (>1200px)" --> K["Multi-column layout"]
 
-    I --> L[Bottom navigation tabs]
-    I --> M[Simple card layouts]
-    I --> N[Touch-optimized buttons]
+    I --> L["Bottom navigation tabs"]
+    I --> M["Simple card layouts"]
+    I --> N["Touch-optimized buttons"]
 
-    J --> O[Side navigation drawer]
-    J --> P[Grid card layouts]
-    J --> Q[Medium-sized buttons]
+    J --> O["Side navigation drawer"]
+    J --> P["Grid card layouts"]
+    J --> Q["Medium-sized buttons"]
 
-    K --> R[Persistent sidebar]
-    K --> S[Advanced grid layouts]
-    K --> T[Desktop-style buttons]
+    K --> R["Persistent sidebar"]
+    K --> S["Advanced grid layouts"]
+    K --> T["Desktop-style buttons"]
 
-    L --> U[Content adaptation]
+    L --> U["Content adaptation"]
     O --> U
     R --> U
 
-    U --> V[Text size adjustment]
-    V --> W[Image optimization]
-    W --> X[Feature prioritization]
+    U --> V["Text size adjustment"]
+    V --> W["Image optimization"]
+    W --> X["Feature prioritization"]
 
-    X --> Y[Essential features always visible]
-    Y --> Z[Secondary features in menus/drawers]
-    Z --> AA[Advanced features contextually hidden]
+    X --> Y["Essential features always visible"]
+    Y --> Z["Secondary features in menus/drawers"]
+    Z --> AA["Advanced features contextually hidden"]
 
-    AA --> BB[User interaction monitoring]
-    BB --> CC[Adapt UI based on usage patterns]
-    CC --> DD[Personalized experience]
+    AA --> BB["User interaction monitoring"]
+    BB --> CC["Adapt UI based on usage patterns"]
+    CC --> DD["Personalized experience"]
 ```
 
 ### 5.2 Multi-Language Experience Journey
