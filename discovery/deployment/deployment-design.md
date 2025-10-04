@@ -23,10 +23,10 @@
 └── Monitoring: 10% savings through targeted observability
 
 📊 Scaling Strategy:
-├── Phase 1 (MVP): 700 users, ₹15,000/month target
-├── Phase 2 (Growth): 5,000 users, ₹45,000/month target
-├── Phase 3 (Scale): 50,000 users, ₹150,000/month target
-└── Phase 4 (Enterprise): 500,000 users, ₹450,000/month target
+├── Phase 1 (MVP): 700 users, ₹26,300/month target
+├── Phase 2 (Growth): 5,000 users, ₹55,000/month target
+├── Phase 3 (Scale): 50,000 users, ₹90,000/month target
+└── Phase 4 (Enterprise): 500,000 users, ₹155,000/month target
 
 🔧 Cost Control Mechanisms:
 ├── Auto-scaling based on demand patterns
@@ -47,17 +47,20 @@ config:
 ---
 flowchart LR
  subgraph subGraph0["📱 End Users"]
-        Mobile["Agent Mitra Mobile App<br>iOS + Android"]
-        Portal["Agent Mitra Config Portal<br>Web Portal<br>Data Management"]
+        Mobile["Agent Mitra Mobile App<br>iOS + Android<br>Flutter + Firebase"]
+        Portal["Agent Mitra Config Portal<br>Web Portal<br>React + Python APIs"]
         WhatsApp["WhatsApp Business<br>Customer Communication"]
   end
  subgraph subGraph1["🌐 Global Edge (CloudFront)"]
-        CDN["CloudFront CDN<br>Global Distribution<br>310+ Edge Locations"]
-        WAF["WAF &amp; Shield<br>DDoS Protection<br>SSL Termination"]
+        CDNMobile["CloudFront CDN<br>Mobile App<br>Global Distribution"]
+        CDNPortal["CloudFront CDN<br>Config Portal<br>Static Assets"]
+        WAFMobile["WAF & Shield<br>Mobile Traffic<br>DDoS Protection"]
+        WAFPortal["WAF & Shield<br>Portal Traffic<br>Security Layer"]
         Route53["Route 53<br>Global DNS<br>Health Checks"]
   end
- subgraph Microservices["Microservices"]
-        API["FastAPI Backend<br>REST APIs<br>GraphQL"]
+ subgraph Microservices["🐍 Unified Python Backend (FastAPI)"]
+        CoreAPI["Core APIs<br>User Management<br>Policy Operations<br>Mobile + Portal"]
+        PortalAPI["Portal APIs<br>Agent Dashboard<br>Admin Operations<br>File Uploads"]
         Chatbot["Chatbot Service<br>NLP Processing<br>Intent Recognition"]
         WhatsAppSvc["WhatsApp Service<br>Message Processing<br>Template Management"]
         VideoSvc["Video Processing<br>Content Moderation<br>YouTube Integration"]
@@ -68,7 +71,7 @@ flowchart LR
         RealtimeSvc["WebSocket Server<br>Real-time Updates<br>Live Dashboards"]
   end
  subgraph subGraph3["🚀 Application Layer (ECS Fargate)"]
-        ALB["Application Load Balancer<br>Auto Scaling<br>SSL Termination"]
+        ALB["Application Load Balancer<br>Auto Scaling<br>SSL Termination<br>Path-based Routing"]
         Microservices
   end
  subgraph subGraph4["🤖 AI/ML Layer (Lambda + External APIs)"]
@@ -96,13 +99,20 @@ flowchart LR
         Sentry["Sentry<br>Error Tracking<br>Release Health"]
         Mixpanel["Mixpanel<br>User Analytics<br>Behavioral Insights"]
   end
-    Mobile --> CDN
-    Portal --> CDN
+    Mobile --> CDNMobile
+    Portal --> CDNPortal
     WhatsApp --> WhatsAppSvc
-    CDN --> WAF
-    WAF --> ALB
-    ALB --> API & Chatbot & WhatsAppSvc & VideoSvc & DataImportSvc & CallbackSvc & CampaignSvc & ContentSvc & RealtimeSvc
+
+    CDNMobile --> WAFMobile
+    CDNPortal --> WAFPortal
+
+            WAFMobile --> ALB
+            WAFPortal --> ALB
+
+            ALB --> CoreAPI & PortalAPI & Chatbot & WhatsAppSvc & VideoSvc & DataImportSvc & CallbackSvc & CampaignSvc & ContentSvc & RealtimeSvc
+
     API --> AuroraPrimary & RedisPrimary & S3 & CloudWatch
+    PortalAPI --> AuroraPrimary & RedisPrimary & S3 & CloudWatch
     Chatbot --> OpenAI & Perplexity & CloudWatch
     VideoSvc --> AWSComprehend & CustomML & S3 & CloudWatch
     DataImportSvc --> AuroraPrimary & S3 & CloudWatch
@@ -116,10 +126,13 @@ flowchart LR
      Mobile:::primary
      Portal:::primary
      WhatsApp:::primary
-     CDN:::secondary
-     WAF:::secondary
+     CDNMobile:::secondary
+     CDNPortal:::secondary
+     WAFMobile:::secondary
+     WAFPortal:::secondary
      Route53:::secondary
      API:::infra
+     PortalAPI:::infra
      Chatbot:::infra
      WhatsAppSvc:::infra
      VideoSvc:::infra
@@ -128,7 +141,7 @@ flowchart LR
      CampaignSvc:::infra
      ContentSvc:::infra
      RealtimeSvc:::infra
-     ALB:::secondary
+             ALB:::secondary
      OpenAI:::infra
      Perplexity:::infra
      AWSComprehend:::infra
@@ -148,16 +161,445 @@ flowchart LR
     classDef monitoring fill:#fff3e0,stroke:#e65100,stroke-width:2px
 ```
 
-### 2.2 Cost-Optimized Infrastructure Components
+### 2.2 Component-Specific Deployment Strategies
+
+Agent Mitra consists of **two separate applications** with distinct deployment strategies, target users, and infrastructure requirements:
+
+#### 2.2.1 Agent Mitra Mobile App (Flutter - Customer-Facing)
+**Target Users:** End customers (policyholders)  
+**Deployment Target:** Mobile App Stores + Cloud Infrastructure  
+**Technology:** Flutter (Cross-platform iOS/Android) + Firebase Backend
+
+```mermaid
+graph TD
+    subgraph "📱 Mobile App Development"
+        Flutter[Flutter SDK<br/>Dart Codebase<br/>Cross-platform]
+        FirebaseCore[Firebase Core<br/>App Initialization<br/>Configuration]
+        FirebaseAuth[Firebase Auth<br/>Phone/Email Auth<br/>Biometric Support]
+        FirebaseFCM[Firebase Cloud Messaging<br/>Push Notifications<br/>Real-time Updates]
+        Firestore[Cloud Firestore<br/>Offline Data Sync<br/>Real-time Updates]
+        FirebaseStorage[Firebase Storage<br/>File Uploads<br/>Media Assets]
+    end
+
+    subgraph "🏪 App Store Distribution"
+        AppStore[Apple App Store<br/>iOS Distribution<br/>App Review Process]
+        PlayStore[Google Play Store<br/>Android Distribution<br/>Automated Review]
+        TestFlight[TestFlight<br/>iOS Beta Testing<br/>Internal Distribution]
+        PlayBeta[Play Store Beta<br/>Android Testing<br/>Open Testing]
+    end
+
+    subgraph "🔥 Firebase Backend Services"
+        FirebaseAnalytics[Firebase Analytics<br/>User Behavior<br/>Event Tracking]
+        FirebaseCrashlytics[Firebase Crashlytics<br/>Crash Reporting<br/>Error Tracking]
+        FirebasePerformance[Firebase Performance<br/>App Performance<br/>Monitoring]
+        FirebaseRemoteConfig[Firebase Remote Config<br/>Feature Flags<br/>Dynamic Updates]
+        FirebaseAppCheck[Firebase App Check<br/>Security Validation<br/>Fraud Prevention]
+    end
+
+    subgraph "📊 Third-Party Analytics & Monitoring"
+        Mixpanel[Mixpanel<br/>Advanced Analytics<br/>Conversion Tracking]
+        Sentry[Sentry<br/>Error Tracking<br/>Release Health]
+        NewRelic[New Relic<br/>Mobile Monitoring<br/>Performance Insights]
+    end
+
+    subgraph "💬 Communication Services"
+        WhatsAppAPI[WhatsApp Business API<br/>Agent Communication<br/>Template Messages]
+        TwilioSMS[Twilio SMS<br/>OTP & Notifications<br/>Transactional SMS]
+        SendGrid[SendGrid<br/>Email Service<br/>Transactional Emails]
+    end
+
+    subgraph "🤖 AI/ML Services"
+        OpenAI[OpenAI API<br/>Chatbot Responses<br/>Content Generation]
+        Perplexity[Perplexity API<br/>Enhanced Search<br/>Knowledge Base]
+        AWSComprehend[AWS Comprehend<br/>Text Analysis<br/>Sentiment Analysis]
+    end
+
+    subgraph "🌐 Content Delivery & Storage"
+        CloudFrontCDN[CloudFront CDN<br/>Global Distribution<br/>Media Assets]
+        S3Storage[S3 Storage<br/>File Storage<br/>Backup & Archive]
+    end
+
+    Flutter --> FirebaseCore
+    FirebaseCore --> FirebaseAuth
+    FirebaseCore --> FirebaseFCM
+    FirebaseCore --> Firestore
+    FirebaseCore --> FirebaseStorage
+    FirebaseCore --> FirebaseAnalytics
+    FirebaseCore --> FirebaseCrashlytics
+    FirebaseCore --> FirebasePerformance
+    FirebaseCore --> FirebaseRemoteConfig
+    FirebaseCore --> FirebaseAppCheck
+
+    Flutter --> AppStore
+    Flutter --> PlayStore
+    Flutter --> TestFlight
+    Flutter --> PlayBeta
+
+    FirebaseAnalytics --> Mixpanel
+    FirebaseCrashlytics --> Sentry
+    FirebasePerformance --> NewRelic
+
+    Flutter --> WhatsAppAPI
+    Flutter --> TwilioSMS
+    Flutter --> SendGrid
+
+    Flutter --> OpenAI
+    Flutter --> Perplexity
+    Flutter --> AWSComprehend
+
+    FirebaseStorage --> CloudFrontCDN
+    FirebaseStorage --> S3Storage
+
+    classDef dev fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef dist fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef firebase fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef analytics fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef comm fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef ai fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    classDef infra fill:#f3e5f5,stroke:#ba68c8,stroke-width:2px
+
+    class Flutter,FirebaseCore dev
+    class AppStore,PlayStore,TestFlight,PlayBeta dist
+    class FirebaseAuth,FirebaseFCM,Firestore,FirebaseStorage,FirebaseAnalytics,FirebaseCrashlytics,FirebasePerformance,FirebaseRemoteConfig,FirebaseAppCheck firebase
+    class Mixpanel,Sentry,NewRelic analytics
+    class WhatsAppAPI,TwilioSMS,SendGrid comm
+    class OpenAI,Perplexity,AWSComprehend ai
+    class CloudFrontCDN,S3Storage infra
+```
+
+**Comprehensive Deployment Characteristics:**
+
+**🔥 Firebase Services (Core Infrastructure):**
+- **Firebase Authentication**: Phone number OTP, email OTP, biometric authentication, multi-factor authentication
+- **Firebase Cloud Messaging (FCM)**: Push notifications, real-time alerts, campaign messaging
+- **Cloud Firestore**: Offline data synchronization, real-time updates, user preferences storage
+- **Firebase Storage**: Document uploads, profile images, policy documents storage
+- **Firebase Analytics**: User behavior tracking, conversion funnels, retention analytics
+- **Firebase Crashlytics**: Crash reporting, error tracking, performance issues
+- **Firebase Performance Monitoring**: App startup times, network requests, UI responsiveness
+- **Firebase Remote Config**: Feature flag management, A/B testing, dynamic updates
+- **Firebase App Check**: Security validation, fraud prevention, API abuse protection
+
+**📱 App Store Distribution:**
+- **Apple App Store**: Manual submission, App Store Connect management, review process (~7-10 days)
+- **Google Play Store**: Automated publishing, Play Console management, instant updates
+- **TestFlight**: iOS beta testing, internal distribution, crash reporting
+- **Play Store Beta**: Android beta testing, open testing tracks, staged rollouts
+
+**📊 Analytics & Monitoring Services:**
+- **Mixpanel**: Advanced user analytics, cohort analysis, funnel optimization
+- **Sentry**: Error tracking, release health monitoring, issue alerting
+- **New Relic**: Mobile app performance monitoring, crash analysis, user experience metrics
+
+**💬 Communication Services:**
+- **WhatsApp Business API**: Direct agent communication, template messages, media sharing
+- **Twilio SMS**: OTP verification, transactional SMS, bulk messaging
+- **SendGrid**: Email notifications, marketing campaigns, delivery tracking
+
+**🤖 AI/ML Services:**
+- **OpenAI API**: Intelligent chatbot responses, content generation, natural language processing
+- **Perplexity API**: Enhanced search capabilities, knowledge base queries, contextual responses
+- **AWS Comprehend**: Text analysis, sentiment analysis, content moderation
+
+**🌐 Content Delivery Infrastructure:**
+- **CloudFront CDN**: Global content distribution, media asset delivery, performance optimization
+- **S3 Storage**: Secure file storage, backup and recovery, lifecycle management
+
+**💰 Comprehensive Cost Structure (Annual):**
+
+**App Store Fees:**
+- Apple App Store: $99/year (Developer Program)
+- Google Play Store: $25 one-time (Developer Account)
+
+**Firebase Services (Blaze Plan - Pay-as-you-use):**
+- Firebase Authentication: $0.0055 per successful verification
+- Cloud Firestore: $0.18/GB stored + $0.036/GB transferred
+- Firebase Storage: $0.026/GB stored + $0.12/GB downloaded
+- Firebase Cloud Messaging: $0.0005 per message (first 10M free)
+- Firebase Analytics: Free up to 500 distinct events
+- Crashlytics: Free
+- Performance Monitoring: Free
+- Remote Config: Free
+- App Check: Free
+
+**Estimated Firebase Costs (for 700 users):**
+- Authentication: ~$150/year (30,000 verifications annually)
+- Firestore: ~$500/year (50GB storage + data transfer)
+- Storage: ~$300/year (20GB storage + downloads)
+- FCM: ~$100/year (100,000 messages annually)
+- Analytics: Free
+- Other Firebase services: Free
+- **Total Firebase**: ~$1,050/year
+
+**Config Portal (Shared Python Backend):**
+- Frontend hosted on S3 (static hosting): ~$100/month (additional CloudFront data transfer)
+- Portal APIs served by unified Python backend: Included in core backend costs
+- **Total Portal Additional**: ~$100/month
+
+**Third-Party Analytics & Monitoring:**
+- Mixpanel: ~$2,000/year (Growth plan for 25K MTUs)
+- Sentry: ~$1,500/year (Team plan for error tracking)
+- New Relic: ~$3,000/year (Pro plan for mobile monitoring)
+- **Total Analytics**: ~$6,500/year
+
+**Communication Services:**
+- WhatsApp Business API: ~$5,000/year (Meta Business API fees)
+- Twilio SMS: ~$500/year (OTP and notifications)
+- SendGrid: ~$200/year (Transactional emails)
+- **Total Communication**: ~$5,700/year
+
+**AI/ML Services:**
+- OpenAI API: ~$3,000/year (Chatbot responses and content)
+- Perplexity API: ~$2,000/year (Enhanced search capabilities)
+- AWS Comprehend: ~$100/year (Text analysis)
+- **Total AI/ML**: ~$5,100/year
+
+**Content Delivery & Storage:**
+- CloudFront CDN: ~$500/year (Data transfer and requests)
+- S3 Storage: ~$200/year (Backup and additional storage)
+- **Total CDN/Storage**: ~$700/year
+
+**Security & Compliance:**
+- AWS WAF: ~$500/year (Web application firewall)
+- AWS Shield: ~$300/year (DDoS protection)
+- SSL Certificates: ~$100/year (HTTPS certificates)
+- **Total Security**: ~$900/year
+
+**🚀 Deployment Pipeline:**
+- **GitHub Actions**: Automated CI/CD for Flutter builds
+- **Fastlane**: Automated app store deployments
+- **Firebase App Distribution**: Beta testing and internal distribution
+- **CodePush**: Over-the-air updates for hotfixes and minor updates
+
+**📈 Scaling Considerations:**
+- Firebase services scale automatically with usage
+- CDN ensures global performance regardless of user location
+- Analytics provide insights for feature optimization
+- Cost monitoring through Firebase console and third-party dashboards
+
+#### 2.2.2 Agent Mitra Config Portal/Website (Agent-Facing)
+**Target Users:** Insurance agents and administrators
+**Deployment Target:** AWS Cloud Infrastructure
+**Technology:** React/Vue.js frontend + Python/FastAPI backend
+
+```mermaid
+graph TD
+    subgraph "🌐 Web Portal Architecture"
+        Frontend[React/Vue.js Frontend<br/>Admin Dashboard<br/>Data Management UI]
+        PythonBackend[Python/FastAPI Backend<br/>Portal APIs<br/>File Upload Handling<br/>Shared with Mobile App]
+    end
+
+    subgraph "☁️ AWS Deployment (ap-south-1)"
+        CloudFront[CloudFront CDN<br/>Global Distribution<br/>SSL Termination]
+        S3Static[S3 Static Website<br/>Frontend Hosting<br/>CloudFront Origin]
+        ECSBackend[ECS Fargate<br/>Unified Backend<br/>Auto-scaling]
+        ALB[Application Load Balancer<br/>All Traffic<br/>Path-based Routing]
+    end
+
+    subgraph "🔐 Security & Access"
+        Cognito[Amazon Cognito<br/>Agent Authentication<br/>MFA Support]
+        WAF[WAF & Shield<br/>DDoS Protection<br/>Bot Management]
+    end
+
+    subgraph "📊 Portal Analytics"
+        CloudWatch[CloudWatch<br/>Portal Performance<br/>Custom Dashboards]
+        Mixpanel[Mixpanel<br/>Agent Usage<br/>Feature Adoption]
+    end
+
+    Frontend --> S3Static
+    PythonBackend --> ECSBackend
+    S3Static --> CloudFront
+    ECSBackend --> ALB
+    ALB --> CloudFront
+    CloudFront --> WAF
+    WAF --> Cognito
+    ECSBackend --> CloudWatch
+    CloudFront --> CloudWatch
+    Cognito --> Mixpanel
+
+    classDef web fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef aws fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef security fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef analytics fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+
+    class Frontend,PortalBackend web
+    class CloudFront,S3Static,ECSBackend,ALBPortal aws
+    class Cognito,WAF security
+    class CloudWatch,Mixpanel analytics
+```
+
+**Deployment Characteristics:**
+- **Frontend**: Static hosting on S3 + CloudFront CDN
+- **Backend**: Containerized Python app on ECS Fargate
+- **Authentication**: Amazon Cognito for agent login
+- **Scaling**: Auto-scaling based on portal usage
+- **Security**: Dedicated WAF rules for admin portal
+- **Domain**: Subdomain (portal.agentmitra.com) with agent-specific routing
+
+#### 2.2.3 Python Backend Microservices (API Layer)
+**Target Users:** All applications (Mobile App + Portal + External)  
+**Deployment Target:** AWS ECS Fargate (Microservices)  
+**Technology:** FastAPI + Python microservices
+
+```mermaid
+graph TD
+    subgraph "🐍 Microservices Architecture"
+        APIGateway[API Gateway<br/>Request Routing<br/>Rate Limiting]
+        CoreAPI[Core API Service<br/>Business Logic<br/>User Management]
+        ChatbotSvc[Chatbot Service<br/>NLP Processing<br/>Intent Recognition]
+        WhatsAppSvc[WhatsApp Service<br/>Message Processing<br/>Template Management]
+        VideoSvc[Video Processing<br/>Content Moderation<br/>YouTube Integration]
+        DataImportSvc[Data Import Service<br/>Excel Processing<br/>Background Jobs]
+        AnalyticsSvc[Analytics Service<br/>Performance Tracking<br/>ROI Calculations]
+    end
+
+    subgraph "🚀 AWS ECS Deployment"
+        ECSCluster[ECS Cluster<br/>agent-mitra-cluster<br/>Fargate Tasks]
+        ServiceMesh[AWS App Mesh<br/>Service Discovery<br/>Traffic Management]
+        TaskDefinitions[Task Definitions<br/>CPU/Memory configs<br/>Environment variables]
+    end
+
+    subgraph "🔄 Auto-scaling & Load Balancing"
+        ALBMicro[Application Load Balancer<br/>Path-based Routing<br/>Health Checks]
+        TargetGroups[Target Groups<br/>Per Service<br/>Blue-Green Deployment]
+        AutoScaling[Auto Scaling<br/>CPU/Memory based<br/>Custom Metrics]
+    end
+
+    subgraph "💾 Data & Caching"
+        AuroraDB[(Aurora PostgreSQL<br/>Primary Database<br/>Read Replicas)]
+        RedisCache[(Redis Cluster<br/>Session Cache<br/>Application Cache)]
+        S3Storage[S3 Buckets<br/>File Storage<br/>CDN Origin]
+    end
+
+    APIGateway --> ALBMicro
+    ALBMicro --> CoreAPI
+    ALBMicro --> ChatbotSvc
+    ALBMicro --> WhatsAppSvc
+    ALBMicro --> VideoSvc
+    ALBMicro --> DataImportSvc
+    ALBMicro --> AnalyticsSvc
+
+    CoreAPI --> ECSCluster
+    ChatbotSvc --> ECSCluster
+    WhatsAppSvc --> ECSCluster
+    VideoSvc --> ECSCluster
+    DataImportSvc --> ECSCluster
+    AnalyticsSvc --> ECSCluster
+
+    ECSCluster --> ServiceMesh
+    ServiceMesh --> AuroraDB
+    ServiceMesh --> RedisCache
+    ServiceMesh --> S3Storage
+
+    ECSCluster --> AutoScaling
+    AutoScaling --> TargetGroups
+    TargetGroups --> ALBMicro
+
+    classDef micro fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef ecs fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef scaling fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef data fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+
+    class APIGateway,CoreAPI,ChatbotSvc,WhatsAppSvc,VideoSvc,DataImportSvc,AnalyticsSvc micro
+    class ECSCluster,ServiceMesh,TaskDefinitions ecs
+    class ALBMicro,TargetGroups,AutoScaling scaling
+    class AuroraDB,RedisCache,S3Storage data
+```
+
+**Deployment Characteristics:**
+- **Microservices**: Independent FastAPI services in separate containers
+- **Orchestration**: AWS ECS Fargate with service mesh
+- **Scaling**: Individual auto-scaling per microservice
+- **Load Balancing**: Path-based routing to specific services
+- **Database**: Shared Aurora PostgreSQL with schema separation
+- **Caching**: Shared Redis cluster for all services
+
+### 2.3 Integration Points Between Components
+
+```mermaid
+graph TD
+    subgraph "📱 Mobile App"
+        FlutterApp[Flutter App<br/>Customer Interface<br/>App Store + Firebase]
+    end
+
+    subgraph "🌐 Config Portal"
+        ReactFrontend[React Frontend<br/>Agent Dashboard<br/>S3 Static Hosting]
+    end
+
+    subgraph "🐍 Unified Python Backend"
+        APIGateway[API Gateway<br/>Request Routing<br/>Authentication]
+        CoreAPI[Core Services<br/>Business Logic<br/>User Management]
+        PortalAPI[Portal APIs<br/>Agent Operations<br/>Admin Functions]
+        ChatbotAPI[Chatbot API<br/>NLP Services<br/>OpenAI Integration]
+        WhatsAppAPI[WhatsApp API<br/>Business Messaging<br/>Meta Integration]
+        VideoAPI[Video API<br/>Content Processing<br/>YouTube API]
+        ImportAPI[Import API<br/>Data Processing<br/>Background Jobs]
+        AnalyticsAPI[Analytics API<br/>Reporting<br/>Real-time Dashboards]
+    end
+
+    subgraph "🔗 Shared Services"
+        Database[(Aurora PostgreSQL<br/>Multi-tenant DB<br/>Schema Separation)]
+        Cache[(Redis Cluster<br/>Shared Cache<br/>Session Store)]
+        Storage[S3 Storage<br/>File Storage<br/>CDN Integration]
+        Auth[Cognito<br/>Unified Auth<br/>MFA Support]
+    end
+
+    FlutterApp --> APIGateway
+    ReactFrontend --> APIGateway
+
+    APIGateway --> PortalAPI
+
+    APIGateway --> CoreAPI
+    APIGateway --> ChatbotAPI
+    APIGateway --> WhatsAppAPI
+    APIGateway --> VideoAPI
+    APIGateway --> ImportAPI
+    APIGateway --> AnalyticsAPI
+
+    CoreAPI --> Database
+    CoreAPI --> Cache
+    CoreAPI --> Storage
+    CoreAPI --> Auth
+
+    ChatbotAPI --> Database
+    ChatbotAPI --> Cache
+
+    WhatsAppAPI --> Database
+    WhatsAppAPI --> Cache
+
+    VideoAPI --> Storage
+    VideoAPI --> Database
+
+    ImportAPI --> Database
+    ImportAPI --> Storage
+
+    AnalyticsAPI --> Database
+    AnalyticsAPI --> Cache
+
+    classDef mobile fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef portal fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef node fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef api fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef shared fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+
+    class FlutterApp mobile
+    class ReactFrontend,NodeBackend portal
+    class APIGateway,CoreAPI,ChatbotAPI,WhatsAppAPI,VideoAPI,ImportAPI,AnalyticsAPI api
+    class Database,Cache,Storage,Auth shared
+```
+
+### 2.4 Cost-Optimized Infrastructure Components
 
 #### AWS Service Selection (Cost-Focused)
 
 ```mermaid
-pie title AWS Cost Distribution (₹15,000/month)
-    "Compute (ECS Fargate, Lambda)" : 40
-    "Storage (Aurora, S3, EFS)" : 25
-    "Network & CDN (CloudFront, ALB)" : 20
-    "Monitoring (CloudWatch, X-Ray)" : 15
+pie title AWS Cost Distribution (₹45,000/month)
+    "Compute (ECS Fargate, Lambda)" : 25
+    "Storage (Aurora, S3, EFS)" : 15
+    "Network & CDN (CloudFront, ALB)" : 10
+    "Monitoring (CloudWatch, X-Ray)" : 8
+    "Security (WAF, Shield, GuardDuty)" : 5
+    "Third-Party Services (Firebase, OpenAI, etc.)" : 37
 ```
 
 ```mermaid
@@ -166,29 +608,46 @@ config:
   layout: elk
 ---
 flowchart TB
- subgraph Compute["🏗️ Compute Layer (₹13,500/month)"]
+ subgraph Compute["🏗️ Compute Layer (₹11,250/month)"]
         ECS["ECS Fargate<br>₹8,000/month<br>Auto-scaling containers"]
         Lambda["Lambda Functions<br>₹2,000/month<br>Event-driven processing"]
-        EC2["EC2 Reserved<br>₹3,000/month<br>Predictable workloads"]
-        Batch["AWS Batch<br>₹500/month<br>Video processing"]
+        EC2["EC2 Reserved<br>₹1,000/month<br>Predictable workloads"]
+        Batch["AWS Batch<br>₹250/month<br>Video processing"]
   end
- subgraph Storage["💾 Storage Layer (₹7,300/month)"]
+ subgraph Storage["💾 Storage Layer (₹6,750/month)"]
         Aurora["Aurora PostgreSQL<br>₹4,000/month<br>Primary database"]
         S3Std["S3 Standard<br>₹1,500/month<br>App assets &amp; media"]
         S3IA["S3 Infrequent Access<br>₹800/month<br>Archive data"]
-        EFS["EFS<br>₹1,000/month<br>Shared file storage"]
+        EFS["EFS<br>₹450/month<br>Shared file storage"]
   end
- subgraph Network["🌐 Network & CDN (₹4,200/month)"]
+ subgraph Network["🌐 Network & CDN (₹4,500/month)"]
         CloudFront["CloudFront CDN<br>₹2,500/month<br>Global distribution"]
         ALB["Application Load Balancer<br>₹1,000/month<br>Traffic routing"]
         Route53["Route 53<br>₹200/month<br>DNS management"]
-        NAT["NAT Gateway<br>₹500/month<br>Outbound traffic"]
+        NAT["NAT Gateway<br>₹800/month<br>Outbound traffic"]
   end
- subgraph Monitoring["📊 Monitoring (₹3,000/month)"]
+ subgraph Monitoring["📊 Monitoring (₹3,600/month)"]
         CloudWatch["CloudWatch<br>₹800/month<br>Metrics &amp; logs"]
         XRay["X-Ray<br>₹400/month<br>Distributed tracing"]
         Sentry["Sentry<br>₹1,200/month<br>Error tracking"]
-        Dashboards["Custom Dashboards<br>₹600/month<br>Business metrics"]
+        NewRelic["New Relic<br>₹1,200/month<br>Mobile monitoring"]
+  end
+ subgraph ThirdParty["🔥 Third-Party Services (₹16,650/month)"]
+        Firebase["Firebase Services<br>₹1,050/year<br>Auth, Storage, Analytics"]
+        Mixpanel["Mixpanel<br>₹2,000/year<br>Advanced Analytics"]
+        OpenAI["OpenAI API<br>₹3,000/year<br>Chatbot & Content"]
+        WhatsApp["WhatsApp API<br>₹5,000/year<br>Business Messaging"]
+        Twilio["Twilio SMS<br>₹500/year<br>OTP & Notifications"]
+        SendGrid["SendGrid<br>₹200/year<br>Email Service"]
+        Perplexity["Perplexity API<br>₹2,000/year<br>Enhanced Search"]
+        AWSComprehend["AWS Comprehend<br>₹100/year<br>Text Analysis"]
+  end
+ subgraph Security["🔒 Security (₹2,250/month)"]
+        WAF["AWS WAF<br>₹500/month<br>Web Application Firewall"]
+        Shield["AWS Shield<br>₹300/month<br>DDoS Protection"]
+        GuardDuty["AWS GuardDuty<br>₹1,200/month<br>Threat Detection"]
+        Certificates["SSL Certificates<br>₹100/month<br>HTTPS Security"]
+        SecurityHub["Security Hub<br>₹150/month<br>Security Posture"]
   end
     ECS -. "Auto-scaling" .-> CostOpt["💡 Cost Optimization"]
     Aurora -. Serverless .-> CostOpt
@@ -304,7 +763,7 @@ graph TD
 📦 Development Tools:
 ├── Flutter SDK (Latest stable)
 ├── Python 3.11+ (Backend development)
-├── Node.js 18+ (Build tools)
+├── Node.js 18+ (Portal build tools)
 ├── Git & GitHub Desktop (Version control)
 └── VS Code + Extensions (Primary IDE)
 ```
@@ -1027,13 +1486,20 @@ FLYWAY_LOCATIONS=filesystem:db/migration
 ├── Device Preview (Multi-device testing)
 └── Flutter Analyze (Code quality)
 
-🔧 Backend Development:
-├── Python 3.11+ (Primary language)
-├── FastAPI (Web framework)
+🔧 Backend Development (Python):
+├── Python 3.11+ (API microservices)
+├── FastAPI (REST APIs & GraphQL)
 ├── SQLAlchemy (ORM)
 ├── Alembic (Database migrations)
 ├── Pytest (Testing framework)
 └── Black/Flake8 (Code formatting)
+
+🌐 Frontend Development (Config Portal):
+├── React/Vue.js (Frontend framework)
+├── TypeScript (Type safety)
+├── Create React App/Vite (Build tools)
+├── Jest (Testing framework)
+└── ESLint/Prettier (Code formatting)
 
 📊 Database Development:
 ├── PostgreSQL 16+ (Primary database)
@@ -1119,115 +1585,188 @@ export class AgentMitraStack extends cdk.Stack {
 
 ### 4.2 Deployment Pipeline (CI/CD)
 
-#### Automated Deployment Pipeline
+#### Two-Tier Deployment Pipeline Architecture
+
+Agent Mitra requires **two separate CI/CD pipelines** for each component with different deployment targets and processes:
+
+##### 4.2.1 Mobile App Deployment Pipeline (App Stores)
 
 ```mermaid
 graph LR
-    subgraph "👨‍💻 Developer"
-        Push[Git Push<br/>feature/* → main]
-        PR[Pull Request<br/>Code Review]
+    subgraph "👨‍💻 Flutter Developer"
+        PushMobile[Git Push<br/>flutter-app/* → main]
+        PRMobile[Pull Request<br/>Code Review]
     end
 
-    subgraph "🔧 Build Stage (GitHub Actions)"
-        Lint[Code Quality<br/>ESLint, Prettier<br/>SonarQube]
-        Test[Testing Suite<br/>Unit Tests<br/>Integration Tests]
-        Security[Security Scan<br/>SAST, Dependencies<br/>Container Scan]
-        Build[Build Artifacts<br/>Flutter APK/AAB<br/>Docker Images]
+    subgraph "🔧 Mobile Build Stage"
+        LintMobile[Flutter Analyze<br/>Dart Code Quality<br/>Custom Lints]
+        TestMobile[Flutter Test<br/>Unit Tests<br/>Widget Tests]
+        SecurityMobile[Security Scan<br/>Dependency Check<br/>Code Obfuscation]
+        BuildMobile[Build Artifacts<br/>Android APK/AAB<br/>iOS IPA]
     end
 
-    subgraph "📦 Container Stage"
-        MultiStage[Multi-stage<br/>Docker Build<br/>Dev/Prod Images]
-        Scan[Security Scan<br/>Trivy, Docker Scout<br/>Vulnerability Check]
-        Sign[Image Signing<br/>Attestation<br/>SBOM Generation]
+    subgraph "🏪 App Store Distribution"
+        TestFlight[TestFlight<br/>iOS Beta Testing<br/>Internal Review]
+        PlayBeta[Play Store Beta<br/>Android Testing<br/>Open Testing]
+        AppStoreRelease[App Store<br/>Production Release<br/>Apple Review]
+        PlayStoreRelease[Play Store<br/>Production Release<br/>Auto-deploy]
     end
 
-    subgraph "🚀 Deployment Stage"
-        BlueGreen[Blue-Green<br/>Deployment<br/>Zero Downtime]
-        Migrate[Database<br/>Migration<br/>Automated Rollback]
-        FeatureFlags[Feature Flags<br/>Gradual Rollout<br/>A/B Testing]
-        LoadTest[Performance<br/>Load Testing<br/>Stress Testing]
-    end
-
-    subgraph "🔍 Post-Deployment"
-        Health[Health Checks<br/>API Endpoints<br/>Database Connectivity]
-        Validate[Performance<br/>Validation<br/>Response Times]
-        Smoke[Smoke Tests<br/>Critical Paths<br/>User Journeys]
-        Rollback[Rollback Ready<br/>Automated<br/>One-Click]
-    end
-
-    subgraph "📊 Production"
-        ECS[ECS Fargate<br/>Application<br/>Running]
-        Aurora[(Aurora DB<br/>Migrated<br/>Healthy)]
-        CloudWatch[Monitoring<br/>Active<br/>Alerting]
+    subgraph "📊 Mobile Analytics"
+        Firebase[Firebase App Dist<br/>Crash Reporting<br/>Performance]
+        Mixpanel[Mixpanel<br/>User Behavior<br/>Conversion Tracking]
     end
 
     %% Flow connections
-    Push --> Lint
-    PR --> Lint
+    PushMobile --> LintMobile
+    PRMobile --> LintMobile
 
-    Lint --> Test
-    Test --> Security
-    Security --> Build
+    LintMobile --> TestMobile
+    TestMobile --> SecurityMobile
+    SecurityMobile --> BuildMobile
 
-    Build --> MultiStage
-    MultiStage --> Scan
-    Scan --> Sign
+    BuildMobile --> TestFlight
+    BuildMobile --> PlayBeta
 
-    Sign --> BlueGreen
-    BlueGreen --> Migrate
-    Migrate --> FeatureFlags
-    FeatureFlags --> LoadTest
+    TestFlight --> AppStoreRelease
+    PlayBeta --> PlayStoreRelease
 
-    LoadTest --> Health
-    Health --> Validate
-    Validate --> Smoke
-
-    Smoke --> ECS
-    Rollback -.->|"If issues"| BlueGreen
-
-    ECS --> CloudWatch
-    Aurora --> CloudWatch
+    AppStoreRelease --> Firebase
+    PlayStoreRelease --> Firebase
+    Firebase --> Mixpanel
 
     %% Styling
     classDef dev fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
     classDef build fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-    classDef container fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
-    classDef deploy fill:#fff3e0,stroke:#f57c00,stroke-width:2px
-    classDef post fill:#fce4ec,stroke:#c2185b,stroke-width:2px
-    classDef prod fill:#e0f2f1,stroke:#00695c,stroke-width:2px
+    classDef dist fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef analytics fill:#fff3e0,stroke:#f57c00,stroke-width:2px
 
-    class Push,PR dev
-    class Lint,Test,Security,Build build
-    class MultiStage,Scan,Sign container
-    class BlueGreen,Migrate,FeatureFlags,LoadTest deploy
-    class Health,Validate,Smoke,Rollback post
-    class ECS,Aurora,CloudWatch prod
+    class PushMobile,PRMobile dev
+    class LintMobile,TestMobile,SecurityMobile,BuildMobile build
+    class TestFlight,PlayBeta,AppStoreRelease,PlayStoreRelease dist
+    class Firebase,Mixpanel analytics
 ```
 
-#### Deployment Configuration
-```yaml
-# GitHub Actions Workflow
-# .github/workflows/deploy.yml
+**Pipeline Characteristics:**
+- **Trigger**: Flutter app code changes
+- **Build Targets**: Separate iOS/Android builds
+- **Testing**: Automated UI tests, integration tests
+- **Distribution**: Manual App Store submission, automated Play Store
+- **Updates**: CodePush for hotfixes, store updates for major releases
 
-name: Deploy to Production
+##### 4.2.2 Backend Deployment Pipeline (AWS ECS)
+
+```mermaid
+graph LR
+    subgraph "👨‍💻 Backend Developer"
+        PushBackend[Git Push<br/>backend/* → main]
+        PRBackend[Pull Request<br/>Code Review]
+    end
+
+    subgraph "🔧 Backend Build Stage"
+        LintBackend[Black + Flake8<br/>Python Quality<br/>Type Checking]
+        TestBackend[Python Testing<br/>Unit Tests<br/>Integration Tests]
+        SecurityBackend[Security Scan<br/>Dependency Audit<br/>SAST Scan]
+        BuildBackend[Build Artifacts<br/>Docker Images<br/>Helm Charts]
+    end
+
+    subgraph "☁️ AWS Deployment"
+        ECSDeploy[ECS Fargate<br/>Backend Deploy<br/>Blue-Green Strategy]
+        ALBRoute[ALB Routing<br/>API Endpoints<br/>Health Checks]
+        PortalDeploy[Portal Static Assets<br/>S3 Upload<br/>CloudFront Invalidation]
+        CDNUpdate[CloudFront<br/>CDN Update<br/>Global Distribution]
+    end
+
+    subgraph "🔐 Portal Security"
+        CognitoAuth[Cognito Update<br/>User Pools<br/>MFA Policies]
+        WAFUpdate[WAF Rules<br/>Portal Security<br/>Rate Limiting]
+    end
+
+    subgraph "📊 Portal Monitoring"
+        CloudWatch[CloudWatch<br/>Portal Metrics<br/>Custom Dashboards]
+        Mixpanel[Mixpanel<br/>Agent Analytics<br/>Usage Tracking]
+    end
+
+    %% Flow connections
+    PushPortal --> LintPortal
+    PRPortal --> LintPortal
+
+    LintPortal --> TestPortal
+    TestPortal --> SecurityPortal
+    SecurityPortal --> BuildPortal
+
+    BuildPortal --> S3Upload
+    BuildPortal --> ECSDeploy
+
+    S3Upload --> CDNUpdate
+    ECSDeploy --> ALBRoute
+
+    ALBRoute --> CDNUpdate
+
+    CDNUpdate --> WAFUpdate
+    WAFUpdate --> CognitoAuth
+
+    CDNUpdate --> CloudWatch
+    ECSDeploy --> CloudWatch
+    CognitoAuth --> Mixpanel
+
+    %% Styling
+    classDef dev fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef build fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef aws fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef security fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef monitoring fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+
+    class PushBackend,PRBackend dev
+    class LintBackend,TestBackend,SecurityBackend,BuildBackend build
+    class ECSDeploy,ALBRoute,PortalDeploy,CDNUpdate aws
+    class CognitoAuth,WAFUpdate security
+    class CloudWatch,Mixpanel monitoring
+```
+
+**Pipeline Characteristics:**
+- **Trigger**: Backend API code changes (Python/FastAPI)
+- **Build Process**: Docker containerization + static asset deployment
+- **Testing**: Python unit tests, integration tests, API testing
+- **Deployment**: ECS Fargate backend + S3 static assets for portal
+- **Security**: Unified authentication, WAF protection, SSL/TLS
+- **APIs**: Mobile app APIs + Config portal APIs
+
+#### Two Separate Deployment Configurations
+
+##### 4.2.1 Mobile App Deployment Configuration
+```yaml
+# .github/workflows/mobile-deploy.yml
+name: Deploy Mobile App to App Stores
+
 on:
   push:
     branches: [main]
+    paths: ['lib/**', 'android/**', 'ios/**', 'pubspec.yaml', 'firebase.json']
+  pull_request:
+    branches: [main]
+    paths: ['lib/**', 'android/**', 'ios/**', 'pubspec.yaml', 'firebase.json']
   workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'beta'
+        type: choice
+        options:
+        - beta
+        - production
 
 jobs:
-  deploy:
+  flutter-tests:
     runs-on: ubuntu-latest
-    environment: production
-
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      # 1. Build and Test
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.16.0'
+          flutter-version: '3.19.0'
 
       - name: Install dependencies
         run: flutter pub get
@@ -1235,25 +1774,229 @@ jobs:
       - name: Run tests
         run: flutter test
 
-      # 2. Build Application
-      - name: Build Flutter app
+      - name: Build Android APK
+        run: flutter build apk --release
+        if: github.event_name == 'push' || github.event.inputs.release_type == 'production'
+
+      - name: Build iOS (simulator)
+        run: flutter build ios --release --no-codesign
+        if: github.event_name == 'push' || github.event.inputs.release_type == 'production'
+
+  deploy-android:
+    needs: flutter-tests
+    runs-on: ubuntu-latest
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event.inputs.release_type == 'production'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+
+      - name: Build Android AAB
+        run: flutter build appbundle --release
+
+      - name: Upload to Play Store
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAYSTORE_SERVICE_ACCOUNT }}
+          packageName: com.agentmitra.mobile
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          track: ${{ github.event.inputs.release_type || 'beta' }}
+
+  deploy-ios:
+    needs: flutter-tests
+    runs-on: macos-latest
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event.inputs.release_type == 'production'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build iOS
+        run: flutter build ios --release --no-codesign
+
+      - name: Upload to TestFlight
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: build/ios/iphoneos/Runner.app
+          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+
+  firebase-distribution:
+    needs: [deploy-android, deploy-ios]
+    runs-on: ubuntu-latest
+    if: github.event.inputs.release_type == 'beta'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+
+      - name: Build Android APK for Firebase
         run: flutter build apk --release
 
-      # 3. Deploy to AWS
-      - name: Deploy to ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      - name: Upload to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
-          task-definition: agent-mitra-task
-          service: agent-mitra-service
-          cluster: agent-mitra-cluster
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          groups: beta-testers
+          file: build/app/outputs/flutter-apk/app-release.apk
+```
 
-      # 4. Database Migration
-      - name: Run migrations
-        run: python manage.py migrate
+##### 4.2.2 Backend Deployment Configuration
+```yaml
+# .github/workflows/backend-deploy.yml
+name: Deploy Backend to AWS ECS
 
-      # 5. Health Check
-      - name: Verify deployment
-        run: curl -f https://api.agentmitra.com/health
+on:
+  push:
+    branches: [main]
+    paths: ['backend/**', 'docker/**', 'infrastructure/**']
+  pull_request:
+    branches: [main]
+    paths: ['backend/**', 'docker/**', 'infrastructure/**']
+  workflow_dispatch:
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          cd backend
+          pytest --cov=. --cov-report=xml
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./backend/coverage.xml
+
+  build-and-deploy:
+    needs: backend-tests
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t agent-mitra-backend .
+          docker tag agent-mitra-backend:latest ${{ steps.login-ecr.outputs.registry }}/agent-mitra-backend:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/agent-mitra-backend:latest
+
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service \
+            --cluster agent-mitra-cluster \
+            --service agent-mitra-backend \
+            --force-new-deployment \
+            --region ap-south-1
+
+      - name: Wait for deployment
+        run: |
+          aws ecs wait services-stable \
+            --cluster agent-mitra-cluster \
+            --services agent-mitra-backend \
+            --region ap-south-1
+
+  portal-deploy:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          cd portal
+          npm install
+
+      - name: Build portal
+        run: |
+          cd portal
+          npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Deploy to S3
+        run: |
+          aws s3 sync portal/dist s3://agent-mitra-portal --delete
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+
+  health-check:
+    needs: [build-and-deploy, portal-deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Health check all services
+        run: |
+          services=("api" "chatbot" "whatsapp" "video" "import" "analytics" "realtime")
+          for service in "${services[@]}"; do
+            curl -f https://api.agentmitra.com/${service}/health
+          done
 ```
 
 ### 4.3 Monitoring & Observability Setup
@@ -1698,45 +2441,68 @@ CREATE TABLE insurance_policies_partitioned (
 ```
 💳 PRODUCTION SUBSCRIPTION REQUIREMENTS
 
-🔐 Security & Compliance:
-├── AWS WAF (₹2,000/month) - DDoS protection
-├── AWS GuardDuty (₹1,500/month) - Threat detection
-├── AWS Security Hub (₹800/month) - Security posture
-├── SSL Certificate (₹5,000/year) - HTTPS encryption
-└── Domain Registration (₹800/year) - agentmitra.com
+🔥 Firebase Services (Pay-as-you-use):
+├── Firebase Authentication (₹150/year) - Multi-factor auth
+├── Cloud Firestore (₹500/year) - Real-time database
+├── Firebase Storage (₹300/year) - File uploads
+├── Firebase Cloud Messaging (₹100/year) - Push notifications
+├── Firebase Analytics (Free) - User behavior tracking
+├── Firebase Crashlytics (Free) - Error reporting
+├── Firebase Performance (Free) - App performance monitoring
+├── Firebase Remote Config (Free) - Feature flags
+└── Firebase App Check (Free) - Security validation
 
-📊 Monitoring & Analytics:
-├── AWS CloudWatch (₹2,000/month) - APM and monitoring
-├── AWS X-Ray (₹400/month) - Distributed tracing
-├── Mixpanel (₹5,000/month) - User analytics
-├── Prometheus + Grafana (₹500/month) - Self-hosted monitoring
-└── Open-source alerting (Free) - Custom error tracking
+📊 Third-Party Analytics & Monitoring:
+├── Mixpanel (₹2,000/year) - Advanced analytics
+├── Sentry (₹1,500/year) - Error tracking
+├── New Relic (₹3,000/year) - Mobile performance monitoring
+└── Slack (₹800/year) - Team notifications
 
 🤖 AI/ML Services:
-├── OpenAI API (₹15,000/month) - Chatbot and analytics
-├── Perplexity API (₹8,000/month) - Enhanced search
-├── AWS Comprehend (₹1,000/month) - Text analysis
-└── Custom ML Models (₹3,000/month) - Predictive analytics
+├── OpenAI API (₹3,000/year) - Chatbot responses
+├── Perplexity API (₹2,000/year) - Enhanced search
+├── AWS Comprehend (₹100/year) - Text analysis
+└── Custom ML Models (₹500/year) - Basic predictive analytics
 
-📱 Communication Services:
-├── WhatsApp Business API (₹5,000/month) - Business messaging
-├── Twilio (₹2,000/month) - SMS and voice (backup)
-├── Microsoft Graph API (Included in O365) - Email, calendar, and collaboration
-└── Push Notifications (₹500/month) - Mobile app notifications
+💬 Communication Services:
+├── WhatsApp Business API (₹5,000/year) - Agent messaging
+├── Twilio SMS (₹500/year) - OTP verification
+├── SendGrid (₹200/year) - Email notifications
+└── Push Notifications (Included in Firebase) - Real-time alerts
+
+🏪 App Store Fees:
+├── Apple App Store (₹8,000/year) - Developer program
+└── Google Play Store (₹200/year) - One-time registration
+
+🔐 Security & Compliance:
+├── AWS WAF (₹500/month) - Web application firewall
+├── AWS Shield (₹300/month) - DDoS protection
+├── AWS GuardDuty (₹1,200/month) - Threat detection
+├── SSL Certificates (₹100/month) - HTTPS encryption
+└── Domain Registration (₹800/year) - agentmitra.com
+
+📊 AWS Monitoring & Observability:
+├── AWS CloudWatch (₹800/month) - Metrics and logs
+├── AWS X-Ray (₹400/month) - Distributed tracing
+└── AWS Config (₹300/month) - Configuration monitoring
+
+💾 AWS Infrastructure:
+├── Aurora PostgreSQL (₹4,000/month) - Primary database
+├── Redis ElastiCache (₹1,500/month) - Session caching
+├── CloudFront CDN (₹2,500/month) - Global distribution
+├── Application Load Balancer (₹1,000/month) - Mobile/Python traffic
+├── ALB Portal (₹300/month) - Config portal traffic
+├── ECS Fargate Portal (₹800/month) - Python backend APIs
+├── S3 Storage (₹800/month) - File storage and backups
+└── Route 53 (₹200/month) - DNS management
 
 🎥 Content & Media:
-├── YouTube API (₹2,000/month) - Video integration
-├── AWS Elemental MediaConvert (₹1,000/month) - Video processing
-├── AWS S3 (₹1,500/month) - File storage
-└── CloudFront CDN (₹2,500/month) - Content delivery
+├── YouTube API (₹500/month) - Video integration
+├── AWS Elemental MediaConvert (₹300/month) - Video processing
+└── Content Moderation (₹200/month) - AI content filtering
 
-💾 Database & Storage:
-├── Aurora PostgreSQL (₹4,000/month) - Primary database
-├── Redis ElastiCache (₹1,500/month) - Caching layer
-├── Database Backups (₹500/month) - Automated backups
-└── Archive Storage (₹300/month) - Long-term retention
-
-TOTAL MONTHLY SUBSCRIPTION COST: ₹45,000 - ₹55,000
+TOTAL MONTHLY SUBSCRIPTION COST: ₹26,300 - ₹36,300 (Phase 1)
+TOTAL ANNUAL SUBSCRIPTION COST: ₹3,15,600 - ₹4,35,600
 ```
 
 ### 6.2 Development Tools & Software
@@ -1841,7 +2607,7 @@ graph TD
         subgraph "📦 Local Services (MacBook Native)"
             PostgresNative[(PostgreSQL 16<br/>Native Service<br/>Port 5432)]
             RedisNative[(Redis 7<br/>Native Service<br/>Port 6379)]
-            NginxDocker[Nginx<br/>Docker Proxy<br/>Port 8080)]
+            NginxDocker[Nginx<br/>Docker Proxy<br/>Port 8080]
         end
 
         subgraph "🔧 Development Tools"
@@ -2012,17 +2778,21 @@ gantt
         Enterprise Launch            :launch3, after bi3, 30d
 ```
 
-#### Phase 1: MVP Infrastructure (₹15,000/month)
+#### Phase 1: MVP Infrastructure (₹26,300/month)
 ```mermaid
-pie title Phase 1 Cost Distribution (₹15,000/month)
-    "Compute (ECS)" : 53
-    "Database (Aurora)" : 27
-    "Network & CDN" : 17
-    "Monitoring" : 3
+pie title Phase 1 Cost Distribution (₹26,300/month)
+    "AWS Infrastructure" : 35
+    "Firebase Services" : 18
+    "Third-Party APIs" : 28
+    "Config Portal Node.js" : 5
+    "App Store Fees" : 4
+    "Security & Monitoring" : 10
 ```
 
 **🎯 Deliverables:**
-- ✅ Agent Mitra Mobile App (iOS + Android)
+- ✅ Agent Mitra Mobile App (Flutter - iOS + Android)
+- ✅ Agent Mitra Config Portal (React + Node.js)
+- ✅ Python Backend Microservices (FastAPI)
 - ✅ Basic authentication (OTP + Biometric)
 - ✅ Policy management (CRUD operations)
 - ✅ WhatsApp integration (Basic messaging)
@@ -2035,19 +2805,21 @@ pie title Phase 1 Cost Distribution (₹15,000/month)
 - Uptime: 99.5%
 - Monthly Active Users: 700 (Target)
 
-#### Phase 2: Growth Infrastructure (₹45,000/month)
+#### Phase 2: Growth Infrastructure (₹50,000/month)
 ```mermaid
-pie title Phase 2 Cost Distribution (₹45,000/month)
-    "Compute (ECS)" : 44
-    "Database (Aurora)" : 18
-    "Network & CDN" : 11
-    "Monitoring" : 9
-    "AI/ML Services" : 7
-    "Load Balancing" : 4
-    "Advanced Features" : 7
+pie title Phase 2 Cost Distribution (₹50,000/month)
+    "AWS Infrastructure" : 30
+    "Firebase Services" : 15
+    "Third-Party APIs" : 35
+    "Advanced Analytics" : 10
+    "Security & Monitoring" : 8
+    "App Store Fees" : 2
 ```
 
 **🎯 Deliverables:**
+- 🔄 Enhanced Mobile App (Advanced features & performance)
+- 🔄 Advanced Config Portal (Agent management & analytics)
+- 🔄 Scaled Backend Services (Microservices optimization)
 - Advanced analytics (Predictive modeling)
 - Real-time dashboards (WebSocket updates)
 - Marketing automation (Campaign management)
@@ -2061,21 +2833,21 @@ pie title Phase 2 Cost Distribution (₹45,000/month)
 - Uptime: 99.9%
 - Monthly Active Users: 5,000
 
-#### Phase 3: Enterprise Infrastructure (₹150,000/month)
+#### Phase 3: Enterprise Infrastructure (₹85,000/month)
 ```mermaid
-pie title Phase 3 Cost Distribution (₹150,000/month)
-    "Compute (ECS Multi-region)" : 40
-    "Database (Global Aurora)" : 17
-    "Network & CDN" : 10
-    "Monitoring (Enterprise)" : 10
-    "AI/ML Services (Advanced)" : 8
-    "Security Services" : 3
-    "Load Balancing (Global)" : 5
-    "Caching (Multi-region)" : 7
+pie title Phase 3 Cost Distribution (₹85,000/month)
+    "AWS Infrastructure (Multi-region)" : 35
+    "Firebase Services (Enterprise)" : 15
+    "Third-Party APIs (Advanced)" : 25
+    "Advanced Analytics & AI" : 15
+    "Security & Compliance" : 8
+    "App Store Fees" : 2
 ```
 
 **🎯 Deliverables:**
-- Global multi-region deployment
+- 🌍 Global Mobile App (Multi-region deployment)
+- 🏢 Enterprise Config Portal (Advanced agent features)
+- 🔧 Enterprise Backend Services (Global microservices)
 - Advanced security (Zero-trust architecture)
 - Enterprise integrations (ERP, CRM systems)
 - Advanced compliance (IRDAI enterprise features)
@@ -2169,8 +2941,9 @@ class CostOptimizer:
 ### 9.2 Implemented Features Status
 
 **✅ Active Features:**
-- Agent Mitra Mobile App (Customer-facing Flutter application)
-- Agent Mitra Config Portal (Agent-facing web portal)
+- 📱 Agent Mitra Mobile App (Flutter - Customer-facing)
+- 🌐 Agent Mitra Config Portal (React + Node.js - Agent-facing)
+- 🐍 Python Backend Microservices (FastAPI - API layer)
 - Official LIC Systems integration
 - WhatsApp Business communication
 - Video content management
