@@ -23,6 +23,7 @@
 - Mobile App ↔ Config Portal: Data synchronization and agent assignment
 - Config Portal ↔ LIC Systems: Policy data, premium processing, and reporting
 - Mobile App ↔ LIC Systems: Direct integration for real-time policy information and transactions
+- **Data Export**: Performed through Official LIC Agent Mobile App or Portal/Website (separate from Agent Mitra Config Portal/Website)
 
 ---
 

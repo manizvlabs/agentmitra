@@ -1,4 +1,4 @@
-# LIC Agent Mobile App - Role-Based Access Control (RBAC) Design
+# Agent Mitra - Role-Based Access Control (RBAC) Design
 
 > **Note:** This document applies [Separation of Concerns](./glossary.md#separation-of-concerns) by implementing distinct access control mechanisms for mobile app users, configuration portal agents, and LIC system administrators.
 
@@ -418,6 +418,6 @@ Insurance Provider Application → Provider Admin (Approved)
 - **Feature Flag Table**: Dynamic feature configuration
 - **Audit Log Table**: Complete audit trail for compliance
 
-This RBAC design provides a comprehensive, scalable, and secure foundation for your multitenant LIC agent mobile app while ensuring compliance with Indian regulatory requirements and supporting your feature flag-driven architecture.
+This RBAC design provides a comprehensive, scalable, and secure foundation for your multitenant Agent Mitra platform while ensuring compliance with Indian regulatory requirements and supporting your feature flag-driven architecture.
 
 **Ready for your review! Please let me know if you'd like me to modify any roles, add additional roles, or adjust the permission structure before I proceed with the wireframes and other deliverables.**

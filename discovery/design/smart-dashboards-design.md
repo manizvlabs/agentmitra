@@ -587,7 +587,7 @@ FEATURE_OFFLINE_DASHBOARD_MODE=true
 
 ### 6.1 Campaign Analytics Dashboard Architecture
 
-The Campaign Performance Analytics dashboard provides comprehensive insights into marketing campaign effectiveness, ROI tracking, and customer engagement metrics through the Agent Configuration Portal.
+The Campaign Performance Analytics dashboard provides comprehensive insights into marketing campaign effectiveness, ROI tracking, and customer engagement metrics through the Agent Mitra Config Portal/Website.
 
 #### Campaign Performance Dashboard Implementation
 ```dart
@@ -1284,7 +1284,7 @@ class CampaignAnalyticsService:
 
 ### 7.1 Content Analytics Dashboard Architecture
 
-The Content Performance Analytics dashboard provides detailed insights into educational content effectiveness, user engagement patterns, and learning outcomes through the Agent Configuration Portal.
+The Content Performance Analytics dashboard provides detailed insights into educational content effectiveness, user engagement patterns, and learning outcomes through the Agent Mitra Config Portal/Website.
 
 #### Content Performance Dashboard Implementation
 ```dart

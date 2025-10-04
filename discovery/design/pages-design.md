@@ -3946,9 +3946,9 @@ class _DataImportDashboardState extends State<DataImportDashboard> {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: _exportData,
+                    onPressed: _exportViaLIC,
                     icon: const Icon(Icons.download),
-                    label: const Text('Export Data'),
+                    label: const Text('Export via LIC'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
@@ -3989,8 +3989,9 @@ class _DataImportDashboardState extends State<DataImportDashboard> {
     // Navigate to bulk update screen
   }
 
-  void _exportData() {
-    // Export data functionality
+  void _exportViaLIC() {
+    // Export data via Official LIC Agent Mobile App or Portal/Website
+    // This interfaces with existing LIC systems for secure data export
   }
 
   void _validateData() {
@@ -7501,7 +7502,7 @@ class _CallbackManagementDashboardPageState extends State<CallbackManagementDash
           ),
           ListTile(
             leading: const Icon(Icons.download),
-            title: const Text('Export Data'),
+            title: const Text('Export via LIC'),
             onTap: () {
               Navigator.pop(context);
               _exportCallbackData();
@@ -7529,7 +7530,8 @@ class _CallbackManagementDashboardPageState extends State<CallbackManagementDash
   }
 
   void _exportCallbackData() {
-    // Export callback data
+    // Export callback data via Official LIC Agent Mobile App or Portal/Website
+    // Interfaces with existing LIC systems for secure callback data export
   }
 }
 ```
