@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.repositories.presentation_repository import PresentationRepository
-from app.repositories.user_repository import UserRepository
+from app.repositories.agent_repository import AgentRepository
 
 router = APIRouter()
 
@@ -45,15 +45,15 @@ class PresentationModel(BaseModel):
 def _presentation_to_dict(presentation):
     """Convert Presentation model to dict"""
     return {
-        "presentation_id": presentation.presentation_id,
-        "agent_id": presentation.agent_id,
+        "presentation_id": str(presentation.presentation_id),
+        "agent_id": str(presentation.agent_id),
         "name": presentation.name,
         "description": presentation.description,
         "status": presentation.status,
         "is_active": presentation.is_active,
         "slides": [
             {
-                "slide_id": slide.slide_id,
+                "slide_id": str(slide.slide_id),
                 "slide_order": slide.slide_order,
                 "slide_type": slide.slide_type,
                 "media_url": slide.media_url,
@@ -81,8 +81,8 @@ def _presentation_to_dict(presentation):
 async def get_active_presentation(agent_id: str, db: Session = Depends(get_db)):
     """Get active presentation for an agent"""
     # Verify agent exists
-    user_repo = UserRepository(db)
-    agent = user_repo.get_by_id(agent_id)
+    agent_repo = AgentRepository(db)
+    agent = agent_repo.get_by_id(agent_id)
     
     if not agent:
         raise HTTPException(
@@ -112,8 +112,8 @@ async def get_agent_presentations(
 ):
     """Get all presentations for an agent"""
     # Verify agent exists
-    user_repo = UserRepository(db)
-    agent = user_repo.get_by_id(agent_id)
+    agent_repo = AgentRepository(db)
+    agent = agent_repo.get_by_id(agent_id)
     
     if not agent:
         raise HTTPException(
@@ -142,8 +142,8 @@ async def create_presentation(
 ):
     """Create a new presentation"""
     # Verify agent exists
-    user_repo = UserRepository(db)
-    agent = user_repo.get_by_id(agent_id)
+    agent_repo = AgentRepository(db)
+    agent = agent_repo.get_by_id(agent_id)
     
     if not agent:
         raise HTTPException(
@@ -184,7 +184,7 @@ async def create_presentation(
     })
     
     return {
-        "presentation_id": created.presentation_id,
+        "presentation_id": str(created.presentation_id),
         "status": created.status,
         "created_at": created.created_at.isoformat() if created.created_at else None
     }
@@ -263,7 +263,7 @@ async def get_templates(
     return {
         "templates": [
             {
-                "template_id": t.template_id,
+                "template_id": str(t.template_id),
                 "name": t.name,
                 "description": t.description,
                 "category": t.category,

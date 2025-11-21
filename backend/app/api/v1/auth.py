@@ -58,6 +58,7 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
     # Find user by phone number or agent code
     user = None
     if request.agent_code:
+        # Agent code lookup goes through agents table
         user = user_repo.get_by_agent_code(request.agent_code)
     elif request.phone_number:
         user = user_repo.get_by_phone(request.phone_number)
@@ -76,9 +77,9 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
                 detail="Invalid password"
             )
     
-    # Create tokens
+    # Create tokens (convert UUID to string for JWT)
     token_data = {
-        "sub": user.user_id,
+        "sub": str(user.user_id),
         "phone_number": user.phone_number,
         "role": user.role,
     }
@@ -99,7 +100,7 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
         "token_type": "bearer",
         "expires_in": 1800,
         "user": {
-            "user_id": user.user_id,
+            "user_id": str(user.user_id),
             "phone_number": user.phone_number,
             "full_name": user.full_name,
             "role": user.role,
@@ -119,7 +120,7 @@ async def send_otp(request: OTPRequest, db: Session = Depends(get_db)):
         # Create new user
         user = user_repo.create({
             "phone_number": request.phone_number,
-            "role": "customer",
+            "role": "policyholder",
             "is_verified": False,
         })
     
@@ -150,7 +151,7 @@ async def verify_otp(request: OTPVerifyRequest, db: Session = Depends(get_db)):
     if not user:
         user = user_repo.create({
             "phone_number": request.phone_number,
-            "role": "customer",
+            "role": "policyholder",
             "is_verified": True,
         })
     else:
@@ -158,9 +159,9 @@ async def verify_otp(request: OTPVerifyRequest, db: Session = Depends(get_db)):
         user_repo.update(user.user_id, {"is_verified": True})
         user.is_verified = True
     
-    # Create tokens
+    # Create tokens (convert UUID to string for JWT)
     token_data = {
-        "sub": user.user_id,
+        "sub": str(user.user_id),
         "phone_number": user.phone_number,
         "role": user.role,
     }
@@ -181,7 +182,7 @@ async def verify_otp(request: OTPVerifyRequest, db: Session = Depends(get_db)):
         "token_type": "bearer",
         "expires_in": 1800,
         "user": {
-            "user_id": user.user_id,
+            "user_id": str(user.user_id),
             "phone_number": user.phone_number,
             "full_name": user.full_name,
             "role": user.role,
@@ -217,9 +218,9 @@ async def refresh_token(request: RefreshTokenRequest, db: Session = Depends(get_
             detail="User not found"
         )
     
-    # Create new tokens
+    # Create new tokens (convert UUID to string for JWT)
     token_data = {
-        "sub": user.user_id,
+        "sub": str(user.user_id),
         "phone_number": user.phone_number,
         "role": user.role,
     }

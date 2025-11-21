@@ -1,10 +1,11 @@
 """
-Presentation repository for database operations
+Presentation repository for database operations - updated for lic_schema
 """
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 from typing import Optional, List
 from app.models.presentation import Presentation, Slide, PresentationTemplate
+from app.models.agent import Agent
 import uuid
 
 
@@ -14,17 +15,33 @@ class PresentationRepository:
     def __init__(self, db: Session):
         self.db = db
 
+    def _to_uuid(self, value):
+        """Convert string to UUID if needed"""
+        if isinstance(value, str):
+            try:
+                return uuid.UUID(value)
+            except ValueError:
+                return None
+        return value
+
     # Presentation operations
-    def get_by_id(self, presentation_id: str) -> Optional[Presentation]:
+    def get_by_id(self, presentation_id) -> Optional[Presentation]:
         """Get presentation by ID"""
+        presentation_id = self._to_uuid(presentation_id)
+        if not presentation_id:
+            return None
         return (
             self.db.query(Presentation)
             .filter(Presentation.presentation_id == presentation_id)
             .first()
         )
 
-    def get_active_by_agent(self, agent_id: str) -> Optional[Presentation]:
+    def get_active_by_agent(self, agent_id) -> Optional[Presentation]:
         """Get active presentation for an agent"""
+        agent_id = self._to_uuid(agent_id)
+        if not agent_id:
+            return None
+
         return (
             self.db.query(Presentation)
             .filter(
@@ -39,12 +56,16 @@ class PresentationRepository:
 
     def get_by_agent(
         self,
-        agent_id: str,
+        agent_id,
         status: Optional[str] = None,
         limit: int = 20,
         offset: int = 0,
     ) -> tuple[List[Presentation], int]:
         """Get all presentations for an agent"""
+        agent_id = self._to_uuid(agent_id)
+        if not agent_id:
+            return [], 0
+
         query = self.db.query(Presentation).filter(
             Presentation.agent_id == agent_id
         )
@@ -59,14 +80,22 @@ class PresentationRepository:
 
     def create(self, presentation_data: dict) -> Presentation:
         """Create a new presentation"""
+        agent_id = self._to_uuid(presentation_data.get("agent_id"))
+        if not agent_id:
+            raise ValueError("Invalid agent_id")
+
+        template_id = None
+        if presentation_data.get("template_id"):
+            template_id = self._to_uuid(presentation_data.get("template_id"))
+
         presentation = Presentation(
-            presentation_id=str(uuid.uuid4()),
-            agent_id=presentation_data.get("agent_id"),
+            presentation_id=uuid.uuid4(),
+            agent_id=agent_id,
             name=presentation_data.get("name"),
             description=presentation_data.get("description"),
             status=presentation_data.get("status", "draft"),
             is_active=presentation_data.get("is_active", False),
-            template_id=presentation_data.get("template_id"),
+            template_id=template_id,
             tags=presentation_data.get("tags", []),
         )
 
@@ -74,7 +103,7 @@ class PresentationRepository:
         slides_data = presentation_data.get("slides", [])
         for slide_data in slides_data:
             slide = Slide(
-                slide_id=str(uuid.uuid4()),
+                slide_id=uuid.uuid4(),
                 presentation_id=presentation.presentation_id,
                 slide_order=slide_data.get("slide_order", 0),
                 slide_type=slide_data.get("slide_type", "text"),
@@ -96,7 +125,7 @@ class PresentationRepository:
         self.db.refresh(presentation)
         return presentation
 
-    def update(self, presentation_id: str, presentation_data: dict) -> Optional[Presentation]:
+    def update(self, presentation_id, presentation_data: dict) -> Optional[Presentation]:
         """Update a presentation"""
         presentation = self.get_by_id(presentation_id)
         if not presentation:
@@ -107,6 +136,10 @@ class PresentationRepository:
             if key == "slides":
                 # Handle slides separately
                 continue
+            if key == "agent_id":
+                value = self._to_uuid(value)
+            if key == "template_id" and value:
+                value = self._to_uuid(value)
             if hasattr(presentation, key) and value is not None:
                 setattr(presentation, key, value)
 
@@ -114,13 +147,13 @@ class PresentationRepository:
         if "slides" in presentation_data:
             # Delete existing slides
             self.db.query(Slide).filter(
-                Slide.presentation_id == presentation_id
+                Slide.presentation_id == presentation.presentation_id
             ).delete()
 
             # Add new slides
             for slide_data in presentation_data["slides"]:
                 slide = Slide(
-                    slide_id=str(uuid.uuid4()),
+                    slide_id=uuid.uuid4(),
                     presentation_id=presentation.presentation_id,
                     slide_order=slide_data.get("slide_order", 0),
                     slide_type=slide_data.get("slide_type", "text"),
@@ -141,7 +174,7 @@ class PresentationRepository:
         self.db.refresh(presentation)
         return presentation
 
-    def delete(self, presentation_id: str) -> bool:
+    def delete(self, presentation_id) -> bool:
         """Delete a presentation"""
         presentation = self.get_by_id(presentation_id)
         if not presentation:
@@ -152,8 +185,11 @@ class PresentationRepository:
         return True
 
     # Template operations
-    def get_template_by_id(self, template_id: str) -> Optional[PresentationTemplate]:
+    def get_template_by_id(self, template_id) -> Optional[PresentationTemplate]:
         """Get template by ID"""
+        template_id = self._to_uuid(template_id)
+        if not template_id:
+            return None
         return (
             self.db.query(PresentationTemplate)
             .filter(PresentationTemplate.template_id == template_id)
@@ -172,4 +208,3 @@ class PresentationRepository:
             query = query.filter(PresentationTemplate.category == category)
 
         return query.all()
-
