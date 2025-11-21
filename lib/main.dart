@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
+import 'core/services/storage_service.dart';
+import 'shared/theme/app_theme.dart';
+import 'features/auth/presentation/viewmodels/auth_viewmodel.dart';
+import 'features/presentations/presentation/viewmodels/presentation_viewmodel.dart';
 import 'screens/splash_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'screens/phone_verification_screen.dart';
-import 'screens/otp_verification_screen.dart';
 import 'screens/trial_setup_screen.dart';
 import 'screens/trial_expiration_screen.dart';
 import 'screens/customer_dashboard.dart';
@@ -14,6 +18,8 @@ import 'screens/learning_center_screen.dart';
 import 'screens/agent_config_dashboard.dart';
 import 'screens/roi_analytics_dashboard.dart';
 import 'screens/marketing_campaign_builder.dart';
+import 'features/auth/presentation/pages/login_page.dart';
+import 'features/auth/presentation/pages/otp_verification_page.dart';
 
 // Demo navigation widget
 class DemoNavigation extends StatelessWidget {
@@ -73,6 +79,13 @@ class DemoNavigation extends StatelessWidget {
             'OTP Verification',
             '6-digit OTP input with timer',
             () => Navigator.pushNamed(context, '/otp-verification'),
+          ),
+
+          _buildDemoButton(
+            context,
+            'Login Page (New)',
+            'New architecture login page',
+            () => Navigator.pushNamed(context, '/login'),
           ),
 
           _buildDemoButton(
@@ -225,7 +238,12 @@ class DemoNavigation extends StatelessWidget {
   }
 }
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize storage service
+  await StorageService.initialize();
+  
   runApp(const AgentMitraApp());
 }
 
@@ -238,87 +256,42 @@ class AgentMitraApp extends StatelessWidget {
       designSize: const Size(375, 812), // iPhone X/XS dimensions
       minTextAdapt: true,
       builder: (context, child) {
-        return MaterialApp(
-          title: 'Agent Mitra',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF1a237e), // Deep blue
-              brightness: Brightness.light,
-            ),
-            useMaterial3: true,
-            textTheme: const TextTheme(
-              headlineLarge: const TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1a237e),
-              ),
-              headlineMedium: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF1a237e),
-              ),
-              titleLarge: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-              bodyLarge: const TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-              ),
-              bodyMedium: const TextStyle(
-                fontSize: 14,
-                color: Colors.black54,
-              ),
-            ),
-            elevatedButtonTheme: ElevatedButtonThemeData(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1a237e),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                textStyle: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            outlinedButtonTheme: OutlinedButtonThemeData(
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF1a237e), width: 1.5),
-                foregroundColor: const Color(0xFF1a237e),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                textStyle: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => AuthViewModel()..initialize()),
+            ChangeNotifierProvider(create: (_) => PresentationViewModel()),
+          ],
+          child: MaterialApp(
+            title: 'Agent Mitra',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: ThemeMode.system,
+            initialRoute: '/',
+            routes: {
+              '/': (context) => const SplashScreen(),
+              '/demo': (context) => const DemoNavigation(),
+              '/welcome': (context) => const WelcomeScreen(),
+              '/phone-verification': (context) => const PhoneVerificationScreen(),
+              '/otp-verification': (context) {
+                final args = ModalRoute.of(context)!.settings.arguments;
+                return OtpVerificationPage(
+                  phoneNumber: args is String ? args : '',
+                );
+              },
+              '/login': (context) => const LoginPage(),
+              '/trial-setup': (context) => const TrialSetupScreen(),
+              '/trial-expiration': (context) => const TrialExpirationScreen(),
+              '/customer-dashboard': (context) => const CustomerDashboard(),
+              '/policy-details': (context) => const PolicyDetailsScreen(),
+              '/whatsapp-integration': (context) => const WhatsappIntegrationScreen(),
+              '/smart-chatbot': (context) => const SmartChatbotScreen(),
+              '/learning-center': (context) => const LearningCenterScreen(),
+              '/agent-config-dashboard': (context) => const AgentConfigDashboard(),
+              '/roi-analytics': (context) => const RoiAnalyticsDashboard(),
+              '/campaign-builder': (context) => const MarketingCampaignBuilder(),
+            },
           ),
-      initialRoute: '/',
-      routes: {
-            '/': (context) => const SplashScreen(),
-            '/demo': (context) => const DemoNavigation(),
-            '/welcome': (context) => const WelcomeScreen(),
-            '/phone-verification': (context) => const PhoneVerificationScreen(),
-            '/otp-verification': (context) => const OtpVerificationScreen(),
-            '/trial-setup': (context) => const TrialSetupScreen(),
-            '/trial-expiration': (context) => const TrialExpirationScreen(),
-            '/customer-dashboard': (context) => const CustomerDashboard(),
-            '/policy-details': (context) => const PolicyDetailsScreen(),
-            '/whatsapp-integration': (context) => const WhatsappIntegrationScreen(),
-            '/smart-chatbot': (context) => const SmartChatbotScreen(),
-            '/learning-center': (context) => const LearningCenterScreen(),
-            '/agent-config-dashboard': (context) => const AgentConfigDashboard(),
-            '/roi-analytics': (context) => const RoiAnalyticsDashboard(),
-            '/campaign-builder': (context) => const MarketingCampaignBuilder(),
-          },
         );
       },
     );

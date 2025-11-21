@@ -10,6 +10,7 @@ Main entry point for the backend API server
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import api_router
+from app.core.database import init_db
 import uvicorn
 import os
 from dotenv import load_dotenv
@@ -37,6 +38,13 @@ app.add_middleware(
 
 # Include API routers
 app.include_router(api_router)
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on startup"""
+    init_db()
+    print("Database initialized")
 
 
 @app.get("/")
