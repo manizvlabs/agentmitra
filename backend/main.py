@@ -3,8 +3,13 @@ Agent Mitra - FastAPI Backend Application
 Main entry point for the backend API server
 """
 
+"""
+Agent Mitra - FastAPI Backend Application
+Main entry point for the backend API server
+"""
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.api.v1 import api_router
 import uvicorn
 import os
 from dotenv import load_dotenv
@@ -15,8 +20,10 @@ load_dotenv("../.env.local")
 # Create FastAPI app
 app = FastAPI(
     title="Agent Mitra API",
-    description="Agent Mitra Backend API",
+    description="Agent Mitra Backend API - Insurance Agent Management Platform",
     version="0.1.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
 # CORS middleware
@@ -28,6 +35,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include API routers
+app.include_router(api_router)
+
 
 @app.get("/")
 async def root():
@@ -35,7 +45,9 @@ async def root():
     return {
         "message": "Agent Mitra API",
         "version": "0.1.0",
-        "status": "running"
+        "status": "running",
+        "docs": "/docs",
+        "api": "/api/v1"
     }
 
 
@@ -44,7 +56,8 @@ async def health():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "service": "agent-mitra-backend"
+        "service": "agent-mitra-backend",
+        "version": "0.1.0"
     }
 
 
