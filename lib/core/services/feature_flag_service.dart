@@ -1,6 +1,7 @@
 /// Feature Flag Service
 /// Provides runtime feature flag configuration with caching and API sync
 import 'dart:async';
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../../shared/constants/feature_flags.dart' as constants;
@@ -176,6 +177,4 @@ class FeatureFlagService {
   }
 }
 
-// Import json for encoding/decoding
-import 'dart:convert';
 

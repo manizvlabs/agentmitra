@@ -24,19 +24,24 @@ class PresentationViewModel extends BaseViewModel {
     // Initialize can be called when needed
   }
 
-  /// Load active presentation for an agent
-  Future<void> loadActivePresentation(String agentId) async {
+  /// Load active presentation for an agent with offline caching
+  Future<void> loadActivePresentation(String agentId, {bool forceRefresh = false}) async {
     setLoading(true);
     clearError();
 
-    try {
-      _activePresentation =
-          await _presentationRepository.getActivePresentation(agentId);
-    } catch (e) {
-      setError('Failed to load active presentation: $e');
-    } finally {
-      setLoading(false);
-    }
+    final result = await _presentationRepository.getActivePresentation(agentId, forceRefresh: forceRefresh);
+
+    result.fold(
+      (error) => setError(error.toString()),
+      (presentation) => _activePresentation = presentation,
+    );
+
+    setLoading(false);
+  }
+
+  /// Refresh active presentation
+  Future<void> refreshActivePresentation(String agentId) async {
+    await loadActivePresentation(agentId, forceRefresh: true);
   }
 
   /// Load all presentations for an agent

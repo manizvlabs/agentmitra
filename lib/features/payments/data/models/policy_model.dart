@@ -1,0 +1,146 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'policy_model.freezed.dart';
+part 'policy_model.g.dart';
+
+@freezed
+class Policy with _$Policy {
+  const factory Policy({
+    required String policyId,
+    required String policyNumber,
+    required String providerPolicyId,
+    required String policyholderId,
+    required String agentId,
+    required String providerId,
+    required String policyType,
+    required String planName,
+    required String planCode,
+    required String category,
+    required double sumAssured,
+    required double premiumAmount,
+    required String premiumFrequency,
+    required String premiumMode,
+    required DateTime applicationDate,
+    DateTime? approvalDate,
+    required DateTime startDate,
+    DateTime? maturityDate,
+    DateTime? renewalDate,
+    required String status,
+    String? subStatus,
+    String? paymentStatus,
+    Map<String, dynamic>? coverageDetails,
+    Map<String, dynamic>? exclusions,
+    Map<String, dynamic>? termsAndConditions,
+    String? policyDocumentUrl,
+    String? applicationFormUrl,
+    Map<String, dynamic>? medicalReports,
+    Map<String, dynamic>? nomineeDetails,
+    Map<String, dynamic>? assigneeDetails,
+    DateTime? lastPaymentDate,
+    DateTime? nextPaymentDate,
+    int? totalPayments,
+    double? outstandingAmount,
+  }) = _Policy;
+
+  factory Policy.fromJson(Map<String, dynamic> json) => _$PolicyFromJson(json);
+}
+
+@freezed
+class Policyholder with _$Policyholder {
+  const factory Policyholder({
+    required String policyholderId,
+    required String userId,
+    String? agentId,
+    String? customerId,
+    String? salutation,
+    String? maritalStatus,
+    String? occupation,
+    double? annualIncome,
+    String? educationLevel,
+    Map<String, dynamic>? riskProfile,
+    String? investmentHorizon,
+    Map<String, dynamic>? communicationPreferences,
+    bool? marketingConsent,
+    Map<String, dynamic>? familyMembers,
+    Map<String, dynamic>? nomineeDetails,
+    Map<String, dynamic>? bankDetails,
+    Map<String, dynamic>? investmentPortfolio,
+    String? preferredContactTime,
+    String? preferredLanguage,
+    int? digitalLiteracyScore,
+    double? engagementScore,
+    String? onboardingStatus,
+    double? churnRiskScore,
+    DateTime? lastInteractionAt,
+    int? totalInteractions,
+  }) = _Policyholder;
+
+  factory Policyholder.fromJson(Map<String, dynamic> json) => _$PolicyholderFromJson(json);
+}
+
+@freezed
+class Premium with _$Premium {
+  const factory Premium({
+    required String paymentId,
+    required String policyId,
+    required String policyholderId,
+    required double amount,
+    required DateTime paymentDate,
+    required DateTime dueDate,
+    String? paymentMethod,
+    String? transactionId,
+    String? paymentGateway,
+    required String status,
+    String? failureReason,
+    Map<String, dynamic>? paymentDetails,
+    String? receiptUrl,
+    String? processedBy,
+  }) = _Premium;
+
+  factory Premium.fromJson(Map<String, dynamic> json) => _$PremiumFromJson(json);
+}
+
+@freezed
+class Claim with _$Claim {
+  const factory Claim({
+    required String claimId,
+    required String policyId,
+    required String policyholderId,
+    required String claimType,
+    required String description,
+    required DateTime incidentDate,
+    required DateTime claimDate,
+    required double claimedAmount,
+    String? status,
+    String? subStatus,
+    Map<String, dynamic>? documents,
+    Map<String, dynamic>? claimDetails,
+    DateTime? approvalDate,
+    DateTime? settlementDate,
+    double? approvedAmount,
+    String? rejectionReason,
+    String? processedBy,
+    String? approvedBy,
+  }) = _Claim;
+
+  factory Claim.fromJson(Map<String, dynamic> json) => _$ClaimFromJson(json);
+}
+
+@freezed
+class Coverage with _$Coverage {
+  const factory Coverage({
+    required String coverageId,
+    required String policyId,
+    required String coverageType,
+    required String description,
+    required double sumAssured,
+    required double premium,
+    required DateTime startDate,
+    DateTime? endDate,
+    String? status,
+    Map<String, dynamic>? terms,
+    Map<String, dynamic>? conditions,
+  }) = _Coverage;
+
+  factory Coverage.fromJson(Map<String, dynamic> json) => _$CoverageFromJson(json);
+}

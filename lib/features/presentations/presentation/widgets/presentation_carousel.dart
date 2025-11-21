@@ -40,10 +40,14 @@ class _PresentationCarouselState extends State<PresentationCarousel> {
     });
   }
 
-  void _loadPresentation() {
+  void _loadPresentation({bool forceRefresh = false}) {
     final viewModel =
         Provider.of<PresentationViewModel>(context, listen: false);
-    viewModel.loadActivePresentation(widget.agentId);
+    viewModel.loadActivePresentation(widget.agentId, forceRefresh: forceRefresh);
+  }
+
+  void _refreshPresentation() {
+    _loadPresentation(forceRefresh: true);
   }
 
   @override
@@ -121,7 +125,7 @@ class _PresentationCarouselState extends State<PresentationCarousel> {
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: _loadPresentation,
+                  onPressed: _refreshPresentation,
                   child: const Text('Retry'),
                 ),
               ],
@@ -143,46 +147,49 @@ class _PresentationCarouselState extends State<PresentationCarousel> {
           });
         }
 
-        return Column(
-          children: [
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: presentation.slides.length,
-                onPageChanged: (index) => _onPageChanged(index, presentation),
-                itemBuilder: (context, index) {
-                  final slide = presentation.slides[index];
-                  return GestureDetector(
-                    onTap: widget.onSlideTap != null
-                        ? () => widget.onSlideTap!(slide)
-                        : null,
-                    child: SlideView(slide: slide),
-                  );
-                },
+        return RefreshIndicator(
+          onRefresh: () async => _refreshPresentation(),
+          child: Column(
+            children: [
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: presentation.slides.length,
+                  onPageChanged: (index) => _onPageChanged(index, presentation),
+                  itemBuilder: (context, index) {
+                    final slide = presentation.slides[index];
+                    return GestureDetector(
+                      onTap: widget.onSlideTap != null
+                          ? () => widget.onSlideTap!(slide)
+                          : null,
+                      child: SlideView(slide: slide),
+                    );
+                  },
+                ),
               ),
-            ),
-            if (widget.showIndicators && presentation.slides.length > 1)
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    presentation.slides.length,
-                    (index) => Container(
-                      width: 8,
-                      height: 8,
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: _currentIndex == index
-                            ? Colors.white
-                            : Colors.white70,
+              if (widget.showIndicators && presentation.slides.length > 1)
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      presentation.slides.length,
+                      (index) => Container(
+                        width: 8,
+                        height: 8,
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _currentIndex == index
+                              ? Colors.white
+                              : Colors.white70,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         );
       },
     );
