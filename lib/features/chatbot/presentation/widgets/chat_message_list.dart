@@ -5,11 +5,13 @@ import 'chat_message_bubble.dart';
 class ChatMessageList extends StatefulWidget {
   final List<ChatMessage> messages;
   final bool isTyping;
+  final Function(String)? onQuickReplySelected;
 
   const ChatMessageList({
     super.key,
     required this.messages,
     this.isTyping = false,
+    this.onQuickReplySelected,
   });
 
   @override
@@ -70,7 +72,10 @@ class _ChatMessageListState extends State<ChatMessageList> {
           final message = widget.messages[index];
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: ChatMessageBubble(message: message),
+            child: ChatMessageBubble(
+              message: message,
+              onQuickReplySelected: widget.onQuickReplySelected,
+            ),
           );
         },
       ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' as provider;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/services/storage_service.dart';
 import 'core/services/logger_service.dart';
@@ -16,6 +16,9 @@ import 'features/onboarding/data/datasources/onboarding_local_datasource.dart';
 import 'features/dashboard/presentation/viewmodels/dashboard_viewmodel.dart';
 import 'features/dashboard/data/repositories/dashboard_repository.dart';
 import 'features/dashboard/data/datasources/dashboard_remote_datasource.dart';
+import 'features/chatbot/presentation/viewmodels/chatbot_viewmodel.dart';
+import 'features/chatbot/data/repositories/chatbot_repository.dart';
+import 'features/chatbot/data/datasources/chatbot_remote_datasource.dart';
 import 'core/services/api_service.dart';
 
 
@@ -52,25 +55,49 @@ class AgentMitraApp extends ConsumerWidget {
       designSize: const Size(375, 812), // iPhone X/XS dimensions
       minTextAdapt: true,
       builder: (context, child) {
-        return MultiProvider(
+        return provider.MultiProvider(
           providers: [
-            ChangeNotifierProvider(create: (_) => AuthViewModel()..initialize()),
-            ChangeNotifierProvider(create: (_) => PresentationViewModel()),
-            ChangeNotifierProvider(
+            provider.ChangeNotifierProvider(create: (_) => AuthViewModel()..initialize()),
+            provider.ChangeNotifierProvider(create: (_) => PresentationViewModel()),
+            provider.ChangeNotifierProvider(
               create: (_) => OnboardingViewModel(
                 OnboardingRepository(
                   const OnboardingLocalDataSource(),
                 ),
               )..initialize(),
             ),
-            ChangeNotifierProvider(
+            provider.ChangeNotifierProvider(
               create: (_) => DashboardViewModel(
                 DashboardRepository(
                   DashboardRemoteDataSource(ApiService()),
                 ),
-                // TODO: Inject proper feature flag service when available
-                null, // Will be updated when feature flag service is properly implemented
+                FeatureFlagService(),
               )..initialize(),
+            ),
+            provider.ChangeNotifierProxyProvider<AuthViewModel, ChatbotViewModel>(
+              create: (context) => ChatbotViewModel(
+                ChatbotRepository(
+                  ChatbotRemoteDataSourceImpl(),
+                ),
+                'test-agent-id', // Fallback agent ID
+              ),
+              update: (context, authViewModel, previous) {
+                final agentId = authViewModel.currentUser?.userId ?? 'test-agent-id';
+                if (previous?.agentId != agentId) {
+                  return ChatbotViewModel(
+                    ChatbotRepository(
+                      ChatbotRemoteDataSourceImpl(),
+                    ),
+                    agentId,
+                  );
+                }
+                return previous ?? ChatbotViewModel(
+                  ChatbotRepository(
+                    ChatbotRemoteDataSourceImpl(),
+                  ),
+                  agentId,
+                );
+              },
             ),
           ],
           child: MaterialApp.router(

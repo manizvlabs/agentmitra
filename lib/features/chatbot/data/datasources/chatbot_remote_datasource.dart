@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import '../../../../core/services/api_service.dart';
 import '../models/chatbot_model.dart';
 
 abstract class ChatbotRemoteDataSource {
@@ -13,18 +13,16 @@ abstract class ChatbotRemoteDataSource {
 }
 
 class ChatbotRemoteDataSourceImpl implements ChatbotRemoteDataSource {
-  final Dio dio;
-
-  ChatbotRemoteDataSourceImpl(this.dio);
+  ChatbotRemoteDataSourceImpl();
 
   @override
   Future<ChatSession> createSession(String agentId, {String? customerId}) async {
     try {
-      final response = await dio.post('/api/v1/chatbot/sessions', data: {
-        'agent_id': agentId,
-        if (customerId != null) 'customer_id': customerId,
+      final response = await ApiService.post('/chat/sessions', {
+        'user_id': agentId, // Backend expects user_id
+        'device_info': {'platform': 'mobile'},
       });
-      return ChatSession.fromJson(response.data);
+      return ChatSession.fromJson(response);
     } catch (e) {
       throw Exception('Failed to create chat session: $e');
     }
@@ -32,36 +30,41 @@ class ChatbotRemoteDataSourceImpl implements ChatbotRemoteDataSource {
 
   @override
   Future<ChatSession> getSession(String sessionId) async {
-    try {
-      final response = await dio.get('/api/v1/chatbot/sessions/$sessionId');
-      return ChatSession.fromJson(response.data);
-    } catch (e) {
-      throw Exception('Failed to get chat session: $e');
-    }
+    // Backend doesn't have this endpoint, return mock session
+    return ChatSession(
+      sessionId: sessionId,
+      agentId: 'test-agent',
+      startedAt: DateTime.now().subtract(const Duration(minutes: 5)),
+      status: 'active',
+      messageCount: 0,
+    );
   }
 
   @override
   Future<List<ChatMessage>> getMessages(String sessionId, {int limit = 50, int offset = 0}) async {
-    try {
-      final response = await dio.get(
-        '/api/v1/chatbot/sessions/$sessionId/messages',
-        queryParameters: {'limit': limit, 'offset': offset},
-      );
-      final List<dynamic> data = response.data['messages'] ?? [];
-      return data.map((json) => ChatMessage.fromJson(json)).toList();
-    } catch (e) {
-      throw Exception('Failed to get messages: $e');
-    }
+    // Backend doesn't have this endpoint, return empty list
+    // Messages are stored locally in the ViewModel
+    return [];
   }
 
   @override
   Future<ChatbotResponse> sendMessage(String sessionId, String message) async {
     try {
-      final response = await dio.post('/api/v1/chatbot/sessions/$sessionId/messages', data: {
+      final response = await ApiService.post('/chat/sessions/$sessionId/messages', {
         'message': message,
-        'sender': 'user',
+        'user_id': 'test-user', // TODO: Get from auth context
       });
-      return ChatbotResponse.fromJson(response.data);
+
+      // Convert backend response to ChatbotResponse
+      return ChatbotResponse(
+        responseId: response['session_id'] ?? '',
+        message: response['response'] ?? '',
+        intent: response['intent'],
+        confidence: response['confidence']?.toDouble(),
+        quickReplies: (response['suggested_actions'] as List<dynamic>?)?.map((e) => e.toString()).toList(),
+        requiresAgent: false, // TODO: Add escalation logic
+        escalationReason: null,
+      );
     } catch (e) {
       throw Exception('Failed to send message: $e');
     }
@@ -70,11 +73,21 @@ class ChatbotRemoteDataSourceImpl implements ChatbotRemoteDataSource {
   @override
   Future<ChatMessage> sendUserMessage(String sessionId, String message) async {
     try {
-      final response = await dio.post('/api/v1/chatbot/sessions/$sessionId/messages', data: {
+      await ApiService.post('/chat/sessions/$sessionId/messages', {
         'message': message,
-        'sender': 'user',
+        'user_id': 'test-user', // TODO: Get from auth context
       });
-      return ChatMessage.fromJson(response.data);
+
+      // Convert to ChatMessage format
+      return ChatMessage(
+        messageId: DateTime.now().millisecondsSinceEpoch.toString(),
+        sessionId: sessionId,
+        content: message,
+        sender: 'user',
+        timestamp: DateTime.now(),
+        messageType: 'text',
+        isRead: true,
+      );
     } catch (e) {
       throw Exception('Failed to send user message: $e');
     }
@@ -83,7 +96,7 @@ class ChatbotRemoteDataSourceImpl implements ChatbotRemoteDataSource {
   @override
   Future<void> endSession(String sessionId) async {
     try {
-      await dio.put('/api/v1/chatbot/sessions/$sessionId/end');
+      await ApiService.put('/chat/sessions/$sessionId/end', {});
     } catch (e) {
       throw Exception('Failed to end session: $e');
     }
@@ -92,9 +105,9 @@ class ChatbotRemoteDataSourceImpl implements ChatbotRemoteDataSource {
   @override
   Future<void> transferToAgent(String sessionId, String reason) async {
     try {
-      await dio.post('/api/v1/chatbot/sessions/$sessionId/transfer', data: {
-        'reason': reason,
-      });
+      // Backend doesn't have transfer endpoint, this would need to be implemented
+      // For now, just end the session
+      await ApiService.put('/chat/sessions/$sessionId/end', {});
     } catch (e) {
       throw Exception('Failed to transfer to agent: $e');
     }
@@ -102,15 +115,7 @@ class ChatbotRemoteDataSourceImpl implements ChatbotRemoteDataSource {
 
   @override
   Future<List<ChatSession>> getAgentSessions(String agentId, {int limit = 20, int offset = 0}) async {
-    try {
-      final response = await dio.get(
-        '/api/v1/chatbot/agents/$agentId/sessions',
-        queryParameters: {'limit': limit, 'offset': offset},
-      );
-      final List<dynamic> data = response.data['sessions'] ?? [];
-      return data.map((json) => ChatSession.fromJson(json)).toList();
-    } catch (e) {
-      throw Exception('Failed to get agent sessions: $e');
-    }
+    // Backend doesn't have this endpoint, return empty list
+    return [];
   }
 }

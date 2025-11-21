@@ -1,9 +1,10 @@
-import '../../../core/architecture/base/base_repository.dart';
+import 'package:flutter/material.dart';
+import '../../../../core/architecture/base/base_repository.dart';
 import '../datasources/dashboard_remote_datasource.dart';
 import '../models/dashboard_data.dart';
 
 /// Repository for dashboard data management
-class DashboardRepository implements BaseRepository {
+class DashboardRepository extends BaseRepository {
   final DashboardRemoteDataSource _remoteDataSource;
 
   DashboardRepository(this._remoteDataSource);
@@ -86,6 +87,13 @@ class DashboardRepository implements BaseRepository {
         subtitle: 'View analytics',
         icon: Icons.analytics_outlined,
         route: '/reports',
+      ),
+      const DashboardQuickAction(
+        id: 'chatbot',
+        title: 'AI Assistant',
+        subtitle: 'Get instant help',
+        icon: Icons.smart_toy_outlined,
+        route: '/smart-chatbot',
       ),
     ];
   }

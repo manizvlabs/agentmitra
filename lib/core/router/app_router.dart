@@ -5,10 +5,8 @@ import '../../screens/welcome_screen.dart';
 import '../../screens/phone_verification_screen.dart';
 import '../../screens/trial_setup_screen.dart';
 import '../../screens/trial_expiration_screen.dart';
-import '../../screens/customer_dashboard.dart';
 import '../../screens/policy_details_screen.dart';
 import '../../screens/whatsapp_integration_screen.dart';
-import '../../screens/smart_chatbot_screen.dart';
 import '../../screens/learning_center_screen.dart';
 import '../../screens/agent_config_dashboard.dart';
 import '../../screens/roi_analytics_dashboard.dart';
@@ -17,6 +15,7 @@ import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/otp_verification_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
+import '../../features/chatbot/presentation/pages/chatbot_page.dart';
 
 /// Application Router Configuration
 /// Uses GoRouter for declarative routing with deep linking support
@@ -100,7 +99,7 @@ class AppRouter {
       GoRoute(
         path: '/smart-chatbot',
         name: 'smart-chatbot',
-        builder: (context, state) => const SmartChatbotScreen(),
+        builder: (context, state) => const ChatbotPage(),
       ),
 
       GoRoute(

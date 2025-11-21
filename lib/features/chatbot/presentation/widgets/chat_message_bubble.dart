@@ -4,10 +4,12 @@ import '../../data/models/chatbot_model.dart';
 
 class ChatMessageBubble extends StatelessWidget {
   final ChatMessage message;
+  final Function(String)? onQuickReplySelected;
 
   const ChatMessageBubble({
     super.key,
     required this.message,
+    this.onQuickReplySelected,
   });
 
   @override
@@ -72,13 +74,22 @@ class ChatMessageBubble extends StatelessWidget {
 
               const SizedBox(height: 4),
 
-              // Timestamp
-              Text(
-                _formatTime(message.timestamp),
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.grey,
-                ),
+              // Timestamp and Status
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _formatTime(message.timestamp),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  if (message.sender == 'user') ...[
+                    const SizedBox(width: 4),
+                    _buildMessageStatus(),
+                  ],
+                ],
               ),
             ],
           ),
@@ -117,18 +128,26 @@ class ChatMessageBubble extends StatelessWidget {
         spacing: 4,
         runSpacing: 4,
         children: quickReplies.map((reply) {
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade300),
-            ),
-            child: Text(
-              reply.toString(),
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.black87,
+          return GestureDetector(
+            onTap: () {
+              if (onQuickReplySelected != null) {
+                onQuickReplySelected!(reply.toString());
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Text(
+                reply.toString(),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.blue.shade700,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           );
@@ -166,6 +185,15 @@ class ChatMessageBubble extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMessageStatus() {
+    // Simple status indicator - could be enhanced with actual delivery status
+    return Icon(
+      Icons.check,
+      size: 12,
+      color: message.isRead == true ? Colors.blue : Colors.grey,
     );
   }
 

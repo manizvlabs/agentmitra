@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:dartz/dartz.dart';
 import '../../data/repositories/chatbot_repository.dart';
 import '../../data/models/chatbot_model.dart';
 
@@ -32,7 +31,7 @@ class ChatbotViewModel extends ChangeNotifier {
   ChatMessage? get lastBotMessage =>
       _messages.where((msg) => msg.sender == 'bot').lastWhere(
         (_) => true,
-        orElse: () => null,
+        orElse: () => throw StateError('No bot messages found'),
       );
 
   List<ChatMessage> get unreadMessages =>
@@ -52,12 +51,9 @@ class ChatbotViewModel extends ChangeNotifier {
       sessionsResult.fold(
         (error) => _error = error.toString(),
         (sessions) {
-          final activeSession = sessions.where((s) => s.status == 'active').firstWhere(
-            (_) => true,
-            orElse: () => null,
-          );
-
-          if (activeSession != null) {
+          final activeSessions = sessions.where((s) => s.status == 'active');
+          if (activeSessions.isNotEmpty) {
+            final activeSession = activeSessions.first;
             _currentSession = activeSession;
             _loadMessages(activeSession.sessionId);
           }
@@ -220,6 +216,20 @@ class ChatbotViewModel extends ChangeNotifier {
         _messages[index] = msg.copyWith(isRead: true);
       }
     });
+    notifyListeners();
+  }
+
+  void clearChat() {
+    _messages.clear();
+    _error = null;
+    notifyListeners();
+  }
+
+  Future<void> exportConversation() async {
+    // TODO: Implement conversation export functionality
+    // This could save to file or share via system share sheet
+    // For now, just show a placeholder
+    _error = 'Export functionality will be implemented soon';
     notifyListeners();
   }
 }

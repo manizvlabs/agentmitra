@@ -16,8 +16,6 @@ class _ChatbotPageState extends State<ChatbotPage> {
   @override
   void initState() {
     super.initState();
-    // TODO: Get agent ID from authentication context
-    const agentId = 'test-agent-id';
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ChatbotViewModel>().initializeChat();
     });
@@ -56,6 +54,9 @@ class _ChatbotPageState extends State<ChatbotPage> {
                     case 'clear':
                       _showClearChatDialog(context, viewModel);
                       break;
+                    case 'export':
+                      viewModel.exportConversation();
+                      break;
                   }
                 },
                 itemBuilder: (context) => [
@@ -70,6 +71,10 @@ class _ChatbotPageState extends State<ChatbotPage> {
                   const PopupMenuItem(
                     value: 'clear',
                     child: Text('Clear Chat'),
+                  ),
+                  const PopupMenuItem(
+                    value: 'export',
+                    child: Text('Export Conversation'),
                   ),
                 ],
               );
@@ -98,6 +103,10 @@ class _ChatbotPageState extends State<ChatbotPage> {
                 child: ChatMessageList(
                   messages: viewModel.messages,
                   isTyping: viewModel.isTyping,
+                  onQuickReplySelected: (reply) {
+                    viewModel.updateCurrentMessage(reply);
+                    viewModel.sendMessage();
+                  },
                 ),
               ),
 
@@ -229,7 +238,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
           ),
           ElevatedButton(
             onPressed: () {
-              // TODO: Implement clear chat functionality
+              viewModel.clearChat();
               Navigator.of(context).pop();
             },
             style: ElevatedButton.styleFrom(
