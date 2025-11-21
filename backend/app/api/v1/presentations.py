@@ -269,7 +269,7 @@ async def get_templates(
                 "category": t.category,
                 "is_public": t.is_public,
                 "thumbnail_url": t.thumbnail_url,
-                "template_data": t.template_data,
+                "slides": t.slides,  # Changed from template_data to slides
             }
             for t in templates
         ]
