@@ -1,21 +1,73 @@
 """
 Database connection and session management
+Production-grade database configuration with connection pooling, health checks, and monitoring
 """
-from sqlalchemy import create_engine
+import time
+from typing import Optional, Dict, Any
+from contextlib import contextmanager
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import NullPool
+from sqlalchemy.pool import QueuePool, NullPool
+from sqlalchemy.exc import SQLAlchemyError
 from app.core.config.settings import settings
+from app.core.logging_config import get_logger
 from app.models.base import Base
 
-# Create database engine
-engine = create_engine(
-    settings.database_url,
-    poolclass=NullPool,  # Use NullPool for development, switch to QueuePool for production
-    echo=settings.debug,  # Log SQL queries in debug mode
-)
+logger = get_logger(__name__)
 
-# Create session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Environment-specific database configuration
+def get_db_config() -> Dict[str, Any]:
+    """Get database configuration based on environment"""
+    base_config = {
+        "pool_pre_ping": True,  # Test connections before use
+        "pool_recycle": 3600,   # Recycle connections after 1 hour
+        "connect_args": {},
+    }
+
+    if settings.environment == "production":
+        # Production configuration
+        base_config.update({
+            "poolclass": QueuePool,
+            "pool_size": 20,          # Connection pool size
+            "max_overflow": 30,       # Max additional connections
+            "pool_timeout": 30,       # Connection timeout
+            "pool_recycle": 1800,     # Recycle after 30 minutes in prod
+            "echo": False,            # Never echo SQL in production
+        })
+        # SSL configuration for production
+        if "sslmode" not in settings.database_url:
+            base_config["connect_args"]["sslmode"] = "require"
+
+    elif settings.environment == "staging":
+        # Staging configuration
+        base_config.update({
+            "poolclass": QueuePool,
+            "pool_size": 10,
+            "max_overflow": 10,
+            "pool_timeout": 20,
+            "echo": False,
+        })
+
+    else:  # development
+        # Development configuration
+        base_config.update({
+            "poolclass": NullPool,    # No pooling in dev for easier debugging
+            "echo": settings.debug,   # Log SQL queries in debug mode
+        })
+
+    return base_config
+
+# Create database engine with optimized configuration
+engine_config = get_db_config()
+engine = create_engine(settings.database_url, **engine_config)
+
+# Create session factory with optimized settings
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+    expire_on_commit=False,  # Prevent unnecessary SELECT queries
+)
 
 
 def get_db():
@@ -43,4 +95,119 @@ def drop_db():
     Drop all tables - use with caution!
     """
     Base.metadata.drop_all(bind=engine)
+
+
+# Health check and monitoring functions
+def check_db_connection() -> Dict[str, Any]:
+    """
+    Check database connection health
+    Returns connection status and metrics
+    """
+    start_time = time.time()
+    try:
+        with engine.connect() as conn:
+            # Execute a simple query to test connection
+            result = conn.execute(text("SELECT 1 as test")).fetchone()
+            response_time = time.time() - start_time
+
+            return {
+                "status": "healthy" if result[0] == 1 else "unhealthy",
+                "response_time_ms": round(response_time * 1000, 2),
+                "pool_size": getattr(engine.pool, 'size', 0) if hasattr(engine.pool, 'size') else 0,
+                "checked_at": time.time(),
+            }
+    except Exception as e:
+        logger.error(f"Database connection check failed: {e}")
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "checked_at": time.time(),
+        }
+
+
+def get_db_stats() -> Dict[str, Any]:
+    """
+    Get database connection pool statistics
+    """
+    pool = engine.pool
+    stats = {
+        "pool_class": pool.__class__.__name__,
+        "checked_at": time.time(),
+    }
+
+    # Add pool-specific stats
+    if hasattr(pool, 'size'):
+        stats["pool_size"] = pool.size
+    if hasattr(pool, 'checkedin'):
+        stats["connections_checked_in"] = pool.checkedin()
+    if hasattr(pool, 'checkedout'):
+        stats["connections_checked_out"] = pool.checkedout()
+    if hasattr(pool, 'overflow'):
+        stats["overflow_connections"] = pool.overflow()
+    if hasattr(pool, 'invalid'):
+        stats["invalid_connections"] = pool.invalid()
+
+    return stats
+
+
+@contextmanager
+def get_db_session():
+    """
+    Context manager for database sessions with automatic error handling
+    """
+    session = SessionLocal()
+    try:
+        yield session
+        session.commit()
+    except SQLAlchemyError as e:
+        logger.error(f"Database session error: {e}")
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def execute_with_retry(query: str, max_retries: int = 3, retry_delay: float = 0.5) -> Any:
+    """
+    Execute a query with retry logic for transient failures
+    """
+    last_error = None
+
+    for attempt in range(max_retries):
+        try:
+            with engine.connect() as conn:
+                result = conn.execute(text(query))
+                return result.fetchall() if result.returns_rows else None
+        except Exception as e:
+            last_error = e
+            if attempt < max_retries - 1:
+                logger.warning(f"Query attempt {attempt + 1} failed, retrying: {e}")
+                time.sleep(retry_delay * (2 ** attempt))  # Exponential backoff
+            else:
+                logger.error(f"Query failed after {max_retries} attempts: {e}")
+
+    raise last_error
+
+
+# SQLAlchemy event listeners for monitoring (only in development)
+if settings.environment == "development":
+    @event.listens_for(engine, "connect")
+    def connect_event(connection, connection_record):
+        """Log database connections"""
+        logger.debug("Database connection established")
+
+@event.listens_for(engine, "checkout")
+def checkout_event(dbapi_connection, connection_record, connection_proxy):
+    """Log connection checkouts"""
+    logger.debug("Database connection checked out")
+
+@event.listens_for(engine, "checkin")
+def checkin_event(dbapi_connection, connection_record):
+    """Log connection checkins"""
+    logger.debug("Database connection checked in")
+
+    @event.listens_for(engine, "close")
+    def close_event(connection, connection_record):
+        """Log connection closures"""
+        logger.debug("Database connection closed")
 
