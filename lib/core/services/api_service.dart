@@ -11,10 +11,10 @@ class ApiService {
   static String get apiUrl => '$baseUrl$apiVersion';
 
   // Get headers with authentication
-  static Future<Map<String, String>> getHeaders() async {
+  Future<Map<String, String>> getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('access_token');
-    
+
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -23,10 +23,18 @@ class ApiService {
   }
 
   // GET request
-  static Future<Map<String, dynamic>> get(String endpoint) async {
+  Future<Map<String, dynamic>> get(String endpoint, {Map<String, dynamic>? queryParameters}) async {
     try {
+      var url = '$apiUrl$endpoint';
+      if (queryParameters != null && queryParameters.isNotEmpty) {
+        final queryString = queryParameters.entries
+            .map((e) => '${e.key}=${e.value}')
+            .join('&');
+        url += '?$queryString';
+      }
+
       final response = await http.get(
-        Uri.parse('$apiUrl$endpoint'),
+        Uri.parse(url),
         headers: await getHeaders(),
       );
 
@@ -37,7 +45,7 @@ class ApiService {
   }
 
   // POST request
-  static Future<Map<String, dynamic>> post(
+  Future<Map<String, dynamic>> post(
     String endpoint,
     Map<String, dynamic> data,
   ) async {
@@ -55,7 +63,7 @@ class ApiService {
   }
 
   // PUT request
-  static Future<Map<String, dynamic>> put(
+  Future<Map<String, dynamic>> put(
     String endpoint,
     Map<String, dynamic> data,
   ) async {
@@ -72,8 +80,26 @@ class ApiService {
     }
   }
 
+  // PATCH request
+  Future<Map<String, dynamic>> patch(
+    String endpoint,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$apiUrl$endpoint'),
+        headers: await getHeaders(),
+        body: jsonEncode(data),
+      );
+
+      return _handleResponse(response);
+    } catch (e) {
+      throw Exception('Network error: $e');
+    }
+  }
+
   // DELETE request
-  static Future<Map<String, dynamic>> delete(String endpoint) async {
+  Future<Map<String, dynamic>> delete(String endpoint) async {
     try {
       final response = await http.delete(
         Uri.parse('$apiUrl$endpoint'),
@@ -87,20 +113,24 @@ class ApiService {
   }
 
   // Handle HTTP response
-  static Map<String, dynamic> _handleResponse(http.Response response) {
+  Map<String, dynamic> _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) {
         return {'success': true};
       }
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else {
-      final error = jsonDecode(response.body) as Map<String, dynamic>;
-      throw Exception(error['message'] ?? 'Request failed');
+      try {
+        final error = jsonDecode(response.body) as Map<String, dynamic>;
+        throw Exception(error['message'] ?? 'Request failed');
+      } catch (_) {
+        throw Exception('Request failed with status ${response.statusCode}');
+      }
     }
   }
 
   // Health check
-  static Future<bool> healthCheck() async {
+  Future<bool> healthCheck() async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/health'));
       return response.statusCode == 200;

@@ -1,4 +1,5 @@
 /// Dashboard data models for analytics and widgets
+import 'package:flutter/material.dart';
 
 class DashboardAnalytics {
   final int totalPolicies;

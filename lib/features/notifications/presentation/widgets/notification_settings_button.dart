@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/notification_viewmodel.dart';
-import 'notification_settings_page.dart';
 
 /// Notification settings button for app bar
 class NotificationSettingsButton extends StatelessWidget {

@@ -166,9 +166,52 @@ class SyncService {
 
   /// Merge remote notifications with local ones
   Future<List<SyncConflict>> _mergeNotifications(List remoteNotifications) async {
-    // TODO: Implement notification merging logic
-    // Compare timestamps, resolve conflicts based on business rules
-    return [];
+    final conflicts = <SyncConflict>[];
+    final prefs = await SharedPreferences.getInstance();
+
+    try {
+      // Get local notifications
+      final localNotificationsJson = prefs.getString('notifications');
+      final localNotifications = localNotificationsJson != null
+          ? jsonDecode(localNotificationsJson) as List
+          : [];
+
+      // Merge logic: remote notifications take precedence for status updates
+      final mergedNotifications = <Map<String, dynamic>>[];
+
+      for (final remote in remoteNotifications) {
+        final remoteMap = remote as Map<String, dynamic>;
+        final existingLocal = localNotifications.firstWhere(
+          (local) => (local as Map<String, dynamic>)['id'] == remoteMap['id'],
+          orElse: () => null,
+        );
+
+        if (existingLocal != null) {
+          // Check for conflicts (e.g., both modified)
+          final localMap = existingLocal as Map<String, dynamic>;
+          if (localMap['updatedAt'] != remoteMap['updatedAt']) {
+            conflicts.add(SyncConflict(
+              id: 'notification_${remoteMap['id']}',
+              type: SyncConflictType.notification,
+              serverData: remoteMap,
+              clientData: localMap,
+              serverTimestamp: DateTime.parse(remoteMap['updatedAt']),
+              clientTimestamp: DateTime.parse(localMap['updatedAt']),
+            ));
+          }
+        }
+
+        mergedNotifications.add(remoteMap);
+      }
+
+      // Save merged notifications
+      await prefs.setString('notifications', jsonEncode(mergedNotifications));
+
+    } catch (e) {
+      _logger.error('Failed to merge notifications', e);
+    }
+
+    return conflicts;
   }
 
   /// Apply user data changes from server
@@ -185,8 +228,54 @@ class SyncService {
 
   /// Merge presentations with conflict resolution
   Future<List<SyncConflict>> _mergePresentations(List presentations) async {
-    // TODO: Implement presentation merging logic
-    return [];
+    final conflicts = <SyncConflict>[];
+    final prefs = await SharedPreferences.getInstance();
+
+    try {
+      // Get local presentations
+      final localPresentationsJson = prefs.getString('presentations');
+      final localPresentations = localPresentationsJson != null
+          ? jsonDecode(localPresentationsJson) as List
+          : [];
+
+      // Merge logic: last modified wins, but flag conflicts
+      final mergedPresentations = <Map<String, dynamic>>[];
+
+      for (final remote in presentations) {
+        final remoteMap = remote as Map<String, dynamic>;
+        final existingLocal = localPresentations.firstWhere(
+          (local) => (local as Map<String, dynamic>)['id'] == remoteMap['id'],
+          orElse: () => null,
+        );
+
+        if (existingLocal != null) {
+          final localMap = existingLocal as Map<String, dynamic>;
+          final remoteUpdated = DateTime.parse(remoteMap['updatedAt']);
+          final localUpdated = DateTime.parse(localMap['updatedAt']);
+
+          if (remoteUpdated != localUpdated) {
+            conflicts.add(SyncConflict(
+              id: 'presentation_${remoteMap['id']}',
+              type: SyncConflictType.presentation,
+              serverData: remoteMap,
+              clientData: localMap,
+              serverTimestamp: remoteUpdated,
+              clientTimestamp: localUpdated,
+            ));
+          }
+        }
+
+        mergedPresentations.add(remoteMap);
+      }
+
+      // Save merged presentations
+      await prefs.setString('presentations', jsonEncode(mergedPresentations));
+
+    } catch (e) {
+      _logger.error('Failed to merge presentations', e);
+    }
+
+    return conflicts;
   }
 
   /// Resolve conflicts automatically
@@ -263,20 +352,70 @@ class SyncService {
 
   /// Apply server version of data
   Future<void> _applyServerVersion(SyncConflict conflict) async {
-    // TODO: Implement server version application
-    _logger.info('Applied server version for conflict: ${conflict.id}');
+    final prefs = await SharedPreferences.getInstance();
+
+    try {
+      switch (conflict.type) {
+        case SyncConflictType.userProfile:
+          await prefs.setString('user_profile', jsonEncode(conflict.serverData));
+          break;
+        case SyncConflictType.presentation:
+          final presentations = await _getStoredPresentations();
+          final index = presentations.indexWhere((p) => p['id'] == conflict.serverData['id']);
+          if (index != -1) {
+            presentations[index] = conflict.serverData;
+            await prefs.setString('presentations', jsonEncode(presentations));
+          }
+          break;
+        case SyncConflictType.notification:
+          final notifications = await _getStoredNotifications();
+          final index = notifications.indexWhere((n) => n['id'] == conflict.serverData['id']);
+          if (index != -1) {
+            notifications[index] = conflict.serverData;
+            await prefs.setString('notifications', jsonEncode(notifications));
+          }
+          break;
+        default:
+          break;
+      }
+      _logger.info('Applied server version for conflict: ${conflict.id}');
+    } catch (e) {
+      _logger.error('Failed to apply server version', e);
+    }
   }
 
   /// Apply client version of data
   Future<void> _applyClientVersion(SyncConflict conflict) async {
-    // TODO: Implement client version application
-    _logger.info('Applied client version for conflict: ${conflict.id}');
+    // Client version is already stored locally, just log the decision
+    _logger.info('Kept client version for conflict: ${conflict.id}');
   }
 
   /// Apply last modified version of data
   Future<void> _applyLastModifiedVersion(SyncConflict conflict) async {
-    // TODO: Compare timestamps and apply newer version
+    if (conflict.serverTimestamp.isAfter(conflict.clientTimestamp)) {
+      await _applyServerVersion(conflict);
+    } else {
+      await _applyClientVersion(conflict);
+    }
     _logger.info('Applied last modified version for conflict: ${conflict.id}');
+  }
+
+  /// Get stored presentations
+  Future<List<Map<String, dynamic>>> _getStoredPresentations() async {
+    final prefs = await SharedPreferences.getInstance();
+    final presentationsJson = prefs.getString('presentations');
+    return presentationsJson != null
+        ? (jsonDecode(presentationsJson) as List).cast<Map<String, dynamic>>()
+        : [];
+  }
+
+  /// Get stored notifications
+  Future<List<Map<String, dynamic>>> _getStoredNotifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    final notificationsJson = prefs.getString('notifications');
+    return notificationsJson != null
+        ? (jsonDecode(notificationsJson) as List).cast<Map<String, dynamic>>()
+        : [];
   }
 
   /// Get last sync timestamp
@@ -300,7 +439,13 @@ class SyncService {
 
   /// Start automatic sync when connected
   void _startAutoSync() {
-    // TODO: Implement periodic sync
+    // Schedule periodic sync every 10 minutes
+    Future.delayed(const Duration(minutes: 10), () async {
+      if (await _isConnected()) {
+        await performFullSync();
+        _startAutoSync(); // Schedule next sync
+      }
+    });
     _logger.info('Auto sync started');
   }
 

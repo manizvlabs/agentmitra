@@ -1,0 +1,83 @@
+# Logs
+logs/
+*.log
+*.log.*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+build/
+dist/
+*.egg-info/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+
+# Config Portal Flutter (don't commit Flutter files in config-portal)
+config-portal/.dart_tool/
+config-portal/.flutter-plugins
+config-portal/.flutter-plugins-dependencies
+config-portal/.packages
+config-portal/.pub-cache/
+config-portal/.pub/
+config-portal/build/
+config-portal/android/
+config-portal/ios/
+config-portal/*.iml
+
+# Coverage
+coverage/
+*.lcov
+.coverage
+htmlcov/
+
+# Database
+*.db
+*.sqlite
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+tmp/
+temp/
+*.tmp

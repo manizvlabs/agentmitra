@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'logger_service.dart';
@@ -115,6 +116,24 @@ class OfflineQueueService {
     // Start sync timer if connected
     if (await _isConnected()) {
       _startSyncTimer();
+    }
+  }
+
+  /// Load queue from storage
+  Future<void> _loadQueue() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final queueJson = prefs.getString(_queueKey);
+      if (queueJson != null) {
+        final queueData = jsonDecode(queueJson) as List;
+        final queue = queueData.map((json) => QueuedOperation.fromJson(json)).toList();
+        _queueController.add(queue);
+      } else {
+        _queueController.add([]);
+      }
+    } catch (e) {
+      _logger.error('Failed to load offline queue: $e');
+      _queueController.add([]);
     }
   }
 
@@ -259,12 +278,52 @@ class OfflineQueueService {
 
   /// Execute a single operation
   Future<bool> _executeOperation(QueuedOperation operation) async {
-    // TODO: Implement actual API calls based on operation type
-    // For now, just simulate success/failure
-    await Future.delayed(const Duration(milliseconds: 500));
+    try {
+      // Create ApiService instance
+      final apiService = ApiService();
 
-    // Simulate 90% success rate
-    return DateTime.now().millisecond % 10 != 0;
+      switch (operation.type) {
+        case OfflineOperationType.apiPost:
+          await apiService.post(operation.endpoint, operation.data ?? {});
+          break;
+        case OfflineOperationType.apiPut:
+          await apiService.put(operation.endpoint, operation.data ?? {});
+          break;
+        case OfflineOperationType.apiPatch:
+          await apiService.patch(operation.endpoint, operation.data ?? {});
+          break;
+        case OfflineOperationType.apiDelete:
+          await apiService.delete(operation.endpoint);
+          break;
+        case OfflineOperationType.localDataUpdate:
+          // Handle local data updates
+          await _handleLocalDataUpdate(operation);
+          break;
+        case OfflineOperationType.notificationAction:
+          // Handle notification actions
+          await _handleNotificationAction(operation);
+          break;
+      }
+
+      return true;
+    } catch (e) {
+      _logger.error('Failed to execute offline operation: ${operation.id}', e);
+      return false;
+    }
+  }
+
+  /// Handle local data update operations
+  Future<void> _handleLocalDataUpdate(QueuedOperation operation) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (operation.data != null) {
+      await prefs.setString(operation.endpoint, jsonEncode(operation.data));
+    }
+  }
+
+  /// Handle notification action operations
+  Future<void> _handleNotificationAction(QueuedOperation operation) async {
+    // Handle notification-related operations
+    _logger.info('Handling notification action: ${operation.endpoint}');
   }
 
   /// Get queue from storage
