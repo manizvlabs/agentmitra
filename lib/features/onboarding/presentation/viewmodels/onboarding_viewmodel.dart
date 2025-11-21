@@ -27,16 +27,22 @@ class OnboardingViewModel extends BaseViewModel {
   EmergencyContactsData? get emergencyContactsData => _emergencyContactsData;
 
   /// Initialize onboarding
+  @override
   Future<void> initialize() async {
-    setLoading(true);
-    try {
-      _progress = await _repository.getOnboardingProgress();
-      await _loadAllStepData();
+    await super.initialize();
+
+    final progress = await executeAsync(
+      () async {
+        final result = await _repository.getOnboardingProgress();
+        _progress = result ?? _createDefaultProgress();
+        await _loadAllStepData();
+        return _progress;
+      },
+      errorMessage: 'Failed to initialize onboarding',
+    );
+
+    if (progress != null) {
       notifyListeners();
-    } catch (e) {
-      setError('Failed to initialize onboarding: $e');
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -118,22 +124,22 @@ class OnboardingViewModel extends BaseViewModel {
 
   /// Update agent discovery data
   Future<bool> updateAgentDiscoveryData(AgentDiscoveryData data) async {
-    try {
-      // Validate data first
-      final isValid = await _repository.validateAgentDiscoveryData(data);
-      if (!isValid) {
-        setError('Invalid agent discovery data');
-        return false;
-      }
+    final result = await executeAsync(
+      () async {
+        // Validate data first
+        final isValid = await _repository.validateAgentDiscoveryData(data);
+        if (!isValid) {
+          throw Exception('Invalid agent discovery data');
+        }
 
-      await _repository.saveAgentDiscoveryData(data);
-      _agentDiscoveryData = data;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      setError('Failed to update agent discovery data: $e');
-      return false;
-    }
+        await _repository.saveAgentDiscoveryData(data);
+        _agentDiscoveryData = data;
+        return true;
+      },
+      errorMessage: 'Failed to update agent discovery data',
+    );
+
+    return result ?? false;
   }
 
   /// Update document verification data
