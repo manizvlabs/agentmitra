@@ -79,3 +79,106 @@ def generate_otp_secret() -> str:
     """Generate a secret for OTP storage"""
     return secrets.token_urlsafe(32)
 
+
+# Token blacklist for logout functionality
+_token_blacklist = set()
+
+
+def blacklist_token(token: str) -> None:
+    """Add token to blacklist (for logout)"""
+    _token_blacklist.add(token)
+
+
+def is_token_blacklisted(token: str) -> bool:
+    """Check if token is blacklisted"""
+    return token in _token_blacklist
+
+
+def clear_expired_blacklist_tokens() -> None:
+    """
+    Clear expired tokens from blacklist
+    Should be called periodically or on application startup
+    """
+    # In production, this would use Redis or database
+    # For now, we'll implement a simple cleanup
+    pass
+
+
+def validate_jwt_token(token: str, token_type: str = "access") -> Optional[Dict]:
+    """
+    Enhanced JWT token validation with blacklist checking
+    """
+    # Check if token is blacklisted
+    if is_token_blacklisted(token):
+        return None
+
+    # Verify token
+    payload = verify_token(token, token_type)
+    if not payload:
+        return None
+
+    return payload
+
+
+def create_token_pair(user_data: Dict) -> Dict[str, str]:
+    """
+    Create both access and refresh tokens for a user
+    """
+    token_data = {
+        "sub": str(user_data.get("user_id", "")),
+        "phone_number": user_data.get("phone_number", ""),
+        "role": user_data.get("role", ""),
+        "email": user_data.get("email", ""),
+    }
+
+    access_token = create_access_token(token_data)
+    refresh_token = create_refresh_token(token_data)
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+        "expires_in": settings.jwt_access_token_expire_minutes * 60,
+    }
+
+
+def refresh_access_token(refresh_token: str) -> Optional[Dict[str, str]]:
+    """
+    Create new access token from valid refresh token
+    """
+    # Validate refresh token
+    payload = validate_jwt_token(refresh_token, "refresh")
+    if not payload:
+        return None
+
+    # Create new access token with same data
+    token_data = {
+        "sub": payload.get("sub"),
+        "phone_number": payload.get("phone_number", ""),
+        "role": payload.get("role", ""),
+        "email": payload.get("email", ""),
+    }
+
+    access_token = create_access_token(token_data)
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "expires_in": settings.jwt_access_token_expire_minutes * 60,
+    }
+
+
+def extract_token_from_header(authorization_header: str) -> Optional[str]:
+    """
+    Extract token from Authorization header
+    Expected format: "Bearer <token>"
+    """
+    if not authorization_header or not authorization_header.startswith("Bearer "):
+        return None
+
+    try:
+        token = authorization_header.split(" ")[1]
+        return token
+    except IndexError:
+        return None
+
