@@ -108,6 +108,7 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
             )
     elif login_method == "phone":
         # Phone login without password - not allowed
+        print("Phone login attempted without password")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Password is required for phone number login"

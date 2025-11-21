@@ -8,19 +8,33 @@ from passlib.context import CryptContext
 from app.core.config.settings import settings
 import secrets
 import random
+import bcrypt
 
-# Password hashing context
+# Password hashing context - simplified for compatibility
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a password against a hash"""
-    return pwd_context.verify(plain_password, hashed_password)
+    """Verify a password against a hash using bcrypt directly for compatibility"""
+    try:
+        # Try using bcrypt directly first (more reliable)
+        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    except Exception:
+        # Fallback to passlib if direct bcrypt fails
+        try:
+            return pwd_context.verify(plain_password, hashed_password)
+        except Exception:
+            return False
 
 
 def get_password_hash(password: str) -> str:
     """Hash a password"""
-    return pwd_context.hash(password)
+    try:
+        # Use bcrypt directly for consistency
+        return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    except Exception:
+        # Fallback to passlib
+        return pwd_context.hash(password)
 
 
 def create_access_token(data: Dict, expires_delta: Optional[timedelta] = None) -> str:

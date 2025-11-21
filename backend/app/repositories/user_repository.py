@@ -3,7 +3,7 @@ User repository for database operations - updated for lic_schema
 """
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
-from typing import Optional
+from typing import Optional, List
 from app.models.user import User, UserSession
 from app.models.agent import Agent
 import uuid
@@ -191,3 +191,47 @@ class UserRepository:
 
         self.db.commit()
         return len(sessions)
+
+    def search_users(self, filters: dict, limit: int = 20, offset: int = 0) -> List[User]:
+        """Search and filter users with pagination"""
+        from sqlalchemy import or_, and_
+
+        query = self.db.query(User)
+
+        # Apply search filter
+        if "search" in filters:
+            search_term = f"%{filters['search']}%"
+            query = query.filter(
+                or_(
+                    User.first_name.ilike(search_term),
+                    User.last_name.ilike(search_term),
+                    User.display_name.ilike(search_term),
+                    User.email.ilike(search_term),
+                    User.phone_number.ilike(search_term)
+                )
+            )
+
+        # Apply role filter
+        if "role" in filters:
+            query = query.filter(User.role == filters["role"])
+
+        # Apply role_in filter (list of roles)
+        if "role_in" in filters:
+            query = query.filter(User.role.in_(filters["role_in"]))
+
+        # Apply status filter
+        if "status" in filters:
+            query = query.filter(User.status == filters["status"])
+
+        # Apply verification filters
+        if "phone_verified" in filters:
+            query = query.filter(User.phone_verified == filters["phone_verified"])
+
+        if "email_verified" in filters:
+            query = query.filter(User.email_verified == filters["email_verified"])
+
+        # Apply ordering (most recent first)
+        query = query.order_by(User.created_at.desc())
+
+        # Apply pagination
+        return query.limit(limit).offset(offset).all()
