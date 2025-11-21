@@ -10,6 +10,7 @@ import '../widgets/dashboard_analytics_cards.dart';
 import '../widgets/dashboard_quick_actions.dart';
 import '../widgets/dashboard_notifications.dart';
 import '../widgets/dashboard_priority_alerts.dart';
+import '../../../../core/widgets/offline_indicator.dart';
 
 /// Enhanced Dashboard Page with real API integration and presentation carousel
 class DashboardPage extends ConsumerStatefulWidget {
@@ -115,6 +116,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                     // Recent Activity / Notifications
                     const DashboardNotifications(),
 
+                    const SizedBox(height: 24),
+
+                    // Offline indicator
+                    const OfflineIndicator(),
+
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -145,6 +151,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         },
       ),
       actions: [
+        // Connectivity indicator
+        const Padding(
+          padding: EdgeInsets.only(right: 8),
+          child: AppBarConnectivityIndicator(),
+        ),
+
+        // Notifications
         provider.Consumer<DashboardViewModel>(
           builder: (context, viewModel, child) {
             final unreadCount = viewModel.unreadNotificationsCount;
@@ -157,10 +170,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                     size: 24,
                   ),
                   onPressed: () {
-                    // TODO: Navigate to notifications screen
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Notifications screen coming soon!')),
-                    );
+                    context.push('/notifications');
                   },
                 ),
                 if (unreadCount > 0)

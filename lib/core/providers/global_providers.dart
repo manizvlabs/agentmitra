@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../services/logger_service.dart';
 import '../services/storage_service.dart';
 
@@ -38,15 +39,58 @@ final appInitializationProvider = FutureProvider<bool>((ref) async {
 });
 
 /// Network connectivity provider
-final connectivityProvider = StateNotifierProvider<ConnectivityNotifier, bool>((ref) {
+final connectivityProvider = StateNotifierProvider<ConnectivityNotifier, ConnectivityResult>((ref) {
   return ConnectivityNotifier();
 });
 
-class ConnectivityNotifier extends StateNotifier<bool> {
-  ConnectivityNotifier() : super(true); // Assume connected by default
+class ConnectivityNotifier extends StateNotifier<ConnectivityResult> {
+  final Connectivity _connectivity = Connectivity();
+  final LoggerService _logger = LoggerService();
 
-  void setConnected(bool connected) {
-    state = connected;
+  ConnectivityNotifier() : super(ConnectivityResult.wifi) {
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    try {
+      // Get initial connectivity status
+      final result = await _connectivity.checkConnectivity();
+      state = result;
+
+      // Listen for connectivity changes
+      _connectivity.onConnectivityChanged.listen((ConnectivityResult result) {
+        state = result;
+        _logger.info('Connectivity changed: ${result.name}', tag: 'Connectivity');
+
+        // TODO: Trigger sync operations when coming back online
+        if (_isConnected(result)) {
+          _handleReconnected();
+        }
+      });
+    } catch (e) {
+      _logger.error('Failed to initialize connectivity monitoring: $e', tag: 'Connectivity');
+    }
+  }
+
+  bool _isConnected(ConnectivityResult result) {
+    return result != ConnectivityResult.none;
+  }
+
+  bool get isConnected => _isConnected(state);
+
+  void _handleReconnected() {
+    _logger.info('Device reconnected to network', tag: 'Connectivity');
+    // TODO: Trigger pending sync operations
+  }
+
+  /// Manually check connectivity
+  Future<void> checkConnectivity() async {
+    try {
+      final result = await _connectivity.checkConnectivity();
+      state = result;
+    } catch (e) {
+      _logger.error('Failed to check connectivity: $e', tag: 'Connectivity');
+    }
   }
 }
 

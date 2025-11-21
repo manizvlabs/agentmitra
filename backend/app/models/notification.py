@@ -1,0 +1,96 @@
+from sqlalchemy import Column, String, Boolean, DateTime, Text, Integer, JSON, ForeignKey
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+
+from .base import Base
+
+class Notification(Base):
+    """Notification model for storing user notifications"""
+    __tablename__ = "notifications"
+
+    id = Column(String(36), primary_key=True, index=True)
+    user_id = Column(String(36), ForeignKey("users.user_id"), nullable=False, index=True)
+    title = Column(String(255), nullable=False)
+    body = Column(Text, nullable=False)
+    type = Column(String(50), nullable=False, index=True)  # policy, payment, claim, renewal, general, marketing, system
+    priority = Column(String(20), nullable=False, default="medium")  # low, medium, high, critical
+    is_read = Column(Boolean, nullable=False, default=False)
+    read_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Action fields for interactive notifications
+    action_url = Column(String(500), nullable=True)
+    action_route = Column(String(200), nullable=True)
+    action_text = Column(String(100), nullable=True)
+    image_url = Column(String(500), nullable=True)
+
+    # Additional data (JSON)
+    data = Column(JSON, nullable=True, default=dict)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    scheduled_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    user = relationship("User", back_populates="notifications")
+
+    def __repr__(self):
+        return f"<Notification(id='{self.id}', user_id='{self.user_id}', title='{self.title}', type='{self.type}')>"
+
+class NotificationSettings(Base):
+    """User notification settings"""
+    __tablename__ = "notification_settings"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String(36), ForeignKey("users.user_id"), nullable=False, unique=True, index=True)
+
+    # Push notification settings
+    enable_push_notifications = Column(Boolean, nullable=False, default=True)
+
+    # Notification type preferences
+    enable_policy_notifications = Column(Boolean, nullable=False, default=True)
+    enable_payment_reminders = Column(Boolean, nullable=False, default=True)
+    enable_claim_updates = Column(Boolean, nullable=False, default=True)
+    enable_renewal_notices = Column(Boolean, nullable=False, default=True)
+    enable_marketing_notifications = Column(Boolean, nullable=False, default=False)
+
+    # Device settings
+    enable_sound = Column(Boolean, nullable=False, default=True)
+    enable_vibration = Column(Boolean, nullable=False, default=True)
+    show_badge = Column(Boolean, nullable=False, default=True)
+
+    # Quiet hours
+    quiet_hours_enabled = Column(Boolean, nullable=False, default=False)
+    quiet_hours_start = Column(String(5), nullable=True)  # HH:MM format
+    quiet_hours_end = Column(String(5), nullable=True)    # HH:MM format
+
+    # Topics/Channels
+    enabled_topics = Column(JSON, nullable=True, default=list)  # List of enabled topics
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships
+    user = relationship("User", back_populates="notification_settings")
+
+    def __repr__(self):
+        return f"<NotificationSettings(user_id='{self.user_id}', push_enabled={self.enable_push_notifications})>"
+
+class DeviceToken(Base):
+    """Device tokens for push notifications"""
+    __tablename__ = "device_tokens"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String(36), ForeignKey("users.user_id"), nullable=False, index=True)
+    token = Column(String(255), nullable=False, unique=True, index=True)
+    device_type = Column(String(20), nullable=False)  # ios, android
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    last_used_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships
+    user = relationship("User", back_populates="device_tokens")
+
+    def __repr__(self):
+        return f"<DeviceToken(user_id='{self.user_id}', device_type='{self.device_type}')>"

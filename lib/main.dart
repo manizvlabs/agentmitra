@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart' as provider;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'core/services/storage_service.dart';
 import 'core/services/logger_service.dart';
 import 'core/services/feature_flag_service.dart';
+import 'core/services/push_notification_service.dart';
+import 'core/services/offline_queue_service.dart';
+import 'core/services/sync_service.dart';
 import 'core/router/app_router.dart';
 import 'shared/theme/app_theme.dart';
 import 'core/providers/global_providers.dart';
@@ -19,11 +23,20 @@ import 'features/dashboard/data/datasources/dashboard_remote_datasource.dart';
 import 'features/chatbot/presentation/viewmodels/chatbot_viewmodel.dart';
 import 'features/chatbot/data/repositories/chatbot_repository.dart';
 import 'features/chatbot/data/datasources/chatbot_remote_datasource.dart';
+import 'features/notifications/presentation/viewmodels/notification_viewmodel.dart';
+import 'features/notifications/data/repositories/notification_repository.dart';
+import 'features/notifications/data/datasources/notification_remote_datasource.dart';
+import 'features/notifications/data/datasources/notification_local_datasource.dart';
 import 'core/services/api_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp();
+  LoggerService().info('Firebase initialized', tag: 'Firebase');
 
   // Initialize core services
   await StorageService.initialize();
@@ -36,15 +49,49 @@ void main() async {
   await FeatureFlagService().initialize();
   LoggerService().info('Feature flags initialized', tag: 'FeatureFlags');
 
+  // Initialize push notifications
+  final pushNotificationService = PushNotificationService();
+  await pushNotificationService.initialize();
+  LoggerService().info('Push notification service initialized', tag: 'PushNotifications');
+
+  // Initialize offline queue service
+  final offlineQueueService = OfflineQueueService(
+    LoggerService(),
+    Connectivity(),
+  );
+  LoggerService().info('Offline queue service initialized', tag: 'OfflineQueue');
+
+  // Initialize sync service
+  final syncService = SyncService(
+    LoggerService(),
+    ApiService(),
+    Connectivity(),
+  );
+  await syncService.initialize();
+  LoggerService().info('Sync service initialized', tag: 'SyncService');
+
   runApp(
-    const ProviderScope(
-      child: AgentMitraApp(),
+    ProviderScope(
+      child: AgentMitraApp(
+        pushNotificationService: pushNotificationService,
+        offlineQueueService: offlineQueueService,
+        syncService: syncService,
+      ),
     ),
   );
 }
 
 class AgentMitraApp extends ConsumerWidget {
-  const AgentMitraApp({super.key});
+  final PushNotificationService pushNotificationService;
+  final OfflineQueueService offlineQueueService;
+  final SyncService syncService;
+
+  const AgentMitraApp({
+    super.key,
+    required this.pushNotificationService,
+    required this.offlineQueueService,
+    required this.syncService,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -57,8 +104,18 @@ class AgentMitraApp extends ConsumerWidget {
       builder: (context, child) {
         return provider.MultiProvider(
           providers: [
+            // Core Services
+            provider.Provider.value(value: pushNotificationService),
+            provider.Provider.value(value: offlineQueueService),
+            provider.Provider.value(value: syncService),
+
+            // Auth ViewModel
             provider.ChangeNotifierProvider(create: (_) => AuthViewModel()..initialize()),
+
+            // Presentation ViewModel
             provider.ChangeNotifierProvider(create: (_) => PresentationViewModel()),
+
+            // Onboarding ViewModel
             provider.ChangeNotifierProvider(
               create: (_) => OnboardingViewModel(
                 OnboardingRepository(
@@ -66,6 +123,8 @@ class AgentMitraApp extends ConsumerWidget {
                 ),
               )..initialize(),
             ),
+
+            // Dashboard ViewModel
             provider.ChangeNotifierProvider(
               create: (_) => DashboardViewModel(
                 DashboardRepository(
@@ -74,6 +133,8 @@ class AgentMitraApp extends ConsumerWidget {
                 FeatureFlagService(),
               )..initialize(),
             ),
+
+            // Chatbot ViewModel
             provider.ChangeNotifierProxyProvider<AuthViewModel, ChatbotViewModel>(
               create: (context) => ChatbotViewModel(
                 ChatbotRepository(
@@ -98,6 +159,22 @@ class AgentMitraApp extends ConsumerWidget {
                   agentId,
                 );
               },
+            ),
+
+            // Notification ViewModel
+            provider.ChangeNotifierProvider(
+              create: (_) => NotificationViewModel(
+                NotificationRepository(
+                  NotificationRemoteDataSource(ApiService(), LoggerService()),
+                  NotificationLocalDataSource(LoggerService()),
+                  Connectivity(),
+                  offlineQueueService,
+                  syncService,
+                  LoggerService(),
+                ),
+                offlineQueueService,
+                LoggerService(),
+              )..initialize(),
             ),
           ],
           child: MaterialApp.router(

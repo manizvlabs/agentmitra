@@ -1,0 +1,185 @@
+-- Create notification tables for push notifications and in-app notifications
+-- Migration: V11__Create_notification_tables.sql
+
+-- Create notifications table
+CREATE TABLE IF NOT EXISTS notifications (
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    body TEXT NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    priority VARCHAR(20) NOT NULL DEFAULT 'medium',
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    read_at TIMESTAMP WITH TIME ZONE,
+
+    -- Action fields for interactive notifications
+    action_url VARCHAR(500),
+    action_route VARCHAR(200),
+    action_text VARCHAR(100),
+    image_url VARCHAR(500),
+
+    -- Additional data (JSON)
+    data JSONB DEFAULT '{}'::jsonb,
+
+    -- Timestamps
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    scheduled_at TIMESTAMP WITH TIME ZONE,
+
+    -- Foreign key constraint
+    CONSTRAINT fk_notifications_user_id
+        FOREIGN KEY (user_id) REFERENCES lic_schema.users(user_id) ON DELETE CASCADE
+);
+
+-- Create indexes for notifications table
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
+CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read);
+
+-- Create notification_settings table
+CREATE TABLE IF NOT EXISTS notification_settings (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL UNIQUE,
+
+    -- Push notification settings
+    enable_push_notifications BOOLEAN NOT NULL DEFAULT TRUE,
+
+    -- Notification type preferences
+    enable_policy_notifications BOOLEAN NOT NULL DEFAULT TRUE,
+    enable_payment_reminders BOOLEAN NOT NULL DEFAULT TRUE,
+    enable_claim_updates BOOLEAN NOT NULL DEFAULT TRUE,
+    enable_renewal_notices BOOLEAN NOT NULL DEFAULT TRUE,
+    enable_marketing_notifications BOOLEAN NOT NULL DEFAULT FALSE,
+
+    -- Device settings
+    enable_sound BOOLEAN NOT NULL DEFAULT TRUE,
+    enable_vibration BOOLEAN NOT NULL DEFAULT TRUE,
+    show_badge BOOLEAN NOT NULL DEFAULT TRUE,
+
+    -- Quiet hours
+    quiet_hours_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    quiet_hours_start VARCHAR(5), -- HH:MM format
+    quiet_hours_end VARCHAR(5),   -- HH:MM format
+
+    -- Topics/Channels
+    enabled_topics JSONB DEFAULT '["general", "policies", "payments"]'::jsonb,
+
+    -- Timestamps
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    -- Foreign key constraint
+    CONSTRAINT fk_notification_settings_user_id
+        FOREIGN KEY (user_id) REFERENCES lic_schema.users(user_id) ON DELETE CASCADE
+);
+
+-- Create index for notification_settings table
+CREATE INDEX IF NOT EXISTS idx_notification_settings_user_id ON notification_settings(user_id);
+
+-- Create device_tokens table for push notifications
+CREATE TABLE IF NOT EXISTS device_tokens (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    device_type VARCHAR(20) NOT NULL, -- ios, android
+
+    -- Timestamps
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_used_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    -- Foreign key constraint
+    CONSTRAINT fk_device_tokens_user_id
+        FOREIGN KEY (user_id) REFERENCES lic_schema.users(user_id) ON DELETE CASCADE
+);
+
+-- Create indexes for device_tokens table
+CREATE INDEX IF NOT EXISTS idx_device_tokens_user_id ON device_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_device_tokens_token ON device_tokens(token);
+
+-- Create trigger to update updated_at timestamp for notification_settings
+CREATE OR REPLACE FUNCTION update_notification_settings_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER trigger_update_notification_settings_updated_at
+    BEFORE UPDATE ON notification_settings
+    FOR EACH ROW
+    EXECUTE FUNCTION update_notification_settings_updated_at();
+
+-- Create trigger to update last_used_at for device_tokens
+CREATE OR REPLACE FUNCTION update_device_tokens_last_used_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.last_used_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER trigger_update_device_tokens_last_used_at
+    BEFORE UPDATE ON device_tokens
+    FOR EACH ROW
+    EXECUTE FUNCTION update_device_tokens_last_used_at();
+
+-- Insert default notification settings for existing users
+INSERT INTO notification_settings (
+    user_id,
+    enable_push_notifications,
+    enable_policy_notifications,
+    enable_payment_reminders,
+    enable_claim_updates,
+    enable_renewal_notices,
+    enable_marketing_notifications,
+    enable_sound,
+    enable_vibration,
+    show_badge,
+    quiet_hours_enabled,
+    enabled_topics
+)
+SELECT
+    u.user_id,
+    TRUE as enable_push_notifications,
+    TRUE as enable_policy_notifications,
+    TRUE as enable_payment_reminders,
+    TRUE as enable_claim_updates,
+    TRUE as enable_renewal_notices,
+    FALSE as enable_marketing_notifications,
+    TRUE as enable_sound,
+    TRUE as enable_vibration,
+    TRUE as show_badge,
+    FALSE as quiet_hours_enabled,
+    '["general", "policies", "payments"]'::jsonb as enabled_topics
+FROM lic_schema.users u
+WHERE NOT EXISTS (
+    SELECT 1 FROM notification_settings ns WHERE ns.user_id = u.user_id
+);
+
+-- Insert some sample notifications for testing
+INSERT INTO notifications (
+    id,
+    user_id,
+    title,
+    body,
+    type,
+    priority,
+    is_read,
+    created_at
+) VALUES
+('550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440000', 'Welcome to Agent Mitra!', 'Thank you for joining Agent Mitra. Your account is now active.', 'system', 'low', false, CURRENT_TIMESTAMP),
+('550e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440000', 'Policy Update Available', 'New policy templates have been added to your dashboard.', 'policy', 'medium', false, CURRENT_TIMESTAMP - INTERVAL '2 hours'),
+('550e8400-e29b-41d4-a716-446655440003', '550e8400-e29b-41d4-a716-446655440000', 'Payment Reminder', 'Your premium payment of ₹2,500 is due in 3 days.', 'payment', 'high', false, CURRENT_TIMESTAMP - INTERVAL '1 day'),
+('550e8400-e29b-41d4-a716-446655440004', '550e8400-e29b-41d4-a716-446655440000', 'Claim Processed', 'Your claim #CLM-2024-001 has been approved for ₹15,000.', 'claim', 'high', true, CURRENT_TIMESTAMP - INTERVAL '3 days'),
+('550e8400-e29b-41d4-a716-446655440005', '550e8400-e29b-41d4-a716-446655440000', 'Renewal Due Soon', 'Policy LIC-12345 renewal is due in 15 days.', 'renewal', 'medium', false, CURRENT_TIMESTAMP - INTERVAL '6 hours');
+
+-- Add comments for documentation
+COMMENT ON TABLE notifications IS 'User notifications including push notifications and in-app messages';
+COMMENT ON TABLE notification_settings IS 'User preferences for notification delivery and types';
+COMMENT ON TABLE device_tokens IS 'FCM device tokens for push notification delivery';
+
+COMMENT ON COLUMN notifications.type IS 'Type of notification: policy, payment, claim, renewal, general, marketing, system';
+COMMENT ON COLUMN notifications.priority IS 'Priority level: low, medium, high, critical';
+COMMENT ON COLUMN device_tokens.device_type IS 'Device platform: ios, android';

@@ -16,6 +16,7 @@ import '../../features/auth/presentation/pages/otp_verification_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/chatbot/presentation/pages/chatbot_page.dart';
+import '../../features/notifications/presentation/pages/notification_page.dart';
 
 /// Application Router Configuration
 /// Uses GoRouter for declarative routing with deep linking support
@@ -100,6 +101,12 @@ class AppRouter {
         path: '/smart-chatbot',
         name: 'smart-chatbot',
         builder: (context, state) => const ChatbotPage(),
+      ),
+
+      GoRoute(
+        path: '/notifications',
+        name: 'notifications',
+        builder: (context, state) => const NotificationPage(),
       ),
 
       GoRoute(
