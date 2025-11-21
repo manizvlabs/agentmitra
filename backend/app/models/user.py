@@ -117,8 +117,8 @@ class UserSession(Base):
 
     session_id = Column(UUID(as_uuid=True), primary_key=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.users.user_id", ondelete="CASCADE"), nullable=False, index=True)
-    session_token = Column(String(255), unique=True, nullable=False)
-    refresh_token = Column(String(255), unique=True, nullable=True)
+    session_token = Column(Text, unique=True, nullable=False)  # Changed to Text for JWT tokens
+    refresh_token = Column(Text, unique=True, nullable=True)  # Changed to Text for JWT tokens
     device_info = Column(JSONB, nullable=True)
     ip_address = Column(INET, nullable=True)
     user_agent = Column(Text, nullable=True)

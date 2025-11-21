@@ -11,8 +11,17 @@
 ### Database & Repositories
 - ✅ Database connection setup (`backend/app/core/database.py`)
 - ✅ User repository with CRUD operations (`backend/app/repositories/user_repository.py`)
+- ✅ Agent repository (`backend/app/repositories/agent_repository.py`)
 - ✅ Presentation repository with CRUD operations (`backend/app/repositories/presentation_repository.py`)
 - ✅ Seed data migration for testing (`db/migration/V5__Seed_test_users_and_presentations.sql`)
+- ✅ Migration to fix JWT token storage (`db/migration/V6__Alter_user_sessions_token_columns.sql`)
+
+### Schema Fixes
+- ✅ Updated all models to use `lic_schema` schema
+- ✅ Changed primary keys from String to UUID
+- ✅ Fixed column names (first_name/last_name instead of full_name)
+- ✅ Updated UserSession to use Text for JWT tokens
+- ✅ Added Agent model matching database schema
 
 ### API Endpoints Updated
 - ✅ `/api/v1/auth/login` - Login with phone/password or agent code
@@ -26,7 +35,7 @@
 
 ## 🧪 Test Results
 
-### Working Endpoints
+### ✅ Working Endpoints
 
 1. **Health Check**
    ```bash
@@ -42,40 +51,96 @@
    # Response: {"message": "OTP sent successfully", "phone_number": "+919876543212", "expires_in": 600}
    ```
 
-### Issues Found
+3. **Login with Agent Code**
+   ```bash
+   curl -X POST http://localhost:8012/api/v1/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"phone_number": "+919876543210", "agent_code": "AGENT001"}'
+   # ✅ Returns JWT tokens and user data
+   ```
 
-1. **Schema Mismatch**: SQLAlchemy models use default schema, but database uses `lic_schema`
-   - Models need to specify `__table_args__ = {'schema': 'lic_schema'}`
-   - Models use String IDs but database uses UUIDs
-   - Models use `full_name` but database uses `first_name`/`last_name`
+4. **Get Active Presentation**
+   ```bash
+   curl http://localhost:8012/api/v1/presentations/agent/b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/active
+   # ✅ Returns presentation with 3 slides
+   ```
 
-2. **Presentation Endpoint**: Returns "Agent not found"
-   - Repository is looking in wrong schema
-   - Need to update models/repositories to match database schema
+5. **Get All Presentations**
+   ```bash
+   curl http://localhost:8012/api/v1/presentations/agent/b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+   # ✅ Returns list of presentations
+   ```
 
-## 🔧 Next Steps to Fix
+6. **Get Templates**
+   ```bash
+   curl http://localhost:8012/api/v1/presentations/templates
+   # ✅ Returns available templates
+   ```
 
-1. **Update SQLAlchemy Models** to match database schema:
-   - Add schema specification: `__table_args__ = {'schema': 'lic_schema'}`
-   - Change primary keys from String to UUID
-   - Update column names to match database (first_name/last_name vs full_name)
-   - Use proper enum types for roles
+### ⚠️ Known Issues
 
-2. **Update Repositories** to work with correct schema
+1. **Login with Password**: May need password hash verification fix
+   - Agent code login works ✅
+   - Password login needs testing
 
-3. **Test All Endpoints** after fixes
+2. **OTP Verification**: Requires actual OTP from send-otp response
+   - OTP is generated and stored
+   - Need to capture OTP for testing
 
 ## 📝 Test Data
 
-Seed data created in migration V5:
-- **Test Agent**: phone `+919876543210`, password `password123`, agent_code `AGENT001`
-- **Test Customer**: phone `+919876543211`, password `password123`
-- **Test Customer 2**: phone `+919876543212` (for OTP testing)
+Seed data created in migrations V5 and V6:
+- **Test Agent**: 
+  - phone `+919876543210`
+  - password `password123`
+  - agent_code `AGENT001`
+  - user_id `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11`
+  - agent_id `b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11`
+  
+- **Test Customer**: 
+  - phone `+919876543211`
+  - password `password123`
+  
+- **Test Customer 2**: 
+  - phone `+919876543212` (for OTP testing)
+
+- **Test Presentation**: 
+  - presentation_id `d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11`
+  - agent_id `b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11`
+  - 3 slides with images and text
 
 ## 🚀 Backend Status
 
 - ✅ Backend running on port 8012
-- ✅ Database migrations applied (V1-V5)
+- ✅ Database migrations applied (V1-V6)
 - ✅ Seed data loaded
-- ⚠️ Model schema mismatch needs fixing
+- ✅ Schema mismatch resolved
+- ✅ All models match database schema
+- ✅ JWT tokens working correctly
+- ✅ Presentation endpoints connected to database
 
+## 🔧 Testing Commands
+
+```bash
+# Health check
+curl http://localhost:8012/health
+
+# Send OTP
+curl -X POST http://localhost:8012/api/v1/auth/send-otp \
+  -H "Content-Type: application/json" \
+  -d '{"phone_number": "+919876543212"}'
+
+# Login with agent code
+curl -X POST http://localhost:8012/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"phone_number": "+919876543210", "agent_code": "AGENT001"}'
+
+# Get active presentation
+curl http://localhost:8012/api/v1/presentations/agent/b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/active
+
+# Get all presentations
+curl http://localhost:8012/api/v1/presentations/agent/b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+
+# Get templates
+curl http://localhost:8012/api/v1/presentations/templates
+```
