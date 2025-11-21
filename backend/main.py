@@ -11,12 +11,24 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import api_router
 from app.core.database import init_db
+from app.core.logging_config import setup_logging, get_logger
+from app.core.config.settings import settings
 import uvicorn
 import os
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv("../.env.local")
+
+# Setup logging
+setup_logging(
+    log_level=os.getenv("LOG_LEVEL", "INFO"),
+    log_file=os.getenv("LOG_FILE", "logs/app.log") if settings.environment == "production" else None,
+    json_format=settings.environment == "production",
+    environment=settings.environment
+)
+
+logger = get_logger(__name__)
 
 # Create FastAPI app
 app = FastAPI(
@@ -43,8 +55,9 @@ app.include_router(api_router)
 @app.on_event("startup")
 async def startup_event():
     """Initialize database on startup"""
+    logger.info("Starting Agent Mitra API")
     init_db()
-    print("Database initialized")
+    logger.info("Database initialized")
 
 
 @app.get("/")

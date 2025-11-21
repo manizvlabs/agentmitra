@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'core/services/storage_service.dart';
+import 'core/services/logger_service.dart';
+import 'core/services/feature_flag_service.dart';
 import 'shared/theme/app_theme.dart';
 import 'features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import 'features/presentations/presentation/viewmodels/presentation_viewmodel.dart';
@@ -241,8 +243,16 @@ class DemoNavigation extends StatelessWidget {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize storage service
+  // Initialize core services
   await StorageService.initialize();
+  
+  // Initialize logging
+  await LoggerService().initialize(enableFileLogging: false);
+  LoggerService().info('Agent Mitra App Starting', tag: 'App');
+  
+  // Initialize feature flags
+  await FeatureFlagService().initialize();
+  LoggerService().info('Feature flags initialized', tag: 'FeatureFlags');
   
   runApp(const AgentMitraApp());
 }
