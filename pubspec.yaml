@@ -67,6 +67,9 @@ dependencies:
   # Utilities
   uuid: ^4.2.1
   path_provider: ^2.1.1
+
+  # Charts & Analytics
+  fl_chart: ^0.65.0
   connectivity_plus: ^5.0.2
 
 dev_dependencies:

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' as provider;
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/global_providers.dart';
@@ -50,6 +50,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       curve: Curves.easeOutCubic,
     ));
 
+    // Load additional analytics data
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final viewModel = provider.Provider.of<DashboardViewModel>(context, listen: false);
+      viewModel.loadAgentPerformanceData();
+      viewModel.loadBusinessIntelligenceData();
+    });
+
     _animationController.forward();
   }
 
@@ -69,7 +76,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
-            final viewModel = context.read<DashboardViewModel>();
+            final viewModel = provider.Provider.of<DashboardViewModel>(context, listen: false);
             await viewModel.refreshDashboard();
           },
           child: SlideTransition(
@@ -138,7 +145,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         },
       ),
       actions: [
-        Consumer<DashboardViewModel>(
+        provider.Consumer<DashboardViewModel>(
           builder: (context, viewModel, child) {
             final unreadCount = viewModel.unreadNotificationsCount;
             return Stack(

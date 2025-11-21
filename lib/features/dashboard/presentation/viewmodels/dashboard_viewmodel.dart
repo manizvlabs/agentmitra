@@ -15,9 +15,15 @@ class DashboardViewModel extends BaseViewModel {
   List<DashboardNotification> _notifications = [];
   bool _isRefreshing = false;
 
+  AgentPerformanceData? _agentPerformance;
+  BusinessIntelligenceData? _businessIntelligence;
+
   DashboardAnalytics? get analytics => _analytics;
   List<DashboardNotification> get notifications => _notifications;
   bool get isRefreshing => _isRefreshing;
+
+  AgentPerformanceData? get agentPerformance => _agentPerformance;
+  BusinessIntelligenceData? get businessIntelligence => _businessIntelligence;
 
   // Computed properties
   int get unreadNotificationsCount =>
@@ -64,6 +70,39 @@ class DashboardViewModel extends BaseViewModel {
       _isRefreshing = false;
       notifyListeners();
     }
+  }
+
+  /// Load agent performance data
+  Future<void> loadAgentPerformanceData() async {
+    await executeAsync(
+      () async {
+        const agentId = 'agent_123'; // TODO: Get from actual user session
+        _agentPerformance = await _repository.getAgentPerformanceData(agentId);
+        return true;
+      },
+      errorMessage: 'Failed to load agent performance data',
+    );
+    notifyListeners();
+  }
+
+  /// Load business intelligence data
+  Future<void> loadBusinessIntelligenceData({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    await executeAsync(
+      () async {
+        const agentId = 'agent_123'; // TODO: Get from actual user session
+        _businessIntelligence = await _repository.getBusinessIntelligenceData(
+          agentId: agentId,
+          startDate: startDate,
+          endDate: endDate,
+        );
+        return true;
+      },
+      errorMessage: 'Failed to load business intelligence data',
+    );
+    notifyListeners();
   }
 
   /// Mark notification as read

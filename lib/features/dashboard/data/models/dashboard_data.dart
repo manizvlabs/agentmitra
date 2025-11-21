@@ -169,3 +169,125 @@ class DashboardNotification {
     }
   }
 }
+
+// Enhanced Analytics Models for Agent Performance Dashboard
+
+class AgentPerformanceData {
+  final String agentId;
+  final String agentName;
+  final double totalCommission;
+  final int policiesSold;
+  final int customersAcquired;
+  final double conversionRate;
+  final double averagePolicyValue;
+  final List<MonthlyData> monthlyData;
+  final Map<String, double> commissionByProduct;
+
+  const AgentPerformanceData({
+    required this.agentId,
+    required this.agentName,
+    required this.totalCommission,
+    required this.policiesSold,
+    required this.customersAcquired,
+    required this.conversionRate,
+    required this.averagePolicyValue,
+    required this.monthlyData,
+    required this.commissionByProduct,
+  });
+}
+
+class MonthlyData {
+  final String month;
+  final int year;
+  final double commission;
+  final int policiesSold;
+  final int customersAcquired;
+  final double revenue;
+
+  const MonthlyData({
+    required this.month,
+    required this.year,
+    required this.commission,
+    required this.policiesSold,
+    required this.customersAcquired,
+    required this.revenue,
+  });
+
+  String get monthYear => '$month $year';
+}
+
+class BusinessIntelligenceData {
+  final List<RevenueTrend> revenueTrends;
+  final List<CustomerEngagement> customerEngagement;
+  final ROIMetrics roiMetrics;
+  final Map<String, int> productPerformance;
+  final List<GeographicData> geographicDistribution;
+
+  const BusinessIntelligenceData({
+    required this.revenueTrends,
+    required this.customerEngagement,
+    required this.roiMetrics,
+    required this.productPerformance,
+    required this.geographicDistribution,
+  });
+}
+
+class RevenueTrend {
+  final DateTime date;
+  final double revenue;
+  final double target;
+  final double growth;
+
+  const RevenueTrend({
+    required this.date,
+    required this.revenue,
+    required this.target,
+    required this.growth,
+  });
+}
+
+class CustomerEngagement {
+  final String metric;
+  final int value;
+  final double change;
+  final String period;
+
+  const CustomerEngagement({
+    required this.metric,
+    required this.value,
+    required this.change,
+    required this.period,
+  });
+}
+
+class ROIMetrics {
+  final double marketingROI;
+  final double customerAcquisitionCost;
+  final double lifetimeValue;
+  final double churnRate;
+  final double retentionRate;
+
+  const ROIMetrics({
+    required this.marketingROI,
+    required this.customerAcquisitionCost,
+    required this.lifetimeValue,
+    required this.churnRate,
+    required this.retentionRate,
+  });
+}
+
+class GeographicData {
+  final String region;
+  final String state;
+  final int customerCount;
+  final double revenue;
+  final double marketShare;
+
+  const GeographicData({
+    required this.region,
+    required this.state,
+    required this.customerCount,
+    required this.revenue,
+    required this.marketShare,
+  });
+}
