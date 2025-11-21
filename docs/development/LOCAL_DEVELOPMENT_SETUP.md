@@ -327,7 +327,7 @@ cp .env.example .env.local
 alembic upgrade head
 
 # Start backend server
-uvicorn main:app --reload --port 8000
+uvicorn main:app --reload --port 8012
 ```
 
 ### 4.6 Step 6: Flutter App Setup
@@ -421,8 +421,8 @@ source venv/bin/activate
 uvicorn main:app --reload
 
 # In another terminal, test API
-curl http://localhost:8000/health
-curl http://localhost:8000/api/v1/health
+curl http://localhost:8012/health
+curl http://localhost:8012/api/v1/health
 ```
 
 #### Flutter App Verification
@@ -453,7 +453,7 @@ cd backend
 source venv/bin/activate
 
 # 3. Start backend server
-uvicorn main:app --reload --port 8000
+uvicorn main:app --reload --port 8012
 
 # 4. In another terminal, start Flutter app
 cd agentmitra
@@ -556,8 +556,8 @@ pip install -r requirements.txt
 # Check what's using a port
 lsof -i :5432  # PostgreSQL
 lsof -i :6379  # Redis
-lsof -i :8000  # Backend API
-lsof -i :3000  # Portal
+lsof -i :8012  # Backend API
+lsof -i :3012  # Portal
 
 # Kill process if needed
 kill -9 <PID>
@@ -616,11 +616,11 @@ REDIS_PORT=6379
 
 # Backend API
 API_HOST=localhost
-API_PORT=8000
-API_URL=http://localhost:8000
+API_PORT=8012
+API_URL=http://localhost:8012
 
 # Flutter
-FLUTTER_API_URL=http://localhost:8000
+FLUTTER_API_URL=http://localhost:8012
 FLUTTER_USE_MOCK_DATA=true  # For development
 
 # Feature Flags

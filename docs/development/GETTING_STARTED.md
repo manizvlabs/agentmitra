@@ -14,7 +14,7 @@ Based on `project-plan.md`, we follow **Phase 1: Foundation & Setup (Weeks 1-2)*
 │   ├── ✅ Step 1: Local Development Setup (THIS GUIDE)
 │   ├── ✅ Step 2: Project Structure Implementation
 │   ├── ✅ Step 3: CI/CD Pipeline Setup
-│   └── ✅ Step 4: Mock Data & Feature Flags
+│   └── ✅ Step 4: Feature Flags (don't use any mock data, only work with real data by adding seed data using flyway into real database)
 │
 └── Week 2: Database Design & Migration Setup
     ├── ✅ Step 1: Database Schema Creation (Flyway)
@@ -168,10 +168,10 @@ cp .env.example .env.local
 nano .env.local  # Update with local settings
 
 # 5. Start backend server
-uvicorn main:app --reload --port 8000
+uvicorn main:app --reload --port 8012
 
 # 6. Test API (in another terminal)
-curl http://localhost:8000/health
+curl http://localhost:8012/health
 ```
 
 ### Step 4: Flutter Setup (Day 4)
@@ -296,7 +296,7 @@ cd backend
 source venv/bin/activate
 
 # 3. Start backend (Terminal 1)
-uvicorn main:app --reload --port 8000
+uvicorn main:app --reload --port 8012
 
 # 4. Start Flutter (Terminal 2)
 cd agentmitra
