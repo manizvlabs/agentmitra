@@ -60,6 +60,34 @@ async def startup_event():
     logger.info("Database initialized")
 
 
+# Lifespan event handler (modern approach)
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Handle application startup and shutdown events"""
+    # Startup
+    logger.info("Starting Agent Mitra API with lifespan events")
+    init_db()
+    logger.info("Database initialized")
+
+    yield
+
+    # Shutdown
+    logger.info("Shutting down Agent Mitra API")
+
+
+# Update app to use lifespan (uncomment when ready to replace on_event)
+# app = FastAPI(
+#     title="Agent Mitra API",
+#     description="Agent Mitra Backend API - Insurance Agent Management Platform",
+#     version="0.1.0",
+#     docs_url="/docs",
+#     redoc_url="/redoc",
+#     lifespan=lifespan,
+# )
+
+
 @app.get("/")
 async def root():
     """Root endpoint"""

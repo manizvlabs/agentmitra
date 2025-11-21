@@ -17,5 +17,5 @@ api_router.include_router(presentations.router, prefix="/presentations", tags=["
 api_router.include_router(chat.router, prefix="/chat", tags=["chat"])
 api_router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
 api_router.include_router(feature_flags.router, tags=["feature-flags"])
-api_router.include_router(health.router, prefix="/health", tags=["health"])
+api_router.include_router(health.router, tags=["health"])
 
