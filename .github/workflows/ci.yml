@@ -1,0 +1,21 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop, feature/** ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  # This workflow serves as a trigger for individual workflows
+  # Individual workflows (flutter-ci.yml, backend-ci.yml) run independently
+  ci-summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    steps:
+      - name: CI Pipeline Triggered
+        run: |
+          echo "CI pipeline triggered for branch: ${{ github.ref }}"
+          echo "Individual workflows will run in parallel"
+
