@@ -1,0 +1,22 @@
+# Flyway Configuration for Agent Mitra
+# Copy this file to flyway.conf and update with your local settings
+
+flyway.url=jdbc:postgresql://localhost:5432/agentmitra_dev
+flyway.user=agentmitra
+flyway.password=
+flyway.schemas=shared,lic_schema,audit
+flyway.locations=filesystem:db/migration
+flyway.baselineOnMigrate=true
+flyway.validateOnMigrate=true
+flyway.cleanDisabled=false
+
+# Migration settings
+flyway.encoding=UTF-8
+flyway.placeholderReplacement=true
+flyway.placeholders.schema=lic_schema
+
+# SQL migration settings
+flyway.sqlMigrationPrefix=V
+flyway.sqlMigrationSeparator=__
+flyway.sqlMigrationSuffixes=.sql
+
