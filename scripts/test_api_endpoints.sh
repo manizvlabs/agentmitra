@@ -217,14 +217,129 @@ run_tests() {
     # Test Analytics Endpoints
     log_info "Testing Analytics Endpoints..."
 
-    # Get agent dashboard analytics (may return empty data)
+    # Get agent dashboard analytics
     test_endpoint "GET" "/api/v1/analytics/dashboard/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11" "" "$AUTH_TOKEN" 200 "Get agent dashboard analytics"
 
-    # Test Chat Endpoints (may not be fully implemented)
-    log_info "Testing Chat Endpoints..."
+    # Get global dashboard analytics
+    test_endpoint "GET" "/api/v1/analytics/dashboard/overview" "" "$AUTH_TOKEN" 200 "Get global dashboard analytics"
 
-    # Get chat sessions (may return empty array)
-    test_endpoint "GET" "/api/v1/chat/sessions" "" "$AUTH_TOKEN" 200 "Get chat sessions"
+    # Get revenue trends chart
+    test_endpoint "GET" "/api/v1/analytics/dashboard/charts/revenue-trends?months=6" "" "$AUTH_TOKEN" 200 "Get revenue trends chart"
+
+    # Get policy trends chart
+    test_endpoint "GET" "/api/v1/analytics/dashboard/charts/policy-trends?months=6" "" "$AUTH_TOKEN" 200 "Get policy trends chart"
+
+    # Get top performing agents
+    test_endpoint "GET" "/api/v1/analytics/dashboard/top-agents?limit=5" "" "$AUTH_TOKEN" 200 "Get top performing agents"
+
+    # Get agent performance metrics
+    test_endpoint "GET" "/api/v1/analytics/agents/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/performance" "" "$AUTH_TOKEN" 200 "Get agent performance metrics"
+
+    # Get policy analytics
+    test_endpoint "GET" "/api/v1/analytics/policies/analytics" "" "$AUTH_TOKEN" 200 "Get policy analytics"
+
+    # Get revenue analytics
+    test_endpoint "GET" "/api/v1/analytics/revenue/analytics" "" "$AUTH_TOKEN" 200 "Get revenue analytics"
+
+    # Get analytics summary
+    test_endpoint "GET" "/api/v1/analytics/reports/summary" "" "$AUTH_TOKEN" 200 "Get analytics summary"
+
+    # Generate custom analytics report
+    test_endpoint "POST" "/api/v1/analytics/reports/generate" '{"report_type": "dashboard", "agent_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"}' "$AUTH_TOKEN" 200 "Generate custom analytics report"
+
+    # Test Presentation Analytics Endpoints
+    log_info "Testing Presentation Analytics Endpoints..."
+
+    # Get presentations list first to get a valid presentation ID
+    PRESENTATION_RESPONSE=$(curl -s "$BASE_URL/api/v1/presentations/agent/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11" \
+        -H "Authorization: Bearer $AUTH_TOKEN")
+
+    # Extract presentation ID if available
+    PRESENTATION_ID=$(echo "$PRESENTATION_RESPONSE" | jq -r '.[0].presentation_id' 2>/dev/null || echo "")
+
+    if [ "$PRESENTATION_ID" != "null" ] && [ "$PRESENTATION_ID" != "" ]; then
+        test_endpoint "GET" "/api/v1/analytics/presentations/$PRESENTATION_ID/analytics" "" "$AUTH_TOKEN" 200 "Get presentation analytics"
+        test_endpoint "GET" "/api/v1/analytics/presentations/$PRESENTATION_ID/analytics/trends?days=7" "" "$AUTH_TOKEN" 200 "Get presentation trends"
+    else
+        log_warning "No presentations found for analytics testing"
+    fi
+
+    # Test Chatbot Endpoints
+    log_info "Testing Chatbot Endpoints..."
+
+    # Create a new chat session
+    SESSION_RESPONSE=$(curl -s -X POST "$BASE_URL/api/v1/chat/sessions" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $AUTH_TOKEN" \
+        -d '{"user_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", "device_info": {"device": "test", "os": "linux"}}')
+
+    SESSION_ID=$(echo "$SESSION_RESPONSE" | jq -r '.session_id' 2>/dev/null || echo "")
+
+    if [ "$SESSION_ID" != "null" ] && [ "$SESSION_ID" != "" ]; then
+        # Test sending a message to the chatbot
+        test_endpoint "POST" "/api/v1/chat/sessions/$SESSION_ID/messages" '{"message": "What is life insurance?", "user_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"}' "$AUTH_TOKEN" 200 "Send message to chatbot"
+
+        # Test getting session analytics
+        test_endpoint "GET" "/api/v1/chat/sessions/$SESSION_ID/analytics" "" "$AUTH_TOKEN" 200 "Get chat session analytics"
+
+        # End the chat session
+        test_endpoint "PUT" "/api/v1/chat/sessions/$SESSION_ID/end?satisfaction_score=5" "" "$AUTH_TOKEN" 200 "End chat session"
+    else
+        log_warning "Failed to create chat session for testing"
+    fi
+
+    # Test Knowledge Base Endpoints
+    log_info "Testing Knowledge Base Endpoints..."
+
+    # Search knowledge base
+    test_endpoint "GET" "/api/v1/chat/knowledge-base/search?q=life%20insurance&limit=5" "" "$AUTH_TOKEN" 200 "Search knowledge base"
+
+    # Create a knowledge base article
+    ARTICLE_RESPONSE=$(curl -s -X POST "$BASE_URL/api/v1/chat/knowledge-base/articles" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $AUTH_TOKEN" \
+        -d '{
+            "title": "Test Article for API Testing",
+            "content": "This is a test article created during API testing to verify the knowledge base functionality.",
+            "category": "testing",
+            "tags": ["test", "api", "automation"]
+        }')
+
+    ARTICLE_ID=$(echo "$ARTICLE_RESPONSE" | jq -r '.article_id' 2>/dev/null || echo "")
+
+    if [ "$ARTICLE_ID" != "null" ] && [ "$ARTICLE_ID" != "" ]; then
+        # Update the article
+        test_endpoint "PUT" "/api/v1/chat/knowledge-base/articles/$ARTICLE_ID" '{"title": "Updated Test Article"}' "$AUTH_TOKEN" 200 "Update knowledge base article"
+
+        # Note: Delete test disabled to avoid cleanup issues in repeated tests
+        # test_endpoint "DELETE" "/api/v1/chat/knowledge-base/articles/$ARTICLE_ID" "" "$AUTH_TOKEN" 200 "Delete knowledge base article"
+    fi
+
+    # Test Intent Management Endpoints
+    log_info "Testing Intent Management Endpoints..."
+
+    # Create a test intent
+    INTENT_RESPONSE=$(curl -s -X POST "$BASE_URL/api/v1/chat/intents" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $AUTH_TOKEN" \
+        -d '{
+            "intent_name": "test_api_inquiry",
+            "description": "Test intent for API testing",
+            "training_examples": ["How does the API work?", "What is API testing?"],
+            "response_templates": ["The API allows you to interact with our system programmatically.", "API testing ensures our endpoints work correctly."]
+        }')
+
+    # Get intent statistics
+    test_endpoint "GET" "/api/v1/chat/intents/stats" "" "$AUTH_TOKEN" 200 "Get intent statistics"
+
+    # Test Chatbot Analytics Endpoints
+    log_info "Testing Chatbot Analytics Endpoints..."
+
+    # Get chatbot analytics
+    test_endpoint "GET" "/api/v1/chat/analytics" "" "$AUTH_TOKEN" 200 "Get chatbot analytics"
+
+    # Test chatbot health check
+    test_endpoint "GET" "/api/v1/chat/health" "" "" 200 "Chatbot health check"
 
     # Summary
     echo "=============================================="

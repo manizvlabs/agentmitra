@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
 # Load .env.local file
-load_dotenv("../.env.local")
+load_dotenv("/Users/manish/Documents/GitHub/zero/agentmitra/backend/.env.local")
 
 
 class Settings(BaseSettings):
@@ -38,10 +38,14 @@ class Settings(BaseSettings):
     jwt_access_token_expire_minutes: int = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
     jwt_refresh_token_expire_days: int = int(os.getenv("JWT_REFRESH_TOKEN_EXPIRE_DAYS", "7"))
     
+    # External APIs
+    openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
+
     # Feature Flags
     enable_mock_data: bool = os.getenv("ENABLE_MOCK_DATA", "false").lower() == "true"
     enable_analytics: bool = os.getenv("ENABLE_ANALYTICS", "false").lower() == "true"
     enable_payment_processing: bool = os.getenv("ENABLE_PAYMENT_PROCESSING", "false").lower() == "true"
+    enable_chatbot: bool = os.getenv("ENABLE_CHATBOT", "false").lower() == "true"
     
     class Config:
         env_file = "../.env.local"
