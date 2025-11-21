@@ -13,7 +13,7 @@ from datetime import datetime
 import json
 
 from app.core.database import get_db
-from app.core.security import get_current_user
+from app.core.auth import get_current_user_context
 from app.models.user import User
 
 router = APIRouter(prefix="/import", tags=["import"])
@@ -127,14 +127,14 @@ for template in _sample_templates:
     _import_templates[template["id"]] = ImportTemplate(**template)
 
 @router.get("/templates", response_model=List[ImportTemplate])
-async def get_templates(current_user: User = Depends(get_current_user)):
+async def get_templates(current_user = Depends(get_current_user_context)):
     """Get all import templates"""
     return list(_import_templates.values())
 
 @router.post("/templates", response_model=ImportTemplate)
 async def create_template(
     template_data: Dict[str, Any],
-    current_user: User = Depends(get_current_user)
+    current_user = Depends(get_current_user_context)
 ):
     """Create a new import template"""
     template_id = str(uuid.uuid4())
@@ -143,7 +143,7 @@ async def create_template(
         **template_data,
         created_at=datetime.now(),
         updated_at=datetime.now(),
-        created_by=current_user.email
+        created_by=current_user.user.email
     )
     _import_templates[template_id] = template
     return template
@@ -152,7 +152,7 @@ async def create_template(
 async def update_template(
     template_id: str,
     template_data: Dict[str, Any],
-    current_user: User = Depends(get_current_user)
+    current_user = Depends(get_current_user_context)
 ):
     """Update an import template"""
     if template_id not in _import_templates:
@@ -169,7 +169,7 @@ async def update_template(
 @router.delete("/templates/{template_id}")
 async def delete_template(
     template_id: str,
-    current_user: User = Depends(get_current_user)
+    current_user = Depends(get_current_user_context)
 ):
     """Delete an import template"""
     if template_id not in _import_templates:
@@ -182,7 +182,7 @@ async def delete_template(
 async def upload_file(
     file: UploadFile = File(...),
     options: Optional[str] = Form(None),
-    current_user: User = Depends(get_current_user)
+    current_user = Depends(get_current_user_context)
 ):
     """Upload a file for import processing"""
     file_id = str(uuid.uuid4())
@@ -234,7 +234,7 @@ async def upload_file(
 async def validate_file(
     file_id: str,
     template_id: Optional[str] = None,
-    current_user: User = Depends(get_current_user)
+    current_user = Depends(get_current_user_context)
 ):
     """Validate uploaded file data"""
     if file_id not in _import_files:
@@ -296,7 +296,7 @@ async def validate_file(
 async def import_data(
     request: Dict[str, Any],
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user)
+    current_user = Depends(get_current_user_context)
 ):
     """Import validated data"""
     file_id = request.get("fileId")
@@ -340,7 +340,7 @@ async def import_data(
         "startTime": datetime.now(),
         "endTime": datetime.now(),
         "duration": 1000,
-        "uploadedBy": current_user.email
+        "uploadedBy": current_user.user.email
     }
     _import_history.append(history_item)
 
@@ -354,7 +354,7 @@ async def import_data(
 @router.get("/status/{import_id}", response_model=ImportResult)
 async def get_import_status(
     import_id: str,
-    current_user: User = Depends(get_current_user)
+    current_user = Depends(get_current_user_context)
 ):
     """Get import status"""
     if import_id not in _import_results:
@@ -366,7 +366,7 @@ async def get_import_status(
 async def get_import_history(
     page: int = 1,
     page_size: int = 10,
-    current_user: User = Depends(get_current_user)
+    current_user = Depends(get_current_user_context)
 ):
     """Get import history"""
     start_idx = (page - 1) * page_size
@@ -383,7 +383,7 @@ async def get_import_history(
 @router.get("/entity-fields/{entity_type}")
 async def get_entity_fields(
     entity_type: str,
-    current_user: User = Depends(get_current_user)
+    current_user = Depends(get_current_user_context)
 ):
     """Get fields for an entity type"""
     # Mock entity field definitions
@@ -407,7 +407,7 @@ async def get_entity_fields(
 @router.get("/sample-data/{entity_type}")
 async def get_sample_data(
     entity_type: str,
-    current_user: User = Depends(get_current_user)
+    current_user = Depends(get_current_user_context)
 ):
     """Get sample data for an entity type"""
     # Mock sample data
@@ -427,7 +427,7 @@ async def get_sample_data(
 @router.get("/templates/{entity_type}/download")
 async def download_template(
     entity_type: str,
-    current_user: User = Depends(get_current_user)
+    current_user = Depends(get_current_user_context)
 ):
     """Download a template file for an entity type"""
     sample_data = await get_sample_data(entity_type, current_user)
@@ -452,7 +452,7 @@ async def download_template(
 @router.get("/results/{import_id}/download")
 async def download_import_results(
     import_id: str,
-    current_user: User = Depends(get_current_user)
+    current_user = Depends(get_current_user_context)
 ):
     """Download import results as CSV"""
     if import_id not in _import_results:
