@@ -16,6 +16,7 @@ import '../../screens/marketing_campaign_builder.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/otp_verification_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
+import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 
 /// Application Router Configuration
 /// Uses GoRouter for declarative routing with deep linking support
@@ -81,7 +82,7 @@ class AppRouter {
       GoRoute(
         path: '/customer-dashboard',
         name: 'customer-dashboard',
-        builder: (context, state) => const CustomerDashboard(),
+        builder: (context, state) => const DashboardPage(),
       ),
 
       GoRoute(

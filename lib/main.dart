@@ -13,6 +13,10 @@ import 'features/presentations/presentation/viewmodels/presentation_viewmodel.da
 import 'features/onboarding/presentation/viewmodels/onboarding_viewmodel.dart';
 import 'features/onboarding/data/repositories/onboarding_repository.dart';
 import 'features/onboarding/data/datasources/onboarding_local_datasource.dart';
+import 'features/dashboard/presentation/viewmodels/dashboard_viewmodel.dart';
+import 'features/dashboard/data/repositories/dashboard_repository.dart';
+import 'features/dashboard/data/datasources/dashboard_remote_datasource.dart';
+import 'core/services/api_service.dart';
 
 
 void main() async {
@@ -57,6 +61,15 @@ class AgentMitraApp extends ConsumerWidget {
                 OnboardingRepository(
                   const OnboardingLocalDataSource(),
                 ),
+              )..initialize(),
+            ),
+            ChangeNotifierProvider(
+              create: (_) => DashboardViewModel(
+                DashboardRepository(
+                  DashboardRemoteDataSource(ApiService()),
+                ),
+                // TODO: Inject proper feature flag service when available
+                null, // Will be updated when feature flag service is properly implemented
               )..initialize(),
             ),
           ],

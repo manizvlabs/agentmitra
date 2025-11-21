@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/services/api_service.dart';
+import '../../../../core/services/logger_service.dart';
 import '../viewmodels/onboarding_viewmodel.dart';
 import '../../data/models/onboarding_step.dart';
 
@@ -41,40 +43,47 @@ class _AgentDiscoveryStepState extends State<AgentDiscoveryStep> {
   Future<void> _searchAgent(String agentCode) async {
     if (agentCode.trim().isEmpty) return;
 
+    LoggerService().info('Searching for agent with code: $agentCode', tag: 'AgentDiscovery');
+
     setState(() {
       _isSearching = true;
       _errorMessage = null;
     });
 
     try {
-      // Simulate API call to search for agent
-      await Future.delayed(const Duration(seconds: 2));
+      // Make real API call to search for agent
+      final apiService = ApiService();
+      final response = await apiService.get('/api/v1/agents/search/$agentCode');
 
-      // Mock agent data - in real app, this would come from API
-      if (agentCode.length >= 6) {
-        final mockAgentData = AgentDiscoveryData(
+      if (response != null && response['success'] == true) {
+        final agentData = response['data'];
+        final realAgentData = AgentDiscoveryData(
           agentCode: agentCode,
-          agentName: 'Rajesh Kumar Sharma',
-          agentPhone: '+91 9876543210',
-          agentEmail: 'rajesh.sharma@licindia.com',
-          branchName: 'LIC Branch - Mumbai Central',
-          branchAddress: '123, Dadabhai Naoroji Road, Mumbai Central, Mumbai - 400008',
+          agentName: agentData['name'] ?? 'Unknown Agent',
+          agentPhone: agentData['phone'] ?? '',
+          agentEmail: agentData['email'] ?? '',
+          branchName: agentData['branch_name'] ?? '',
+          branchAddress: agentData['branch_address'] ?? '',
         );
 
         final viewModel = context.read<OnboardingViewModel>();
-        await viewModel.updateAgentDiscoveryData(mockAgentData);
+        await viewModel.updateAgentDiscoveryData(realAgentData);
+
+        LoggerService().info('Agent found successfully: ${agentData['name']}', tag: 'AgentDiscovery');
 
         setState(() {
           _errorMessage = null;
         });
       } else {
+        LoggerService().warning('Agent not found for code: $agentCode', tag: 'AgentDiscovery');
         setState(() {
-          _errorMessage = 'Invalid agent code. Please enter a valid 6-digit code.';
+          _errorMessage = response?['message'] ?? 'Agent not found. Please check the agent code and try again.';
         });
       }
     } catch (e) {
+      LoggerService().error('Agent search failed: $e', tag: 'AgentDiscovery');
       setState(() {
-        _errorMessage = 'Failed to search agent. Please try again.';
+        _errorMessage = 'Failed to search agent. Please check your internet connection and try again.';
       });
     } finally {
       setState(() {

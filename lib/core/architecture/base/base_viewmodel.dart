@@ -30,9 +30,9 @@ class ViewModelResult<T> {
     );
   }
 
-  static ViewModelResult<T> loading<T>() => ViewModelResult<T>(isLoading: true);
-  static ViewModelResult<T> error<T>(String error) => ViewModelResult<T>(error: error);
-  static ViewModelResult<T> success<T>(T data) => ViewModelResult<T>(data: data);
+  factory ViewModelResult.loading() => const ViewModelResult<T>(isLoading: true);
+  factory ViewModelResult.error(String error) => ViewModelResult<T>(error: error);
+  factory ViewModelResult.success(T data) => ViewModelResult<T>(data: data);
 }
 
 abstract class BaseViewModel extends ChangeNotifier {
@@ -116,11 +116,11 @@ abstract class BaseViewModel extends ChangeNotifier {
       clearError();
 
       final result = await operation();
-      return ViewModelResult.success(result);
+      return ViewModelResult<T>.success(result);
     } catch (e) {
       final message = errorMessage ?? 'Operation failed: ${e.toString()}';
       setError(message);
-      return ViewModelResult.error(message);
+      return ViewModelResult<T>.error(message);
     } finally {
       setLoading(false);
     }

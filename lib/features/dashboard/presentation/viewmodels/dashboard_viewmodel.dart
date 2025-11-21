@@ -1,0 +1,198 @@
+import 'package:flutter/material.dart';
+import '../../../../core/architecture/base/base_viewmodel.dart';
+import '../../../../core/services/feature_flag_service.dart';
+import '../../data/repositories/dashboard_repository.dart';
+import '../../data/models/dashboard_data.dart';
+
+/// ViewModel for dashboard screen management
+class DashboardViewModel extends BaseViewModel {
+  final DashboardRepository _repository;
+  final FeatureFlagService _featureFlagService;
+
+  DashboardViewModel(this._repository, this._featureFlagService);
+
+  DashboardAnalytics? _analytics;
+  List<DashboardNotification> _notifications = [];
+  bool _isRefreshing = false;
+
+  DashboardAnalytics? get analytics => _analytics;
+  List<DashboardNotification> get notifications => _notifications;
+  bool get isRefreshing => _isRefreshing;
+
+  // Computed properties
+  int get unreadNotificationsCount =>
+      _notifications.where((n) => !n.isRead).length;
+
+  List<DashboardQuickAction> get quickActions => _repository.getQuickActions();
+
+  List<PolicySummary> get expiringPolicies =>
+      _analytics?.recentPolicies.where((policy) => policy.isExpiringSoon).toList() ?? [];
+
+  List<PaymentDue> get overduePayments =>
+      _analytics?.upcomingPayments.where((payment) => payment.isOverdue).toList() ?? [];
+
+  @override
+  Future<void> initialize() async {
+    await super.initialize();
+    await loadDashboardData();
+  }
+
+  /// Load dashboard data from real API
+  Future<void> loadDashboardData() async {
+    await executeAsync(
+      () async {
+        // TODO: Get agent ID from user session/current user context
+        const agentId = 'agent_123'; // Replace with actual agent ID from session
+        _analytics = await _repository.getDashboardAnalytics(agentId: agentId);
+        _notifications = await _repository.getNotifications(userId: agentId);
+        return true;
+      },
+      errorMessage: 'Failed to load dashboard data from server',
+    );
+
+    notifyListeners();
+  }
+
+  /// Refresh dashboard data
+  Future<void> refreshDashboard() async {
+    _isRefreshing = true;
+    notifyListeners();
+
+    try {
+      await loadDashboardData();
+    } finally {
+      _isRefreshing = false;
+      notifyListeners();
+    }
+  }
+
+  /// Mark notification as read
+  Future<void> markNotificationAsRead(String notificationId) async {
+    final notificationIndex = _notifications.indexWhere((n) => n.id == notificationId);
+    if (notificationIndex != -1) {
+      final updatedNotification = _notifications[notificationIndex].copyWith(isRead: true);
+      _notifications[notificationIndex] = updatedNotification;
+
+      // Try to update on server (don't fail if offline)
+      try {
+        await _repository.markNotificationAsRead(notificationId);
+      } catch (e) {
+        // Ignore server errors for read status
+      }
+
+      notifyListeners();
+    }
+  }
+
+  /// Mark all notifications as read
+  Future<void> markAllNotificationsAsRead() async {
+    for (var i = 0; i < _notifications.length; i++) {
+      if (!_notifications[i].isRead) {
+        _notifications[i] = _notifications[i].copyWith(isRead: true);
+      }
+    }
+
+    // Try to update on server
+    try {
+      for (final notification in _notifications) {
+        if (notification.isRead) {
+          await _repository.markNotificationAsRead(notification.id);
+        }
+      }
+    } catch (e) {
+      // Ignore server errors for read status
+    }
+
+    notifyListeners();
+  }
+
+  /// Get analytics summary for display
+  Map<String, dynamic> getAnalyticsSummary() {
+    if (_analytics == null) return {};
+
+    return {
+      'total_policies': _analytics!.totalPolicies,
+      'total_premium': _analytics!.totalPremium,
+      'active_claims': _analytics!.activeClaims,
+      'monthly_revenue': _analytics!.monthlyRevenue,
+      'new_customers': _analytics!.newCustomers,
+      'growth_rate': _analytics!.growthRate,
+      'expiring_policies_count': expiringPolicies.length,
+      'overdue_payments_count': overduePayments.length,
+      'unread_notifications': unreadNotificationsCount,
+    };
+  }
+
+  /// Get top priorities for dashboard alerts
+  List<Map<String, dynamic>> getTopPriorities() {
+    final priorities = <Map<String, dynamic>>[];
+
+    // Overdue payments
+    if (overduePayments.isNotEmpty) {
+      priorities.add({
+        'type': 'overdue_payments',
+        'title': '${overduePayments.length} Overdue Payments',
+        'message': 'Action required on overdue premium payments',
+        'priority': 'high',
+        'icon': Icons.warning,
+        'color': Colors.red,
+      });
+    }
+
+    // Expiring policies
+    if (expiringPolicies.isNotEmpty) {
+      priorities.add({
+        'type': 'expiring_policies',
+        'title': '${expiringPolicies.length} Policies Expiring Soon',
+        'message': 'Renew policies before they expire',
+        'priority': 'medium',
+        'icon': Icons.schedule,
+        'color': Colors.orange,
+      });
+    }
+
+    // Active claims
+    if ((_analytics?.activeClaims ?? 0) > 0) {
+      priorities.add({
+        'type': 'active_claims',
+        'title': '${_analytics!.activeClaims} Active Claims',
+        'message': 'Claims currently being processed',
+        'priority': 'low',
+        'icon': Icons.assignment,
+        'color': Colors.blue,
+      });
+    }
+
+    return priorities;
+  }
+
+  /// Format currency for display
+  String formatCurrency(double amount) {
+    if (amount >= 10000000) { // 1 crore
+      return '₹${(amount / 10000000).toStringAsFixed(1)}Cr';
+    } else if (amount >= 100000) { // 1 lakh
+      return '₹${(amount / 100000).toStringAsFixed(1)}L';
+    } else if (amount >= 1000) { // 1 thousand
+      return '₹${(amount / 1000).toStringAsFixed(1)}K';
+    } else {
+      return '₹${amount.toStringAsFixed(0)}';
+    }
+  }
+
+  /// Format percentage for display
+  String formatPercentage(double percentage) {
+    return '${percentage >= 0 ? '+' : ''}${percentage.toStringAsFixed(1)}%';
+  }
+
+  /// Get greeting based on time of day
+  String getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Good Morning';
+    } else if (hour < 17) {
+      return 'Good Afternoon';
+    } else {
+      return 'Good Evening';
+    }
+  }
+}
