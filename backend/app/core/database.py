@@ -18,7 +18,7 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-def get_db() -> Session:
+def get_db():
     """
     Dependency function to get database session
     Use this in FastAPI route dependencies

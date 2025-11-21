@@ -1,7 +1,7 @@
 """
 User models
 """
-from sqlalchemy import Column, String, Boolean, Integer, ForeignKey, Text
+from sqlalchemy import Column, String, Boolean, Integer, ForeignKey, Text, DateTime
 from sqlalchemy.orm import relationship
 from .base import Base, TimestampMixin
 
