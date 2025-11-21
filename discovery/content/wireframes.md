@@ -214,11 +214,17 @@ Feature Flag Dependencies:
 │  │   (Red header bar with white text)                │   │
 │  └─────────────────────────────────────────────────┘   │
 ├─────────────────────────────────────────────────────────┤
-│  📢 Banner Section (Carousel/Slider)                    │
+│  🎠 Dynamic Presentation Carousel                       │
 │  ┌─────────────────────────────────────────────────┐   │
-│  │ 🎨 LIC Branding Banner                           │   │
-│  │    Family imagery with promotional content        │   │
-│  │    Pagination dots indicator                      │   │
+│  │ 🎠 Agent-Created Presentation Slides             │   │
+│  │    • Auto-playing carousel (4-5s per slide)     │   │
+│  │    • Images, videos, and text overlays          │   │
+│  │    • Dot indicators showing current slide        │   │
+│  │    • Swipe navigation enabled                    │   │
+│  │    • Height: 220px (mobile optimized)          │   │
+│  │    • Agent branding (logo, contact CTA)         │   │
+│  │    • CTA buttons for actions                    │   │
+│  │    • ✏️ Edit button (top right)                 │   │
 │  └─────────────────────────────────────────────────┘   │
 ├─────────────────────────────────────────────────────────┤
 │  🎯 Feature Tiles Grid (2 rows × 3 columns)           │
@@ -251,7 +257,8 @@ Additional UI Elements:
 
 Feature Flag Dependencies:
 - agent_home_dashboard_enabled (Main dashboard)
-- banner_carousel_enabled (Promotional banners)
+- presentation_carousel_enabled (Dynamic presentation carousel)
+- presentation_carousel_homepage_enabled (Home screen integration)
 - feature_tiles_enabled (Quick access tiles)
 - notification_badges_enabled (Badge indicators)
 - my_policies_section_enabled (Policy overview)
@@ -314,15 +321,26 @@ Feature Flag Dependencies:
 ┌─────────────────────────────────────────────────────────┐
 │  📢 PRESENTATIONS SCREEN                               │
 │  ┌─────────────────────────────────────────────────┐   │
-│  │ ← Back Arrow │ 📢 Presentations │ (Red header)    │   │
+│  │ ← Back Arrow │ 📢 Presentations │ ✏️ Edit (Red header)│   │
+│  └─────────────────────────────────────────────────┘   │
+├─────────────────────────────────────────────────────────┤
+│  🎠 Presentation Carousel (Home Screen Integration)    │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │ 🎠 Active Presentation Preview                   │   │
+│  │    • Auto-playing carousel (4-5s per slide)     │   │
+│  │    • Dot indicators showing current slide        │   │
+│  │    • Swipe navigation enabled                    │   │
+│  │    • Height: 220px (mobile)                     │   │
 │  └─────────────────────────────────────────────────┘   │
 ├─────────────────────────────────────────────────────────┤
 │  📚 Presentation Library                                │
 │  ┌─────────────────────────────────────────────────┐   │
 │  │ 📄 Presentation List (when available)            │   │
-│  │    • PDFs, videos, images                        │   │
-│  │    • Organized by categories                     │   │
-│  │    • Upload date and size                        │   │
+│  │    • Active presentation (highlighted)          │   │
+│  │    • Draft presentations                        │   │
+│  │    • Archived presentations                     │   │
+│  │    • Organized by categories                    │   │
+│  │    • Upload date and size                       │   │
 │  └─────────────────────────────────────────────────┘   │
 ├─────────────────────────────────────────────────────────┤
 │  🚫 Empty State (when no presentations)                 │
@@ -331,21 +349,29 @@ Feature Flag Dependencies:
 │  │    (Light blue and gray)                         │   │
 │  │ 📝 "No Presentation Available"                   │   │
 │  │    (Dark gray text, centered layout)            │   │
+│  │ 💡 "Create your first presentation"              │   │
 │  └─────────────────────────────────────────────────┘   │
 ├─────────────────────────────────────────────────────────┤
 │  🎯 Action Buttons                                     │
 │  ┌─────────────────────────────────────────────────┐   │
-│  │ ➕ Upload New Presentation                       │   │
+│  │ ➕ Create New Presentation                       │   │
+│  │    • Start from scratch                         │   │
+│  │    • Use template                               │   │
+│  │    • Import from library                        │   │
+│  │ ✏️ Edit Active Presentation                      │   │
 │  │ 📤 Send to Clients                               │   │
 │  │    • All clients                                 │   │
 │  │    • Specific groups (age, profession, etc.)     │   │
-│  │    • Individual clients                           │   │
+│  │    • Individual clients                          │   │
 │  └─────────────────────────────────────────────────┘   │
 ├─────────────────────────────────────────────────────────┤
 │  🔴 Floating Action Button (FAB)                       │
 │  ┌─────────────────────────────────────────────────┐   │
 │  │ 🔴 Red circular button (bottom right corner)     │   │
 │  │    White lowercase 'i' (information icon)         │   │
+│  │    • Presentation tips                           │   │
+│  │    • Template suggestions                        │   │
+│  │    • Analytics insights                          │   │
 │  └─────────────────────────────────────────────────┘   │
 ├─────────────────────────────────────────────────────────┤
 │  🔙 Exit Functionality                                 │
@@ -356,17 +382,123 @@ Feature Flag Dependencies:
 └─────────────────────────────────────────────────────────┘
 
 Additional Features:
+- Dynamic carousel: Auto-playing slide carousel on home screen
+- In-app editor: Full-featured slide editor within mobile app
+- Media support: Images and videos with custom layouts
+- Template system: Pre-built templates for common insurance products
+- Offline support: Local caching for offline editing and viewing
+- Backend sync: Real-time synchronization with backend storage
+- Personal branding: Agent logo and contact CTA integration
 - Analytics tracking: Monitor presentation engagement (views, forwards, interest levels)
 - Content categories: Organize presentations by target audience type
 - Targeted broadcasting: Send to specific client segments
 
 Feature Flag Dependencies:
 - presentations_screen_enabled (Main feature)
+- presentation_carousel_enabled (Carousel display on home screen)
+- presentation_editor_enabled (In-app editor functionality)
 - presentation_library_enabled (Content management)
+- presentation_templates_enabled (Template system)
+- presentation_offline_mode_enabled (Offline editing support)
 - empty_state_enabled (Empty state display)
 - fab_information_enabled (FAB button)
 - targeted_broadcasting_enabled (Segment-based sending)
 - presentation_analytics_enabled (Engagement tracking)
+- presentation_branding_enabled (Agent branding integration)
+```
+
+### 3.0.2.1 Presentation Editor Screen (Agent App)
+```
+┌─────────────────────────────────────────────────────────┐
+│  ✏️ PRESENTATION EDITOR                                │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │ ← Back │ ✏️ Edit Presentation │ 💾 Save Draft    │   │
+│  │   (Red header with white text)                   │   │
+│  └─────────────────────────────────────────────────┘   │
+├─────────────────────────────────────────────────────────┤
+│  📋 Slide List (Reorderable)                            │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │ ☰ Slide 1: "Secure Your Family's Future"        │   │
+│  │    🖼️ Image • 📝 Centered Layout • ⏱️ 4s        │   │
+│  │    ✏️ Edit │ 🗑️ Delete │ ⬆️ ⬇️ Reorder          │   │
+│  ├─────────────────────────────────────────────────┤   │
+│  │ ☰ Slide 2: "Health Insurance Benefits"         │   │
+│  │    🎥 Video • 📝 Left Aligned • ⏱️ 5s           │   │
+│  │    ✏️ Edit │ 🗑️ Delete │ ⬆️ ⬇️ Reorder          │   │
+│  ├─────────────────────────────────────────────────┤   │
+│  │ ☰ Slide 3: "Child Education Plans"              │   │
+│  │    🖼️ Image • 📝 Grid Layout • ⏱️ 4s            │   │
+│  │    ✏️ Edit │ 🗑️ Delete │ ⬆️ ⬇️ Reorder          │   │
+│  └─────────────────────────────────────────────────┘   │
+├─────────────────────────────────────────────────────────┤
+│  ➕ Add New Slide                                       │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │ ➕ Add Slide │ 📋 Use Template │ 📤 Import      │   │
+│  │    • Start blank                                │   │
+│  │    • Choose from templates                      │   │
+│  │    • Import existing slide                      │   │
+│  └─────────────────────────────────────────────────┘   │
+├─────────────────────────────────────────────────────────┤
+│  🎨 Editor Panel (When slide selected)                  │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │ 📝 Title: [Rich Text Editor]                    │   │
+│  │    • Bold, italic, color, size                 │   │
+│  │ 📝 Subtitle: [Rich Text Editor]                 │   │
+│  │    • Formatting options                         │   │
+│  │ 🖼️ Media: [Image/Video Picker]                  │   │
+│  │    • Gallery │ 📷 Camera │ 🎥 Video            │   │
+│  │    • Preview thumbnail                          │   │
+│  │ 🎨 Layout: [Centered] [Left] [Grid]            │   │
+│  │    • Visual layout selector                     │   │
+│  │ 🎨 Text Color: [Color Picker]                   │   │
+│  │    • Hex color picker                           │   │
+│  │ 🎨 Background: [Color Picker]                    │   │
+│  │    • Background color selection                 │   │
+│  │ ⏱️ Duration: [4] seconds                        │   │
+│  │    • Slider: 2-10 seconds                      │   │
+│  │ 🔘 CTA Button: [Enable] [Text] [Action]        │   │
+│  │    • Button text input                          │   │
+│  │    • Action selector (navigate, call, etc.)     │   │
+│  │ 🏷️ Agent Branding: [Enable Logo] [Show Contact]│   │
+│  │    • Toggle agent logo                          │   │
+│  │    • Toggle contact CTA                         │   │
+│  └─────────────────────────────────────────────────┘   │
+├─────────────────────────────────────────────────────────┤
+│  👁️ Preview Mode                                        │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │ 👁️ Preview │ ▶️ Play │ ⏸️ Pause │ 🔄 Refresh   │   │
+│  │    • Live carousel preview                      │   │
+│  │    • Auto-play simulation                      │   │
+│  │    • Full-screen preview option                │   │
+│  └─────────────────────────────────────────────────┘   │
+├─────────────────────────────────────────────────────────┤
+│  🎯 Action Buttons                                     │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │ 💾 Save Draft │ 🚀 Publish │ ❌ Cancel          │   │
+│  │    • Save as draft for later editing            │   │
+│  │    • Publish to make live on home screen        │   │
+│  │    • Cancel and discard changes                 │   │
+│  └─────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────┘
+
+Additional Features:
+- Drag & drop reordering: Intuitive slide reordering
+- Rich text editing: Format title and subtitle with colors, sizes
+- Media optimization: Auto-compress images before upload
+- Template library: Pre-built templates for insurance products
+- Offline editing: Edit slides without internet connection
+- Auto-save: Automatic draft saving every 30 seconds
+- Undo/Redo: Support for undo/redo actions
+
+Feature Flag Dependencies:
+- presentation_editor_enabled (Main editor feature)
+- slide_editor_enabled (Individual slide editing)
+- media_picker_enabled (Image/video selection)
+- rich_text_editor_enabled (Text formatting)
+- template_system_enabled (Template library)
+- preview_mode_enabled (Live preview)
+- offline_editing_enabled (Offline support)
+- auto_save_enabled (Auto-save drafts)
 ```
 
 ### 3.0.3 Daily Motivational Quotes Screen (Agent App)

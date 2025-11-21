@@ -3612,6 +3612,472 @@ class _AgentDashboardPageState extends State<AgentDashboardPage> {
 }
 ```
 
+### 4.2 Presentation Carousel Homepage Integration
+
+> **Reference:** See [Presentation Carousel Homepage Design](./presentation-carousel-homepage.md) for complete architecture and implementation details.
+
+#### Home Dashboard with Presentation Carousel
+```dart
+class AgentHomeDashboardPage extends StatefulWidget {
+  @override
+  _AgentHomeDashboardPageState createState() => _AgentHomeDashboardPageState();
+}
+
+class _AgentHomeDashboardPageState extends State<AgentHomeDashboardPage> {
+  late PresentationViewModel _presentationViewModel;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPresentation();
+  }
+
+  Future<void> _loadPresentation() async {
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final agent = await authService.getCurrentAgent();
+      
+      _presentationViewModel = await PresentationService()
+          .getActivePresentation(agent.agentId);
+      setState(() => _isLoading = false);
+    } catch (e) {
+      // Load from cache if offline
+      final cached = await PresentationCacheService().getCachedPresentation();
+      setState(() {
+        _presentationViewModel = cached ?? PresentationViewModel.empty();
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.menu),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
+        title: Text('Home'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.notifications),
+            onPressed: () => Navigator.pushNamed(context, '/notifications'),
+          ),
+        ],
+        backgroundColor: Colors.red[700],
+        foregroundColor: Colors.white,
+      ),
+      body: RefreshIndicator(
+        onRefresh: _loadPresentation,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Dynamic Presentation Carousel
+              if (!_isLoading && _presentationViewModel.slides.isNotEmpty)
+                PresentationCarousel(
+                  slides: _presentationViewModel.slides,
+                  height: 220,
+                  autoPlay: true,
+                  onEditPressed: () {
+                    Navigator.pushNamed(context, '/presentations/editor');
+                  },
+                )
+              else if (!_isLoading)
+                _buildEmptyCarouselState(),
+
+              const SizedBox(height: 16),
+
+              // Feature Tiles Grid
+              _buildFeatureTilesGrid(),
+
+              const SizedBox(height: 16),
+
+              // My Policies Section
+              _buildMyPoliciesSection(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyCarouselState() {
+    return Container(
+      height: 220,
+      color: Colors.grey[200],
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.slideshow, size: 48, color: Colors.grey[400]),
+            SizedBox(height: 8),
+            Text(
+              'No presentation available',
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+            SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: () => Navigator.pushNamed(context, '/presentations/editor'),
+              child: Text('Create Presentation'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+### 4.3 Presentation Editor Page
+
+#### Full-Featured Presentation Editor Implementation
+```dart
+class PresentationEditorPage extends StatefulWidget {
+  final String? presentationId; // null for new presentation
+
+  const PresentationEditorPage({Key? key, this.presentationId}) : super(key: key);
+
+  @override
+  _PresentationEditorPageState createState() => _PresentationEditorPageState();
+}
+
+class _PresentationEditorPageState extends State<PresentationEditorPage> {
+  late PresentationEditorViewModel _viewModel;
+  bool _isLoading = true;
+  bool _hasUnsavedChanges = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeEditor();
+  }
+
+  Future<void> _initializeEditor() async {
+    try {
+      if (widget.presentationId != null) {
+        _viewModel = await PresentationService()
+            .loadPresentation(widget.presentationId!);
+      } else {
+        _viewModel = PresentationEditorViewModel.empty();
+      }
+      setState(() => _isLoading = false);
+    } catch (e) {
+      // Handle error
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('Edit Presentation'),
+          backgroundColor: Colors.red[700],
+          foregroundColor: Colors.white,
+        ),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => _handleBackPress(),
+        ),
+        title: Text('Edit Presentation'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.save),
+            onPressed: _saveDraft,
+            tooltip: 'Save Draft',
+          ),
+          ElevatedButton(
+            onPressed: _publishPresentation,
+            child: Text('Publish'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red[700],
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+        backgroundColor: Colors.red[700],
+        foregroundColor: Colors.white,
+      ),
+      body: Column(
+        children: [
+          // Slide List (Reorderable)
+          Expanded(
+            flex: 2,
+            child: _buildSlideListView(),
+          ),
+          
+          // Editor Panel (When slide selected)
+          if (_viewModel.selectedSlide != null)
+            Expanded(
+              flex: 3,
+              child: _buildEditorPanel(),
+            ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addNewSlide,
+        backgroundColor: Colors.red[700],
+        child: Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildSlideListView() {
+    return ReorderableListView.builder(
+      itemCount: _viewModel.slides.length,
+      onReorder: (oldIndex, newIndex) {
+        setState(() {
+          _viewModel.reorderSlides(oldIndex, newIndex);
+          _hasUnsavedChanges = true;
+        });
+      },
+      itemBuilder: (context, index) {
+        final slide = _viewModel.slides[index];
+        return ListTile(
+          key: ValueKey(slide.id),
+          leading: Icon(Icons.drag_handle),
+          title: Text(slide.title ?? 'Untitled Slide'),
+          subtitle: Text('${slide.type} • ${slide.layout} • ${slide.duration}s'),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: Icon(Icons.edit),
+                onPressed: () => _selectSlide(slide),
+              ),
+              IconButton(
+                icon: Icon(Icons.delete),
+                onPressed: () => _deleteSlide(slide),
+              ),
+            ],
+          ),
+          onTap: () => _selectSlide(slide),
+        );
+      },
+    );
+  }
+
+  Widget _buildEditorPanel() {
+    final slide = _viewModel.selectedSlide!;
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title Editor
+          TextField(
+            decoration: InputDecoration(
+              labelText: 'Title',
+              border: OutlineInputBorder(),
+            ),
+            controller: TextEditingController(text: slide.title),
+            onChanged: (value) {
+              setState(() {
+                slide.title = value;
+                _hasUnsavedChanges = true;
+              });
+            },
+          ),
+          SizedBox(height: 16),
+          
+          // Subtitle Editor
+          TextField(
+            decoration: InputDecoration(
+              labelText: 'Subtitle',
+              border: OutlineInputBorder(),
+            ),
+            controller: TextEditingController(text: slide.subtitle),
+            onChanged: (value) {
+              setState(() {
+                slide.subtitle = value;
+                _hasUnsavedChanges = true;
+              });
+            },
+          ),
+          SizedBox(height: 16),
+          
+          // Media Picker
+          _buildMediaPicker(slide),
+          SizedBox(height: 16),
+          
+          // Layout Selector
+          _buildLayoutSelector(slide),
+          SizedBox(height: 16),
+          
+          // Color Pickers
+          _buildColorPickers(slide),
+          SizedBox(height: 16),
+          
+          // Duration Slider
+          _buildDurationSlider(slide),
+          SizedBox(height: 16),
+          
+          // CTA Button Settings
+          _buildCTASettings(slide),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMediaPicker(SlideModel slide) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Media', style: TextStyle(fontWeight: FontWeight.bold)),
+        SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () => _pickImage(slide),
+                icon: Icon(Icons.image),
+                label: Text('Image'),
+              ),
+            ),
+            SizedBox(width: 8),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () => _pickVideo(slide),
+                icon: Icon(Icons.video_library),
+                label: Text('Video'),
+              ),
+            ),
+          ],
+        ),
+        if (slide.mediaUrl != null)
+          Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: Image.network(slide.mediaUrl!, height: 100),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _saveDraft() async {
+    try {
+      await PresentationService().saveDraft(_viewModel.toPresentation());
+      setState(() => _hasUnsavedChanges = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Draft saved successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving draft: $e')),
+      );
+    }
+  }
+
+  Future<void> _publishPresentation() async {
+    try {
+      await PresentationService().publishPresentation(_viewModel.toPresentation());
+      Navigator.pop(context, true); // Return true to indicate refresh needed
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error publishing: $e')),
+      );
+    }
+  }
+}
+```
+
+### 4.4 Presentation List Page
+
+#### Presentations Library Implementation
+```dart
+class PresentationsListPage extends StatefulWidget {
+  @override
+  _PresentationsListPageState createState() => _PresentationsListPageState();
+}
+
+class _PresentationsListPageState extends State<PresentationsListPage> {
+  List<PresentationModel> _presentations = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPresentations();
+  }
+
+  Future<void> _loadPresentations() async {
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final agent = await authService.getCurrentAgent();
+      
+      _presentations = await PresentationService()
+          .getAllPresentations(agent.agentId);
+      setState(() => _isLoading = false);
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text('Presentations'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.edit),
+            onPressed: () => Navigator.pushNamed(context, '/presentations/editor'),
+          ),
+        ],
+        backgroundColor: Colors.red[700],
+        foregroundColor: Colors.white,
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : _presentations.isEmpty
+              ? _buildEmptyState()
+              : _buildPresentationsList(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Navigator.pushNamed(context, '/presentations/editor'),
+        backgroundColor: Colors.red[700],
+        child: Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.slideshow, size: 64, color: Colors.grey[400]),
+          SizedBox(height: 16),
+          Text(
+            'No Presentation Available',
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.grey[600],
+            ),
+          ),
+          SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: () => Navigator.pushNamed(context, '/presentations/editor'),
+            child: Text('Create Your First Presentation'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
 ## 5. Agent Configuration Portal Wireframes
 
 ### 5.1 Agent Configuration Portal Overview

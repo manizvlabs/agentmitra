@@ -88,6 +88,7 @@ lib/
 │   ├── 📋 policies/                # Insurance Policies
 │   ├── 💳 payments/                # Payment Processing
 │   ├── 💬 chat/                    # Chat & Communication
+│   ├── 📢 presentations/           # Presentation Carousel & Editor
 │   ├── 📊 dashboard/               # Analytics Dashboard
 │   ├── 🎥 tutorials/               # Video Tutorials
 │   └── 🔔 notifications/           # Push Notifications
@@ -281,6 +282,56 @@ lib/features/chat/
     └── 🧪 integration/
 ```
 
+#### Presentation Carousel Feature
+```
+lib/features/presentations/
+├── 📱 presentation/
+│   ├── 📱 widgets/
+│   │   ├── 📱 presentation_carousel.dart      # Main carousel widget
+│   │   ├── 📱 slide_view.dart                 # Individual slide renderer
+│   │   ├── 📱 slide_image_view.dart           # Image slide widget
+│   │   ├── 📱 slide_video_view.dart           # Video slide widget
+│   │   └── 📱 slide_text_overlay.dart         # Text overlay widget
+│   ├── 📱 pages/
+│   │   ├── 📱 presentations_list_page.dart    # Presentations library
+│   │   └── 📱 presentation_preview_page.dart     # Full-screen preview
+│   └── 🏗️ viewmodels/
+│       └── 🏗️ presentation_viewmodel.dart     # Carousel logic
+├── ✏️ editor/
+│   ├── 📱 pages/
+│   │   ├── 📱 presentation_editor_page.dart    # Main editor screen
+│   │   ├── 📱 slide_editor_page.dart           # Individual slide editor
+│   │   └── 📱 template_selector_page.dart      # Template selection
+│   ├── 🧩 widgets/
+│   │   ├── 🧩 slide_list_view.dart             # Reorderable slide list
+│   │   ├── 🧩 media_picker_widget.dart         # Image/video picker
+│   │   ├── 🧩 text_editor_widget.dart          # Rich text editor
+│   │   ├── 🧩 layout_selector_widget.dart     # Layout options
+│   │   ├── 🧩 color_picker_widget.dart         # Color selection
+│   │   └── 🧩 preview_widget.dart             # Live preview
+│   └── 🏗️ viewmodels/
+│       ├── 🏗️ presentation_editor_viewmodel.dart
+│       └── 🏗️ slide_editor_viewmodel.dart
+├── 💾 data/
+│   ├── 💾 models/
+│   │   ├── 💾 slide_model.dart                 # Slide data model
+│   │   ├── 💾 presentation_model.dart          # Presentation model
+│   │   └── 💾 template_model.dart              # Template model
+│   ├── 💾 repositories/
+│   │   └── 💾 presentation_repository.dart     # Data access layer
+│   └── 💾 datasources/
+│       ├── 💾 presentation_remote_datasource.dart # API calls
+│       └── 💾 presentation_local_datasource.dart   # Hive cache
+├── 🔧 services/
+│   ├── 🔧 presentation_service.dart            # API service
+│   ├── 🔧 presentation_cache_service.dart      # Local cache
+│   └── 🔧 media_upload_service.dart            # Media upload
+└── 🧪 test/
+    ├── 🧪 unit/
+    ├── 🧪 widget/
+    └── 🧪 integration/
+```
+
 ### 2.3 Shared Resources Structure
 
 #### Theme & Styling
@@ -338,6 +389,7 @@ lib/shared/constants/
 ├── 🎯 app_constants.dart          # App-wide Constants
 ├── 📊 analytics_constants.dart    # Analytics Events
 ├── 💬 chat_constants.dart         # Chat Configuration
+├── 📢 presentation_constants.dart  # Presentation Configuration
 ├── 💰 payment_constants.dart      # Payment Settings
 ├── 🌐 localization_constants.dart # Language Settings
 └── 🔧 feature_flags.dart          # Feature Toggle Constants
@@ -366,6 +418,7 @@ backend/
 │   │   ├── 📋 policies.py         # Policy Management
 │   │   ├── 💳 payments.py         # Payment Processing
 │   │   ├── 💬 chat.py             # Chat & Communication
+│   │   ├── 📢 presentations.py   # Presentation Management
 │   │   ├── 📊 analytics.py        # Analytics & Reporting
 │   │   ├── 🎥 content.py          # Content Management
 │   │   └── 🤖 chatbot.py          # AI Chatbot
@@ -375,6 +428,7 @@ backend/
 │   ├── 📋 policy.py               # Policy Models
 │   ├── 💳 payment.py              # Payment Models
 │   ├── 💬 chat.py                 # Chat Models
+│   ├── 📢 presentations.py        # Presentation Models
 │   ├── 📊 analytics.py            # Analytics Models
 │   └── 🎥 content.py              # Content Models
 ├── 🔧 services/                   # Business Logic
@@ -382,6 +436,7 @@ backend/
 │   ├── 💳 payment_service.py      # Payment Processing
 │   ├── 💬 chat_service.py         # Chat Service
 │   ├── 🤖 chatbot_service.py      # AI Chatbot Service
+│   ├── 📢 presentation_service.py # Presentation Service
 │   ├── 📧 email_service.py        # Email Service
 │   ├── 📱 sms_service.py          # SMS Service
 │   └── 📊 analytics_service.py    # Analytics Service
@@ -390,6 +445,7 @@ backend/
 │   ├── 📋 policy_repository.py    # Policy Data Access
 │   ├── 💳 payment_repository.py   # Payment Data Access
 │   ├── 💬 chat_repository.py      # Chat Data Access
+│   ├── 📢 presentation_repository.py # Presentation Data Access
 │   └── 📊 analytics_repository.py # Analytics Data Access
 ├── 🧪 tests/                      # Test Suite
 │   ├── 🧪 unit/                   # Unit Tests
@@ -477,6 +533,11 @@ backend/models/
 │   ├── ChatMessage model
 │   ├── WhatsAppMessage model
 │   └── Conversation model
+├── 📢 presentations.py
+│   ├── Presentation model
+│   ├── Slide model
+│   ├── PresentationTemplate model
+│   └── MediaUpload model
 ├── 📊 analytics.py
 │   ├── UserEvent model
 │   ├── UserJourney model

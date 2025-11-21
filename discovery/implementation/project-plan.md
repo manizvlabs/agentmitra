@@ -327,6 +327,11 @@ Agent Mitra is a comprehensive platform serving:
    - Create policy management screens
    - Set up payment screens with mock transactions (DEFERRED)
    - Build settings and profile management pages
+   - **Implement Presentation Carousel on Home Screen**
+     - Create dynamic carousel widget with auto-play
+     - Implement slide view renderer (image/video/text)
+     - Set up local caching for offline support
+     - Integrate with home dashboard
    - Create Agent Portal basic layout and navigation
    - Implement data import dashboard wireframe
    - Set up Portal authentication and user management foundation
@@ -446,6 +451,7 @@ Agent Mitra is a comprehensive platform serving:
 - Create campaign performance analytics from `smart-dashboards-design.md`
 - Expand Agent Configuration Portal with customer data management
 - Set up callback priority queue and SLA tracking
+- **Complete Presentation Carousel Editor Module** from `presentation-carousel-homepage.md`
 
 **Tasks:**
 1. **Callback Request Management System (Week 13)**
@@ -466,20 +472,36 @@ Agent Mitra is a comprehensive platform serving:
    - Set up agent productivity tracking
    - Build ROI measurement and reporting
 
-4. **Portal-Flutter Integration (Week 14)**
+4. **Presentation Carousel Editor (Week 14)**
+   - Implement full-featured presentation editor UI
+   - Create slide editor with media picker (image/video)
+   - Build rich text editor for title/subtitle
+   - Implement layout selector and color picker
+   - Set up template system with pre-built templates
+   - Create preview mode with live carousel simulation
+   - Implement drag & drop slide reordering
+   - Set up offline editing support with local cache
+   - Integrate media upload service with backend
+   - Add auto-save and draft management
+
+5. **Portal-Flutter Integration (Week 14)**
    - Implement data synchronization between Portal and Mobile app
    - Set up real-time callback notifications
    - Create unified agent dashboard across platforms
    - Integrate callback management with existing workflows
+   - Sync presentation data between Portal and Mobile app
 
 **Deliverables:**
 - ✅ Callback request management fully functional with priority queue
 - ✅ Agent Portal expanded with customer data management
 - ✅ Campaign and content performance analytics operational
+- ✅ Presentation Carousel Editor fully functional with all features
+- ✅ Template system operational with pre-built templates
+- ✅ Offline editing support implemented
 - ✅ Portal-Mobile app integration working
 - ✅ SLA tracking and escalation rules implemented
 
-**Documents Covered:** `marketing-campaigns-design.md`, `smart-dashboards-design.md`, `pages-design.md`
+**Documents Covered:** `marketing-campaigns-design.md`, `smart-dashboards-design.md`, `pages-design.md`, `presentation-carousel-homepage.md`
 
 #### Weeks 15-16: Multi-Tenant & Enterprise Features
 **Duration:** 10 days | **Effort:** 80 hours | **Resources:** 3 Developers
@@ -893,14 +915,14 @@ Agent Mitra is a comprehensive platform serving:
 🔷 Phase 2: Core Development
 ├── Weeks 3-4: python-backend-design.md, authentication-design.md
 ├── Weeks 5-6: whatsapp-chatbot-design.md, smart-dashboards-design.md
-└── Weeks 7-8: pages-design.md, wireframes.md, navigation-hierarchy.md
+└── Weeks 7-8: pages-design.md, wireframes.md, navigation-hierarchy.md, presentation-carousel-homepage.md (carousel widget)
 
 🔷 Phase 3: Integration & Testing
 ├── Weeks 9-10: pages-design.md, python-backend-design.md
 └── Weeks 11-12: user-journey.md
 
 🔷 Phase 4: Advanced Features & Portal Expansion
-├── Weeks 13-14: marketing-campaigns-design.md, smart-dashboards-design.md, pages-design.md
+├── Weeks 13-14: marketing-campaigns-design.md, smart-dashboards-design.md, pages-design.md, presentation-carousel-homepage.md (editor module)
 ├── Week 15: multitenant-architecture-design.md, role-based-access-control.md
 └── Week 16: content-structure.md
 
@@ -919,7 +941,7 @@ Agent Mitra is a comprehensive platform serving:
 **Total Duration:** 20 weeks (5 months)
 **Total Effort:** 1,400+ developer hours
 **Team Size:** 8-10 developers + support staff (including 2 Portal developers)
-**Documents Covered:** 17 comprehensive design documents
+**Documents Covered:** 18 comprehensive design documents (including presentation-carousel-homepage.md)
 **Key Deliverables:** Production-ready multi-tenant insurance platform with Agent Configuration Portal
 
 **Updated Project Scope:**
@@ -927,6 +949,7 @@ Agent Mitra is a comprehensive platform serving:
 - ✅ Agent Mitra Config Portal (Web) - Agent-facing administrative platform
 - ✅ Official LIC Systems Integration - Existing infrastructure
 - ✅ Enhanced Customer Onboarding (5-step process)
+- ✅ Presentation Carousel Homepage - Dynamic carousel with in-app editor
 - ✅ Callback Request Management with priority queue
 - ✅ Campaign Performance Analytics
 - ✅ Content Performance Analytics
