@@ -433,7 +433,7 @@ class SyncService {
   void _startAutoSync() {
     // Schedule periodic sync every 10 minutes
     Future.delayed(const Duration(minutes: 10), () async {
-      if (await _isConnected()) {
+      if (ConnectivityService.isConnected) {
         await performFullSync();
         _startAutoSync(); // Schedule next sync
       }
@@ -449,7 +449,7 @@ class SyncService {
     return {
       'last_sync': lastSync?.toIso8601String(),
       'pending_conflicts': conflicts.length,
-      'is_connected': await _isConnected(),
+      'is_connected': ConnectivityService.isConnected,
     };
   }
 

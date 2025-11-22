@@ -111,7 +111,7 @@ class OfflineStatusDialog extends ConsumerWidget {
             context,
             'Connection Status',
             _getConnectivityDescription(connectivityResult),
-            !isConnected ? Colors.red : Colors.orange,
+            !connectivityResult ? Colors.red : Colors.orange,
           ),
 
           const SizedBox(height: 12),
@@ -192,7 +192,7 @@ class OfflineStatusDialog extends ConsumerWidget {
   }
 
   Widget _buildFeatureList(BuildContext context, bool isConnected) {
-    final features = _getAvailableFeatures(result);
+    final features = _getAvailableFeatures(isConnected);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

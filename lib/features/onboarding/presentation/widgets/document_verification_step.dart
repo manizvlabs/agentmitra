@@ -43,7 +43,7 @@ class _DocumentVerificationStepState extends State<DocumentVerificationStep> {
     super.dispose();
   }
 
-  Future<void> _pickImage(dynamic source, String documentType) async {
+  Future<void> _pickImage(String source, String documentType) async {
     // TODO: Implement web-compatible image picking
     // try {
     //   final pickedFile = await _imagePicker.pickImage(
@@ -70,14 +70,14 @@ class _DocumentVerificationStepState extends State<DocumentVerificationStep> {
 
     //     // Save data
     //     await _saveDocumentData();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to pick image: $e')),
-        );
-      }
-    }
+    //   }
+    // } catch (e) {
+    //   if (mounted) {
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //       SnackBar(content: Text('Failed to pick image: $e')),
+    //     );
+    //   }
+    // }
   }
 
   Future<void> _saveDocumentData() async {
@@ -106,7 +106,7 @@ class _DocumentVerificationStepState extends State<DocumentVerificationStep> {
               title: const Text('Take Photo'),
               onTap: () {
                 Navigator.pop(context);
-                _pickImage(ImageSource.camera, documentType);
+                _pickImage('camera', documentType);
               },
             ),
             ListTile(
@@ -114,7 +114,7 @@ class _DocumentVerificationStepState extends State<DocumentVerificationStep> {
               title: const Text('Choose from Gallery'),
               onTap: () {
                 Navigator.pop(context);
-                _pickImage(ImageSource.gallery, documentType);
+                _pickImage('gallery', documentType);
               },
             ),
           ],
@@ -369,7 +369,7 @@ class _DocumentVerificationStepState extends State<DocumentVerificationStep> {
     );
   }
 
-  Widget _buildImageUploadField(String label, File? imageFile, VoidCallback onTap) {
+  Widget _buildImageUploadField(String label, dynamic imageFile, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       child: Container(

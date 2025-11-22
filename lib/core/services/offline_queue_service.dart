@@ -209,7 +209,7 @@ class OfflineQueueService {
   /// Process the offline queue
   Future<void> _processQueue() async {
     if (_isProcessing) return;
-    if (!(await _isConnected())) return;
+    if (!ConnectivityService.isConnected) return;
 
     _isProcessing = true;
     _syncController.add(SyncStatus.syncing);

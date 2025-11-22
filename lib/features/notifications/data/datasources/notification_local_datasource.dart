@@ -144,8 +144,7 @@ class NotificationLocalDataSource {
   }
 
   /// Check if device is online
-  Future<bool> isOnline() async {
-    final result = await _connectivity.checkConnectivity();
-    return result != ConnectivityResult.none;
+  bool isOnline() {
+    return ConnectivityService.isConnected;
   }
 }

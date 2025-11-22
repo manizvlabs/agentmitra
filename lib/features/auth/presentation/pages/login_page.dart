@@ -226,11 +226,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  // IconData _getBiometricIcon() {
-  //   // In a real app, you'd check the available biometrics
-  //   // For now, default to fingerprint
-  //   return Icons.fingerprint;
-  // }
+  IconData _getBiometricIcon() {
+    // In a real app, you'd check the available biometrics
+    // For now, default to fingerprint
+    return Icons.fingerprint;
+  }
 
   Widget _buildAdditionalOptions() {
     return Column(
