@@ -28,8 +28,8 @@ class MockChatbotViewModel extends ChangeNotifier {
       sessionId: 'session_123',
       agentId: 'agent_123',
       customerId: 'user_123',
-      status: 'active',
       startedAt: DateTime.now(),
+      status: 'active',
     );
 
     _messages = [
@@ -108,10 +108,9 @@ class MockChatbotViewModel extends ChangeNotifier {
     _currentSession = ChatSession(
       sessionId: 'session_${DateTime.now().millisecondsSinceEpoch}',
       agentId: 'agent_123',
-      userId: 'user_123',
+      customerId: 'user_123',
+      startedAt: DateTime.now(),
       status: 'active',
-      createdAt: DateTime.now(),
-      lastActivityAt: DateTime.now(),
     );
 
     _messages.clear();

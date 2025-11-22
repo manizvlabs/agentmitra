@@ -26,43 +26,47 @@ class MockClaimsViewModel extends ChangeNotifier {
       Claim(
         claimId: 'CLM001',
         policyId: 'POL001',
-        customerId: 'CUST001',
-        customerName: 'John Doe',
-        claimAmount: 50000.0,
-        claimReason: 'Medical Emergency',
+        policyholderId: 'PH001',
+        claimType: 'Medical',
         description: 'Hospitalization due to accident',
+        incidentDate: DateTime.now().subtract(const Duration(days: 10)),
+        claimDate: DateTime.now().subtract(const Duration(days: 7)),
+        claimedAmount: 50000.0,
         status: 'approved',
-        submittedDate: DateTime.now().subtract(const Duration(days: 7)),
-        approvedDate: DateTime.now().subtract(const Duration(days: 3)),
-        documents: ['medical_report.pdf', 'bill_receipt.pdf'],
-        comments: 'Claim approved after document verification',
+        documents: {
+          'medical_report': 'medical_report.pdf',
+          'bill_receipt': 'bill_receipt.pdf',
+        },
       ),
       Claim(
         claimId: 'CLM002',
         policyId: 'POL002',
-        customerId: 'CUST002',
-        customerName: 'Jane Smith',
-        claimAmount: 25000.0,
-        claimReason: 'Vehicle Damage',
+        policyholderId: 'PH002',
+        claimType: 'Vehicle Damage',
         description: 'Car accident damage',
+        incidentDate: DateTime.now().subtract(const Duration(days: 5)),
+        claimDate: DateTime.now().subtract(const Duration(days: 2)),
+        claimedAmount: 25000.0,
         status: 'pending',
-        submittedDate: DateTime.now().subtract(const Duration(days: 2)),
-        documents: ['accident_report.pdf', 'repair_estimate.pdf'],
-        comments: null,
+        documents: {
+          'accident_report': 'accident_report.pdf',
+          'repair_estimate': 'repair_estimate.pdf',
+        },
       ),
       Claim(
         claimId: 'CLM003',
         policyId: 'POL003',
-        customerId: 'CUST003',
-        customerName: 'Bob Johnson',
-        claimAmount: 15000.0,
-        claimReason: 'Property Damage',
+        policyholderId: 'PH003',
+        claimType: 'Property Damage',
         description: 'House fire damage',
+        incidentDate: DateTime.now().subtract(const Duration(days: 12)),
+        claimDate: DateTime.now().subtract(const Duration(days: 10)),
+        claimedAmount: 15000.0,
         status: 'rejected',
-        submittedDate: DateTime.now().subtract(const Duration(days: 10)),
-        rejectedDate: DateTime.now().subtract(const Duration(days: 5)),
-        documents: ['fire_report.pdf', 'damage_photos.pdf'],
-        comments: 'Insufficient documentation provided',
+        documents: {
+          'fire_report': 'fire_report.pdf',
+          'damage_photos': 'damage_photos.pdf',
+        },
       ),
     ];
   }
@@ -100,10 +104,17 @@ class MockClaimsViewModel extends ChangeNotifier {
     await Future.delayed(const Duration(seconds: 2));
 
     // Add the new claim to the list
-    _claims.insert(0, claim.copyWith(
+    _claims.insert(0, Claim(
       claimId: 'CLM${(_claims.length + 1).toString().padLeft(3, '0')}',
+      policyId: claim.policyId,
+      policyholderId: claim.policyholderId,
+      claimType: claim.claimType,
+      description: claim.description,
+      incidentDate: claim.incidentDate,
+      claimDate: DateTime.now(),
+      claimedAmount: claim.claimedAmount,
       status: 'pending',
-      submittedDate: DateTime.now(),
+      documents: claim.documents,
     ));
 
     _isLoading = false;
@@ -118,11 +129,18 @@ class MockClaimsViewModel extends ChangeNotifier {
 
     final index = _claims.indexWhere((c) => c.claimId == claimId);
     if (index != -1) {
-      _claims[index] = _claims[index].copyWith(
+      final existingClaim = _claims[index];
+      _claims[index] = Claim(
+        claimId: existingClaim.claimId,
+        policyId: existingClaim.policyId,
+        policyholderId: existingClaim.policyholderId,
+        claimType: existingClaim.claimType,
+        description: existingClaim.description,
+        incidentDate: existingClaim.incidentDate,
+        claimDate: existingClaim.claimDate,
+        claimedAmount: existingClaim.claimedAmount,
         status: status,
-        comments: comments,
-        approvedDate: status == 'approved' ? DateTime.now() : null,
-        rejectedDate: status == 'rejected' ? DateTime.now() : null,
+        documents: existingClaim.documents,
       );
     }
 

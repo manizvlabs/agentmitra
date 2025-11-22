@@ -15,7 +15,10 @@ class MockPoliciesViewModel extends ChangeNotifier {
 
   List<Policy> get activePolicies => _policies.where((p) => p.status == 'active').toList();
   List<Policy> get expiredPolicies => _policies.where((p) => p.status == 'expired').toList();
-  List<Policy> get expiringSoonPolicies => _policies.where((p) => p.isExpiringSoon).toList();
+  List<Policy> get expiringSoonPolicies => _policies.where((p) =>
+    p.renewalDate != null &&
+    p.renewalDate!.difference(DateTime.now()).inDays <= 30
+  ).toList();
 
   MockPoliciesViewModel() {
     _initializeMockPolicies();
@@ -25,54 +28,60 @@ class MockPoliciesViewModel extends ChangeNotifier {
     _policies = [
       Policy(
         policyId: 'POL001',
-        customerId: 'CUST001',
-        customerName: 'John Doe',
-        policyType: 'Life Insurance',
         policyNumber: 'LI2023001',
-        premiumAmount: 5000.0,
-        sumAssured: 500000.0,
-        startDate: DateTime.now().subtract(const Duration(days: 365)),
-        endDate: DateTime.now().add(const Duration(days: 365)),
-        status: 'active',
+        providerPolicyId: 'LIC001',
+        policyholderId: 'PH001',
         agentId: 'agent_123',
-        agentName: 'Rajesh Kumar',
-        paymentFrequency: 'monthly',
-        nextPaymentDate: DateTime.now().add(const Duration(days: 30)),
-        documents: ['policy_document.pdf', 'terms_conditions.pdf'],
+        providerId: 'LIC',
+        policyType: 'Life Insurance',
+        planName: 'Life Secure Plus',
+        planCode: 'LIFE_SECURE',
+        category: 'Life Insurance',
+        sumAssured: 500000.0,
+        premiumAmount: 5000.0,
+        premiumFrequency: 'Monthly',
+        premiumMode: 'Online',
+        applicationDate: DateTime.now().subtract(const Duration(days: 370)),
+        startDate: DateTime.now().subtract(const Duration(days: 365)),
+        status: 'active',
       ),
       Policy(
         policyId: 'POL002',
-        customerId: 'CUST002',
-        customerName: 'Jane Smith',
-        policyType: 'Health Insurance',
         policyNumber: 'HI2023002',
-        premiumAmount: 3000.0,
-        sumAssured: 300000.0,
-        startDate: DateTime.now().subtract(const Duration(days: 200)),
-        endDate: DateTime.now().add(const Duration(days: 165)),
-        status: 'active',
+        providerPolicyId: 'HDFC002',
+        policyholderId: 'PH002',
         agentId: 'agent_123',
-        agentName: 'Rajesh Kumar',
-        paymentFrequency: 'quarterly',
-        nextPaymentDate: DateTime.now().add(const Duration(days: 60)),
-        documents: ['health_policy.pdf'],
+        providerId: 'HDFC',
+        policyType: 'Health Insurance',
+        planName: 'Health Shield',
+        planCode: 'HEALTH_SHIELD',
+        category: 'Health Insurance',
+        sumAssured: 300000.0,
+        premiumAmount: 3000.0,
+        premiumFrequency: 'Quarterly',
+        premiumMode: 'Online',
+        applicationDate: DateTime.now().subtract(const Duration(days: 205)),
+        startDate: DateTime.now().subtract(const Duration(days: 200)),
+        status: 'active',
       ),
       Policy(
         policyId: 'POL003',
-        customerId: 'CUST003',
-        customerName: 'Bob Johnson',
-        policyType: 'Vehicle Insurance',
         policyNumber: 'VI2023003',
-        premiumAmount: 8000.0,
-        sumAssured: 800000.0,
-        startDate: DateTime.now().subtract(const Duration(days: 100)),
-        endDate: DateTime.now().add(const Duration(days: 265)),
-        status: 'active',
+        providerPolicyId: 'BAJAJ003',
+        policyholderId: 'PH003',
         agentId: 'agent_123',
-        agentName: 'Rajesh Kumar',
-        paymentFrequency: 'yearly',
-        nextPaymentDate: DateTime.now().add(const Duration(days: 120)),
-        documents: ['vehicle_policy.pdf', 'vehicle_details.pdf'],
+        providerId: 'BAJAJ',
+        policyType: 'Vehicle Insurance',
+        planName: 'Vehicle Shield',
+        planCode: 'VEHICLE_SHIELD',
+        category: 'Motor Insurance',
+        sumAssured: 800000.0,
+        premiumAmount: 8000.0,
+        premiumFrequency: 'Yearly',
+        premiumMode: 'Online',
+        applicationDate: DateTime.now().subtract(const Duration(days: 105)),
+        startDate: DateTime.now().subtract(const Duration(days: 100)),
+        status: 'active',
       ),
     ];
   }
@@ -142,7 +151,7 @@ class MockPoliciesViewModel extends ChangeNotifier {
 
     final index = _policies.indexWhere((p) => p.policyId == policyId);
     if (index != -1) {
-      _policies[index] = _policies[index].copyWith(endDate: newEndDate);
+      _policies[index] = _policies[index].copyWith(renewalDate: newEndDate);
     }
 
     _isLoading = false;

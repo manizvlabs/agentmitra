@@ -75,10 +75,10 @@ class MockNotificationViewModel extends ChangeNotifier {
   }
 
   Future<void> loadNotificationSettings() async {
-    _notificationSettings = NotificationSettings(
-      pushEnabled: true,
-      emailEnabled: true,
-      smsEnabled: false,
+    _notificationSettings = const NotificationSettings(
+      enablePushNotifications: true,
+      enablePolicyNotifications: true,
+      enablePaymentReminders: true,
     );
     notifyListeners();
   }

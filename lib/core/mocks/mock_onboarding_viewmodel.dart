@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../features/onboarding/data/models/onboarding_step.dart';
-import '../../features/onboarding/data/models/onboarding_progress.dart';
 
 /// Mock OnboardingViewModel for web compatibility
 class MockOnboardingViewModel extends ChangeNotifier {
@@ -30,11 +29,9 @@ class MockOnboardingViewModel extends ChangeNotifier {
 
   void _loadProgress() {
     _progress = OnboardingProgress(
-      userId: 'user_123',
-      completedSteps: [],
-      currentStepId: 'agent_discovery',
-      startedAt: DateTime.now(),
-      lastUpdatedAt: DateTime.now(),
+      currentStep: OnboardingStep.agentDiscovery,
+      completedSteps: {},
+      formData: {},
     );
   }
 
@@ -44,10 +41,7 @@ class MockOnboardingViewModel extends ChangeNotifier {
 
     await Future.delayed(const Duration(seconds: 1));
 
-    _progress = _progress?.copyWith(
-      startedAt: DateTime.now(),
-      lastUpdatedAt: DateTime.now(),
-    );
+    // Progress already initialized in _loadProgress()
 
     _isLoading = false;
     notifyListeners();
@@ -59,15 +53,24 @@ class MockOnboardingViewModel extends ChangeNotifier {
 
     await Future.delayed(const Duration(milliseconds: 500));
 
-    final stepIndex = _steps.indexWhere((s) => s.id == stepId);
-    if (stepIndex != -1) {
-      _steps[stepIndex] = _steps[stepIndex].copyWith(isCompleted: true);
+    // Find the step by name
+    OnboardingStep? stepToComplete;
+    try {
+      stepToComplete = OnboardingStep.values.firstWhere(
+        (step) => step.name == stepId,
+      );
+    } catch (e) {
+      // Step not found
     }
 
-    _progress = _progress?.copyWith(
-      completedSteps: [..._progress!.completedSteps, stepId],
-      lastUpdatedAt: DateTime.now(),
-    );
+    if (stepToComplete != null && _progress != null) {
+      final updatedCompletedSteps = Map<OnboardingStep, bool>.from(_progress!.completedSteps);
+      updatedCompletedSteps[stepToComplete] = true;
+
+      _progress = _progress!.copyWith(
+        completedSteps: updatedCompletedSteps,
+      );
+    }
 
     // Move to next step if available
     if (_currentStepIndex < _steps.length - 1) {

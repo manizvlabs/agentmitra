@@ -1,117 +1,76 @@
-/// Remote data source for presentation API calls
 import '../../../../core/services/api_service.dart';
 import '../../../../shared/constants/api_constants.dart';
-import '../models/presentation_model.dart';
+import '../models/presentation_models.dart';
 
 class PresentationRemoteDataSource {
-  /// Get active presentation for an agent
-  Future<PresentationModel> getActivePresentation(String agentId) async {
-    final response = await ApiService.get(
-      ApiConstants.activePresentation(agentId),
-    );
-    return PresentationModel.fromJson(response);
-  }
-
-  /// Get all presentations for an agent
-  Future<Map<String, dynamic>> getAgentPresentations(
-    String agentId, {
-    String? status,
-    int limit = 20,
-    int offset = 0,
-  }) async {
-    final queryParams = <String, String>{
-      'limit': limit.toString(),
-      'offset': offset.toString(),
-    };
-    if (status != null) {
-      queryParams['status'] = status;
-    }
-
-    final queryString = queryParams.entries
-        .map((e) => '${e.key}=${e.value}')
-        .join('&');
-
-    final response = await ApiService.get(
-      '${ApiConstants.agentPresentations(agentId)}?$queryString',
-    );
-
-    return {
-      'presentations': (response['presentations'] as List<dynamic>?)
-              ?.map((p) => PresentationModel.fromJson(p as Map<String, dynamic>))
-              .toList() ??
-          [],
-      'total': response['total'] ?? 0,
-      'limit': response['limit'] ?? limit,
-      'offset': response['offset'] ?? offset,
-    };
-  }
-
-  /// Create a new presentation
-  Future<PresentationModel> createPresentation(
-    String agentId,
-    PresentationModel presentation,
-  ) async {
-    final response = await ApiService.post(
-      ApiConstants.agentPresentations(agentId),
-      presentation.toJson(),
-    );
-    return PresentationModel.fromJson(response);
-  }
-
-  /// Update an existing presentation
-  Future<PresentationModel> updatePresentation(
-    String agentId,
-    String presentationId,
-    PresentationModel presentation,
-  ) async {
-    final response = await ApiService.put(
-      '${ApiConstants.agentPresentations(agentId)}/$presentationId',
-      presentation.toJson(),
-    );
-    return PresentationModel.fromJson(response);
-  }
-
   /// Get presentation templates
-  Future<List<Map<String, dynamic>>> getTemplates({
-    String? category,
-    bool isPublic = true,
-  }) async {
-    final queryParams = <String, String>{
-      'is_public': isPublic.toString(),
-    };
-    if (category != null) {
-      queryParams['category'] = category;
+  Future<List<PresentationTemplate>> getTemplates() async {
+    final response = await ApiService.get(ApiConstants.presentationTemplates);
+
+    final templates = response['templates'] as List<dynamic>;
+    return templates.map((json) => PresentationTemplate.fromJson(json)).toList();
+  }
+
+  /// Get presentations for an agent
+  Future<List<Presentation>> getAgentPresentations(String agentId) async {
+    final response = await ApiService.get(ApiConstants.agentPresentations(agentId));
+
+    return (response as List<dynamic>)
+        .map((json) => Presentation.fromJson(json))
+        .toList();
+  }
+
+  /// Get active presentation for an agent
+  Future<Presentation?> getActivePresentation(String agentId) async {
+    try {
+      final response = await ApiService.get(ApiConstants.activePresentation(agentId));
+      return Presentation.fromJson(response);
+    } catch (e) {
+      // No active presentation found
+      return null;
     }
+  }
 
-    final queryString = queryParams.entries
-        .map((e) => '${e.key}=${e.value}')
-        .join('&');
+  /// Get presentation by ID
+  Future<Presentation> getPresentationById(String presentationId) async {
+    final response = await ApiService.get(ApiConstants.presentationById(presentationId));
+    return Presentation.fromJson(response);
+  }
 
-    final response = await ApiService.get(
-      '${ApiConstants.presentationTemplates}?$queryString',
+  /// Create new presentation
+  Future<Presentation> createPresentation(Map<String, dynamic> presentationData) async {
+    final response = await ApiService.post(ApiConstants.presentations, presentationData);
+    return Presentation.fromJson(response);
+  }
+
+  /// Update presentation
+  Future<Presentation> updatePresentation(String presentationId, Map<String, dynamic> presentationData) async {
+    final response = await ApiService.put(
+      ApiConstants.presentationById(presentationId),
+      presentationData,
     );
-    return (response['templates'] as List<dynamic>?)
-            ?.map((t) => t as Map<String, dynamic>)
-            .toList() ??
-        [];
+    return Presentation.fromJson(response);
+  }
+
+  /// Delete presentation
+  Future<void> deletePresentation(String presentationId) async {
+    await ApiService.delete(ApiConstants.presentationById(presentationId));
+  }
+
+  /// Get presentation analytics
+  Future<PresentationAnalytics> getPresentationAnalytics(String presentationId) async {
+    final response = await ApiService.get('${ApiConstants.analytics}/presentations/$presentationId/analytics');
+    return PresentationAnalytics.fromJson(response);
   }
 
   /// Upload media file
-  Future<Map<String, dynamic>> uploadMedia(
-    List<int> fileBytes,
-    String fileName,
-    String type, // 'image' or 'video'
-  ) async {
-    // Note: This is a simplified version. In production, you'd use multipart/form-data
-    final response = await ApiService.post(
-      ApiConstants.mediaUpload,
-      {
-        'file': fileBytes,
-        'filename': fileName,
-        'type': type,
-      },
-    );
+  Future<Map<String, dynamic>> uploadMedia(String filePath, List<int> fileBytes) async {
+    // Note: This would need to be implemented with proper multipart upload
+    // For now, returning a mock response
+    final response = await ApiService.post(ApiConstants.mediaUpload, {
+      'file_name': filePath.split('/').last,
+      'file_size': fileBytes.length,
+    });
     return response;
   }
 }
-

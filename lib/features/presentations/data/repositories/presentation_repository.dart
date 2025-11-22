@@ -1,147 +1,117 @@
-/// Presentation repository - combines remote and local data sources
-import 'package:dartz/dartz.dart';
 import '../../../../core/architecture/base/base_repository.dart';
 import '../datasources/presentation_remote_datasource.dart';
-import '../datasources/presentation_local_datasource.dart';
-import '../models/presentation_model.dart';
+import '../models/presentation_models.dart';
 
 class PresentationRepository extends BaseRepository {
   final PresentationRemoteDataSource _remoteDataSource;
-  final PresentationLocalDataSource _localDataSource;
 
   PresentationRepository({
     PresentationRemoteDataSource? remoteDataSource,
-    PresentationLocalDataSource? localDataSource,
-  }) : _remoteDataSource = remoteDataSource ?? PresentationRemoteDataSource(),
-       _localDataSource = localDataSource ?? PresentationLocalDataSourceImpl() {
-    // Initialize local datasource
-    if (_localDataSource is PresentationLocalDataSourceImpl) {
-      (_localDataSource as PresentationLocalDataSourceImpl).init();
+  }) : _remoteDataSource = remoteDataSource ?? PresentationRemoteDataSource();
+
+  /// Get all presentation templates
+  Future<List<PresentationTemplate>> getTemplates() async {
+    try {
+      return await _remoteDataSource.getTemplates();
+    } catch (e) {
+      throw Exception('Failed to fetch presentation templates: $e');
     }
   }
 
-  /// Get active presentation for an agent with offline caching
-  Future<Either<Exception, PresentationModel>> getActivePresentation(
-    String agentId, {
-    bool forceRefresh = false,
+  /// Get presentations for an agent
+  Future<List<Presentation>> getAgentPresentations(String agentId) async {
+    try {
+      return await _remoteDataSource.getAgentPresentations(agentId);
+    } catch (e) {
+      throw Exception('Failed to fetch agent presentations: $e');
+    }
+  }
+
+  /// Get active presentation for an agent
+  Future<Presentation?> getActivePresentation(String agentId) async {
+    try {
+      return await _remoteDataSource.getActivePresentation(agentId);
+    } catch (e) {
+      // No active presentation is not an error
+      return null;
+    }
+  }
+
+  /// Get presentation by ID
+  Future<Presentation> getPresentationById(String presentationId) async {
+    try {
+      return await _remoteDataSource.getPresentationById(presentationId);
+    } catch (e) {
+      throw Exception('Failed to fetch presentation: $e');
+    }
+  }
+
+  /// Create new presentation
+  Future<Presentation> createPresentation({
+    required String agentId,
+    required String title,
+    String? description,
+    List<PresentationSlide>? slides,
   }) async {
     try {
-      // Try to get cached data first (unless force refresh is requested)
-      if (!forceRefresh) {
-        final cachedPresentation = await _localDataSource.getCachedActivePresentation(agentId);
-        if (cachedPresentation != null) {
-          // Try to refresh in background if we have cached data
-          _refreshFromRemote(agentId);
-          return Right(cachedPresentation);
-        }
-      }
+      final presentationData = {
+        'agent_id': agentId,
+        'title': title,
+        if (description != null) 'description': description,
+        'slides': slides?.map((slide) => slide.toJson()).toList() ?? [],
+      };
 
-      // Fetch from remote
-      final presentation = await _remoteDataSource.getActivePresentation(agentId);
-
-      // Cache the result
-      await _localDataSource.cacheActivePresentation(agentId, presentation);
-
-      return Right(presentation);
+      return await _remoteDataSource.createPresentation(presentationData);
     } catch (e) {
-      // If remote fails and we have cache, return cached data
-      if (!forceRefresh) {
-        try {
-          final cachedPresentation = await _localDataSource.getCachedActivePresentation(agentId);
-          if (cachedPresentation != null) {
-            return Right(cachedPresentation);
-          }
-        } catch (_) {}
-      }
-
-      return Left(Exception('Failed to fetch active presentation: $e'));
+      throw Exception('Failed to create presentation: $e');
     }
   }
 
-  /// Refresh presentation data from remote in background
-  Future<void> _refreshFromRemote(String agentId) async {
-    try {
-      final presentation = await _remoteDataSource.getActivePresentation(agentId);
-      await _localDataSource.cacheActivePresentation(agentId, presentation);
-    } catch (e) {
-      // Silently fail background refresh
-    }
-  }
-
-  /// Get all presentations for an agent
-  Future<Map<String, dynamic>> getAgentPresentations(
-    String agentId, {
+  /// Update presentation
+  Future<Presentation> updatePresentation({
+    required String presentationId,
+    String? title,
+    String? description,
+    List<PresentationSlide>? slides,
     String? status,
-    int limit = 20,
-    int offset = 0,
   }) async {
     try {
-      return await _remoteDataSource.getAgentPresentations(
-        agentId,
-        status: status,
-        limit: limit,
-        offset: offset,
-      );
+      final updateData = <String, dynamic>{};
+      if (title != null) updateData['title'] = title;
+      if (description != null) updateData['description'] = description;
+      if (slides != null) updateData['slides'] = slides.map((slide) => slide.toJson()).toList();
+      if (status != null) updateData['status'] = status;
+
+      return await _remoteDataSource.updatePresentation(presentationId, updateData);
     } catch (e) {
-      rethrow;
+      throw Exception('Failed to update presentation: $e');
     }
   }
 
-  /// Create a new presentation
-  Future<PresentationModel> createPresentation(
-    String agentId,
-    PresentationModel presentation,
-  ) async {
+  /// Delete presentation
+  Future<void> deletePresentation(String presentationId) async {
     try {
-      return await _remoteDataSource.createPresentation(agentId, presentation);
+      await _remoteDataSource.deletePresentation(presentationId);
     } catch (e) {
-      rethrow;
+      throw Exception('Failed to delete presentation: $e');
     }
   }
 
-  /// Update an existing presentation
-  Future<PresentationModel> updatePresentation(
-    String agentId,
-    String presentationId,
-    PresentationModel presentation,
-  ) async {
+  /// Get presentation analytics
+  Future<PresentationAnalytics> getPresentationAnalytics(String presentationId) async {
     try {
-      return await _remoteDataSource.updatePresentation(
-        agentId,
-        presentationId,
-        presentation,
-      );
+      return await _remoteDataSource.getPresentationAnalytics(presentationId);
     } catch (e) {
-      rethrow;
-    }
-  }
-
-  /// Get presentation templates
-  Future<List<Map<String, dynamic>>> getTemplates({
-    String? category,
-    bool isPublic = true,
-  }) async {
-    try {
-      return await _remoteDataSource.getTemplates(
-        category: category,
-        isPublic: isPublic,
-      );
-    } catch (e) {
-      rethrow;
+      throw Exception('Failed to fetch presentation analytics: $e');
     }
   }
 
   /// Upload media file
-  Future<Map<String, dynamic>> uploadMedia(
-    List<int> fileBytes,
-    String fileName,
-    String type,
-  ) async {
+  Future<Map<String, dynamic>> uploadMedia(String filePath, List<int> fileBytes) async {
     try {
-      return await _remoteDataSource.uploadMedia(fileBytes, fileName, type);
+      return await _remoteDataSource.uploadMedia(filePath, fileBytes);
     } catch (e) {
-      rethrow;
+      throw Exception('Failed to upload media: $e');
     }
   }
 }
-

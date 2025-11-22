@@ -46,5 +46,37 @@ class ApiConstants {
   // Payment Endpoints
   static const String payments = '$apiVersion/payments';
   static String paymentHistory(String userId) => '$payments/user/$userId';
+
+  // Analytics Endpoints
+  static const String analytics = '$apiVersion/analytics';
+  static const String dashboardAnalytics = '$analytics/dashboard';
+  static const String agentAnalytics = '$analytics/agents';
+  static const String policyAnalytics = '$analytics/policies';
+  static const String revenueAnalytics = '$analytics/revenue';
+  static String agentPerformance(String agentId) => '$agentAnalytics/$agentId/performance';
+  static String dashboardCharts(String chartType) => '$dashboardAnalytics/charts/$chartType';
+
+  // Chat Endpoints
+  static const String chat = '$apiVersion/chat';
+  static const String chatSessions = '$chat/sessions';
+  static String chatSession(String sessionId) => '$chatSessions/$sessionId';
+  static String chatSessionMessages(String sessionId) => '$chatSession/$sessionId/messages';
+  static String chatSessionAnalytics(String sessionId) => '$chatSession/$sessionId/analytics';
+
+  // Provider Endpoints
+  static const String providers = '$apiVersion/providers';
+  static String providerById(String providerId) => '$providers/$providerId';
+  static String providerByCode(String providerCode) => '$providers/code/$providerCode';
+
+  // Session Endpoints
+  static const String authSessions = '$apiVersion/auth/sessions';
+  static String authSession(String sessionId) => '$authSessions/$sessionId';
+
+  // Presentation Endpoints
+  static const String presentations = '$apiVersion/presentations';
+  static String agentPresentations(String agentId) => '$presentations/agent/$agentId';
+  static String presentationById(String presentationId) => '$presentations/$presentationId';
+  static const String presentationTemplates = '$presentations/templates';
+  static const String mediaUpload = '$presentations/media/upload';
 }
 

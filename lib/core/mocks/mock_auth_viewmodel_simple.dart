@@ -13,6 +13,7 @@ class MockAuthViewModel extends BaseViewModel {
 
   @override
   Future<void> initialize() async {
+    await super.initialize();
     setLoading(true);
     try {
       // Mock initialization - check for existing session

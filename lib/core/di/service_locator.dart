@@ -10,6 +10,7 @@ import '../../features/payments/presentation/viewmodels/policies_viewmodel.dart'
 import '../../features/chatbot/presentation/viewmodels/chatbot_viewmodel.dart';
 import '../../features/chatbot/data/repositories/chatbot_repository.dart';
 import '../../features/chatbot/data/datasources/chatbot_remote_datasource.dart';
+import '../../features/analytics/presentation/viewmodels/analytics_viewmodel.dart';
 
 /// Service Locator for Dependency Injection
 /// Provides centralized access to all services, repositories, and ViewModels
@@ -18,7 +19,6 @@ class ServiceLocator {
   // CORE SERVICES (Single instances)
   // ===========================================================================
 
-  static final ApiService _apiService = ApiService();
   static final LoggerService _logger = LoggerService();
 
   // ===========================================================================
@@ -57,6 +57,10 @@ class ServiceLocator {
   static ChatbotViewModel createChatbotViewModel(String agentId) {
     return ChatbotViewModel(ChatbotRepository(ChatbotRemoteDataSourceImpl()), agentId);
   }
+
+  /// Analytics ViewModel - connects to advanced analytics APIs
+  static AnalyticsViewModel get analyticsViewModel =>
+    AnalyticsViewModel();
 
   // ===========================================================================
   // UTILITY METHODS
