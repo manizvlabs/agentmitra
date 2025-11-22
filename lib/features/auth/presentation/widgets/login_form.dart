@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/services/logger_service.dart';
+import '../../../../core/services/logger_service.dart';
 import '../viewmodels/auth_viewmodel.dart';
 
 class LoginForm extends StatefulWidget {
@@ -93,7 +93,11 @@ class _LoginFormState extends State<LoginForm> with TickerProviderStateMixin {
         // TODO: Save login credentials securely
       }
 
-      widget.onLoginSuccess?.call() ?? context.go('/customer-dashboard');
+      if (widget.onLoginSuccess != null) {
+        widget.onLoginSuccess!.call();
+      } else {
+        context.go('/customer-dashboard');
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -146,14 +150,6 @@ class _LoginFormState extends State<LoginForm> with TickerProviderStateMixin {
     } else {
       LoggerService().error('Failed to send OTP', tag: 'LoginForm');
     }
-  }
-
-  @override
-  void dispose() {
-    _phoneController.dispose();
-    _passwordController.dispose();
-    _agentCodeController.dispose();
-    super.dispose();
   }
 
   @override

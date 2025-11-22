@@ -144,7 +144,17 @@ class NotificationSettings with _$NotificationSettings {
     }
 
     final now = TimeOfDay.now();
-    return !_isTimeInRange(now, quietHoursStart!, quietHoursEnd!);
+    final start = _parseTimeString(quietHoursStart!);
+    final end = _parseTimeString(quietHoursEnd!);
+    return !_isTimeInRange(now, start, end);
+  }
+
+  /// Parse time string (HH:MM) to TimeOfDay
+  TimeOfDay _parseTimeString(String timeString) {
+    final parts = timeString.split(':');
+    final hour = int.parse(parts[0]);
+    final minute = int.parse(parts[1]);
+    return TimeOfDay(hour: hour, minute: minute);
   }
 
   /// Check if time is within quiet hours range

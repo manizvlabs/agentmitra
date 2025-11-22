@@ -69,7 +69,7 @@ dependencies:
   path_provider: ^2.1.1
 
   # Charts & Analytics
-  fl_chart: ^0.65.0
+  fl_chart: ^0.62.0
   connectivity_plus: ^5.0.2
 
   # Firebase & Push Notifications

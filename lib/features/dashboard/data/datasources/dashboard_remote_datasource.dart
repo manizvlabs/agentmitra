@@ -19,7 +19,7 @@ class DashboardRemoteDataSource {
       if (startDate != null) queryParams['start_date'] = startDate.toIso8601String();
       if (endDate != null) queryParams['end_date'] = endDate.toIso8601String();
 
-      final response = await _apiService.get(
+      final response = await ApiService.get(
         '/api/v1/dashboard/analytics/$agentId',
         queryParameters: queryParams,
       );
@@ -76,7 +76,7 @@ class DashboardRemoteDataSource {
     int limit = 10,
   }) async {
     try {
-      final response = await _apiService.get(
+      final response = await ApiService.get(
         '/api/v1/dashboard/notifications/$userId',
         queryParameters: {'limit': limit.toString()},
       );
@@ -99,9 +99,9 @@ class DashboardRemoteDataSource {
   /// Mark notification as read
   Future<void> markNotificationAsRead(String notificationId) async {
     try {
-      await _apiService.put(
+      await ApiService.put(
         '/api/v1/dashboard/notifications/$notificationId/read',
-        data: {},
+        {},
       );
     } catch (e) {
       throw Exception('Failed to mark notification as read: $e');
@@ -111,9 +111,9 @@ class DashboardRemoteDataSource {
   /// Refresh dashboard cache
   Future<void> refreshDashboardCache(String agentId) async {
     try {
-      await _apiService.post(
+      await ApiService.post(
         '/api/v1/dashboard/cache/refresh/$agentId',
-        data: {},
+        {},
       );
     } catch (e) {
       throw Exception('Failed to refresh dashboard cache: $e');

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'logger_service.dart';
+import 'api_service.dart';
 
 /// Types of operations that can be queued for offline execution
 enum OfflineOperationType {
@@ -279,21 +280,18 @@ class OfflineQueueService {
   /// Execute a single operation
   Future<bool> _executeOperation(QueuedOperation operation) async {
     try {
-      // Create ApiService instance
-      final apiService = ApiService();
-
       switch (operation.type) {
         case OfflineOperationType.apiPost:
-          await apiService.post(operation.endpoint, operation.data ?? {});
+          await ApiService.post(operation.endpoint, operation.data ?? {});
           break;
         case OfflineOperationType.apiPut:
-          await apiService.put(operation.endpoint, operation.data ?? {});
+          await ApiService.put(operation.endpoint, operation.data ?? {});
           break;
         case OfflineOperationType.apiPatch:
-          await apiService.patch(operation.endpoint, operation.data ?? {});
+          await ApiService.patch(operation.endpoint, operation.data ?? {});
           break;
         case OfflineOperationType.apiDelete:
-          await apiService.delete(operation.endpoint);
+          await ApiService.delete(operation.endpoint);
           break;
         case OfflineOperationType.localDataUpdate:
           // Handle local data updates
@@ -307,7 +305,7 @@ class OfflineQueueService {
 
       return true;
     } catch (e) {
-      _logger.error('Failed to execute offline operation: ${operation.id}', e);
+      _logger.error('Failed to execute offline operation: ${operation.id}', error: e);
       return false;
     }
   }

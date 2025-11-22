@@ -62,7 +62,7 @@ class ChatHeader extends StatelessWidget {
               ),
               child: Text(
                 session.topic!,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
                   color: Colors.blue.shade700,
                   fontWeight: FontWeight.w500,

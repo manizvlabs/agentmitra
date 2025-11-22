@@ -12,12 +12,11 @@ class SyncService {
   static const String _pendingUploadsKey = 'pending_uploads';
 
   final LoggerService _logger;
-  final ApiService _apiService;
   final Connectivity _connectivity;
 
   final StreamController<SyncEvent> _syncController = StreamController.broadcast();
 
-  SyncService(this._logger, this._apiService, this._connectivity);
+  SyncService(this._logger, this._connectivity);
 
   Stream<SyncEvent> get syncStream => _syncController.stream;
 
@@ -36,7 +35,7 @@ class SyncService {
       return SyncResult.failure('No internet connection');
     }
 
-    _syncController.add(SyncEvent.syncStarted);
+    _syncController.add(SyncEvent.syncStarted());
     _logger.info('Starting full synchronization');
 
     try {
@@ -77,7 +76,7 @@ class SyncService {
       return result;
 
     } catch (e, stackTrace) {
-      _logger.error('Full synchronization failed', e, stackTrace);
+      _logger.error('Full synchronization failed', error: e, stackTrace: stackTrace);
       final result = SyncResult.failure(e.toString());
       _syncController.add(SyncEvent.syncFailed(result));
       return result;
@@ -88,7 +87,7 @@ class SyncService {
   Future<SyncOperationResult> _syncNotifications(DateTime? lastSync) async {
     try {
       // Fetch remote notifications since last sync
-      final response = await _apiService.get('/api/v1/notifications', queryParameters: {
+      final response = await ApiService.get('/api/v1/notifications', queryParameters: {
         'since': lastSync?.toIso8601String(),
       });
 
@@ -102,7 +101,7 @@ class SyncService {
         conflicts: conflicts,
       );
     } catch (e) {
-      _logger.error('Failed to sync notifications', e);
+      _logger.error('Failed to sync notifications', error: e);
       return SyncOperationResult.failure(conflicts: []);
     }
   }
@@ -111,7 +110,7 @@ class SyncService {
   Future<SyncOperationResult> _syncUserData(DateTime? lastSync) async {
     try {
       // Sync user profile, preferences, etc.
-      final response = await _apiService.get('/api/v1/users/profile');
+      final response = await ApiService.get('/api/v1/users/profile');
 
       // Apply server changes locally
       await _applyUserDataChanges(response['data']);
@@ -121,7 +120,7 @@ class SyncService {
         conflicts: [],
       );
     } catch (e) {
-      _logger.error('Failed to sync user data', e);
+      _logger.error('Failed to sync user data', error: e);
       return SyncOperationResult.failure(conflicts: []);
     }
   }
@@ -130,7 +129,7 @@ class SyncService {
   Future<SyncOperationResult> _syncAgentData(DateTime? lastSync) async {
     try {
       // Sync agent-specific data
-      final response = await _apiService.get('/api/v1/agents/me');
+      final response = await ApiService.get('/api/v1/agents/me');
 
       await _applyAgentDataChanges(response['data']);
 
@@ -139,7 +138,7 @@ class SyncService {
         conflicts: [],
       );
     } catch (e) {
-      _logger.error('Failed to sync agent data', e);
+      _logger.error('Failed to sync agent data', error: e);
       return SyncOperationResult.failure(conflicts: []);
     }
   }
@@ -147,7 +146,7 @@ class SyncService {
   /// Sync presentation data
   Future<SyncOperationResult> _syncPresentationData(DateTime? lastSync) async {
     try {
-      final response = await _apiService.get('/api/v1/presentations/agent/me', queryParameters: {
+      final response = await ApiService.get('/api/v1/presentations/agent/me', queryParameters: {
         'since': lastSync?.toIso8601String(),
       });
 
@@ -159,7 +158,7 @@ class SyncService {
         conflicts: conflicts,
       );
     } catch (e) {
-      _logger.error('Failed to sync presentation data', e);
+      _logger.error('Failed to sync presentation data', error: e);
       return SyncOperationResult.failure(conflicts: []);
     }
   }
@@ -208,7 +207,7 @@ class SyncService {
       await prefs.setString('notifications', jsonEncode(mergedNotifications));
 
     } catch (e) {
-      _logger.error('Failed to merge notifications', e);
+      _logger.error('Failed to merge notifications', error: e);
     }
 
     return conflicts;
@@ -272,7 +271,7 @@ class SyncService {
       await prefs.setString('presentations', jsonEncode(mergedPresentations));
 
     } catch (e) {
-      _logger.error('Failed to merge presentations', e);
+      _logger.error('Failed to merge presentations', error: e);
     }
 
     return conflicts;
@@ -380,7 +379,7 @@ class SyncService {
       }
       _logger.info('Applied server version for conflict: ${conflict.id}');
     } catch (e) {
-      _logger.error('Failed to apply server version', e);
+      _logger.error('Failed to apply server version', error: e);
     }
   }
 

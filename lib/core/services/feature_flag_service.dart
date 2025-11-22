@@ -62,8 +62,7 @@ class FeatureFlagService {
   /// Sync feature flags from backend API
   Future<void> syncFlags() async {
     try {
-      final apiService = ApiService();
-      final response = await apiService.get('/feature-flags');
+      final response = await ApiService.get('/feature-flags');
 
       if (response['flags'] != null) {
         final flags = Map<String, bool>.from(

@@ -18,7 +18,6 @@ class PushNotificationService {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
   final LoggerService _logger = LoggerService();
-  final ApiService _apiService = ApiService();
 
   static const String _fcmTokenKey = 'fcm_token';
   static const String _notificationSettingsKey = 'notification_settings';
@@ -46,7 +45,7 @@ class PushNotificationService {
 
       _logger.info('Push notification service initialized successfully');
     } catch (e, stackTrace) {
-      _logger.error('Failed to initialize push notification service', e, stackTrace);
+      _logger.error('Failed to initialize push notification service', error: e, stackTrace: stackTrace);
       rethrow;
     }
   }
@@ -144,7 +143,7 @@ class PushNotificationService {
       }
       return token;
     } catch (e, stackTrace) {
-      _logger.error('Failed to get FCM token', e, stackTrace);
+      _logger.error('Failed to get FCM token', error: e, stackTrace: stackTrace);
       return null;
     }
   }
@@ -165,13 +164,13 @@ class PushNotificationService {
   /// Register FCM token with backend
   Future<void> _registerTokenWithBackend(String token) async {
     try {
-      await _apiService.post('/api/v1/users/fcm-token', {
+      await ApiService.post('/api/v1/users/fcm-token', {
         'fcm_token': token,
         'device_type': Platform.isIOS ? 'ios' : 'android',
       });
       _logger.info('FCM token registered with backend');
     } catch (e, stackTrace) {
-      _logger.error('Failed to register FCM token with backend', e, stackTrace);
+      _logger.error('Failed to register FCM token with backend', error: e, stackTrace: stackTrace);
       // Don't rethrow - this shouldn't break the app
     }
   }
@@ -251,7 +250,7 @@ class PushNotificationService {
         // Handle specific actions like opening URLs, etc.
       }
     } catch (e, stackTrace) {
-      _logger.error('Failed to handle notification payload', e, stackTrace);
+      _logger.error('Failed to handle notification payload', error: e, stackTrace: stackTrace);
     }
   }
 
@@ -265,7 +264,7 @@ class PushNotificationService {
         // Load user preferences
         _logger.info('Notification settings loaded');
       } catch (e, stackTrace) {
-        _logger.error('Failed to load notification settings', e, stackTrace);
+        _logger.error('Failed to load notification settings', error: e, stackTrace: stackTrace);
       }
     }
   }
@@ -298,7 +297,7 @@ class PushNotificationService {
       await _firebaseMessaging.subscribeToTopic(topic);
       _logger.info('Subscribed to topic: $topic');
     } catch (e, stackTrace) {
-      _logger.error('Failed to subscribe to topic: $topic', e, stackTrace);
+      _logger.error('Failed to subscribe to topic: $topic', error: e, stackTrace: stackTrace);
     }
   }
 
@@ -308,7 +307,7 @@ class PushNotificationService {
       await _firebaseMessaging.unsubscribeFromTopic(topic);
       _logger.info('Unsubscribed from topic: $topic');
     } catch (e, stackTrace) {
-      _logger.error('Failed to unsubscribe from topic: $topic', e, stackTrace);
+      _logger.error('Failed to unsubscribe from topic: $topic', error: e, stackTrace: stackTrace);
     }
   }
 
@@ -320,7 +319,7 @@ class PushNotificationService {
       await prefs.remove(_fcmTokenKey);
       _logger.info('FCM token deleted');
     } catch (e, stackTrace) {
-      _logger.error('Failed to delete FCM token', e, stackTrace);
+      _logger.error('Failed to delete FCM token', error: e, stackTrace: stackTrace);
     }
   }
 

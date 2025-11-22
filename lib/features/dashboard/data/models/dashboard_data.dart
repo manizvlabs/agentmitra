@@ -169,6 +169,28 @@ class DashboardNotification {
         return Icons.info;
     }
   }
+
+  DashboardNotification copyWith({
+    String? id,
+    String? title,
+    String? message,
+    DateTime? timestamp,
+    String? type,
+    bool? isRead,
+    String? actionText,
+    String? actionRoute,
+  }) {
+    return DashboardNotification(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      message: message ?? this.message,
+      timestamp: timestamp ?? this.timestamp,
+      type: type ?? this.type,
+      isRead: isRead ?? this.isRead,
+      actionText: actionText ?? this.actionText,
+      actionRoute: actionRoute ?? this.actionRoute,
+    );
+  }
 }
 
 // Enhanced Analytics Models for Agent Performance Dashboard

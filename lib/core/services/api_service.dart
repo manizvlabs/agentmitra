@@ -11,7 +11,7 @@ class ApiService {
   static String get apiUrl => '$baseUrl$apiVersion';
 
   // Get headers with authentication
-  Future<Map<String, String>> getHeaders() async {
+  static Future<Map<String, String>> getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('access_token');
 
@@ -23,7 +23,7 @@ class ApiService {
   }
 
   // GET request
-  Future<Map<String, dynamic>> get(String endpoint, {Map<String, dynamic>? queryParameters}) async {
+  static Future<Map<String, dynamic>> get(String endpoint, {Map<String, dynamic>? queryParameters}) async {
     try {
       var url = '$apiUrl$endpoint';
       if (queryParameters != null && queryParameters.isNotEmpty) {
@@ -45,7 +45,7 @@ class ApiService {
   }
 
   // POST request
-  Future<Map<String, dynamic>> post(
+  static Future<Map<String, dynamic>> post(
     String endpoint,
     Map<String, dynamic> data,
   ) async {
@@ -63,7 +63,7 @@ class ApiService {
   }
 
   // PUT request
-  Future<Map<String, dynamic>> put(
+  static Future<Map<String, dynamic>> put(
     String endpoint,
     Map<String, dynamic> data,
   ) async {
@@ -81,7 +81,7 @@ class ApiService {
   }
 
   // PATCH request
-  Future<Map<String, dynamic>> patch(
+  static Future<Map<String, dynamic>> patch(
     String endpoint,
     Map<String, dynamic> data,
   ) async {
@@ -99,7 +99,7 @@ class ApiService {
   }
 
   // DELETE request
-  Future<Map<String, dynamic>> delete(String endpoint) async {
+  static Future<Map<String, dynamic>> delete(String endpoint) async {
     try {
       final response = await http.delete(
         Uri.parse('$apiUrl$endpoint'),
@@ -113,7 +113,7 @@ class ApiService {
   }
 
   // Handle HTTP response
-  Map<String, dynamic> _handleResponse(http.Response response) {
+  static Map<String, dynamic> _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) {
         return {'success': true};

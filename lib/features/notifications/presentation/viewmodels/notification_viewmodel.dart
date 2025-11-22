@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../core/architecture/base/base_viewmodel.dart';
 import '../../../../core/services/logger_service.dart';
+import '../../../../core/services/offline_queue_service.dart';
 import '../../data/repositories/notification_repository.dart';
 import '../../data/models/notification_model.dart';
 
@@ -92,7 +93,7 @@ class NotificationViewModel extends BaseViewModel {
       _logger.info('Loaded ${_notifications.length} notifications');
     } catch (e, stackTrace) {
       _errorMessage = 'Failed to load notifications: ${e.toString()}';
-      _logger.error('Failed to load notifications', e, stackTrace);
+      _logger.error('Failed to load notifications', error: e, stackTrace: stackTrace);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -118,7 +119,7 @@ class NotificationViewModel extends BaseViewModel {
       _notificationSettings = await _repository.getNotificationSettings();
       _logger.info('Loaded notification settings');
     } catch (e, stackTrace) {
-      _logger.error('Failed to load notification settings', e, stackTrace);
+      _logger.error('Failed to load notification settings', error: e, stackTrace: stackTrace);
       // Use default settings if loading fails
       _notificationSettings ??= const NotificationSettings();
     }
@@ -148,7 +149,7 @@ class NotificationViewModel extends BaseViewModel {
       // Revert on failure
       _notificationSettings = previousSettings;
       notifyListeners();
-      _logger.error('Failed to update notification settings', e, stackTrace);
+      _logger.error('Failed to update notification settings', error: e, stackTrace: stackTrace);
       return false;
     }
   }
@@ -171,7 +172,7 @@ class NotificationViewModel extends BaseViewModel {
         }
       }
     } catch (e, stackTrace) {
-      _logger.error('Failed to mark notification as read', e, stackTrace);
+      _logger.error('Failed to mark notification as read', error: e, stackTrace: stackTrace);
     }
   }
 
@@ -205,7 +206,7 @@ class NotificationViewModel extends BaseViewModel {
         _logger.warning('Failed to mark all notifications as read on server');
       }
     } catch (e, stackTrace) {
-      _logger.error('Failed to mark all notifications as read', e, stackTrace);
+      _logger.error('Failed to mark all notifications as read', error: e, stackTrace: stackTrace);
     }
   }
 
@@ -229,7 +230,7 @@ class NotificationViewModel extends BaseViewModel {
         }
       }
     } catch (e, stackTrace) {
-      _logger.error('Failed to delete notification', e, stackTrace);
+      _logger.error('Failed to delete notification', error: e, stackTrace: stackTrace);
     }
   }
 
@@ -247,7 +248,7 @@ class NotificationViewModel extends BaseViewModel {
 
       _logger.info('Added new notification: ${notification.id}');
     } catch (e, stackTrace) {
-      _logger.error('Failed to add notification', e, stackTrace);
+      _logger.error('Failed to add notification', error: e, stackTrace: stackTrace);
     }
   }
 
@@ -288,7 +289,7 @@ class NotificationViewModel extends BaseViewModel {
         endDate: endDate,
       );
     } catch (e, stackTrace) {
-      _logger.error('Failed to get notification statistics', e, stackTrace);
+      _logger.error('Failed to get notification statistics', error: e, stackTrace: stackTrace);
       return {};
     }
   }
@@ -359,7 +360,7 @@ class NotificationViewModel extends BaseViewModel {
       // Refresh local data after sync
       await loadNotifications(forceRefresh: true);
     } catch (e, stackTrace) {
-      _logger.error('Failed to sync notifications', e, stackTrace);
+      _logger.error('Failed to sync notifications', error: e, stackTrace: stackTrace);
       _errorMessage = 'Failed to sync notifications: ${e.toString()}';
       notifyListeners();
     }
@@ -370,7 +371,7 @@ class NotificationViewModel extends BaseViewModel {
     try {
       return await _repository.getSyncStatistics();
     } catch (e, stackTrace) {
-      _logger.error('Failed to get sync statistics', e, stackTrace);
+      _logger.error('Failed to get sync statistics', error: e, stackTrace: stackTrace);
       return {};
     }
   }

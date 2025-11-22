@@ -5,6 +5,7 @@ import '../../../../core/services/logger_service.dart';
 import '../../../../core/services/offline_queue_service.dart';
 import '../../../../core/services/sync_service.dart';
 import '../datasources/notification_remote_datasource.dart';
+import '../datasources/notification_local_datasource.dart';
 import '../models/notification_model.dart';
 
 /// Repository for notification operations with offline support
@@ -43,13 +44,14 @@ class NotificationRepository extends BaseRepository {
     bool? isRead,
     bool forceRefresh = false,
   }) async {
-    return executeAsync(() async {
+    try {
       final connected = await isConnected;
 
       if (!connected && !forceRefresh) {
         // Return cached data when offline
         _logger.info('Offline mode: returning cached notifications');
-        return await _localDataSource.getCachedNotifications();
+        final cachedData = await _localDataSource.getCachedNotifications();
+        return cachedData.map((json) => NotificationModel.fromJson(json)).toList();
       }
 
       // Fetch from remote when online
@@ -62,32 +64,41 @@ class NotificationRepository extends BaseRepository {
       );
 
       // Cache the data locally
-      await _localDataSource.cacheNotifications(remoteNotifications);
+      final notificationsJson = remoteNotifications.map((n) => n.toJson()).toList();
+      await _localDataSource.cacheNotifications(notificationsJson);
 
       return remoteNotifications;
-    });
+    } catch (e) {
+      _logger.error('Failed to fetch notifications', error: e);
+      rethrow;
+    }
   }
 
   /// Get notification by ID
   Future<NotificationModel?> getNotificationById(String notificationId) async {
-    return executeAsync(() async {
-      final notifications = await _localDataSource.getCachedNotifications();
+    try {
+      final cachedData = await _localDataSource.getCachedNotifications();
+      final notifications = cachedData.map((json) => NotificationModel.fromJson(json)).toList();
       return notifications.where((n) => n.id == notificationId).firstOrNull;
-    });
+    } catch (e) {
+      _logger.error('Failed to get notification by ID', error: e);
+      rethrow;
+    }
   }
 
   /// Mark notification as read
   Future<bool> markNotificationAsRead(String notificationId) async {
-    return executeAsync(() async {
+    try {
       final connected = await isConnected;
 
       // Update local cache first
-      final cachedNotifications = await _localDataSource.getCachedNotifications();
+      final cachedData = await _localDataSource.getCachedNotifications();
+      final cachedNotifications = cachedData.map((json) => NotificationModel.fromJson(json)).toList();
       final notificationIndex = cachedNotifications.indexWhere((n) => n.id == notificationId);
 
       if (notificationIndex != -1) {
         final updatedNotification = cachedNotifications[notificationIndex].copyWith(isRead: true);
-        await _localDataSource.updateNotificationInCache(updatedNotification);
+        await _localDataSource.updateNotificationInCache(updatedNotification.toJson());
       }
 
       // Try to update remote if connected
@@ -106,23 +117,28 @@ class NotificationRepository extends BaseRepository {
 
       _logger.info('Marked notification as read offline');
       return true;
-    });
+    } catch (e) {
+      _logger.error('Failed to get notification by ID', error: e);
+      rethrow;
+    }
   }
 
   /// Mark multiple notifications as read
   Future<bool> markNotificationsAsRead(List<String> notificationIds) async {
-    return executeAsync(() async {
+    try {
       final connected = await isConnected;
 
       // Update local cache first
-      final cachedNotifications = await _localDataSource.getCachedNotifications();
+      final cachedData = await _localDataSource.getCachedNotifications();
+      final cachedNotifications = cachedData.map((json) => NotificationModel.fromJson(json)).toList();
       for (final id in notificationIds) {
         final index = cachedNotifications.indexWhere((n) => n.id == id);
         if (index != -1) {
           cachedNotifications[index] = cachedNotifications[index].copyWith(isRead: true);
         }
       }
-      await _localDataSource.cacheNotifications(cachedNotifications);
+      final updatedData = cachedNotifications.map((n) => n.toJson()).toList();
+      await _localDataSource.cacheNotifications(updatedData);
 
       // Try to update remote if connected
       if (connected) {
@@ -136,12 +152,15 @@ class NotificationRepository extends BaseRepository {
 
       _logger.info('Marked ${notificationIds.length} notifications as read offline');
       return true;
-    });
+    } catch (e) {
+      _logger.error('Failed to get notification by ID', error: e);
+      rethrow;
+    }
   }
 
   /// Delete notification
   Future<bool> deleteNotification(String notificationId) async {
-    return executeAsync(() async {
+    try {
       final connected = await isConnected;
 
       // Remove from local cache first
@@ -159,43 +178,53 @@ class NotificationRepository extends BaseRepository {
 
       _logger.info('Deleted notification offline');
       return true;
-    });
+    } catch (e) {
+      _logger.error('Failed to get notification by ID', error: e);
+      rethrow;
+    }
   }
 
   /// Add new notification (typically from push notification)
   Future<void> addNotification(NotificationModel notification) async {
-    return executeAsync(() async {
-      await _localDataSource.addNotificationToCache(notification);
+    try {
+      await _localDataSource.addNotificationToCache(notification.toJson());
       _logger.info('Added new notification: ${notification.id}');
-    });
+    } catch (e) {
+      _logger.error('Failed to get notification by ID', error: e);
+      rethrow;
+    }
   }
 
   /// Get notification settings
   Future<NotificationSettings?> getNotificationSettings() async {
-    return executeAsync(() async {
+    try {
       final connected = await isConnected;
 
       // Try to get from remote first if connected
       if (connected) {
         final remoteSettings = await _remoteDataSource.getNotificationSettings();
         if (remoteSettings != null) {
-          await _localDataSource.cacheNotificationSettings(remoteSettings);
+          await _localDataSource.cacheNotificationSettings(remoteSettings.toJson());
           return remoteSettings;
         }
       }
 
       // Fallback to cached settings
-      return await _localDataSource.getCachedNotificationSettings();
-    });
+      final cachedData = await _localDataSource.getCachedNotificationSettings();
+      return cachedData != null ? NotificationSettings.fromJson(cachedData) : null;
+    } catch (e) {
+      _logger.error('Failed to get notification by ID', error: e);
+      rethrow;
+    }
   }
 
   /// Update notification settings
   Future<bool> updateNotificationSettings(NotificationSettings settings) async {
-    return executeAsync(() async {
+    try {
       final connected = await isConnected;
 
       // Cache locally first
-      await _localDataSource.cacheNotificationSettings(settings);
+      await _localDataSource.cacheNotificationSettings(settings.toJson());
 
       // Try to update remote if connected
       if (connected) {
@@ -209,7 +238,10 @@ class NotificationRepository extends BaseRepository {
 
       _logger.info('Updated notification settings offline');
       return true;
-    });
+    } catch (e) {
+      _logger.error('Failed to get notification by ID', error: e);
+      rethrow;
+    }
   }
 
   /// Get notification statistics
@@ -218,7 +250,7 @@ class NotificationRepository extends BaseRepository {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    return executeAsync(() async {
+    try {
       final connected = await isConnected;
 
       if (connected) {
@@ -230,19 +262,24 @@ class NotificationRepository extends BaseRepository {
       }
 
       // Return basic statistics from cached data
-      final cachedNotifications = await _localDataSource.getCachedNotifications();
+      final cachedData = await _localDataSource.getCachedNotifications();
+      final cachedNotifications = cachedData.map((json) => NotificationModel.fromJson(json)).toList();
+      final lastSync = await _localDataSource.getLastSyncTimestamp();
       return {
         'total_notifications': cachedNotifications.length,
         'unread_count': cachedNotifications.where((n) => !n.isRead).length,
         'read_count': cachedNotifications.where((n) => n.isRead).length,
-        'last_sync': await _localDataSource.getLastSyncTimestamp()?.toIso8601String(),
+        'last_sync': lastSync?.toIso8601String(),
       };
-    });
+    } catch (e) {
+      _logger.error('Failed to get notification by ID', error: e);
+      rethrow;
+    }
   }
 
   /// Register device token
   Future<bool> registerDeviceToken(String token, String deviceType) async {
-    return executeAsync(() async {
+    try {
       final connected = await isConnected;
 
       if (connected) {
@@ -251,12 +288,15 @@ class NotificationRepository extends BaseRepository {
 
       _logger.warning('Cannot register device token while offline');
       return false;
-    });
+    } catch (e) {
+      _logger.error('Failed to get notification by ID', error: e);
+      rethrow;
+    }
   }
 
   /// Sync pending operations when coming back online
   Future<void> syncPendingOperations() async {
-    return executeAsync(() async {
+    try {
       final connected = await isConnected;
 
       if (!connected) {
@@ -272,29 +312,40 @@ class NotificationRepository extends BaseRepository {
       // - Resolve conflicts
 
       _logger.info('Pending operations sync completed');
-    });
+    } catch (e) {
+      _logger.error('Failed to get notification by ID', error: e);
+      rethrow;
+    }
   }
 
   /// Clear all cached data
   Future<void> clearCache() async {
-    return executeAsync(() async {
+    try {
       await _localDataSource.clearCache();
       _logger.info('Cleared notification cache');
-    });
+    } catch (e) {
+      _logger.error('Failed to get notification by ID', error: e);
+      rethrow;
+    }
   }
 
   /// Get unread notification count
   Future<int> getUnreadCount() async {
-    return executeAsync(() async {
-      final notifications = await _localDataSource.getCachedNotifications();
+    try {
+      final cachedData = await _localDataSource.getCachedNotifications();
+      final notifications = cachedData.map((json) => NotificationModel.fromJson(json)).toList();
       return notifications.where((n) => !n.isRead).length;
-    });
+    } catch (e) {
+      _logger.error('Failed to get notification by ID', error: e);
+      rethrow;
+    }
   }
 
   /// Search notifications
   Future<List<NotificationModel>> searchNotifications(String query) async {
-    return executeAsync(() async {
-      final notifications = await _localDataSource.getCachedNotifications();
+    try {
+      final cachedData = await _localDataSource.getCachedNotifications();
+      final notifications = cachedData.map((json) => NotificationModel.fromJson(json)).toList();
       final lowercaseQuery = query.toLowerCase();
 
       return notifications.where((notification) {
@@ -302,25 +353,34 @@ class NotificationRepository extends BaseRepository {
                notification.body.toLowerCase().contains(lowercaseQuery) ||
                (notification.category?.toLowerCase().contains(lowercaseQuery) ?? false);
       }).toList();
-    });
+    } catch (e) {
+      _logger.error('Failed to get notification by ID', error: e);
+      rethrow;
+    }
   }
 
   /// Sync notifications with conflict resolution
   Future<void> syncNotifications() async {
-    return executeAsync(() async {
+    try {
       final result = await _syncService.performFullSync();
       if (!result.success) {
         _logger.warning('Notification sync failed: ${result.error}');
       } else {
         _logger.info('Notification sync completed: ${result.itemsSynced} items synced');
       }
-    });
+    } catch (e) {
+      _logger.error('Failed to get notification by ID', error: e);
+      rethrow;
+    }
   }
 
   /// Get sync statistics
   Future<Map<String, dynamic>> getSyncStatistics() async {
-    return executeAsync(() async {
+    try {
       return await _syncService.getSyncStatistics();
-    });
+    } catch (e) {
+      _logger.error('Failed to get notification by ID', error: e);
+      rethrow;
+    }
   }
 }

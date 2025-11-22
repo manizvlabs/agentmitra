@@ -96,7 +96,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                     const SizedBox(height: 24),
 
                     // Presentation Carousel
-                    const PresentationCarousel(),
+                    const PresentationCarousel(agentId: 'current-agent'),
 
                     const SizedBox(height: 24),
 
@@ -275,7 +275,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   }
 
   Widget _buildWelcomeHeader() {
-    return Consumer<DashboardViewModel>(
+    return provider.Consumer<DashboardViewModel>(
       builder: (context, viewModel, child) {
         final greeting = viewModel.getGreeting();
         final summary = viewModel.getAnalyticsSummary();

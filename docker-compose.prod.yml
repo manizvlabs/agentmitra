@@ -1,35 +1,35 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database - TEMPORARILY ENABLED FOR TESTING
-  postgres:
-    image: postgres:16-alpine
-    container_name: agentmitra_postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: agentmitra_dev
-      POSTGRES_USER: manish
-      POSTGRES_PASSWORD: agentmitra_dev
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./db/migration:/docker-entrypoint-initdb.d
-    ports:
-      - "5432:5432"
-    networks:
-      - agentmitra_network
+  # PostgreSQL Database - COMMENTED OUT - Using local MacBook service
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: agentmitra_postgres
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: agentmitra_dev
+  #     POSTGRES_USER: manish
+  #     POSTGRES_PASSWORD: agentmitra_dev
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #     - ./db/migration:/docker-entrypoint-initdb.d
+  #   ports:
+  #     - "5432:5432"
+  #   networks:
+  #     - agentmitra_network
 
-  # Redis for caching and sessions - TEMPORARILY ENABLED FOR TESTING
-  redis:
-    image: redis:7-alpine
-    container_name: agentmitra_redis
-    restart: unless-stopped
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6379:6379"
-    networks:
-      - agentmitra_network
+  # Redis for caching and sessions - COMMENTED OUT - Using local MacBook service
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: agentmitra_redis
+  #   restart: unless-stopped
+  #   command: redis-server --appendonly yes
+  #   volumes:
+  #     - redis_data:/data
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - agentmitra_network
 
   # Python Backend API
   backend:
@@ -40,15 +40,12 @@ services:
     restart: unless-stopped
     environment:
       - ENVIRONMENT=production
-      - DATABASE_URL=postgresql://manish:agentmitra_dev@postgres:5432/agentmitra_dev?sslmode=disable
-      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://manish:agentmitra_dev@host.docker.internal:5432/agentmitra_dev?sslmode=disable
+      - REDIS_URL=redis://host.docker.internal:6379
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - CORS_ORIGINS=${CORS_ORIGINS}
     ports:
       - "8012:8012"
-    depends_on:
-      - postgres
-      - redis
     volumes:
       - ./logs:/app/logs
     networks:
@@ -133,8 +130,8 @@ services:
       - agentmitra_network
 
 volumes:
-  postgres_data:
-  redis_data:
+  # postgres_data:  # Commented out - using local MacBook PostgreSQL
+  # redis_data:     # Commented out - using local MacBook Redis
   prometheus_data:
   grafana_data:
 

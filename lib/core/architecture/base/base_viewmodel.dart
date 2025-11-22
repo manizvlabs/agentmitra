@@ -30,7 +30,7 @@ class ViewModelResult<T> {
     );
   }
 
-  factory ViewModelResult.loading() => const ViewModelResult<T>(isLoading: true);
+  factory ViewModelResult.loading() => ViewModelResult<T>(isLoading: true);
   factory ViewModelResult.error(String error) => ViewModelResult<T>(error: error);
   factory ViewModelResult.success(T data) => ViewModelResult<T>(data: data);
 }

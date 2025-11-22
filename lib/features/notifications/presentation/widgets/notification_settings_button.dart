@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/notification_viewmodel.dart';
+import '../../data/models/notification_model.dart';
 
 /// Notification settings button for app bar
 class NotificationSettingsButton extends StatelessWidget {
@@ -302,7 +303,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                             child: Row(
                               children: [
                                 Text(
-                                  _settings.quietHoursStart?.format(context) ?? 'Select time',
+                                  _settings.quietHoursStart ?? 'Select time',
                                 ),
                                 const Spacer(),
                                 const Icon(Icons.access_time, size: 16),
@@ -333,7 +334,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                             child: Row(
                               children: [
                                 Text(
-                                  _settings.quietHoursEnd?.format(context) ?? 'Select time',
+                                  _settings.quietHoursEnd ?? 'Select time',
                                 ),
                                 const Spacer(),
                                 const Icon(Icons.access_time, size: 16),
@@ -424,11 +425,12 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
     );
 
     if (pickedTime != null) {
+      final timeString = '${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}';
       setState(() {
         if (isStartTime) {
-          _settings = _settings.copyWith(quietHoursStart: pickedTime);
+          _settings = _settings.copyWith(quietHoursStart: timeString);
         } else {
-          _settings = _settings.copyWith(quietHoursEnd: pickedTime);
+          _settings = _settings.copyWith(quietHoursEnd: timeString);
         }
       });
     }

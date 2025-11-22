@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from ...core.database import get_db
 from ...core.auth import get_current_user_context, get_current_user_optional, get_current_user
 from ...models.user import User
-from ...services.notification_service import NotificationService
+# from ...services.notification_service import NotificationService
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 

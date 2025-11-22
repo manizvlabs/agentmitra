@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/notification_model.dart';
+import '../../data/models/notification_model.dart';
 
 /// Notification filters widget
 class NotificationFilters extends StatefulWidget {

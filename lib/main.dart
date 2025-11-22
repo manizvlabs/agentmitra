@@ -64,7 +64,6 @@ void main() async {
   // Initialize sync service
   final syncService = SyncService(
     LoggerService(),
-    ApiService(),
     Connectivity(),
   );
   await syncService.initialize();
@@ -166,7 +165,7 @@ class AgentMitraApp extends ConsumerWidget {
               create: (_) => NotificationViewModel(
                 NotificationRepository(
                   NotificationRemoteDataSource(ApiService(), LoggerService()),
-                  NotificationLocalDataSource(LoggerService()),
+                  NotificationLocalDataSource(LoggerService(), Connectivity()),
                   Connectivity(),
                   offlineQueueService,
                   syncService,

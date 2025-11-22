@@ -24,7 +24,7 @@ class NotificationLocalDataSource {
       final notifications = jsonDecode(notificationsJson) as List;
       return notifications.cast<Map<String, dynamic>>();
     } catch (e) {
-      _logger.error('Failed to get stored notifications', e);
+      _logger.error('Failed to get stored notifications', error: e);
       return [];
     }
   }
@@ -36,7 +36,7 @@ class NotificationLocalDataSource {
       await prefs.setString(_notificationsKey, jsonEncode(notifications));
       await prefs.setString(_lastSyncKey, DateTime.now().toIso8601String());
     } catch (e) {
-      _logger.error('Failed to save notifications locally', e);
+      _logger.error('Failed to save notifications locally', error: e);
     }
   }
 
@@ -80,6 +80,61 @@ class NotificationLocalDataSource {
   Future<void> clearAllNotifications() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_notificationsKey);
+  }
+
+  /// Get cached notifications (alias for getNotifications)
+  Future<List<Map<String, dynamic>>> getCachedNotifications() async {
+    return getNotifications();
+  }
+
+  /// Cache notifications (alias for saveNotifications)
+  Future<void> cacheNotifications(List<Map<String, dynamic>> notifications) async {
+    return saveNotifications(notifications);
+  }
+
+  /// Update notification in cache (alias for updateNotification)
+  Future<void> updateNotificationInCache(Map<String, dynamic> updatedNotification) async {
+    final notificationId = updatedNotification['id'] as String;
+    return updateNotification(notificationId, updatedNotification);
+  }
+
+  /// Remove notification from cache (alias for deleteNotification)
+  Future<void> removeNotificationFromCache(String notificationId) async {
+    return deleteNotification(notificationId);
+  }
+
+  /// Add notification to cache (alias for addNotification)
+  Future<void> addNotificationToCache(Map<String, dynamic> notification) async {
+    return addNotification(notification);
+  }
+
+  /// Cache notification settings
+  Future<void> cacheNotificationSettings(Map<String, dynamic> settings) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_notificationSettingsKey, jsonEncode(settings));
+    } catch (e) {
+      _logger.error('Failed to cache notification settings', error: e);
+    }
+  }
+
+  /// Get cached notification settings
+  Future<Map<String, dynamic>?> getCachedNotificationSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final settingsJson = prefs.getString(_notificationSettingsKey);
+      if (settingsJson == null) return null;
+
+      return jsonDecode(settingsJson) as Map<String, dynamic>;
+    } catch (e) {
+      _logger.error('Failed to get cached notification settings', error: e);
+      return null;
+    }
+  }
+
+  /// Clear cache (alias for clearAllNotifications)
+  Future<void> clearCache() async {
+    return clearAllNotifications();
   }
 
   /// Get last sync timestamp
