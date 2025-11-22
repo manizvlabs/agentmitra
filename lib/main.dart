@@ -1,160 +1,129 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart' as provider;
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase/firebase_options.dart';
 import 'core/services/storage_service.dart';
-import 'core/services/logger_service.dart';
-import 'core/services/feature_flag_service.dart';
-import 'core/services/push_notification_service.dart';
-import 'core/services/offline_queue_service.dart';
-import 'core/services/sync_service.dart';
-import 'core/router/app_router.dart';
-import 'shared/theme/app_theme.dart';
-import 'core/providers/global_providers.dart';
-import 'features/auth/presentation/viewmodels/auth_viewmodel.dart';
-import 'features/presentations/presentation/viewmodels/presentation_viewmodel.dart';
-import 'features/onboarding/presentation/viewmodels/onboarding_viewmodel.dart';
-import 'features/onboarding/data/repositories/onboarding_repository.dart';
-import 'features/onboarding/data/datasources/onboarding_local_datasource.dart';
-import 'features/dashboard/presentation/viewmodels/dashboard_viewmodel.dart';
-import 'features/dashboard/data/repositories/dashboard_repository.dart';
-import 'features/dashboard/data/datasources/dashboard_remote_datasource.dart';
-import 'features/chatbot/presentation/viewmodels/chatbot_viewmodel.dart';
-import 'features/chatbot/data/repositories/chatbot_repository.dart';
-import 'features/chatbot/data/datasources/chatbot_remote_datasource.dart';
-import 'features/notifications/presentation/viewmodels/notification_viewmodel.dart';
-import 'features/notifications/data/repositories/notification_repository.dart';
-import 'features/notifications/data/datasources/notification_remote_datasource.dart';
-import 'features/notifications/data/datasources/notification_local_datasource.dart';
-import 'core/services/api_service.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
+// Import all screens for web-compatible routing (no GoRouter)
+import 'screens/splash_screen.dart';
+import 'screens/welcome_screen.dart';
+import 'screens/phone_verification_screen.dart';
+import 'screens/trial_setup_screen.dart';
+import 'screens/trial_expiration_screen.dart';
+import 'screens/policy_details_screen.dart';
+import 'screens/whatsapp_integration_screen.dart';
+import 'screens/learning_center_screen.dart';
+import 'screens/agent_config_dashboard.dart';
+import 'screens/roi_analytics_dashboard.dart';
+import 'screens/marketing_campaign_builder.dart';
+import 'features/auth/presentation/pages/login_page.dart';
+import 'features/auth/presentation/pages/otp_verification_page.dart';
+import 'features/onboarding/presentation/pages/onboarding_page.dart';
+import 'features/dashboard/presentation/pages/dashboard_page.dart';
+import 'features/chatbot/presentation/pages/chatbot_page.dart';
+import 'features/notifications/presentation/pages/notification_page.dart';
 
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-void main() {
+  // Initialize Firebase (with error handling for web)
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print('Firebase initialized successfully');
+  } catch (e) {
+    print('Firebase initialization failed (this is OK for demo): $e');
+  }
+
+  // Initialize storage service (web-compatible)
+  if (!kIsWeb) {
+    try {
+      await StorageService.initialize();
+      print('Storage service initialized');
+    } catch (e) {
+      print('Storage service initialization failed: $e');
+    }
+  } else {
+    print('Using web-compatible storage (in-memory)');
+  }
+
   runApp(
-    const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text(
-            '🎉 Agent Mitra Web App is Working!\n\nIf you can see this message,\nthe Flutter web build is successful.',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ),
-    ),
+    const AgentMitraApp(),
   );
 }
 
-class AgentMitraApp extends ConsumerWidget {
-  final PushNotificationService pushNotificationService;
-  final OfflineQueueService offlineQueueService;
-  final SyncService syncService;
-
-  const AgentMitraApp({
-    super.key,
-    required this.pushNotificationService,
-    required this.offlineQueueService,
-    required this.syncService,
-  });
+class AgentMitraApp extends StatelessWidget {
+  const AgentMitraApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Watch theme mode from Riverpod
-    final themeMode = ref.watch(themeModeProvider);
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Agent Mitra',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+      ),
+      initialRoute: '/splash',
+      routes: {
+        // Splash & Welcome Flow
+        '/splash': (context) => const SplashScreen(),
+        '/welcome': (context) => const WelcomeScreen(),
 
-    return ScreenUtilInit(
-      designSize: const Size(375, 812), // iPhone X/XS dimensions
-      minTextAdapt: true,
-      builder: (context, child) {
-        return provider.MultiProvider(
-          providers: [
-            // Core Services
-            provider.Provider.value(value: pushNotificationService),
-            provider.Provider.value(value: offlineQueueService),
-            provider.Provider.value(value: syncService),
+        // Authentication Flow
+        '/phone-verification': (context) => const PhoneVerificationScreen(),
+        '/otp-verification': (context) {
+          // Extract phone number from arguments if available
+          final args = ModalRoute.of(context)?.settings.arguments;
+          final phoneNumber = args is String ? args : '+91 9876543210';
+          return OtpVerificationPage(phoneNumber: phoneNumber);
+        },
+        '/login': (context) => const LoginPage(),
 
-            // Auth ViewModel
-            provider.ChangeNotifierProvider(create: (_) => AuthViewModel()..initialize()),
+        // Onboarding Flow
+        '/trial-setup': (context) => const TrialSetupScreen(),
+        '/onboarding': (context) => const OnboardingPage(),
+        '/trial-expiration': (context) => const TrialExpirationScreen(),
 
-            // Presentation ViewModel
-            provider.ChangeNotifierProvider(create: (_) => PresentationViewModel()),
+        // Customer Portal
+        '/customer-dashboard': (context) => const DashboardPage(),
+        '/policy-details': (context) => const PolicyDetailsScreen(),
+        '/whatsapp-integration': (context) => const WhatsappIntegrationScreen(),
+        '/smart-chatbot': (context) => const ChatbotPage(),
+        '/notifications': (context) => const NotificationPage(),
+        '/learning-center': (context) => const LearningCenterScreen(),
 
-            // Onboarding ViewModel
-            provider.ChangeNotifierProvider(
-              create: (_) => OnboardingViewModel(
-                OnboardingRepository(
-                  const OnboardingLocalDataSource(),
-                ),
-              )..initialize(),
-            ),
-
-            // Dashboard ViewModel
-            provider.ChangeNotifierProvider(
-              create: (_) => DashboardViewModel(
-                DashboardRepository(
-                  DashboardRemoteDataSource(ApiService()),
-                ),
-                FeatureFlagService(),
-              )..initialize(),
-            ),
-
-            // Chatbot ViewModel
-            provider.ChangeNotifierProxyProvider<AuthViewModel, ChatbotViewModel>(
-              create: (context) => ChatbotViewModel(
-                ChatbotRepository(
-                  ChatbotRemoteDataSourceImpl(),
-                ),
-                'test-agent-id', // Fallback agent ID
-              ),
-              update: (context, authViewModel, previous) {
-                final agentId = authViewModel.currentUser?.userId ?? 'test-agent-id';
-                if (previous?.agentId != agentId) {
-                  return ChatbotViewModel(
-                    ChatbotRepository(
-                      ChatbotRemoteDataSourceImpl(),
-                    ),
-                    agentId,
-                  );
-                }
-                return previous ?? ChatbotViewModel(
-                  ChatbotRepository(
-                    ChatbotRemoteDataSourceImpl(),
+        // Agent Portal
+        '/agent-config-dashboard': (context) => const AgentConfigDashboard(),
+        '/roi-analytics': (context) => const RoiAnalyticsDashboard(),
+        '/campaign-builder': (context) => const MarketingCampaignBuilder(),
+      },
+      onUnknownRoute: (settings) {
+        return MaterialPageRoute(
+          builder: (context) => Scaffold(
+            appBar: AppBar(title: const Text('404 - Page Not Found')),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Page not found',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
-                  agentId,
-                );
-              },
+                  const SizedBox(height: 16),
+                  Text('Route: ${settings.name}'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(context).pushReplacementNamed('/splash'),
+                    child: const Text('Go Home'),
+                  ),
+                ],
+              ),
             ),
-
-            // Notification ViewModel
-            provider.ChangeNotifierProvider(
-              create: (_) => NotificationViewModel(
-                NotificationRepository(
-                  NotificationRemoteDataSource(ApiService(), LoggerService()),
-                  NotificationLocalDataSource(LoggerService(), Connectivity()),
-                  Connectivity(),
-                  offlineQueueService,
-                  syncService,
-                  LoggerService(),
-                ),
-                offlineQueueService,
-                LoggerService(),
-              )..initialize(),
-            ),
-          ],
-          child: MaterialApp.router(
-            title: 'Agent Mitra',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode: themeMode,
-            routerConfig: AppRouter.router,
           ),
         );
       },
     );
   }
 }
+

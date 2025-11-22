@@ -213,8 +213,159 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('OTP Verification')),
-      body: const Center(child: Text('OTP Verification Page - Temporarily simplified')),
+      appBar: AppBar(
+        title: const Text('Verify Phone Number'),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 40),
+
+              // Header
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Enter Verification Code',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'We sent a 6-digit code to ${widget.phoneNumber}',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 48),
+
+              // OTP Input
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Container(
+                  alignment: Alignment.center,
+                  child: OtpInput(
+                    controller: _otpController,
+                    onCompleted: _verifyOtp,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Resend Timer/Button
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _canResend
+                          ? "Didn't receive the code? "
+                          : 'Resend code in ${_remainingSeconds}s',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    if (_canResend)
+                      TextButton(
+                        onPressed: _isResending ? null : _resendOtp,
+                        style: TextButton.styleFrom(
+                          foregroundColor: Theme.of(context).colorScheme.primary,
+                          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        child: _isResending
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Text('Resend'),
+                      ),
+                  ],
+                ),
+              ),
+
+              const Spacer(),
+
+              // Verify Button
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: (_otpController.text.length == 6 && !_isVerifying)
+                        ? _verifyOtp
+                        : null,
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: _isVerifying
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'Verify & Continue',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Getting Started CTA Link
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    // Navigate to getting started/onboarding flow
+                    Navigator.of(context).pushReplacementNamed('/welcome');
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.primary,
+                    textStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  child: const Text('Skip verification for demo →'),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
