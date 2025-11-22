@@ -668,7 +668,6 @@ class _AgentVerificationScreenState extends State<AgentVerificationScreen> with 
   void _startPhoneVerification() {
     setState(() {
       _verificationStatus = 'calling';
-      _isCalling = true;
     });
 
     // Simulate calling process
@@ -676,7 +675,6 @@ class _AgentVerificationScreenState extends State<AgentVerificationScreen> with 
       if (mounted) {
         setState(() {
           _verificationStatus = 'verifying';
-          _isCalling = false;
         });
 
         // Simulate verification process
