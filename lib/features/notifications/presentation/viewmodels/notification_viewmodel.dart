@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../../../core/architecture/base/base_viewmodel.dart';
+import '../../../../core/services/api_service.dart';
 import '../../../../core/services/logger_service.dart';
 import '../../../../core/services/offline_queue_service.dart';
 import '../../data/repositories/notification_repository.dart';
@@ -17,8 +19,8 @@ class NotificationViewModel extends BaseViewModel {
     NotificationRepository? repository,
     OfflineQueueService? offlineQueueService,
     LoggerService? logger,
-  ])  : _repository = repository ?? NotificationRepository(NotificationRemoteDataSource()),
-        _offlineQueueService = offlineQueueService ?? OfflineQueueService(),
+  ])  : _repository = repository ?? NotificationRepository(NotificationRemoteDataSource(ApiService(), LoggerService())),
+        _offlineQueueService = offlineQueueService ?? OfflineQueueService(LoggerService(), Connectivity()),
         _logger = logger ?? LoggerService() {
     // Initialize with mock data for Phase 5 testing
     _initializeMockData();
@@ -397,46 +399,49 @@ class NotificationViewModel extends BaseViewModel {
       NotificationModel(
         id: 'notif_001',
         title: 'Policy Renewal Due',
-        message: 'Your policy LIC123456789 is due for renewal in 7 days.',
-        type: 'warning',
+        body: 'Your policy LIC123456789 is due for renewal in 7 days.',
+        type: NotificationType.renewal,
+        priority: NotificationPriority.high,
         isRead: false,
-        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-        actionUrl: '/policies',
-        metadata: {'policyId': 'POL001'},
+        timestamp: DateTime.now().subtract(const Duration(hours: 2)),
+        actionRoute: '/policies',
+        data: {'policyId': 'POL001'},
       ),
       NotificationModel(
         id: 'notif_002',
         title: 'Claim Approved',
-        message: 'Your claim CLM001 for ₹45,000 has been approved.',
-        type: 'success',
+        body: 'Your claim CLM001 for ₹45,000 has been approved.',
+        type: NotificationType.claim,
+        priority: NotificationPriority.high,
         isRead: false,
-        createdAt: DateTime.now().subtract(const Duration(hours: 4)),
-        actionUrl: '/claims',
-        metadata: {'claimId': 'CLM001'},
+        timestamp: DateTime.now().subtract(const Duration(hours: 4)),
+        actionRoute: '/claims',
+        data: {'claimId': 'CLM001'},
       ),
       NotificationModel(
         id: 'notif_003',
         title: 'Payment Reminder',
-        message: 'Premium payment of ₹2,500 is due in 3 days.',
-        type: 'info',
+        body: 'Premium payment of ₹2,500 is due in 3 days.',
+        type: NotificationType.payment,
+        priority: NotificationPriority.medium,
         isRead: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-        actionUrl: '/policies',
-        metadata: {'policyId': 'POL001'},
+        timestamp: DateTime.now().subtract(const Duration(days: 1)),
+        actionRoute: '/policies',
+        data: {'policyId': 'POL001'},
       ),
       NotificationModel(
         id: 'notif_004',
         title: 'New Feature Available',
-        message: 'Try our new claims filing feature with AI assistance.',
-        type: 'info',
+        body: 'Try our new claims filing feature with AI assistance.',
+        type: NotificationType.marketing,
+        priority: NotificationPriority.low,
         isRead: false,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-        actionUrl: '/claims',
-        metadata: {},
+        timestamp: DateTime.now().subtract(const Duration(days: 2)),
+        actionRoute: '/claims',
+        data: {},
       ),
     ];
 
-    _totalNotifications = _notifications.length;
-    _unreadCount = _notifications.where((n) => !n.isRead).length;
+    // Notification counts are computed properties
   }
 }
