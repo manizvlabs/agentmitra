@@ -45,9 +45,10 @@ class MockAuthViewModel extends BaseViewModel {
 
       return AuthResponse(
         user: _currentUser!,
-        token: 'mock_jwt_token',
+        accessToken: 'mock_jwt_token',
         refreshToken: 'mock_refresh_token',
-        expiresAt: DateTime.now().add(const Duration(hours: 24)),
+        tokenType: 'bearer',
+        expiresIn: 1800,
       );
     } catch (e) {
       setError('Login failed: ${e.toString()}');

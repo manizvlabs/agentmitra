@@ -1,13 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:dartz/dartz.dart';
 import '../../data/repositories/agent_repository.dart';
+import '../../data/datasources/agent_remote_datasource.dart';
 import '../../data/models/agent_model.dart';
 
 class AgentProfileViewModel extends ChangeNotifier {
   final AgentRepository _agentRepository;
   final String agentId;
 
-  AgentProfileViewModel(this._agentRepository, this.agentId);
+  AgentProfileViewModel([
+    AgentRepository? agentRepository,
+    String? agentId,
+  ])  : _agentRepository = agentRepository ?? AgentRepository(AgentRemoteDataSource()),
+        agentId = agentId ?? 'current-agent'; // TODO: Get from auth context
 
   // State
   AgentProfile? _profile;

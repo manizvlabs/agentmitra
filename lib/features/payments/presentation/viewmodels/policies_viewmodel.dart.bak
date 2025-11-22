@@ -1,12 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:dartz/dartz.dart';
 import '../../data/repositories/policy_repository.dart';
+import '../../data/datasources/policy_remote_datasource.dart';
 import '../../data/models/policy_model.dart';
 
 class PoliciesViewModel extends ChangeNotifier {
   final PolicyRepository _policyRepository;
 
-  PoliciesViewModel(this._policyRepository);
+  PoliciesViewModel([PolicyRepository? policyRepository])
+      : _policyRepository = policyRepository ?? PolicyRepository(PolicyRemoteDataSource());
 
   // State
   List<Policy> _policies = [];

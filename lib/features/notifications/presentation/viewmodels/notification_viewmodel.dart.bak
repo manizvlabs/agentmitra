@@ -4,6 +4,7 @@ import '../../../../core/architecture/base/base_viewmodel.dart';
 import '../../../../core/services/logger_service.dart';
 import '../../../../core/services/offline_queue_service.dart';
 import '../../data/repositories/notification_repository.dart';
+import '../../data/datasources/notification_remote_datasource.dart';
 import '../../data/models/notification_model.dart';
 
 /// ViewModel for notification management
@@ -12,7 +13,13 @@ class NotificationViewModel extends BaseViewModel {
   final OfflineQueueService _offlineQueueService;
   final LoggerService _logger;
 
-  NotificationViewModel(this._repository, this._offlineQueueService, this._logger);
+  NotificationViewModel([
+    NotificationRepository? repository,
+    OfflineQueueService? offlineQueueService,
+    LoggerService? logger,
+  ])  : _repository = repository ?? NotificationRepository(NotificationRemoteDataSource()),
+        _offlineQueueService = offlineQueueService ?? OfflineQueueService(),
+        _logger = logger ?? LoggerService();
 
   // Notification data
   List<NotificationModel> _notifications = [];

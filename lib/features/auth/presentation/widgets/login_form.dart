@@ -135,9 +135,9 @@ class _LoginFormState extends State<LoginForm> with TickerProviderStateMixin {
     LoggerService().info('Sending OTP to: ${_phoneController.text}', tag: 'LoginForm');
 
     final viewModel = Provider.of<MockAuthViewModel>(context, listen: false);
-    final success = await viewModel.sendOtp(_phoneController.text.trim());
+    await viewModel.sendOtp(_phoneController.text.trim());
 
-    if (success && mounted) {
+    if (!viewModel.hasError && mounted) {
       LoggerService().info('OTP sent successfully', tag: 'LoginForm');
       context.go('/otp-verification', extra: _phoneController.text.trim());
 

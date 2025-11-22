@@ -1,12 +1,14 @@
 import '../../../../core/architecture/base/base_viewmodel.dart';
 import '../../data/repositories/onboarding_repository.dart';
+import '../../data/datasources/onboarding_local_datasource.dart';
 import '../../data/models/onboarding_step.dart';
 
 /// ViewModel for onboarding flow management
 class OnboardingViewModel extends BaseViewModel {
   final OnboardingRepository _repository;
 
-  OnboardingViewModel(this._repository);
+  OnboardingViewModel([OnboardingRepository? repository])
+      : _repository = repository ?? OnboardingRepository(OnboardingLocalDataSource());
 
   // State variables
   OnboardingProgress? _progress;
@@ -20,6 +22,10 @@ class OnboardingViewModel extends BaseViewModel {
   OnboardingStep? get currentStep => _progress?.currentStep;
   double get progressPercentage => _progress?.progressPercentage ?? 0.0;
   bool get isCompleted => _progress?.isCompleted ?? false;
+
+  // Navigation helpers
+  bool get isFirst => currentStep == OnboardingStep.agentDiscovery;
+  bool get isLast => currentStep == OnboardingStep.profileSetup;
 
   AgentDiscoveryData? get agentDiscoveryData => _agentDiscoveryData;
   DocumentVerificationData? get documentVerificationData => _documentVerificationData;

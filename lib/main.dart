@@ -5,14 +5,7 @@ import 'package:provider/provider.dart' as provider;
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase/firebase_options.dart';
 import 'core/services/storage_service.dart';
-import 'core/mocks/mock_dashboard_viewmodel.dart';
-import 'core/mocks/mock_auth_viewmodel_simple.dart';
-import 'core/mocks/mock_notification_viewmodel_simple.dart';
-import 'core/mocks/mock_onboarding_viewmodel_simple.dart';
-import 'core/mocks/mock_chatbot_viewmodel_simple.dart';
-import 'core/mocks/mock_agent_profile_viewmodel_simple.dart';
-import 'core/mocks/mock_claims_viewmodel_simple.dart';
-import 'core/mocks/mock_policies_viewmodel_simple.dart';
+import 'core/di/service_locator.dart';
 import 'core/providers/global_providers.dart';
 import 'shared/theme/app_theme.dart';
 import 'features/presentations/presentation/viewmodels/presentation_viewmodel.dart';
@@ -30,10 +23,11 @@ import 'screens/roi_analytics_dashboard.dart';
 import 'screens/marketing_campaign_builder.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/otp_verification_page.dart';
-import 'features/onboarding/presentation/pages/onboarding_page.dart';
-import 'features/dashboard/presentation/pages/dashboard_page.dart';
-import 'features/chatbot/presentation/pages/chatbot_page.dart';
-import 'features/notifications/presentation/pages/notification_page.dart';
+// Temporarily disable complex screens to focus on auth
+// import 'features/onboarding/presentation/pages/onboarding_page.dart';
+// import 'features/dashboard/presentation/pages/dashboard_page.dart';
+// import 'features/chatbot/presentation/pages/chatbot_page.dart';
+// import 'features/notifications/presentation/pages/notification_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,6 +54,14 @@ void main() async {
     print('Using web-compatible storage (in-memory)');
   }
 
+  // Initialize Service Locator (dependency injection container)
+  try {
+    await ServiceLocator.initialize();
+    print('Service Locator initialized successfully');
+  } catch (e) {
+    print('Service Locator initialization failed: $e');
+  }
+
   runApp(
     const ProviderScope(
       child: AgentMitraApp(),
@@ -77,32 +79,31 @@ class AgentMitraApp extends ConsumerWidget {
 
     return provider.MultiProvider(
       providers: [
-        // Mock ViewModels for web compatibility
+        // Real ViewModels connected to backend APIs via Service Locator
         provider.ChangeNotifierProvider(
-          create: (_) => MockDashboardViewModel(),
+          create: (_) => ServiceLocator.authViewModel,
         ),
-        provider.ChangeNotifierProvider(
-          create: (_) => MockAuthViewModel(),
-        ),
-        provider.ChangeNotifierProvider(
-          create: (_) => MockNotificationViewModel(),
-        ),
-        provider.ChangeNotifierProvider(
-          create: (_) => MockOnboardingViewModel(),
-        ),
-        provider.ChangeNotifierProvider(
-          create: (_) => MockChatbotViewModel('current-agent'),
-        ),
-        provider.ChangeNotifierProvider(
-          create: (_) => MockAgentProfileViewModel(),
-        ),
-        provider.ChangeNotifierProvider(
-          create: (_) => MockClaimsViewModel(),
-        ),
-        provider.ChangeNotifierProvider(
-          create: (_) => MockPoliciesViewModel(),
-        ),
-        // Real ViewModels (may need repositories in production)
+        // Temporarily disable dashboard to focus on auth
+        // provider.ChangeNotifierProvider(
+        //   create: (_) => ServiceLocator.dashboardViewModel,
+        // ),
+        // Temporarily disable complex ViewModels to focus on auth first
+        // provider.ChangeNotifierProvider(
+        //   create: (_) => ServiceLocator.notificationViewModel,
+        // ),
+        // provider.ChangeNotifierProvider(
+        //   create: (_) => ServiceLocator.onboardingViewModel,
+        // ),
+        // Note: ChatbotViewModel requires agentId parameter, will be created per screen
+        // provider.ChangeNotifierProvider(
+        //   create: (_) => ServiceLocator.agentProfileViewModel,
+        // ),
+        // provider.ChangeNotifierProvider(
+        //   create: (_) => ServiceLocator.claimsViewModel,
+        // ),
+        // provider.ChangeNotifierProvider(
+        //   create: (_) => ServiceLocator.policiesViewModel,
+        // ),
         provider.ChangeNotifierProvider(
           create: (_) => PresentationViewModel(),
         ),
@@ -131,15 +132,15 @@ class AgentMitraApp extends ConsumerWidget {
 
         // Onboarding Flow
         '/trial-setup': (context) => const TrialSetupScreen(),
-        '/onboarding': (context) => const OnboardingPage(),
+        // '/onboarding': (context) => const OnboardingPage(), // Temporarily disabled
         '/trial-expiration': (context) => const TrialExpirationScreen(),
 
         // Customer Portal
-        '/customer-dashboard': (context) => const DashboardPage(),
+        // '/customer-dashboard': (context) => const DashboardPage(), // Temporarily disabled
         '/policy-details': (context) => const PolicyDetailsScreen(),
         '/whatsapp-integration': (context) => const WhatsappIntegrationScreen(),
-        '/smart-chatbot': (context) => const ChatbotPage(),
-        '/notifications': (context) => const NotificationPage(),
+        // '/smart-chatbot': (context) => const ChatbotPage(), // Temporarily disabled
+        // '/notifications': (context) => const NotificationPage(), // Temporarily disabled
         '/learning-center': (context) => const LearningCenterScreen(),
 
         // Agent Portal
