@@ -192,6 +192,19 @@ class UserRepository:
         self.db.commit()
         return len(sessions)
 
+    def get_user_sessions(self, user_id) -> List[UserSession]:
+        """Get all sessions for a user"""
+        if isinstance(user_id, str):
+            try:
+                user_id = uuid.UUID(user_id)
+            except ValueError:
+                return []
+
+        return self.db.query(UserSession)\
+            .filter(UserSession.user_id == user_id)\
+            .order_by(UserSession.created_at.desc())\
+            .all()
+
     def search_users(self, filters: dict, limit: int = 20, offset: int = 0) -> List[User]:
         """Search and filter users with pagination"""
         from sqlalchemy import or_, and_

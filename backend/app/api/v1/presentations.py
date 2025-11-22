@@ -105,27 +105,32 @@ async def get_active_presentation(agent_id: str, db: Session = Depends(get_db)):
 @router.get("/agent/{agent_id}")
 async def get_agent_presentations(
     agent_id: str,
-    status: Optional[str] = None,
+    presentation_status: Optional[str] = None,
     limit: int = 20,
     offset: int = 0,
     db: Session = Depends(get_db)
 ):
-    """Get all presentations for an agent"""
-    # Verify agent exists
+    """Get all presentations for an agent (accepts both agent_id and user_id)"""
     agent_repo = AgentRepository(db)
+
+    # First try to get agent by ID
     agent = agent_repo.get_by_id(agent_id)
-    
+
+    # If not found by ID, try to get by user_id
+    if not agent:
+        agent = agent_repo.get_by_user_id(agent_id)
+
     if not agent:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Agent not found"
         )
-    
+
     presentation_repo = PresentationRepository(db)
     presentations, total = presentation_repo.get_by_agent(
-        agent_id, status=status, limit=limit, offset=offset
+        str(agent.agent_id), status=presentation_status, limit=limit, offset=offset
     )
-    
+
     return {
         "presentations": [_presentation_to_dict(p) for p in presentations],
         "total": total,

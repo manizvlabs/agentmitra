@@ -34,7 +34,7 @@ logger = get_logger(__name__)
 app = FastAPI(
     title="Agent Mitra API",
     description="Agent Mitra Backend API - Insurance Agent Management Platform",
-    version="0.1.0",
+    version="1.0.0",
     docs_url="/docs" if settings.environment == "development" else None,  # Disable docs in production
     redoc_url="/redoc" if settings.environment == "development" else None,  # Disable redoc in production
 )
@@ -137,7 +137,7 @@ async def root():
     """Root endpoint"""
     return {
         "message": "Agent Mitra API",
-        "version": "0.1.0",
+        "version": "1.0.0",
         "status": "running",
         "docs": "/docs",
         "api": "/api/v1"

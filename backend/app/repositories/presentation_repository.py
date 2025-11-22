@@ -1,7 +1,7 @@
 """
 Presentation repository for database operations - updated for lic_schema
 """
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import and_
 from typing import Optional, List
 from app.models.presentation import Presentation, Slide, PresentationTemplate
@@ -66,7 +66,7 @@ class PresentationRepository:
         if not agent_id:
             return [], 0
 
-        query = self.db.query(Presentation).filter(
+        query = self.db.query(Presentation).options(selectinload(Presentation.slides)).filter(
             Presentation.agent_id == agent_id
         )
 
