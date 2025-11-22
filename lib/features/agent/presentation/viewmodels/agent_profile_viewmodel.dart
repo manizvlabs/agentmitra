@@ -12,7 +12,10 @@ class AgentProfileViewModel extends ChangeNotifier {
     AgentRepository? agentRepository,
     String? agentId,
   ])  : _agentRepository = agentRepository ?? AgentRepository(AgentRemoteDataSource()),
-        agentId = agentId ?? 'current-agent'; // TODO: Get from auth context
+        agentId = agentId ?? 'current-agent' {
+    // Initialize with mock data for Phase 5 testing
+    _initializeMockData();
+  }
 
   // State
   AgentProfile? _profile;
@@ -189,5 +192,37 @@ class AgentProfileViewModel extends ChangeNotifier {
       _licenseExpiryDate = _profile!.licenseExpiryDate;
     }
     notifyListeners();
+  }
+
+  void _initializeMockData() {
+    // Mock data for Phase 5 testing
+    _profile = AgentProfile(
+      agentId: 'agent_123',
+      name: 'John Doe',
+      email: 'john.doe@agentmitra.com',
+      phone: '+91 9876543210',
+      licenseNumber: 'LIC123456789',
+      licenseExpiryDate: '2025-12-31', // String format for now
+      status: 'active',
+      joinDate: DateTime.now().subtract(const Duration(days: 365)),
+      profileImageUrl: null,
+      address: '123 Agent Street, Mumbai, Maharashtra',
+      panNumber: 'ABCDE1234F',
+      aadhaarNumber: '123456789012',
+    );
+
+    _performance = AgentPerformance(
+      agentId: 'agent_123',
+      totalCommission: 45000.0,
+      policiesSold: 42,
+      customersAcquired: 38,
+      conversionRate: 85.0,
+      averagePolicyValue: 1250.0,
+      monthlyData: [],
+      commissionByProduct: {'Life Insurance': 25000.0, 'Health Insurance': 15000.0, 'Motor Insurance': 5000.0},
+    );
+
+    _licenseExpiryDate = DateTime(2025, 12, 31);
+    _formattedLicenseExpiryDate = '31/12/2025';
   }
 }

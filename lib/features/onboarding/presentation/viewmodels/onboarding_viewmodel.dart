@@ -8,7 +8,10 @@ class OnboardingViewModel extends BaseViewModel {
   final OnboardingRepository _repository;
 
   OnboardingViewModel([OnboardingRepository? repository])
-      : _repository = repository ?? OnboardingRepository(OnboardingLocalDataSource());
+      : _repository = repository ?? OnboardingRepository(OnboardingLocalDataSource()) {
+    // Initialize with mock data for Phase 5 testing
+    _initializeMockData();
+  }
 
   // State variables
   OnboardingProgress? _progress;
@@ -248,6 +251,49 @@ class OnboardingViewModel extends BaseViewModel {
         for (var step in OnboardingStep.values) step: false,
       },
       formData: {},
+    );
+  }
+
+  void _initializeMockData() {
+    // Mock onboarding progress for Phase 5 testing
+    _progress = OnboardingProgress(
+      currentStep: OnboardingStep.agentDiscovery,
+      completedSteps: {
+        OnboardingStep.agentDiscovery: true,
+        OnboardingStep.documentVerification: true,
+        OnboardingStep.kycProcess: false,
+        OnboardingStep.emergencyContacts: false,
+        OnboardingStep.profileSetup: false,
+      },
+      formData: {
+        'agentCode': 'AGT123456',
+        'companyName': 'ABC Insurance Brokers',
+        'licenseNumber': 'LIC123456789',
+        'panNumber': 'ABCDE1234F',
+        'aadhaarNumber': '123456789012',
+      },
+    );
+
+    // Initialize mock data for each step
+    _agentDiscoveryData = AgentDiscoveryData(
+      agentCode: 'AGT123456',
+      companyName: 'ABC Insurance Brokers',
+      branchName: 'Mumbai Central',
+      designation: 'Senior Insurance Agent',
+    );
+
+    _documentVerificationData = DocumentVerificationData(
+      licenseDocument: 'license.pdf',
+      panDocument: 'pan.pdf',
+      aadhaarDocument: 'aadhaar.pdf',
+      addressProof: 'address.pdf',
+      bankDetails: 'bank.pdf',
+    );
+
+    _kycProcessData = KycProcessData(
+      kycStatus: 'pending',
+      verificationDocuments: ['license.pdf', 'pan.pdf', 'aadhaar.pdf'],
+      submittedAt: DateTime.now().subtract(const Duration(days: 2)),
     );
   }
 }

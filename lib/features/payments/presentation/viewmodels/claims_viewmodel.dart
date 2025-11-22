@@ -9,7 +9,10 @@ class ClaimsViewModel extends ChangeNotifier {
   final PolicyRepository _policyRepository;
 
   ClaimsViewModel([PolicyRepository? policyRepository])
-      : _policyRepository = policyRepository ?? PolicyRepository(PolicyRemoteDataSource());
+      : _policyRepository = policyRepository ?? PolicyRepository(PolicyRemoteDataSource()) {
+    // Initialize with mock data for Phase 5 testing
+    _initializeMockData();
+  }
 
   // State
   List<Claim> _claims = [];
@@ -210,5 +213,39 @@ class ClaimsViewModel extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  void _initializeMockData() {
+    // Mock claims data for Phase 5 testing
+    _claims = [
+      Claim(
+        claimId: 'CLM001',
+        policyId: 'POL001',
+        claimantName: 'John Doe',
+        claimType: 'Medical',
+        description: 'Hospitalization due to accident',
+        claimedAmount: 50000.0,
+        approvedAmount: 45000.0,
+        status: 'approved',
+        submittedDate: DateTime.now().subtract(const Duration(days: 7)),
+        processedDate: DateTime.now().subtract(const Duration(days: 3)),
+        documents: ['medical_report.pdf', 'hospital_bill.pdf'],
+        notes: 'Approved with 10% deduction for co-payment',
+      ),
+      Claim(
+        claimId: 'CLM002',
+        policyId: 'POL002',
+        claimantName: 'Jane Smith',
+        claimType: 'Vehicle Damage',
+        description: 'Car accident damage',
+        claimedAmount: 75000.0,
+        approvedAmount: null,
+        status: 'processing',
+        submittedDate: DateTime.now().subtract(const Duration(days: 2)),
+        processedDate: null,
+        documents: ['accident_report.pdf', 'repair_estimate.pdf'],
+        notes: 'Under review by claims team',
+      ),
+    ];
   }
 }

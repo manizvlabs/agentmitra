@@ -24,14 +24,13 @@ import 'screens/marketing_campaign_builder.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/otp_verification_page.dart';
 // Temporarily disable complex screens to focus on auth
-// Temporarily disable problematic imports to get clean build
-// import 'features/onboarding/presentation/pages/onboarding_page.dart';
+import 'features/onboarding/presentation/pages/onboarding_page.dart';
 import 'features/dashboard/presentation/pages/dashboard_page.dart';
-// import 'features/chatbot/presentation/pages/chatbot_page.dart';
-// import 'features/notifications/presentation/pages/notification_page.dart';
-// import 'features/agent/presentation/pages/agent_profile_page.dart';
-// import 'features/payments/presentation/pages/claims_page.dart';
-// import 'features/payments/presentation/pages/policies_list_page.dart';
+import 'features/chatbot/presentation/pages/chatbot_page.dart';
+import 'features/notifications/presentation/pages/notification_page.dart';
+import 'features/agent/presentation/pages/agent_profile_page.dart';
+import 'features/payments/presentation/pages/claims_page.dart';
+import 'features/payments/presentation/pages/policies_list_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -91,30 +90,30 @@ class AgentMitraApp extends ConsumerWidget {
         provider.ChangeNotifierProvider(
           create: (_) => ServiceLocator.dashboardViewModel,
         ),
-        // Notification ViewModel - TODO: Fix dependencies
-        // provider.ChangeNotifierProvider(
-        //   create: (_) => ServiceLocator.notificationViewModel,
-        // ),
-        // Onboarding ViewModel - TODO: Fix data type issues
-        // provider.ChangeNotifierProvider(
-        //   create: (_) => ServiceLocator.onboardingViewModel,
-        // ),
-        // Agent Profile ViewModel - TODO: Fix dependencies
-        // provider.ChangeNotifierProvider(
-        //   create: (_) => ServiceLocator.agentProfileViewModel,
-        // ),
-        // Claims ViewModel - TODO: Fix dependencies
-        // provider.ChangeNotifierProvider(
-        //   create: (_) => ServiceLocator.claimsViewModel,
-        // ),
-        // Policies ViewModel - TODO: Fix dependencies
-        // provider.ChangeNotifierProvider(
-        //   create: (_) => ServiceLocator.policiesViewModel,
-        // ),
-        // Chatbot ViewModel - TODO: Fix dependencies
-        // provider.ChangeNotifierProvider(
-        //   create: (_) => ServiceLocator.createChatbotViewModel('current-agent'),
-        // ),
+        // Notification ViewModel - mock data for testing
+        provider.ChangeNotifierProvider(
+          create: (_) => ServiceLocator.notificationViewModel,
+        ),
+        // Onboarding ViewModel - mock data for testing
+        provider.ChangeNotifierProvider(
+          create: (_) => ServiceLocator.onboardingViewModel,
+        ),
+        // Agent Profile ViewModel - mock data for testing
+        provider.ChangeNotifierProvider(
+          create: (_) => ServiceLocator.agentProfileViewModel,
+        ),
+        // Claims ViewModel - mock data for testing
+        provider.ChangeNotifierProvider(
+          create: (_) => ServiceLocator.claimsViewModel,
+        ),
+        // Policies ViewModel - mock data for testing
+        provider.ChangeNotifierProvider(
+          create: (_) => ServiceLocator.policiesViewModel,
+        ),
+        // Chatbot ViewModel - mock data for testing
+        provider.ChangeNotifierProvider(
+          create: (_) => ServiceLocator.createChatbotViewModel('current-agent'),
+        ),
         provider.ChangeNotifierProvider(
           create: (_) => PresentationViewModel(),
         ),
@@ -143,25 +142,25 @@ class AgentMitraApp extends ConsumerWidget {
 
         // Onboarding Flow
         '/trial-setup': (context) => const TrialSetupScreen(),
-        // '/onboarding': (context) => const OnboardingPage(), // TODO: Fix ViewModel
+        '/onboarding': (context) => const OnboardingPage(),
         '/trial-expiration': (context) => const TrialExpirationScreen(),
 
         // Customer Portal
         '/customer-dashboard': (context) => const DashboardPage(),
-        // '/policies': (context) => const PoliciesListPage(), // TODO: Fix ViewModel dependencies
-        // '/claims': (context) {
-        //   // Extract policyId from arguments if available
-        //   final args = ModalRoute.of(context)?.settings.arguments;
-        //   return ClaimsPage(policyId: args as String?);
-        // }, // TODO: Fix ViewModel dependencies
+        '/policies': (context) => const PoliciesListPage(),
+        '/claims': (context) {
+          // Extract policyId from arguments if available
+          final args = ModalRoute.of(context)?.settings.arguments;
+          return ClaimsPage(policyId: args as String?);
+        },
         '/policy-details': (context) => const PolicyDetailsScreen(),
         '/whatsapp-integration': (context) => const WhatsappIntegrationScreen(),
-        // '/smart-chatbot': (context) => const ChatbotPage(), // TODO: Fix ViewModel
-        // '/notifications': (context) => const NotificationPage(), // TODO: Fix ViewModel
+        '/smart-chatbot': (context) => const ChatbotPage(),
+        '/notifications': (context) => const NotificationPage(),
         '/learning-center': (context) => const LearningCenterScreen(),
 
         // Agent Portal
-        // '/agent-profile': (context) => const AgentProfilePage(), // TODO: Fix ViewModel
+        '/agent-profile': (context) => const AgentProfilePage(),
         '/agent-config-dashboard': (context) => const AgentConfigDashboard(),
         '/roi-analytics': (context) => const RoiAnalyticsDashboard(),
         '/campaign-builder': (context) => const MarketingCampaignBuilder(),

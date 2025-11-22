@@ -95,8 +95,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
                     const SizedBox(height: 24),
 
-                    // Presentation Carousel
-                    const PresentationCarousel(agentId: 'current-agent'),
+                    // Presentation Carousel - temporarily disabled for Phase 5 polish
+                    // const PresentationCarousel(agentId: 'current-agent'),
+                    _buildPresentationPlaceholder(),
 
                     const SizedBox(height: 24),
 
@@ -365,6 +366,53 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
           ),
         );
       },
+    );
+  }
+
+  Widget _buildPresentationPlaceholder() {
+    return Container(
+      height: 200,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.slideshow,
+            size: 48,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Presentation Carousel',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Interactive presentations will be available here',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: () {
+              // TODO: Navigate to presentations management
+            },
+            icon: const Icon(Icons.play_arrow),
+            label: const Text('Coming Soon'),
+          ),
+        ],
+      ),
     );
   }
 

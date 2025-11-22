@@ -19,7 +19,10 @@ class NotificationViewModel extends BaseViewModel {
     LoggerService? logger,
   ])  : _repository = repository ?? NotificationRepository(NotificationRemoteDataSource()),
         _offlineQueueService = offlineQueueService ?? OfflineQueueService(),
-        _logger = logger ?? LoggerService();
+        _logger = logger ?? LoggerService() {
+    // Initialize with mock data for Phase 5 testing
+    _initializeMockData();
+  }
 
   // Notification data
   List<NotificationModel> _notifications = [];
@@ -386,5 +389,54 @@ class NotificationViewModel extends BaseViewModel {
   /// Force sync with conflict resolution
   Future<void> forceSync() async {
     await syncNotifications();
+  }
+
+  void _initializeMockData() {
+    // Mock notifications data for Phase 5 testing
+    _notifications = [
+      NotificationModel(
+        id: 'notif_001',
+        title: 'Policy Renewal Due',
+        message: 'Your policy LIC123456789 is due for renewal in 7 days.',
+        type: 'warning',
+        isRead: false,
+        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+        actionUrl: '/policies',
+        metadata: {'policyId': 'POL001'},
+      ),
+      NotificationModel(
+        id: 'notif_002',
+        title: 'Claim Approved',
+        message: 'Your claim CLM001 for ₹45,000 has been approved.',
+        type: 'success',
+        isRead: false,
+        createdAt: DateTime.now().subtract(const Duration(hours: 4)),
+        actionUrl: '/claims',
+        metadata: {'claimId': 'CLM001'},
+      ),
+      NotificationModel(
+        id: 'notif_003',
+        title: 'Payment Reminder',
+        message: 'Premium payment of ₹2,500 is due in 3 days.',
+        type: 'info',
+        isRead: true,
+        createdAt: DateTime.now().subtract(const Duration(days: 1)),
+        actionUrl: '/policies',
+        metadata: {'policyId': 'POL001'},
+      ),
+      NotificationModel(
+        id: 'notif_004',
+        title: 'New Feature Available',
+        message: 'Try our new claims filing feature with AI assistance.',
+        type: 'info',
+        isRead: false,
+        createdAt: DateTime.now().subtract(const Duration(days: 2)),
+        actionUrl: '/claims',
+        metadata: {},
+      ),
+    ];
+
+    _totalNotifications = _notifications.length;
+    _unreadCount = _notifications.where((n) => !n.isRead).length;
   }
 }

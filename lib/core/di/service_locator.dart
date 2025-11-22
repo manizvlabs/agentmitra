@@ -9,28 +9,14 @@ import '../../features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../features/dashboard/data/datasources/dashboard_remote_datasource.dart';
 import '../../features/dashboard/data/repositories/dashboard_repository.dart';
 import '../../features/dashboard/presentation/viewmodels/dashboard_viewmodel.dart';
-// Temporarily disabled due to dependency issues
-// import '../../features/notifications/data/datasources/notification_remote_datasource.dart';
-// import '../../features/notifications/data/repositories/notification_repository.dart';
-// import '../../features/notifications/presentation/viewmodels/notification_viewmodel.dart';
-// Temporarily disabled due to dependency issues
-// import '../../features/onboarding/data/datasources/onboarding_local_datasource.dart';
-// import '../../features/onboarding/data/repositories/onboarding_repository.dart';
-// import '../../features/onboarding/presentation/viewmodels/onboarding_viewmodel.dart';
-// Temporarily disabled due to dependency issues
-// import '../../features/agent/data/datasources/agent_remote_datasource.dart';
-// import '../../features/agent/data/datasources/agent_local_datasource.dart';
-// import '../../features/agent/data/repositories/agent_repository.dart';
-// import '../../features/agent/presentation/viewmodels/agent_profile_viewmodel.dart';
-// Temporarily disabled due to dependency issues
-// import '../../features/payments/data/datasources/policy_remote_datasource.dart';
-// import '../../features/payments/data/datasources/policy_local_datasource.dart';
-// import '../../features/payments/data/repositories/policy_repository.dart';
-// import '../../features/payments/presentation/viewmodels/claims_viewmodel.dart';
-// import '../../features/payments/presentation/viewmodels/policies_viewmodel.dart';
-// import '../../features/chatbot/data/repositories/chatbot_repository.dart';
-// import '../../features/chatbot/data/datasources/chatbot_remote_datasource.dart';
-// import '../../features/chatbot/presentation/viewmodels/chatbot_viewmodel.dart';
+import '../../features/notifications/presentation/viewmodels/notification_viewmodel.dart';
+import '../../features/onboarding/presentation/viewmodels/onboarding_viewmodel.dart';
+import '../../features/agent/presentation/viewmodels/agent_profile_viewmodel.dart';
+import '../../features/payments/presentation/viewmodels/claims_viewmodel.dart';
+import '../../features/payments/presentation/viewmodels/policies_viewmodel.dart';
+import '../../features/chatbot/presentation/viewmodels/chatbot_viewmodel.dart';
+import '../../features/chatbot/data/repositories/chatbot_repository.dart';
+import '../../features/chatbot/data/datasources/chatbot_remote_datasource.dart';
 
 /// Service Locator for Dependency Injection
 /// Provides centralized access to all services, repositories, and ViewModels
@@ -55,35 +41,29 @@ class ServiceLocator {
     DashboardViewModel();
 
   /// Notification ViewModel - connects to real notification APIs
-  // TODO: Fix dependencies - NotificationRemoteDataSource needs ApiService, etc.
-  // static NotificationViewModel get notificationViewModel =>
-  //   NotificationViewModel();
+  static NotificationViewModel get notificationViewModel =>
+    NotificationViewModel();
 
   /// Onboarding ViewModel - uses local persistence (may connect to backend later)
-  // TODO: Fix OnboardingViewModel issues with mock data types
-  // static OnboardingViewModel get onboardingViewModel =>
-  //   OnboardingViewModel();
+  static OnboardingViewModel get onboardingViewModel =>
+    OnboardingViewModel();
 
   /// Agent Profile ViewModel - connects to real agent APIs
-  // TODO: Fix AgentRemoteDataSource to use ApiService instead of Dio
-  // static AgentProfileViewModel get agentProfileViewModel =>
-  //   AgentProfileViewModel();
+  static AgentProfileViewModel get agentProfileViewModel =>
+    AgentProfileViewModel();
 
   /// Claims ViewModel - connects to real claims APIs
-  // TODO: Fix PolicyRemoteDataSource to use ApiService instead of Dio
-  // static ClaimsViewModel get claimsViewModel =>
-  //   ClaimsViewModel();
+  static ClaimsViewModel get claimsViewModel =>
+    ClaimsViewModel();
 
   /// Policies ViewModel - connects to real policy APIs
-  // TODO: Fix PolicyRemoteDataSource to use ApiService instead of Dio
-  // static PoliciesViewModel get policiesViewModel =>
-  //   PoliciesViewModel();
+  static PoliciesViewModel get policiesViewModel =>
+    PoliciesViewModel();
 
   /// Chatbot ViewModel factory - requires agentId parameter
-  // TODO: Fix ChatbotRemoteDataSource to use ApiService instead of Dio
-  // static ChatbotViewModel createChatbotViewModel(String agentId) {
-  //   return ChatbotViewModel(ChatbotRepository(ChatbotRemoteDataSource()), agentId);
-  // }
+  static ChatbotViewModel createChatbotViewModel(String agentId) {
+    return ChatbotViewModel(ChatbotRepository(ChatbotRemoteDataSource()), agentId);
+  }
 
   // ===========================================================================
   // UTILITY METHODS

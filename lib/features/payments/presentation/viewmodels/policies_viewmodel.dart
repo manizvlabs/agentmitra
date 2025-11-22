@@ -8,7 +8,10 @@ class PoliciesViewModel extends ChangeNotifier {
   final PolicyRepository _policyRepository;
 
   PoliciesViewModel([PolicyRepository? policyRepository])
-      : _policyRepository = policyRepository ?? PolicyRepository(PolicyRemoteDataSource());
+      : _policyRepository = policyRepository ?? PolicyRepository(PolicyRemoteDataSource()) {
+    // Initialize with mock data for Phase 5 testing
+    _initializeMockData();
+  }
 
   // State
   List<Policy> _policies = [];
@@ -119,5 +122,63 @@ class PoliciesViewModel extends ChangeNotifier {
     _selectedStatus = null;
     _searchQuery = null;
     loadPolicies(refresh: true);
+  }
+
+  void _initializeMockData() {
+    // Mock policies data for Phase 5 testing
+    _policies = [
+      Policy(
+        policyId: 'POL001',
+        policyNumber: 'LIFE001234567',
+        customerName: 'John Doe',
+        customerEmail: 'john.doe@email.com',
+        customerPhone: '+91 9876543210',
+        policyType: 'Life Insurance',
+        status: 'active',
+        premium: 2500.0,
+        sumAssured: 500000.0,
+        startDate: DateTime.now().subtract(const Duration(days: 365)),
+        endDate: DateTime.now().add(const Duration(days: 365)),
+        agentId: 'agent_123',
+        agentName: 'John Doe',
+        createdAt: DateTime.now().subtract(const Duration(days: 365)),
+        updatedAt: DateTime.now(),
+      ),
+      Policy(
+        policyId: 'POL002',
+        policyNumber: 'HEALTH001234568',
+        customerName: 'Jane Smith',
+        customerEmail: 'jane.smith@email.com',
+        customerPhone: '+91 9876543211',
+        policyType: 'Health Insurance',
+        status: 'active',
+        premium: 1800.0,
+        sumAssured: 300000.0,
+        startDate: DateTime.now().subtract(const Duration(days: 180)),
+        endDate: DateTime.now().add(const Duration(days: 545)),
+        agentId: 'agent_123',
+        agentName: 'John Doe',
+        createdAt: DateTime.now().subtract(const Duration(days: 180)),
+        updatedAt: DateTime.now(),
+      ),
+      Policy(
+        policyId: 'POL003',
+        policyNumber: 'MOTOR001234569',
+        customerName: 'Bob Johnson',
+        customerEmail: 'bob.johnson@email.com',
+        customerPhone: '+91 9876543212',
+        policyType: 'Motor Insurance',
+        status: 'expiring_soon',
+        premium: 3200.0,
+        sumAssured: 800000.0,
+        startDate: DateTime.now().subtract(const Duration(days: 330)),
+        endDate: DateTime.now().add(const Duration(days: 35)), // Expires in 35 days
+        agentId: 'agent_123',
+        agentName: 'John Doe',
+        createdAt: DateTime.now().subtract(const Duration(days: 330)),
+        updatedAt: DateTime.now(),
+      ),
+    ];
+    _totalPolicies = _policies.length;
   }
 }
