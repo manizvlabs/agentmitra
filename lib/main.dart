@@ -29,6 +29,13 @@ import 'features/notifications/presentation/pages/notification_page.dart';
 import 'features/agent/presentation/pages/agent_profile_page.dart';
 import 'features/payments/presentation/pages/claims_page.dart';
 import 'features/payments/presentation/pages/policies_list_page.dart';
+import 'screens/daily_quotes_screen.dart';
+import 'screens/my_policies_screen.dart';
+import 'screens/data_pending_screen.dart';
+import 'screens/agent_discovery_screen.dart';
+import 'screens/agent_verification_screen.dart';
+import 'screens/document_upload_screen.dart';
+import 'screens/emergency_contact_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -146,9 +153,16 @@ class AgentMitraApp extends ConsumerWidget {
         '/smart-chatbot': (context) => const ChatbotPage(),
         '/notifications': (context) => const NotificationPage(),
         '/learning-center': (context) => const LearningCenterScreen(),
+        '/data-pending': (context) => const DataPendingScreen(),
+        '/agent-discovery': (context) => const AgentDiscoveryScreen(),
+        '/agent-verification': (context) => const AgentVerificationScreen(),
+        '/document-upload': (context) => const DocumentUploadScreen(),
+        '/emergency-contact': (context) => const EmergencyContactScreen(),
 
         // Agent Portal
         '/agent-profile': (context) => const AgentProfilePage(),
+        '/daily-quotes': (context) => const DailyQuotesScreen(),
+        '/my-policies': (context) => const MyPoliciesScreen(),
         '/agent-config-dashboard': (context) => const AgentConfigDashboard(),
         '/roi-analytics': (context) => const RoiAnalyticsDashboard(),
         '/campaign-builder': (context) => const MarketingCampaignBuilder(),

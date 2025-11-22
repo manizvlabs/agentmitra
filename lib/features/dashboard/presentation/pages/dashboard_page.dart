@@ -7,6 +7,7 @@ import '../widgets/dashboard_analytics_cards.dart';
 import '../widgets/dashboard_quick_actions.dart';
 import '../widgets/dashboard_notifications.dart';
 import '../widgets/dashboard_priority_alerts.dart';
+import '../widgets/agent_side_drawer.dart';
 import '../../../../core/widgets/offline_indicator.dart';
 
 /// Enhanced Dashboard Page with real API integration and presentation carousel
@@ -68,6 +69,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      drawer: const AgentSideDrawer(),
       appBar: _buildAppBar(),
       body: SafeArea(
         child: RefreshIndicator(
@@ -144,6 +146,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
               fontSize: titleSize,
             ),
           );
+        },
+      ),
+      leading: IconButton(
+        icon: Icon(
+          Icons.menu,
+          color: Theme.of(context).iconTheme.color,
+        ),
+        onPressed: () {
+          Scaffold.of(context).openDrawer();
         },
       ),
       actions: [
