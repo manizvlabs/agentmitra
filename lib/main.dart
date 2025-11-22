@@ -136,7 +136,7 @@ class AgentMitraApp extends ConsumerWidget {
         '/trial-expiration': (context) => const TrialExpirationScreen(),
 
         // Customer Portal
-        // '/customer-dashboard': (context) => const DashboardPage(), // Temporarily disabled
+        '/customer-dashboard': (context) => const DashboardPage(),
         '/policy-details': (context) => const PolicyDetailsScreen(),
         '/whatsapp-integration': (context) => const WhatsappIntegrationScreen(),
         // '/smart-chatbot': (context) => const ChatbotPage(), // Temporarily disabled
