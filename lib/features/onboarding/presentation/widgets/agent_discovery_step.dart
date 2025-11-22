@@ -76,7 +76,7 @@ class _AgentDiscoveryStepState extends State<AgentDiscoveryStep> {
       } else {
         LoggerService().warning('Agent not found for code: $agentCode', tag: 'AgentDiscovery');
         setState(() {
-          _errorMessage = response?['message'] ?? 'Agent not found. Please check the agent code and try again.';
+          _errorMessage = response['message'] ?? 'Agent not found. Please check the agent code and try again.';
         });
       }
     } catch (e) {

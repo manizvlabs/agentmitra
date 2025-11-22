@@ -3,19 +3,19 @@ import '../../features/payments/data/models/policy_model.dart';
 
 /// Mock PoliciesViewModel for web compatibility
 class MockPoliciesViewModel extends ChangeNotifier {
-  List<PolicyModel> _policies = [];
-  PolicyModel? _selectedPolicy;
+  List<Policy> _policies = [];
+  Policy? _selectedPolicy;
   bool _isLoading = false;
   String? _error;
 
-  List<PolicyModel> get policies => _policies;
-  PolicyModel? get selectedPolicy => _selectedPolicy;
+  List<Policy> get policies => _policies;
+  Policy? get selectedPolicy => _selectedPolicy;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  List<PolicyModel> get activePolicies => _policies.where((p) => p.status == 'active').toList();
-  List<PolicyModel> get expiredPolicies => _policies.where((p) => p.status == 'expired').toList();
-  List<PolicyModel> get expiringSoonPolicies => _policies.where((p) => p.isExpiringSoon).toList();
+  List<Policy> get activePolicies => _policies.where((p) => p.status == 'active').toList();
+  List<Policy> get expiredPolicies => _policies.where((p) => p.status == 'expired').toList();
+  List<Policy> get expiringSoonPolicies => _policies.where((p) => p.isExpiringSoon).toList();
 
   MockPoliciesViewModel() {
     _initializeMockPolicies();
@@ -23,7 +23,7 @@ class MockPoliciesViewModel extends ChangeNotifier {
 
   void _initializeMockPolicies() {
     _policies = [
-      PolicyModel(
+      Policy(
         policyId: 'POL001',
         customerId: 'CUST001',
         customerName: 'John Doe',
@@ -40,7 +40,7 @@ class MockPoliciesViewModel extends ChangeNotifier {
         nextPaymentDate: DateTime.now().add(const Duration(days: 30)),
         documents: ['policy_document.pdf', 'terms_conditions.pdf'],
       ),
-      PolicyModel(
+      Policy(
         policyId: 'POL002',
         customerId: 'CUST002',
         customerName: 'Jane Smith',
@@ -57,7 +57,7 @@ class MockPoliciesViewModel extends ChangeNotifier {
         nextPaymentDate: DateTime.now().add(const Duration(days: 60)),
         documents: ['health_policy.pdf'],
       ),
-      PolicyModel(
+      Policy(
         policyId: 'POL003',
         customerId: 'CUST003',
         customerName: 'Bob Johnson',
@@ -103,7 +103,7 @@ class MockPoliciesViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> createPolicy(PolicyModel policy) async {
+  Future<void> createPolicy(Policy policy) async {
     _isLoading = true;
     notifyListeners();
 
@@ -119,7 +119,7 @@ class MockPoliciesViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updatePolicy(String policyId, PolicyModel updatedPolicy) async {
+  Future<void> updatePolicy(String policyId, Policy updatedPolicy) async {
     _isLoading = true;
     notifyListeners();
 
@@ -149,7 +149,7 @@ class MockPoliciesViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void selectPolicy(PolicyModel policy) {
+  void selectPolicy(Policy policy) {
     _selectedPolicy = policy;
     notifyListeners();
   }

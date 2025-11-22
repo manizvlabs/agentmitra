@@ -260,7 +260,6 @@ class PushNotificationService {
     final settingsJson = prefs.getString(_notificationSettingsKey);
     if (settingsJson != null) {
       try {
-        final settings = jsonDecode(settingsJson) as Map<String, dynamic>;
         // Load user preferences
         _logger.info('Notification settings loaded');
       } catch (e, stackTrace) {

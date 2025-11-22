@@ -3,12 +3,12 @@ import '../../features/agent/data/models/agent_profile_model.dart';
 
 /// Mock AgentProfileViewModel for web compatibility
 class MockAgentProfileViewModel extends ChangeNotifier {
-  AgentProfileModel? _profile;
+  AgentProfile? _profile;
   bool _isLoading = false;
   bool _isEditing = false;
   String? _error;
 
-  AgentProfileModel? get profile => _profile;
+  AgentProfile? get profile => _profile;
   bool get isLoading => _isLoading;
   bool get isEditing => _isEditing;
   String? get error => _error;
@@ -18,31 +18,29 @@ class MockAgentProfileViewModel extends ChangeNotifier {
   }
 
   void _initializeMockProfile() {
-    _profile = AgentProfileModel(
+    _profile = AgentProfile(
       agentId: 'agent_123',
-      name: 'Rajesh Kumar',
-      phoneNumber: '+91 9876543210',
-      email: 'rajesh.kumar@agentmitra.com',
+      userId: 'user_123',
+      agentCode: 'AGENT001',
       licenseNumber: 'LIC2023001',
-      licenseExpiryDate: DateTime.now().add(const Duration(days: 365)),
-      experienceYears: 8,
-      specialization: ['Life Insurance', 'Health Insurance'],
-      languages: ['English', 'Hindi', 'Marathi'],
-      address: AgentAddress(
-        street: '123 MG Road',
-        city: 'Mumbai',
-        state: 'Maharashtra',
-        pincode: '400001',
-        country: 'India',
-      ),
+      companyName: 'Agent Mitra',
+      branchName: 'Mumbai Central',
+      designation: 'Senior Insurance Agent',
+      joiningDate: DateTime.now().subtract(const Duration(days: 365)),
+      employmentStatus: 'active',
+      contactDetails: {
+        'phone': '+91 9876543210',
+        'email': 'rajesh.kumar@agentmitra.com',
+      },
+      addressDetails: {
+        'street': '123 MG Road',
+        'city': 'Mumbai',
+        'state': 'Maharashtra',
+        'pincode': '400001',
+        'country': 'India',
+      },
+      verificationStatus: 'verified',
       profileImageUrl: null,
-      rating: 4.5,
-      totalPoliciesSold: 156,
-      commissionEarned: 125000.0,
-      isVerified: true,
-      isActive: true,
-      joinedDate: DateTime.now().subtract(const Duration(days: 365)),
-      lastActiveDate: DateTime.now(),
     );
   }
 
@@ -66,7 +64,7 @@ class MockAgentProfileViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateProfile(AgentProfileModel updatedProfile) async {
+  Future<void> updateProfile(AgentProfile updatedProfile) async {
     _isLoading = true;
     notifyListeners();
 

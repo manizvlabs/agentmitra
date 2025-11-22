@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/logger_service.dart';
 import '../models/notification_model.dart';
@@ -8,9 +7,6 @@ import '../models/notification_model.dart';
 class NotificationRemoteDataSource {
   final ApiService _apiService;
   final LoggerService _logger;
-
-  static const String _notificationsKey = 'cached_notifications';
-  static const String _lastSyncKey = 'notifications_last_sync';
 
   NotificationRemoteDataSource(this._apiService, this._logger);
 

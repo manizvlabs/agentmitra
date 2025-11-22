@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../providers/global_providers.dart';
-import '../services/offline_queue_service.dart';
 
 /// Offline indicator widget that shows connectivity and sync status
 class OfflineIndicator extends ConsumerWidget {

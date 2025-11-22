@@ -27,34 +27,33 @@ class MockChatbotViewModel extends ChangeNotifier {
     _currentSession = ChatSession(
       sessionId: 'session_123',
       agentId: 'agent_123',
-      userId: 'user_123',
+      customerId: 'user_123',
       status: 'active',
-      createdAt: DateTime.now(),
-      lastActivityAt: DateTime.now(),
+      startedAt: DateTime.now(),
     );
 
     _messages = [
       ChatMessage(
-        id: '1',
+        messageId: '1',
         sessionId: 'session_123',
         sender: 'bot',
-        message: 'Hello! I\'m your insurance assistant. How can I help you today?',
+        content: 'Hello! I\'m your insurance assistant. How can I help you today?',
         timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
         messageType: 'text',
       ),
       ChatMessage(
-        id: '2',
+        messageId: '2',
         sessionId: 'session_123',
         sender: 'user',
-        message: 'I need help with my policy details',
+        content: 'I need help with my policy details',
         timestamp: DateTime.now().subtract(const Duration(minutes: 4)),
         messageType: 'text',
       ),
       ChatMessage(
-        id: '3',
+        messageId: '3',
         sessionId: 'session_123',
         sender: 'bot',
-        message: 'I\'d be happy to help you with your policy details. Could you please provide your policy number?',
+        content: 'I\'d be happy to help you with your policy details. Could you please provide your policy number?',
         timestamp: DateTime.now().subtract(const Duration(minutes: 3)),
         messageType: 'text',
       ),
@@ -70,10 +69,10 @@ class MockChatbotViewModel extends ChangeNotifier {
     if (_currentMessage.trim().isEmpty) return;
 
     final userMessage = ChatMessage(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      messageId: DateTime.now().millisecondsSinceEpoch.toString(),
       sessionId: _currentSession!.sessionId,
       sender: 'user',
-      message: _currentMessage,
+      content: _currentMessage,
       timestamp: DateTime.now(),
       messageType: 'text',
     );
@@ -87,10 +86,10 @@ class MockChatbotViewModel extends ChangeNotifier {
     await Future.delayed(const Duration(seconds: 2));
 
     final botResponse = ChatMessage(
-      id: (DateTime.now().millisecondsSinceEpoch + 1).toString(),
+      messageId: (DateTime.now().millisecondsSinceEpoch + 1).toString(),
       sessionId: _currentSession!.sessionId,
       sender: 'bot',
-      message: 'Thank you for your message. A human agent will assist you shortly.',
+      content: 'Thank you for your message. A human agent will assist you shortly.',
       timestamp: DateTime.now(),
       messageType: 'text',
     );

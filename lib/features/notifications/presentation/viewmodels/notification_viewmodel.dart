@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../../../core/architecture/base/base_viewmodel.dart';
 import '../../../../core/services/api_service.dart';
@@ -14,7 +13,7 @@ import '../../data/models/notification_model.dart';
 /// ViewModel for notification management
 class NotificationViewModel extends BaseViewModel {
   final NotificationRepository _repository;
-  final OfflineQueueService _offlineQueueService;
+  // final OfflineQueueService _offlineQueueService;
   final LoggerService _logger;
 
   NotificationViewModel([
@@ -29,7 +28,7 @@ class NotificationViewModel extends BaseViewModel {
           SyncService(LoggerService(), Connectivity()),
           LoggerService(),
         ),
-        _offlineQueueService = offlineQueueService ?? OfflineQueueService(LoggerService(), Connectivity()),
+        // _offlineQueueService = offlineQueueService ?? OfflineQueueService(LoggerService(), Connectivity()),
         _logger = logger ?? LoggerService() {
     // Initialize with mock data for Phase 5 testing
     _initializeMockData();

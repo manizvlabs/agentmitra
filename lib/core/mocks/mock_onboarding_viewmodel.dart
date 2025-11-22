@@ -25,48 +25,7 @@ class MockOnboardingViewModel extends ChangeNotifier {
   }
 
   void _initializeSteps() {
-    _steps = [
-      OnboardingStep(
-        id: 'agent_discovery',
-        title: 'Agent Discovery',
-        description: 'Find and connect with insurance agents',
-        isCompleted: false,
-        isRequired: true,
-        order: 1,
-      ),
-      OnboardingStep(
-        id: 'profile_setup',
-        title: 'Profile Setup',
-        description: 'Complete your profile information',
-        isCompleted: false,
-        isRequired: true,
-        order: 2,
-      ),
-      OnboardingStep(
-        id: 'document_verification',
-        title: 'Document Verification',
-        description: 'Verify your identity documents',
-        isCompleted: false,
-        isRequired: true,
-        order: 3,
-      ),
-      OnboardingStep(
-        id: 'kyc_process',
-        title: 'KYC Process',
-        description: 'Complete Know Your Customer verification',
-        isCompleted: false,
-        isRequired: true,
-        order: 4,
-      ),
-      OnboardingStep(
-        id: 'emergency_contacts',
-        title: 'Emergency Contacts',
-        description: 'Add emergency contact information',
-        isCompleted: false,
-        isRequired: false,
-        order: 5,
-      ),
-    ];
+    _steps = OnboardingStep.values;
   }
 
   void _loadProgress() {

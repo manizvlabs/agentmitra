@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../features/notifications/data/models/notification_model.dart';
+import '../../features/notifications/data/models/notification_model.dart' as notification_models show NotificationType, NotificationPriority;
 
 /// Mock NotificationViewModel for web compatibility
 class MockNotificationViewModel extends ChangeNotifier {
@@ -21,19 +22,21 @@ class MockNotificationViewModel extends ChangeNotifier {
       NotificationModel(
         id: '1',
         title: 'Policy Renewal Reminder',
-        message: 'Policy POL001 is due for renewal in 7 days',
-        type: 'warning',
+        body: 'Policy POL001 is due for renewal in 7 days',
+        type: NotificationType.renewal,
+        priority: NotificationPriority.medium,
         isRead: false,
-        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+        timestamp: DateTime.now().subtract(const Duration(hours: 2)),
         actionUrl: '/policies',
       ),
       NotificationModel(
         id: '2',
         title: 'Claim Approved',
-        message: 'Your claim CLM001 has been approved',
-        type: 'success',
+        body: 'Your claim CLM001 has been approved',
+        type: NotificationType.claim,
+        priority: NotificationPriority.high,
         isRead: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
+        timestamp: DateTime.now().subtract(const Duration(days: 1)),
         actionUrl: '/claims',
       ),
     ];

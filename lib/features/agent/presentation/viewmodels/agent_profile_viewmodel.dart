@@ -206,7 +206,7 @@ class AgentProfileViewModel extends ChangeNotifier {
       email: 'john.doe@agentmitra.com',
       phone: '+91 9876543210',
       licenseNumber: 'LIC123456789',
-      licenseExpiryDate: '2025-12-31', // String format for now
+      licenseExpiryDate: DateTime(2025, 12, 31),
       status: 'active',
       joinDate: DateTime.now().subtract(const Duration(days: 365)),
       profileImageUrl: null,

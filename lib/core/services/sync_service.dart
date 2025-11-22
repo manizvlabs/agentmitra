@@ -61,7 +61,6 @@ class SyncService {
       // Update last sync timestamp
       await _setLastSyncTimestamp(DateTime.now());
 
-      final success = results.every((r) => r.success);
       final totalSynced = results.fold<int>(0, (sum, r) => sum + r.itemsSynced);
 
       final result = SyncResult.success(

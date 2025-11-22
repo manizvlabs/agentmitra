@@ -12,9 +12,9 @@ class _MarketingCampaignBuilderState extends State<MarketingCampaignBuilder> {
   final TextEditingController _subjectController = TextEditingController();
   final TextEditingController _messageController = TextEditingController();
 
-  DateTimeRange? _selectedDateRange;
-  bool _isDraft = false;
-  String _selectedSegment = 'All Customers';
+  // DateTimeRange? _selectedDateRange;
+  // bool _isDraft = false;
+  // String _selectedSegment = 'All Customers';
 
   @override
   void dispose() {

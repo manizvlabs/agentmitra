@@ -17,7 +17,7 @@ class _AgentProfilePageState extends State<AgentProfilePage> {
   void initState() {
     super.initState();
     // TODO: Get agent ID from authentication context
-    const agentId = 'test-agent-id'; // Placeholder
+    // const agentId = 'test-agent-id'; // Placeholder
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AgentProfileViewModel>().loadAgentProfile();
     });

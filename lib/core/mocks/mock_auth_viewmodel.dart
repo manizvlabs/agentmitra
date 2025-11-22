@@ -22,9 +22,9 @@ class MockAuthViewModel extends ChangeNotifier {
 
     // Mock successful login
     _currentUser = UserModel(
-      id: 'user_123',
+      userId: 'user_123',
       phoneNumber: phoneNumber,
-      name: 'John Doe',
+      fullName: 'John Doe',
       email: 'john@example.com',
       isVerified: true,
       createdAt: DateTime.now(),
@@ -41,9 +41,9 @@ class MockAuthViewModel extends ChangeNotifier {
     await Future.delayed(const Duration(seconds: 1));
 
     _currentUser = UserModel(
-      id: 'user_123',
+      userId: 'user_123',
       phoneNumber: phoneNumber,
-      name: 'John Doe',
+      fullName: 'John Doe',
       email: 'john@example.com',
       isVerified: true,
       createdAt: DateTime.now(),

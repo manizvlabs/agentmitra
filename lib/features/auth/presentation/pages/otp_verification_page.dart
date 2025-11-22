@@ -2,10 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
 import 'dart:async';
 import '../../../../core/services/logger_service.dart';
-import '../viewmodels/auth_viewmodel.dart';
 import '../widgets/otp_input.dart';
 
 class OtpVerificationPage extends StatefulWidget {

@@ -46,17 +46,13 @@ class NotificationSettingsPage extends StatefulWidget {
 }
 
 class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
-  late Map<String, dynamic> _settings;
+  late NotificationSettings _settings;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _settings = widget.viewModel.notificationSettings ?? {
-      'pushEnabled': true,
-      'emailEnabled': true,
-      'smsEnabled': false,
-    };
+    _settings = widget.viewModel.notificationSettings ?? const NotificationSettings();
   }
 
   @override

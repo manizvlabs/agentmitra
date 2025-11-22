@@ -3,19 +3,19 @@ import '../../features/payments/data/models/claim_model.dart';
 
 /// Mock ClaimsViewModel for web compatibility
 class MockClaimsViewModel extends ChangeNotifier {
-  List<ClaimModel> _claims = [];
-  ClaimModel? _selectedClaim;
+  List<Claim> _claims = [];
+  Claim? _selectedClaim;
   bool _isLoading = false;
   String? _error;
 
-  List<ClaimModel> get claims => _claims;
-  ClaimModel? get selectedClaim => _selectedClaim;
+  List<Claim> get claims => _claims;
+  Claim? get selectedClaim => _selectedClaim;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  List<ClaimModel> get pendingClaims => _claims.where((c) => c.status == 'pending').toList();
-  List<ClaimModel> get approvedClaims => _claims.where((c) => c.status == 'approved').toList();
-  List<ClaimModel> get rejectedClaims => _claims.where((c) => c.status == 'rejected').toList();
+  List<Claim> get pendingClaims => _claims.where((c) => c.status == 'pending').toList();
+  List<Claim> get approvedClaims => _claims.where((c) => c.status == 'approved').toList();
+  List<Claim> get rejectedClaims => _claims.where((c) => c.status == 'rejected').toList();
 
   MockClaimsViewModel() {
     _initializeMockClaims();
@@ -23,7 +23,7 @@ class MockClaimsViewModel extends ChangeNotifier {
 
   void _initializeMockClaims() {
     _claims = [
-      ClaimModel(
+      Claim(
         claimId: 'CLM001',
         policyId: 'POL001',
         customerId: 'CUST001',
@@ -37,7 +37,7 @@ class MockClaimsViewModel extends ChangeNotifier {
         documents: ['medical_report.pdf', 'bill_receipt.pdf'],
         comments: 'Claim approved after document verification',
       ),
-      ClaimModel(
+      Claim(
         claimId: 'CLM002',
         policyId: 'POL002',
         customerId: 'CUST002',
@@ -50,7 +50,7 @@ class MockClaimsViewModel extends ChangeNotifier {
         documents: ['accident_report.pdf', 'repair_estimate.pdf'],
         comments: null,
       ),
-      ClaimModel(
+      Claim(
         claimId: 'CLM003',
         policyId: 'POL003',
         customerId: 'CUST003',
@@ -93,7 +93,7 @@ class MockClaimsViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> submitClaim(ClaimModel claim) async {
+  Future<void> submitClaim(Claim claim) async {
     _isLoading = true;
     notifyListeners();
 
@@ -130,7 +130,7 @@ class MockClaimsViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void selectClaim(ClaimModel claim) {
+  void selectClaim(Claim claim) {
     _selectedClaim = claim;
     notifyListeners();
   }
