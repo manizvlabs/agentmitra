@@ -9,10 +9,7 @@ class ClaimsViewModel extends ChangeNotifier {
   final PolicyRepository _policyRepository;
 
   ClaimsViewModel([PolicyRepository? policyRepository])
-      : _policyRepository = policyRepository ?? PolicyRepository(PolicyRemoteDataSourceImpl(), PolicyLocalDataSourceImpl()) {
-    // Initialize with mock data for Phase 5 testing
-    _initializeMockData();
-  }
+      : _policyRepository = policyRepository ?? PolicyRepository(PolicyRemoteDataSourceImpl(), PolicyLocalDataSourceImpl());
 
   // State
   List<Claim> _claims = [];

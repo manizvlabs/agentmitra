@@ -13,48 +13,50 @@ api_router = APIRouter(prefix="/api/v1", tags=["api"])
 
 # Dashboard endpoint (simplified for Flutter app compatibility)
 @api_router.get("/dashboard/analytics")
-async def get_dashboard_analytics():
+async def get_dashboard_analytics(db: Session = Depends(get_db)):
     """Simple dashboard analytics endpoint for Flutter app"""
-    # Return mock data for now - will be replaced with real analytics
-    return {
-        "totalPremium": 35500.0,
-        "policiesCount": 3,
-        "claimsCount": 2,
-        "recentPolicies": [
+    try:
+        from app.repositories.analytics_repository import AnalyticsRepository
+        from app.repositories.policy_repository import InsurancePolicyRepository
+
+        analytics_repo = AnalyticsRepository(db)
+        policy_repo = InsurancePolicyRepository(db)
+
+        # Get real dashboard KPIs
+        kpis = analytics_repo.get_dashboard_kpis()
+
+        # Get recent policies (limit to 3)
+        recent_policies_data = policy_repo.get_all(limit=3)
+        recent_policies = [
             {
-                "id": "POL001",
-                "policyNumber": "LIC123456789",
-                "premium": 2500.0,
-                "status": "active"
-            },
-            {
-                "id": "POL002",
-                "policyNumber": "HDFC987654321",
-                "premium": 1500.0,
-                "status": "active"
-            },
-            {
-                "id": "POL003",
-                "policyNumber": "SBI456789123",
-                "premium": 3000.0,
-                "status": "pending"
+                "id": policy.policy_id,
+                "policyNumber": policy.policy_number,
+                "premium": policy.premium_amount,
+                "status": policy.status
             }
-        ],
-        "recentClaims": [
-            {
-                "id": "CLM001",
-                "policyNumber": "LIC123456789",
-                "amount": 45000.0,
-                "status": "approved"
-            },
-            {
-                "id": "CLM002",
-                "policyNumber": "HDFC987654321",
-                "amount": 25000.0,
-                "status": "pending"
-            }
+            for policy in recent_policies_data
         ]
-    }
+
+        # Get recent claims (limit to 2) - simplified for now
+        recent_claims = []  # TODO: Implement claims repository
+
+        return {
+            "totalPremium": kpis.total_premium_collected,
+            "policiesCount": kpis.total_policies,
+            "claimsCount": 0,  # TODO: Get from claims repository
+            "recentPolicies": recent_policies,
+            "recentClaims": recent_claims
+        }
+    except Exception as e:
+        # Fallback to basic data if analytics fail
+        print(f"Dashboard analytics error: {e}")
+        return {
+            "totalPremium": 0.0,
+            "policiesCount": 0,
+            "claimsCount": 0,
+            "recentPolicies": [],
+            "recentClaims": []
+        }
 
 # Test endpoints (temporary - remove in production)
 @api_router.get("/test/policies")

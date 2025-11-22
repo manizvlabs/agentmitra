@@ -14,10 +14,7 @@ class AgentProfileViewModel extends ChangeNotifier {
     AgentRepository? agentRepository,
     String? agentId,
   ])  : _agentRepository = agentRepository ?? AgentRepository(AgentRemoteDataSourceImpl(Dio()), AgentLocalDataSourceImpl()),
-        agentId = agentId ?? 'current-agent' {
-    // Initialize with mock data for Phase 5 testing
-    _initializeMockData();
-  }
+        agentId = agentId ?? 'current-agent';
 
   // State
   AgentProfile? _profile;

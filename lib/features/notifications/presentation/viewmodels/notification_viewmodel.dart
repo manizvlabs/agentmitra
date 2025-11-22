@@ -27,10 +27,7 @@ class NotificationViewModel extends BaseViewModel {
           LoggerService(),
         ),
         // _offlineQueueService = offlineQueueService ?? OfflineQueueService(LoggerService(), Connectivity()),
-        _logger = logger ?? LoggerService() {
-    // Initialize with mock data for Phase 5 testing
-    _initializeMockData();
-  }
+        _logger = logger ?? LoggerService();
 
   // Notification data
   List<NotificationModel> _notifications = [];

@@ -26,7 +26,7 @@ class ChatbotService:
         self.analytics_repo = AnalyticsRepository(db)
 
         # Initialize OpenAI client
-        openai.api_key = settings.openai_api_key
+        self.openai_client = openai.OpenAI(api_key=settings.openai_api_key)
 
         # System prompt for insurance agent chatbot
         self.system_prompt = """
@@ -173,7 +173,7 @@ class ChatbotService:
             Return as JSON with keys: intent, confidence, entities, suggested_actions
             """
 
-            response = await openai.ChatCompletion.acreate(
+            response = self.openai_client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "You are an intent analysis expert for insurance chatbots. Return only valid JSON."},
@@ -192,7 +192,9 @@ class ChatbotService:
                 "suggested_actions": result.get("suggested_actions", [])
             }
 
-        except Exception:
+        except Exception as e:
+            # Log the error for debugging
+            print(f"OpenAI API Error in _analyze_intent: {e}")
             # Fallback intent analysis
             return {
                 "intent": "general_inquiry",
@@ -247,7 +249,7 @@ class ChatbotService:
         """
 
         try:
-            response = await openai.ChatCompletion.acreate(
+            response = self.openai_client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": self.system_prompt},
@@ -260,6 +262,8 @@ class ChatbotService:
             return response.choices[0].message.content.strip()
 
         except Exception as e:
+            # Log the error for debugging
+            print(f"OpenAI API Error in _generate_response: {e}")
             # Fallback response
             return "I understand you're asking about insurance. Could you please provide more details so I can assist you better?"
 

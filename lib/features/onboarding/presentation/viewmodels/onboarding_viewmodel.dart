@@ -8,10 +8,7 @@ class OnboardingViewModel extends BaseViewModel {
   final OnboardingRepository _repository;
 
   OnboardingViewModel([OnboardingRepository? repository])
-      : _repository = repository ?? OnboardingRepository(OnboardingLocalDataSource()) {
-    // Initialize with mock data for Phase 5 testing
-    _initializeMockData();
-  }
+      : _repository = repository ?? OnboardingRepository(OnboardingLocalDataSource());
 
   // State variables
   OnboardingProgress? _progress;

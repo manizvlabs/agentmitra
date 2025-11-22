@@ -6,10 +6,7 @@ class ChatbotViewModel extends ChangeNotifier {
   final ChatbotRepository _chatbotRepository;
   final String agentId;
 
-  ChatbotViewModel(this._chatbotRepository, this.agentId) {
-    // Initialize with mock data for Phase 5 testing
-    _initializeMockData();
-  }
+  ChatbotViewModel(this._chatbotRepository, this.agentId);
 
   // State
   ChatSession? _currentSession;
