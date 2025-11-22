@@ -133,7 +133,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         final success = await viewModel.completeCurrentStep();
                         if (success && mounted) {
                           // Navigate to main app
-                          Navigator.of(context).pushReplacementNamed('/customer-dashboard');
+                          Navigator.of(context).pushNamedAndRemoveUntil('/customer-dashboard', (route) => false);
                         }
                       } else {
                         // Move to next step

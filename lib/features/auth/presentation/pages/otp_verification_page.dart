@@ -138,7 +138,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
       if (otp.length == 6 && mounted) {
         LoggerService().info('OTP verification successful (demo)', tag: 'OTPVerification');
 
-        Navigator.of(context).pushReplacementNamed('/customer-dashboard');
+        Navigator.of(context).pushNamedAndRemoveUntil('/customer-dashboard', (route) => false);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
