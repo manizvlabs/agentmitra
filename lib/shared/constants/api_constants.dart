@@ -38,11 +38,6 @@ class ApiConstants {
   static const String presentationTemplates = '$presentations/templates';
   static const String mediaUpload = '$presentations/media/upload';
 
-  // Chat Endpoints
-  static const String chat = '$apiVersion/chat';
-  static const String chatbotSessions = '$chat/sessions';
-  static String chatbotSession(String sessionId) => '$chatbotSessions/$sessionId';
-
   // Payment Endpoints
   static const String payments = '$apiVersion/payments';
   static String paymentHistory(String userId) => '$payments/user/$userId';
@@ -71,12 +66,5 @@ class ApiConstants {
   // Session Endpoints
   static const String authSessions = '$apiVersion/auth/sessions';
   static String authSession(String sessionId) => '$authSessions/$sessionId';
-
-  // Presentation Endpoints
-  static const String presentations = '$apiVersion/presentations';
-  static String agentPresentations(String agentId) => '$presentations/agent/$agentId';
-  static String presentationById(String presentationId) => '$presentations/$presentationId';
-  static const String presentationTemplates = '$presentations/templates';
-  static const String mediaUpload = '$presentations/media/upload';
 }
 

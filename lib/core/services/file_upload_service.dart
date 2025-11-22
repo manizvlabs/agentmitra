@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'api_service.dart';
@@ -45,7 +44,7 @@ class FileUploadService {
       final response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return ApiService._handleResponse(response);
+        return ApiService.handleResponse(response);
       } else {
         throw Exception('Upload failed: ${response.statusCode} ${response.body}');
       }
@@ -91,7 +90,7 @@ class FileUploadService {
       final response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return ApiService._handleResponse(response);
+        return ApiService.handleResponse(response);
       } else {
         throw Exception('Upload failed: ${response.statusCode} ${response.body}');
       }

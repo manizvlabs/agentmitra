@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../core/architecture/base/base_viewmodel.dart';
-import '../../../../core/services/feature_flag_service.dart';
-import '../../../../core/services/api_service.dart';
 import '../../data/repositories/dashboard_repository.dart';
 import '../../data/datasources/dashboard_remote_datasource.dart';
 import '../../data/models/dashboard_data.dart';
@@ -9,13 +7,10 @@ import '../../data/models/dashboard_data.dart';
 /// ViewModel for dashboard screen management
 class DashboardViewModel extends BaseViewModel {
   final DashboardRepository _repository;
-  final FeatureFlagService _featureFlagService;
 
   DashboardViewModel({
     DashboardRepository? repository,
-    FeatureFlagService? featureFlagService,
-  })  : _repository = repository ?? DashboardRepository(DashboardRemoteDataSource(ApiService())),
-        _featureFlagService = featureFlagService ?? FeatureFlagService();
+  })  : _repository = repository ?? DashboardRepository(DashboardRemoteDataSource());
 
   DashboardAnalytics? _analytics;
   List<DashboardNotification> _notifications = [];

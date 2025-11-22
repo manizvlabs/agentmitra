@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart' as provider;
+import 'package:provider/Provider.dart' as provider;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/providers/global_providers.dart';
-import '../../../../features/presentations/presentation/widgets/presentation_carousel.dart';
 import '../viewmodels/dashboard_viewmodel.dart';
 import '../widgets/dashboard_analytics_cards.dart';
 import '../widgets/dashboard_quick_actions.dart';
@@ -68,8 +66,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
   @override
   Widget build(BuildContext context) {
-    final themeMode = ref.watch(themeModeProvider);
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: _buildAppBar(),

@@ -54,7 +54,7 @@ class _AgentDiscoveryStepState extends State<AgentDiscoveryStep> {
       // Make real API call to search for agent
       final response = await ApiService.get('/api/v1/agents/search/$agentCode');
 
-      if (response != null && response['success'] == true) {
+      if (response['success'] == true && response['data'] != null) {
         final agentData = response['data'];
         final realAgentData = AgentDiscoveryData(
           agentCode: agentCode,

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import '../../../../core/architecture/base/base_viewmodel.dart';
 import '../../data/repositories/analytics_repository.dart';
 import '../../data/models/analytics_models.dart';

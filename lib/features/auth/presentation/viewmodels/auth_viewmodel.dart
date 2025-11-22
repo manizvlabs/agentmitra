@@ -18,6 +18,7 @@ class AuthViewModel extends BaseViewModel {
 
   @override
   Future<void> initialize() async {
+    await super.initialize();
     setLoading(true);
     try {
       _isAuthenticated = _authRepository.isLoggedIn();

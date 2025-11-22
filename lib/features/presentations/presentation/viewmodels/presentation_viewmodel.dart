@@ -2,6 +2,8 @@
 import '../../../../core/architecture/base/base_viewmodel.dart';
 import '../../data/repositories/presentation_repository.dart';
 import '../../data/models/presentation_model.dart';
+import '../../data/models/presentation_models.dart';
+import '../../data/models/slide_model.dart';
 
 class PresentationViewModel extends BaseViewModel {
   final PresentationRepository _presentationRepository;
@@ -19,53 +21,63 @@ class PresentationViewModel extends BaseViewModel {
   List<PresentationModel> get presentations => _presentations;
   int get totalPresentations => _totalPresentations;
 
+  /// Convert Presentation to PresentationModel
+  PresentationModel _presentationToModel(Presentation presentation) {
+    return PresentationModel(
+      presentationId: presentation.presentationId,
+      agentId: presentation.agentId,
+      name: presentation.title,
+      description: presentation.description,
+      status: presentation.status,
+      isActive: presentation.status == 'active',
+      slides: presentation.slides.map((slide) => SlideModel(
+        slideOrder: 0, // Default order
+        slideType: slide.type ?? 'text',
+        title: slide.title,
+        subtitle: slide.content,
+        mediaUrl: slide.imageUrl ?? slide.videoUrl,
+        layout: slide.layout ?? 'centered',
+      )).toList(),
+      createdAt: presentation.createdAt,
+      updatedAt: presentation.updatedAt,
+    );
+  }
+
   @override
   Future<void> initialize() async {
+    await super.initialize();
     // Initialize can be called when needed
   }
 
   /// Load active presentation for an agent with offline caching
-  Future<void> loadActivePresentation(String agentId, {bool forceRefresh = false}) async {
+  Future<void> loadActivePresentation(String agentId) async {
     setLoading(true);
     clearError();
 
-    final result = await _presentationRepository.getActivePresentation(agentId, forceRefresh: forceRefresh);
-
-    result.fold(
-      (error) => setError(error.toString()),
-      (presentation) => _activePresentation = presentation,
-    );
+    try {
+      final presentation = await _presentationRepository.getActivePresentation(agentId);
+      _activePresentation = presentation != null ? _presentationToModel(presentation) : null;
+    } catch (e) {
+      setError(e.toString());
+    }
 
     setLoading(false);
   }
 
   /// Refresh active presentation
   Future<void> refreshActivePresentation(String agentId) async {
-    await loadActivePresentation(agentId, forceRefresh: true);
+    await loadActivePresentation(agentId);
   }
 
   /// Load all presentations for an agent
-  Future<void> loadAgentPresentations(
-    String agentId, {
-    String? status,
-    int limit = 20,
-    int offset = 0,
-  }) async {
+  Future<void> loadAgentPresentations(String agentId) async {
     setLoading(true);
     clearError();
 
     try {
-      final result = await _presentationRepository.getAgentPresentations(
-        agentId,
-        status: status,
-        limit: limit,
-        offset: offset,
-      );
-
-      _presentations = (result['presentations'] as List<dynamic>)
-          .map((p) => PresentationModel.fromJson(p as Map<String, dynamic>))
-          .toList();
-      _totalPresentations = result['total'] ?? 0;
+      final presentations = await _presentationRepository.getAgentPresentations(agentId);
+      _presentations = presentations.map((p) => _presentationToModel(p)).toList();
+      _totalPresentations = presentations.length;
     } catch (e) {
       setError('Failed to load presentations: $e');
     } finally {
@@ -74,20 +86,25 @@ class PresentationViewModel extends BaseViewModel {
   }
 
   /// Create a new presentation
-  Future<PresentationModel?> createPresentation(
-    String agentId,
-    PresentationModel presentation,
-  ) async {
+  Future<PresentationModel?> createPresentation({
+    required String agentId,
+    required String title,
+    String? description,
+    List<PresentationSlide>? slides,
+  }) async {
     setLoading(true);
     clearError();
 
     try {
       final created = await _presentationRepository.createPresentation(
-        agentId,
-        presentation,
+        agentId: agentId,
+        title: title,
+        description: description,
+        slides: slides,
       );
-      _presentations.add(created);
-      return created;
+      final model = _presentationToModel(created);
+      _presentations.add(model);
+      return model;
     } catch (e) {
       setError('Failed to create presentation: $e');
       return null;
@@ -97,30 +114,35 @@ class PresentationViewModel extends BaseViewModel {
   }
 
   /// Update an existing presentation
-  Future<bool> updatePresentation(
-    String agentId,
-    String presentationId,
-    PresentationModel presentation,
-  ) async {
+  Future<bool> updatePresentation({
+    required String presentationId,
+    String? title,
+    String? description,
+    List<PresentationSlide>? slides,
+    String? status,
+  }) async {
     setLoading(true);
     clearError();
 
     try {
       final updated = await _presentationRepository.updatePresentation(
-        agentId,
-        presentationId,
-        presentation,
+        presentationId: presentationId,
+        title: title,
+        description: description,
+        slides: slides,
+        status: status,
       );
 
+      final model = _presentationToModel(updated);
       final index = _presentations.indexWhere(
         (p) => p.presentationId == presentationId,
       );
       if (index != -1) {
-        _presentations[index] = updated;
+        _presentations[index] = model;
       }
 
       if (_activePresentation?.presentationId == presentationId) {
-        _activePresentation = updated;
+        _activePresentation = model;
       }
 
       return true;

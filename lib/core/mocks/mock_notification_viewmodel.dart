@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../features/notifications/data/models/notification_model.dart';
-import '../../features/notifications/data/models/notification_model.dart' as notification_models show NotificationType, NotificationPriority;
 
 /// Mock NotificationViewModel for web compatibility
 class MockNotificationViewModel extends ChangeNotifier {

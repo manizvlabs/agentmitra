@@ -1,12 +1,8 @@
-import 'dart:convert';
 import '../../../../core/services/api_service.dart';
 import '../models/dashboard_data.dart';
 
 /// Remote data source for dashboard analytics and data
 class DashboardRemoteDataSource {
-  final ApiService _apiService;
-
-  DashboardRemoteDataSource(this._apiService);
 
   /// Fetch dashboard analytics
   Future<DashboardAnalytics> fetchDashboardAnalytics({

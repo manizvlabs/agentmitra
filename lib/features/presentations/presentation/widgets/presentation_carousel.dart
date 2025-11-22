@@ -40,14 +40,14 @@ class _PresentationCarouselState extends State<PresentationCarousel> {
     });
   }
 
-  void _loadPresentation({bool forceRefresh = false}) {
+  void _loadPresentation() {
     final viewModel =
         Provider.of<PresentationViewModel>(context, listen: false);
-    viewModel.loadActivePresentation(widget.agentId, forceRefresh: forceRefresh);
+    viewModel.loadActivePresentation(widget.agentId);
   }
 
   void _refreshPresentation() {
-    _loadPresentation(forceRefresh: true);
+    _loadPresentation();
   }
 
   @override

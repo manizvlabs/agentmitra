@@ -17,7 +17,6 @@ class FeatureFlagService {
   static const Duration _syncInterval = Duration(minutes: 10);
 
   Map<String, bool> _flagCache = {};
-  DateTime? _lastSync;
   Timer? _syncTimer;
   bool _isInitialized = false;
 
@@ -70,7 +69,6 @@ class FeatureFlagService {
         );
 
         _flagCache = flags;
-        _lastSync = DateTime.now();
 
         // Save to cache
         await _saveToCache(flags);
@@ -84,7 +82,6 @@ class FeatureFlagService {
   /// Clear cache and force refresh
   Future<void> clearCache() async {
     _flagCache.clear();
-    _lastSync = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_cacheKey);
     await prefs.remove(_cacheTimestampKey);
@@ -119,7 +116,6 @@ class FeatureFlagService {
             json.decode(cacheJson) as Map<String, dynamic>,
           );
           _flagCache = Map<String, bool>.from(data);
-          _lastSync = timestamp;
         }
       }
     } catch (e) {

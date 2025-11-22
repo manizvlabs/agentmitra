@@ -1,14 +1,12 @@
-import 'dart:convert';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/logger_service.dart';
 import '../models/notification_model.dart';
 
 /// Remote datasource for notification operations
 class NotificationRemoteDataSource {
-  final ApiService _apiService;
   final LoggerService _logger;
 
-  NotificationRemoteDataSource(this._apiService, this._logger);
+  NotificationRemoteDataSource(this._logger);
 
   /// Fetch notifications from backend
   Future<List<NotificationModel>> fetchNotifications({

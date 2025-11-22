@@ -33,7 +33,7 @@ class PresentationRemoteDataSource {
 
   /// Get presentation by ID
   Future<Presentation> getPresentationById(String presentationId) async {
-    final response = await ApiService.get(ApiConstants.presentationById(presentationId));
+    final response = await ApiService.get(ApiConstants.presentationDetails(presentationId));
     return Presentation.fromJson(response);
   }
 
@@ -46,7 +46,7 @@ class PresentationRemoteDataSource {
   /// Update presentation
   Future<Presentation> updatePresentation(String presentationId, Map<String, dynamic> presentationData) async {
     final response = await ApiService.put(
-      ApiConstants.presentationById(presentationId),
+        ApiConstants.presentationDetails(presentationId),
       presentationData,
     );
     return Presentation.fromJson(response);
@@ -54,7 +54,7 @@ class PresentationRemoteDataSource {
 
   /// Delete presentation
   Future<void> deletePresentation(String presentationId) async {
-    await ApiService.delete(ApiConstants.presentationById(presentationId));
+    await ApiService.delete(ApiConstants.presentationDetails(presentationId));
   }
 
   /// Get presentation analytics

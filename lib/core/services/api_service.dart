@@ -46,7 +46,7 @@ class ApiService {
         headers: await getHeaders(),
       );
 
-      return _handleResponse(response);
+      return handleResponse(response);
     } catch (e) {
       throw Exception('Network error: $e');
     }
@@ -64,7 +64,7 @@ class ApiService {
         body: jsonEncode(data),
       );
 
-      return _handleResponse(response);
+      return handleResponse(response);
     } catch (e) {
       throw Exception('Network error: $e');
     }
@@ -82,7 +82,7 @@ class ApiService {
         body: jsonEncode(data),
       );
 
-      return _handleResponse(response);
+      return handleResponse(response);
     } catch (e) {
       throw Exception('Network error: $e');
     }
@@ -100,7 +100,7 @@ class ApiService {
         body: jsonEncode(data),
       );
 
-      return _handleResponse(response);
+      return handleResponse(response);
     } catch (e) {
       throw Exception('Network error: $e');
     }
@@ -114,14 +114,14 @@ class ApiService {
         headers: await getHeaders(),
       );
 
-      return _handleResponse(response);
+      return handleResponse(response);
     } catch (e) {
       throw Exception('Network error: $e');
     }
   }
 
-  // Handle HTTP response
-  static Map<String, dynamic> _handleResponse(http.Response response) {
+  // Handle HTTP response (public method for use by other services)
+  static Map<String, dynamic> handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) {
         return {'success': true};

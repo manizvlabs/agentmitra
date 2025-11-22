@@ -1,6 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:dartz/dartz.dart';
-import 'package:dio/dio.dart';
 import '../../data/repositories/policy_repository.dart';
 import '../../data/datasources/policy_remote_datasource.dart';
 import '../../data/datasources/policy_local_datasource.dart';

@@ -1,7 +1,6 @@
 /// Enhanced OTP Verification page with Material Design 3
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
 import 'dart:async';
 import '../../../../core/services/logger_service.dart';
 import '../widgets/otp_input.dart';

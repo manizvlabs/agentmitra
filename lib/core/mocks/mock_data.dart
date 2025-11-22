@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import '../../features/auth/data/models/user_model.dart';
 import '../../features/notifications/data/models/notification_model.dart';
 import '../../features/chatbot/data/models/chatbot_model.dart';

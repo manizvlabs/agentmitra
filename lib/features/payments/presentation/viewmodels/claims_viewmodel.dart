@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dartz/dartz.dart';
-import 'package:dio/dio.dart';
 import '../../data/repositories/policy_repository.dart';
 import '../../data/datasources/policy_remote_datasource.dart';
 import '../../data/datasources/policy_local_datasource.dart';
@@ -164,17 +163,6 @@ class ClaimsViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Create claim data
-      final claimData = {
-        'policy_id': _policyId,
-        'claim_type': _claimType,
-        'description': _description,
-        'incident_date': _incidentDate.toIso8601String(),
-        'claimed_amount': _claimedAmount,
-        'status': 'pending',
-        // Add file uploads here when backend is ready
-      };
-
       // For now, create a mock claim response
       // TODO: Replace with actual API call when backend claim endpoint is ready
       final mockClaim = Claim(
