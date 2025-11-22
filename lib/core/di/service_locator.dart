@@ -6,10 +6,9 @@ import '../../features/auth/data/datasources/auth_remote_datasource.dart';
 import '../../features/auth/data/datasources/auth_local_datasource.dart';
 import '../../features/auth/data/repositories/auth_repository.dart';
 import '../../features/auth/presentation/viewmodels/auth_viewmodel.dart';
-// Temporarily commented out problematic ViewModels
-// import '../../features/dashboard/data/datasources/dashboard_remote_datasource.dart';
-// import '../../features/dashboard/data/repositories/dashboard_repository.dart';
-// import '../../features/dashboard/presentation/viewmodels/dashboard_viewmodel.dart';
+import '../../features/dashboard/data/datasources/dashboard_remote_datasource.dart';
+import '../../features/dashboard/data/repositories/dashboard_repository.dart';
+import '../../features/dashboard/presentation/viewmodels/dashboard_viewmodel.dart';
 // import '../../features/notifications/data/datasources/notification_remote_datasource.dart';
 // import '../../features/notifications/data/repositories/notification_repository.dart';
 // import '../../features/notifications/presentation/viewmodels/notification_viewmodel.dart';
@@ -44,14 +43,9 @@ class ServiceLocator {
   static AuthViewModel get authViewModel =>
     AuthViewModel();
 
-  // /// Dashboard ViewModel - connects to real analytics APIs
-  // static DashboardViewModel get dashboardViewModel =>
-  //   DashboardViewModel();
-
-  // Temporarily commented out problematic ViewModels
-  // /// Dashboard ViewModel - connects to real analytics APIs
-  // static DashboardViewModel get dashboardViewModel =>
-  //   DashboardViewModel();
+  /// Dashboard ViewModel - connects to real analytics APIs
+  static DashboardViewModel get dashboardViewModel =>
+    DashboardViewModel();
 
   // /// Notification ViewModel - connects to real notification APIs
   // static NotificationViewModel get notificationViewModel =>

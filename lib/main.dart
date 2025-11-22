@@ -83,10 +83,10 @@ class AgentMitraApp extends ConsumerWidget {
         provider.ChangeNotifierProvider(
           create: (_) => ServiceLocator.authViewModel,
         ),
-        // Temporarily disable dashboard to focus on auth testing
-        // provider.ChangeNotifierProvider(
-        //   create: (_) => ServiceLocator.dashboardViewModel,
-        // ),
+        // Dashboard ViewModel - connects to real analytics APIs
+        provider.ChangeNotifierProvider(
+          create: (_) => ServiceLocator.dashboardViewModel,
+        ),
         // Temporarily disable complex ViewModels to focus on auth first
         // provider.ChangeNotifierProvider(
         //   create: (_) => ServiceLocator.notificationViewModel,

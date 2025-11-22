@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/mocks/mock_dashboard_viewmodel.dart';
+import '../viewmodels/dashboard_viewmodel.dart';
 
 /// Priority Alerts Widget for dashboard critical notifications
 class DashboardPriorityAlerts extends StatelessWidget {
@@ -9,7 +9,7 @@ class DashboardPriorityAlerts extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<MockDashboardViewModel>(
+    return Consumer<DashboardViewModel>(
       builder: (context, viewModel, child) {
         final priorities = viewModel.getTopPriorities();
 
