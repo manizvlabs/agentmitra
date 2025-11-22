@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/mocks/mock_notification_viewmodel_simple.dart';
+import '../viewmodels/notification_viewmodel.dart';
 import '../widgets/notification_list.dart';
 import '../widgets/notification_filters.dart';
 import '../widgets/notification_settings_button.dart';
@@ -49,7 +49,7 @@ class _NotificationPageState extends State<NotificationPage>
           ],
         ),
       ),
-      body: Consumer<MockNotificationViewModel>(
+      body: Consumer<NotificationViewModel>(
         builder: (context, viewModel, child) {
           return TabBarView(
             controller: _tabController,
@@ -87,7 +87,7 @@ class _NotificationPageState extends State<NotificationPage>
           );
         },
       ),
-      floatingActionButton: Consumer<MockNotificationViewModel>(
+      floatingActionButton: Consumer<NotificationViewModel>(
         builder: (context, viewModel, child) {
           if (viewModel.unreadCount == 0) return const SizedBox.shrink();
 
@@ -115,7 +115,7 @@ class NotificationFiltersPage extends StatelessWidget {
         title: const Text('Filter Notifications'),
         elevation: 0,
       ),
-      body: Consumer<MockNotificationViewModel>(
+      body: Consumer<NotificationViewModel>(
         builder: (context, viewModel, child) {
           return NotificationFilters(
             searchQuery: viewModel.searchQuery,

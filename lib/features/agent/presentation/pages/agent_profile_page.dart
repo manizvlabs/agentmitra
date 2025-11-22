@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/mocks/mock_agent_profile_viewmodel_simple.dart';
+import '../viewmodels/agent_profile_viewmodel.dart';
 import '../widgets/profile_header.dart';
 import '../widgets/profile_info_card.dart';
 import '../widgets/performance_card.dart';
@@ -19,7 +19,7 @@ class _AgentProfilePageState extends State<AgentProfilePage> {
     // TODO: Get agent ID from authentication context
     const agentId = 'test-agent-id'; // Placeholder
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<MockAgentProfileViewModel>().loadAgentProfile();
+      context.read<AgentProfileViewModel>().loadAgentProfile();
     });
   }
 
@@ -48,7 +48,7 @@ class _AgentProfilePageState extends State<AgentProfilePage> {
           ),
         ],
       ),
-      body: Consumer<MockAgentProfileViewModel>(
+      body: Consumer<AgentProfileViewModel>(
         builder: (context, viewModel, child) {
           if (viewModel.isLoading && viewModel.profile == null) {
             return const Center(child: CircularProgressIndicator());
@@ -206,7 +206,7 @@ class _AgentProfilePageState extends State<AgentProfilePage> {
     );
   }
 
-  Widget _buildCompletionCard(MockAgentProfileViewModel viewModel) {
+  Widget _buildCompletionCard(AgentProfileViewModel viewModel) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -254,7 +254,7 @@ class _AgentProfilePageState extends State<AgentProfilePage> {
     );
   }
 
-  Widget _buildLicenseAlert(MockAgentProfileViewModel viewModel) {
+  Widget _buildLicenseAlert(AgentProfileViewModel viewModel) {
     final isExpired = viewModel.isLicenseExpired;
     final color = isExpired ? Colors.red : Colors.orange;
     final icon = isExpired ? Icons.error : Icons.warning;
@@ -349,7 +349,7 @@ class _AgentProfilePageState extends State<AgentProfilePage> {
     );
   }
 
-  Widget _buildErrorView(MockAgentProfileViewModel viewModel) {
+  Widget _buildErrorView(AgentProfileViewModel viewModel) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -382,7 +382,7 @@ class _AgentProfilePageState extends State<AgentProfilePage> {
     );
   }
 
-  Color _getLicenseColor(MockAgentProfileViewModel viewModel) {
+  Color _getLicenseColor(AgentProfileViewModel viewModel) {
     if (viewModel.isLicenseExpired) return Colors.red;
     if (viewModel.isLicenseExpiringSoon) return Colors.orange;
     return Colors.green;

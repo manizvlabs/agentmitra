@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/mocks/mock_notification_viewmodel_simple.dart';
+import '../viewmodels/notification_viewmodel.dart';
 import '../../data/models/notification_model.dart';
 
 /// Notification settings button for app bar
@@ -9,7 +9,7 @@ class NotificationSettingsButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<MockNotificationViewModel>(
+    return Consumer<NotificationViewModel>(
       builder: (context, viewModel, child) {
         return IconButton(
           onPressed: () => _showNotificationSettings(context, viewModel),
@@ -22,7 +22,7 @@ class NotificationSettingsButton extends StatelessWidget {
 
   void _showNotificationSettings(
     BuildContext context,
-    MockNotificationViewModel viewModel,
+    NotificationViewModel viewModel,
   ) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -34,7 +34,7 @@ class NotificationSettingsButton extends StatelessWidget {
 
 /// Notification settings page
 class NotificationSettingsPage extends StatefulWidget {
-  final MockNotificationViewModel viewModel;
+  final NotificationViewModel viewModel;
 
   const NotificationSettingsPage({
     super.key,
