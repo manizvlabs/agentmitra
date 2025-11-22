@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart' as provider;
 import 'dart:async';
+import '../features/auth/presentation/viewmodels/auth_viewmodel.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -63,10 +65,19 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       _loadingAnimationController.forward();
     });
 
-    // Navigate to welcome screen after splash
+    // Navigate based on authentication state
     Timer(const Duration(seconds: 3), () {
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/welcome');
+        // Check if user is already authenticated
+        // For now, use demo logic - in production, check AuthViewModel.isAuthenticated
+        final authViewModel = provider.Provider.of<AuthViewModel>(context, listen: false);
+        final isAuthenticated = authViewModel.isAuthenticated;
+
+        if (isAuthenticated) {
+          Navigator.of(context).pushReplacementNamed('/customer-dashboard');
+        } else {
+          Navigator.of(context).pushReplacementNamed('/welcome');
+        }
       }
     });
   }
