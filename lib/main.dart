@@ -36,6 +36,66 @@ import 'screens/agent_discovery_screen.dart';
 import 'screens/agent_verification_screen.dart';
 import 'screens/document_upload_screen.dart';
 import 'screens/emergency_contact_screen.dart';
+import 'screens/kyc_verification_screen.dart';
+import 'screens/campaign_performance_screen.dart';
+import 'screens/content_performance_screen.dart';
+import 'screens/accessibility_settings_screen.dart';
+import 'screens/language_selection_screen.dart';
+import 'screens/premium_calendar_screen.dart';
+import 'screens/agent_chat_screen.dart';
+import 'screens/reminders_screen.dart';
+import 'screens/presentations_screen.dart';
+import 'screens/global_search_screen.dart';
+
+/// Placeholder screen for routes that are not yet implemented
+class PlaceholderScreen extends StatelessWidget {
+  final String title;
+
+  const PlaceholderScreen({super.key, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.red,
+        title: Text(title, style: const TextStyle(color: Colors.white)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.construction,
+              size: 64,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '$title - Coming Soon!',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'This feature is currently under development.',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -148,7 +208,9 @@ class AgentMitraApp extends ConsumerWidget {
           final args = ModalRoute.of(context)?.settings.arguments;
           return ClaimsPage(policyId: args as String?);
         },
+        '/claims/new': (context) => const PlaceholderScreen(title: 'File New Claim'),
         '/policy-details': (context) => const PolicyDetailsScreen(),
+        '/policy/create': (context) => const PlaceholderScreen(title: 'Create New Policy'),
         '/whatsapp-integration': (context) => const WhatsappIntegrationScreen(),
         '/smart-chatbot': (context) => const ChatbotPage(),
         '/notifications': (context) => const NotificationPage(),
@@ -158,11 +220,25 @@ class AgentMitraApp extends ConsumerWidget {
         '/agent-verification': (context) => const AgentVerificationScreen(),
         '/document-upload': (context) => const DocumentUploadScreen(),
         '/emergency-contact': (context) => const EmergencyContactScreen(),
+        '/kyc-verification': (context) => const KycVerificationScreen(),
 
         // Agent Portal
         '/agent-profile': (context) => const AgentProfilePage(),
         '/daily-quotes': (context) => const DailyQuotesScreen(),
         '/my-policies': (context) => const MyPoliciesScreen(),
+        '/premium-calendar': (context) => const PremiumCalendarScreen(),
+        '/agent-chat': (context) => const AgentChatScreen(),
+        '/reminders': (context) => const RemindersScreen(),
+        '/presentations': (context) => const PresentationsScreen(),
+        '/campaign-performance': (context) => const CampaignPerformanceScreen(),
+        '/content-performance': (context) => const ContentPerformanceScreen(),
+        '/accessibility-settings': (context) => const AccessibilitySettingsScreen(),
+        '/language-selection': (context) => const LanguageSelectionScreen(),
+        '/payments': (context) => const PlaceholderScreen(title: 'Payments'),
+        '/reports': (context) => const PlaceholderScreen(title: 'Reports'),
+        '/customers': (context) => const PlaceholderScreen(title: 'Customers'),
+        '/settings': (context) => const PlaceholderScreen(title: 'Settings'),
+        '/global-search': (context) => const GlobalSearchScreen(),
         '/agent-config-dashboard': (context) => const AgentConfigDashboard(),
         '/roi-analytics': (context) => const RoiAnalyticsDashboard(),
         '/campaign-builder': (context) => const MarketingCampaignBuilder(),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/widgets/offline_indicator.dart';
+import '../core/services/whatsapp_business_service.dart';
+import '../core/services/feature_flag_service.dart';
 
 /// Daily Motivational Quotes Screen for Agent App
 /// Allows agents to create, edit, and share motivational quotes with clients
@@ -14,6 +16,9 @@ class _DailyQuotesScreenState extends State<DailyQuotesScreen> with TickerProvid
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+
+  final FeatureFlagService _featureFlagService = FeatureFlagService();
+  late bool _whatsappEnabled;
 
   // Form state
   final _quoteController = TextEditingController();
@@ -44,6 +49,15 @@ class _DailyQuotesScreenState extends State<DailyQuotesScreen> with TickerProvid
     ));
 
     _animationController.forward();
+
+    // Initialize feature flags
+    _initializeFeatureFlags();
+  }
+
+  Future<void> _initializeFeatureFlags() async {
+    await _featureFlagService.initialize();
+    _whatsappEnabled = await _featureFlagService.isFeatureEnabled('whatsapp_integration_enabled') ?? true;
+    setState(() {}); // Trigger rebuild with feature flags
   }
 
   @override
@@ -499,42 +513,137 @@ class _DailyQuotesScreenState extends State<DailyQuotesScreen> with TickerProvid
   }
 
   Widget _buildSendOptions() {
-    return Column(
-      children: [
-        _buildSendOption(
-          icon: Icons.group,
-          title: 'Send to All Clients',
-          subtitle: 'Broadcast to entire client database',
-          onTap: () {
+    final sendOptions = <Widget>[];
+
+    // Send to All Clients - only show if WhatsApp is enabled
+    if (_whatsappEnabled) {
+      sendOptions.add(_buildSendOption(
+        icon: Icons.group,
+        title: 'Send to All Clients',
+        subtitle: 'Broadcast to entire client database',
+        onTap: () async {
+          if (_quoteController.text.isEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Sending to all clients...')),
+              const SnackBar(content: Text('Please enter a quote first')),
             );
-          },
-        ),
-        const SizedBox(height: 12),
-        _buildSendOption(
-          icon: Icons.filter_list,
-          title: 'Send to Specific Groups',
-          subtitle: 'Target by age, profession, or custom segments',
-          onTap: () {
+            return;
+          }
+
+          final success = await WhatsAppBusinessService.shareContent(
+            content: '"${_quoteController.text}"\n\n- B.Sridhar\nYour LIC Agent',
+            subject: 'Daily Motivational Quote',
+          );
+
+          if (success) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Group selection coming soon!')),
+              const SnackBar(content: Text('Quote shared successfully!')),
             );
-          },
-        ),
-        const SizedBox(height: 12),
-        _buildSendOption(
-          icon: Icons.person,
-          title: 'Send to Individual Clients',
-          subtitle: 'Select specific clients from your database',
-          onTap: () {
+          } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Client selection coming soon!')),
+              const SnackBar(content: Text('Failed to share quote')),
             );
-          },
-        ),
-      ],
-    );
+          }
+        },
+      ));
+    }
+
+    // Send to Specific Groups
+    sendOptions.add(const SizedBox(height: 12));
+    sendOptions.add(_buildSendOption(
+      icon: Icons.filter_list,
+      title: 'Send to Specific Groups',
+      subtitle: 'Target by age, profession, or custom segments',
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Group selection coming soon!')),
+        );
+      },
+    ));
+
+    // Send to Individual Clients - only show if WhatsApp is enabled
+    sendOptions.add(const SizedBox(height: 12));
+    if (_whatsappEnabled) {
+      sendOptions.add(_buildSendOption(
+        icon: Icons.person,
+        title: 'Send to Individual Clients',
+        subtitle: 'Select specific clients from your database',
+        onTap: () async {
+          if (_quoteController.text.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Please enter a quote first')),
+            );
+            return;
+          }
+
+          // Show client selection dialog (placeholder for now)
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Select Client'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: const CircleAvatar(child: Text('A')),
+                    title: const Text('Amit Kumar'),
+                    subtitle: const Text('+91 9876543210'),
+                    onTap: () async {
+                      Navigator.of(context).pop();
+                      final success = await WhatsAppBusinessService.sendQuoteMessage(
+                        phoneNumber: '+919876543210',
+                        quote: _quoteController.text,
+                        agentName: 'B.Sridhar',
+                      );
+
+                      if (success) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Quote sent via WhatsApp!')),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Failed to send WhatsApp message')),
+                        );
+                      }
+                    },
+                  ),
+                  ListTile(
+                    leading: const CircleAvatar(child: Text('P')),
+                    title: const Text('Priya Sharma'),
+                    subtitle: const Text('+91 9876543211'),
+                    onTap: () async {
+                      Navigator.of(context).pop();
+                      final success = await WhatsAppBusinessService.sendQuoteMessage(
+                        phoneNumber: '+919876543211',
+                        quote: _quoteController.text,
+                        agentName: 'B.Sridhar',
+                      );
+
+                      if (success) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Quote sent via WhatsApp!')),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Failed to send WhatsApp message')),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+              ],
+            ),
+          );
+        },
+      ));
+    }
+
+    return Column(children: sendOptions);
   }
 
   Widget _buildSendOption({

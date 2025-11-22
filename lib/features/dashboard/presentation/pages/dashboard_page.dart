@@ -148,14 +148,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
           );
         },
       ),
-      leading: IconButton(
-        icon: Icon(
-          Icons.menu,
-          color: Theme.of(context).iconTheme.color,
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: Icon(
+            Icons.menu,
+            color: Theme.of(context).iconTheme.color,
+          ),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
         ),
-        onPressed: () {
-          Scaffold.of(context).openDrawer();
-        },
       ),
       actions: [
         // Connectivity indicator
@@ -216,10 +218,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
             size: 24,
           ),
           onPressed: () {
-            // TODO: Implement global search
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Global search coming soon!')),
-            );
+            Navigator.of(context).pushNamed('/global-search');
           },
         ),
         PopupMenuButton<String>(

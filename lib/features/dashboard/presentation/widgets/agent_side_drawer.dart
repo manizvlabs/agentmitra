@@ -1,9 +1,56 @@
 import 'package:flutter/material.dart';
+import '../../../../core/services/feature_flag_service.dart';
+import '../../../../core/services/badge_service.dart';
 
 /// Agent Side Drawer Menu as per wireframes specification
 /// Features red header, navigation items with icons, badges, and logout footer
-class AgentSideDrawer extends StatelessWidget {
+class AgentSideDrawer extends StatefulWidget {
   const AgentSideDrawer({super.key});
+
+  @override
+  State<AgentSideDrawer> createState() => _AgentSideDrawerState();
+}
+
+class _AgentSideDrawerState extends State<AgentSideDrawer> {
+  final FeatureFlagService _featureFlagService = FeatureFlagService();
+  final BadgeService _badgeService = BadgeService();
+  Map<String, bool> _featureFlags = {};
+  Map<String, String?> _badges = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFeatureFlags();
+    _loadBadges();
+  }
+
+  Future<void> _loadFeatureFlags() async {
+    await _featureFlagService.initialize();
+    setState(() {
+      _featureFlags = {
+        'daily_quotes_enabled': _featureFlagService.isFeatureEnabledSync('daily_quotes_enabled') ?? true,
+        'policies_enabled': _featureFlagService.isFeatureEnabledSync('policies_enabled') ?? true,
+        'premium_calendar_enabled': _featureFlagService.isFeatureEnabledSync('premium_calendar_enabled') ?? false,
+        'agent_chat_enabled': _featureFlagService.isFeatureEnabledSync('agent_chat_enabled') ?? true,
+        'reminders_enabled': _featureFlagService.isFeatureEnabledSync('reminders_enabled') ?? true,
+        'presentations_enabled': _featureFlagService.isFeatureEnabledSync('presentations_enabled') ?? true,
+        'accessibility_enabled': _featureFlagService.isFeatureEnabledSync('accessibility_enabled') ?? true,
+        'language_enabled': _featureFlagService.isFeatureEnabledSync('language_enabled') ?? true,
+      };
+    });
+  }
+
+  Future<void> _loadBadges() async {
+    await _badgeService.initialize();
+    _badges = _badgeService.getAllBadges();
+
+    // Listen to badge updates
+    _badgeService.badgeStream.listen((badges) {
+      setState(() {
+        _badges = badges;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,67 +133,116 @@ class AgentSideDrawer extends StatelessWidget {
 
   /// Menu items list with icons and badges
   Widget _buildMenuItems(BuildContext context) {
-    final menuItems = [
-      _MenuItem(
-        icon: Icons.home,
-        title: 'Home',
-        route: '/customer-dashboard', // Agent dashboard
-        iconColor: Colors.yellow,
-        backgroundColor: Colors.yellow.withOpacity(0.1),
-      ),
-      _MenuItem(
+    final menuItems = <_MenuItem>[];
+
+    // Always show Home
+    menuItems.add(_MenuItem(
+      icon: Icons.home,
+      title: 'Home',
+      route: '/customer-dashboard', // Agent dashboard
+      iconColor: Colors.yellow,
+      backgroundColor: Colors.yellow.withOpacity(0.1),
+    ));
+
+    // Conditionally show Daily Quotes
+    if (_featureFlags['daily_quotes_enabled'] ?? true) {
+      menuItems.add(_MenuItem(
         icon: Icons.lightbulb,
         title: 'Daily Quotes',
         route: '/daily-quotes',
-        badge: 'New',
+        badge: _badges[BadgeService.dailyQuotes],
         iconColor: Colors.purple,
         backgroundColor: Colors.purple.withOpacity(0.1),
-      ),
-      _MenuItem(
+      ));
+    }
+
+    // Conditionally show My Policies
+    if (_featureFlags['policies_enabled'] ?? true) {
+      menuItems.add(_MenuItem(
         icon: Icons.policy,
         title: 'My Policies',
         route: '/my-policies',
         iconColor: Colors.purple,
         backgroundColor: Colors.purple.withOpacity(0.1),
-      ),
-      _MenuItem(
+      ));
+    }
+
+    // Conditionally show Premium Calendar
+    if (_featureFlags['premium_calendar_enabled'] ?? false) {
+      menuItems.add(_MenuItem(
         icon: Icons.calendar_today,
         title: 'Premium Calendar',
         route: '/premium-calendar',
         iconColor: Colors.blue,
         backgroundColor: Colors.blue.withOpacity(0.1),
-      ),
-      _MenuItem(
+      ));
+    }
+
+    // Conditionally show Agent Chat
+    if (_featureFlags['agent_chat_enabled'] ?? true) {
+      menuItems.add(_MenuItem(
         icon: Icons.chat_bubble,
         title: 'Agent Chat',
         route: '/agent-chat',
-        badge: '3', // Unread messages count
+        badge: _badges[BadgeService.agentChat],
         iconColor: Colors.blue,
         backgroundColor: Colors.blue.withOpacity(0.1),
-      ),
-      _MenuItem(
+      ));
+    }
+
+    // Conditionally show Reminders
+    if (_featureFlags['reminders_enabled'] ?? true) {
+      menuItems.add(_MenuItem(
         icon: Icons.notifications,
         title: 'Reminders',
         route: '/reminders',
-        badge: '1', // Pending reminders count
+        badge: _badges[BadgeService.reminders],
         iconColor: Colors.orange,
         backgroundColor: Colors.orange.withOpacity(0.1),
-      ),
-      _MenuItem(
+      ));
+    }
+
+    // Conditionally show Presentations
+    if (_featureFlags['presentations_enabled'] ?? true) {
+      menuItems.add(_MenuItem(
         icon: Icons.slideshow,
         title: 'Presentations',
         route: '/presentations',
         iconColor: Colors.green,
         backgroundColor: Colors.green.withOpacity(0.1),
-      ),
-      _MenuItem(
-        icon: Icons.person,
-        title: 'Profile',
-        route: '/agent-profile',
-        iconColor: Colors.red,
-        backgroundColor: Colors.red.withOpacity(0.1),
-      ),
-    ];
+      ));
+    }
+
+    // Always show Profile
+    menuItems.add(_MenuItem(
+      icon: Icons.person,
+      title: 'Profile',
+      route: '/agent-profile',
+      iconColor: Colors.red,
+      backgroundColor: Colors.red.withOpacity(0.1),
+    ));
+
+    // Conditionally show Accessibility
+    if (_featureFlags['accessibility_enabled'] ?? true) {
+      menuItems.add(_MenuItem(
+        icon: Icons.accessibility,
+        title: 'Accessibility',
+        route: '/accessibility-settings',
+        iconColor: Colors.blue,
+        backgroundColor: Colors.blue.withOpacity(0.1),
+      ));
+    }
+
+    // Conditionally show Language
+    if (_featureFlags['language_enabled'] ?? true) {
+      menuItems.add(_MenuItem(
+        icon: Icons.language,
+        title: 'Language',
+        route: '/language-selection',
+        iconColor: Colors.teal,
+        backgroundColor: Colors.teal.withOpacity(0.1),
+      ));
+    }
 
     return ListView.builder(
       padding: EdgeInsets.zero,

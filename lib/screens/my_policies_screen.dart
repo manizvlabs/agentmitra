@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/widgets/offline_indicator.dart';
+import '../core/services/whatsapp_business_service.dart';
 
 /// My Policies Screen for Agent App
 /// Displays policy information, client management, and segmentation tools
@@ -448,6 +449,75 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
                   'Next Due',
                   policy['nextDue'],
                   Icons.calendar_today,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final success = await WhatsAppBusinessService.sendPolicyMessage(
+                      phoneNumber: policy['clientPhone'] ?? '+919876543210',
+                      policyNumber: policy['policyNumber'],
+                      policyType: policy['planName'],
+                    );
+
+                    if (success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Policy message sent via WhatsApp!')),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Failed to send WhatsApp message')),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.message, size: 16),
+                  label: const Text('Message'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    textStyle: const TextStyle(fontSize: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    // Calculate premium due date (next due date)
+                    final nextDue = policy['nextDue'];
+                    final premiumAmount = policy['premium'] as int;
+
+                    final success = await WhatsAppBusinessService.sendPremiumReminder(
+                      phoneNumber: policy['clientPhone'] ?? '+919876543210',
+                      policyNumber: policy['policyNumber'],
+                      premiumAmount: premiumAmount.toDouble(),
+                      dueDate: DateTime.now().add(const Duration(days: 30)), // Placeholder
+                    );
+
+                    if (success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Premium reminder sent via WhatsApp!')),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Failed to send WhatsApp message')),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.notifications, size: 16),
+                  label: const Text('Remind'),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.orange),
+                    foregroundColor: Colors.orange,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    textStyle: const TextStyle(fontSize: 12),
+                  ),
                 ),
               ),
             ],

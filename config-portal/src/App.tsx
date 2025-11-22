@@ -12,6 +12,9 @@ import Layout from './components/Layout';
 // Pages
 import Dashboard from './pages/Dashboard';
 import DataImport from './pages/DataImport';
+import DataImportProgress from './pages/DataImportProgress';
+import ImportErrors from './pages/ImportErrors';
+import ImportSuccess from './pages/ImportSuccess';
 import ExcelTemplate from './pages/ExcelTemplate';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
@@ -127,6 +130,9 @@ function App() {
                 <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="data-import" element={<DataImport />} />
+                <Route path="data-import-progress" element={<DataImportProgress />} />
+                <Route path="import-errors" element={<ImportErrors />} />
+                <Route path="import-success" element={<ImportSuccess />} />
                 <Route path="excel-template" element={<ExcelTemplate />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
