@@ -1,7 +1,6 @@
-/// Enhanced Login page with biometric authentication
+/// Enhanced Login page
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/services/logger_service.dart';
 import '../viewmodels/auth_viewmodel.dart';
@@ -15,12 +14,8 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
-  final LocalAuthentication _localAuth = LocalAuthentication();
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-
-  bool _biometricAvailable = false;
-  bool _isBiometricSupported = false;
 
   @override
   void initState() {
@@ -38,7 +33,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     ));
 
     _animationController.forward();
-    _checkBiometricSupport();
   }
 
   @override
@@ -47,61 +41,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  Future<void> _checkBiometricSupport() async {
-    try {
-      final isAvailable = await _localAuth.isDeviceSupported();
-      final canCheckBiometrics = await _localAuth.canCheckBiometrics;
-      final availableBiometrics = await _localAuth.getAvailableBiometrics();
-
-      setState(() {
-        _biometricAvailable = isAvailable && canCheckBiometrics && availableBiometrics.isNotEmpty;
-        _isBiometricSupported = availableBiometrics.isNotEmpty;
-      });
-
-      LoggerService().info('Biometric support checked - Available: $_biometricAvailable, Supported: $_isBiometricSupported');
-    } catch (e) {
-      LoggerService().error('Biometric support check failed: $e');
-    }
-  }
-
-  Future<void> _authenticateWithBiometrics() async {
-    try {
-      final authenticated = await _localAuth.authenticate(
-        localizedReason: 'Authenticate to access Agent Mitra',
-        options: const AuthenticationOptions(
-          biometricOnly: true,
-          useErrorDialogs: true,
-          stickyAuth: true,
-        ),
-      );
-
-      if (authenticated && mounted) {
-        // Biometric authentication successful
-        LoggerService().info('Biometric authentication successful');
-
-        // Navigate to dashboard or show success
-        Navigator.pushNamed(context, '/customer-dashboard');
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login successful!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      LoggerService().error('Biometric authentication failed: $e');
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Biometric authentication failed: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -184,9 +123,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
                 const SizedBox(height: 48),
 
-                // Biometric Authentication (if available)
-                if (_biometricAvailable) ...[
-                  _buildBiometricSection(),
+                // Biometric Authentication (disabled for web compatibility)
+                // if (_biometricAvailable) ...[
+                  // _buildBiometricSection(),
                   const SizedBox(height: 32),
 
                   // Divider
@@ -208,7 +147,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   ),
 
                   const SizedBox(height: 32),
-                ],
+                // ],
 
                 // Login Form
                 Consumer<AuthViewModel>(
@@ -271,27 +210,27 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: _authenticateWithBiometrics,
-            icon: Icon(_getBiometricIcon()),
-            label: const Text('Login with Biometrics'),
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
+          // ElevatedButton.icon(
+          //   onPressed: () {}, // _authenticateWithBiometrics, // Disabled for web compatibility
+          //   icon: Icon(_getBiometricIcon()),
+          //   label: const Text('Login with Biometrics'),
+          //   style: ElevatedButton.styleFrom(
+          //     minimumSize: const Size(double.infinity, 50),
+          //     shape: RoundedRectangleBorder(
+          //       borderRadius: BorderRadius.circular(12),
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );
   }
 
-  IconData _getBiometricIcon() {
-    // In a real app, you'd check the available biometrics
-    // For now, default to fingerprint
-    return Icons.fingerprint;
-  }
+  // IconData _getBiometricIcon() {
+  //   // In a real app, you'd check the available biometrics
+  //   // For now, default to fingerprint
+  //   return Icons.fingerprint;
+  // }
 
   Widget _buildAdditionalOptions() {
     return Column(

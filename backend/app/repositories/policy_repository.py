@@ -202,6 +202,14 @@ class PolicyRepository:
         # Apply pagination
         return query.limit(limit).offset(offset).all()
 
+    def get_all(self, limit: int = 20, offset: int = 0) -> List[InsurancePolicy]:
+        """Get all policies with pagination"""
+        return self.db.query(InsurancePolicy)\
+            .order_by(InsurancePolicy.created_at.desc())\
+            .limit(limit)\
+            .offset(offset)\
+            .all()
+
     def create(self, policy_data: dict) -> InsurancePolicy:
         """Create a new insurance policy"""
         policy = InsurancePolicy(

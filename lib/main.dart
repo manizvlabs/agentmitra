@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as provider;
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase/firebase_options.dart';
 import 'core/services/storage_service.dart';
 import 'core/di/service_locator.dart';
 import 'core/providers/global_providers.dart';
@@ -34,16 +32,6 @@ import 'features/payments/presentation/pages/policies_list_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize Firebase (with error handling for web)
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    print('Firebase initialized successfully');
-  } catch (e) {
-    print('Firebase initialization failed (this is OK for demo): $e');
-  }
 
   // Initialize storage service (web-compatible)
   if (!kIsWeb) {

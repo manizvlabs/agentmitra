@@ -3,7 +3,9 @@ Agent Mitra - API v1 Router
 Main API router that combines all endpoint routers
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from app.core.database import get_db
 from . import auth, users, providers, agents, policies, presentations, chat, analytics, feature_flags, health, notifications
 
 # Create main API router
@@ -56,32 +58,28 @@ async def get_dashboard_analytics():
 
 # Test endpoints (temporary - remove in production)
 @api_router.get("/test/policies")
-async def get_test_policies():
+async def get_test_policies(db: Session = Depends(get_db)):
     """Test endpoint for policies (no auth required)"""
+    from app.repositories.policy_repository import PolicyRepository
+
+    repo = PolicyRepository(db)
+    policies = repo.get_all(limit=10)  # Get first 10 policies
+
     return [
         {
-            "policy_id": "POL001",
-            "policy_number": "LIC123456789",
-            "premium": 2500.0,
-            "status": "active"
-        },
-        {
-            "policy_id": "POL002",
-            "policy_number": "HDFC987654321",
-            "premium": 1500.0,
-            "status": "active"
-        },
-        {
-            "policy_id": "POL003",
-            "policy_number": "SBI456789123",
-            "premium": 3000.0,
-            "status": "pending"
+            "policy_id": str(policy.policy_id),
+            "policy_number": policy.policy_number,
+            "premium": float(policy.premium_amount) if policy.premium_amount else 0.0,
+            "status": policy.status or "active"
         }
+        for policy in policies
     ]
 
 @api_router.get("/test/notifications")
-async def get_test_notifications():
+async def get_test_notifications(db: Session = Depends(get_db)):
     """Test endpoint for notifications (no auth required)"""
+    # TODO: Connect to real notification repository when implemented
+    # For now, return mock data that would come from database
     return [
         {
             "id": "notif_001",
@@ -114,27 +112,56 @@ async def get_test_notifications():
     ]
 
 @api_router.get("/test/agent/profile")
-async def get_test_agent_profile():
+async def get_test_agent_profile(db: Session = Depends(get_db)):
     """Test endpoint for agent profile (no auth required)"""
-    return {
-        "agent_id": "test-agent-001",
-        "user_id": "test-user-001",
-        "agent_code": "AGENT001",
-        "license_number": "LIC123456789",
-        "license_expiry_date": "2025-12-31",
-        "business_name": "Test Insurance Solutions",
-        "territory": "Mumbai",
-        "experience_years": 5,
-        "total_policies_sold": 25,
-        "total_premium_collected": 35500.0,
-        "status": "active",
-        "verification_status": "approved",
-        "user_info": {
-            "full_name": "John Doe",
-            "phone_number": "+919876543210",
-            "email": "john.doe@test.com"
+    from app.repositories.agent_repository import AgentRepository
+
+    repo = AgentRepository(db)
+    agents = repo.get_all()  # Get agents
+    agents = agents[:1] if agents else []  # Take first agent
+
+    if agents:
+        agent = agents[0]
+        return {
+            "agent_id": str(agent.agent_id),
+            "user_id": str(agent.user_id) if agent.user_id else None,
+            "agent_code": agent.agent_code,
+            "license_number": agent.license_number,
+            "license_expiry_date": agent.license_expiry_date.isoformat() if agent.license_expiry_date else None,
+            "business_name": agent.business_name,
+            "territory": agent.territory,
+            "experience_years": agent.experience_years,
+            "total_policies_sold": agent.total_policies_sold,
+            "total_premium_collected": agent.total_premium_collected,
+            "status": agent.status,
+            "verification_status": agent.verification_status,
+            "user_info": {
+                "full_name": "Agent User",  # Simplified for now
+                "phone_number": "+919876543210",
+                "email": "agent@test.com"
+            }
         }
-    }
+    else:
+        # Return mock data if no agents in database
+        return {
+            "agent_id": "test-agent-001",
+            "user_id": "test-user-001",
+            "agent_code": "AGENT001",
+            "license_number": "LIC123456789",
+            "license_expiry_date": "2025-12-31",
+            "business_name": "Test Insurance Solutions",
+            "territory": "Mumbai",
+            "experience_years": 5,
+            "total_policies_sold": 25,
+            "total_premium_collected": 35500.0,
+            "status": "active",
+            "verification_status": "approved",
+            "user_info": {
+                "full_name": "John Doe",
+                "phone_number": "+919876543210",
+                "email": "john.doe@test.com"
+            }
+        }
 
 # Include all endpoint routers
 api_router.include_router(auth.router, prefix="/auth", tags=["authentication"])

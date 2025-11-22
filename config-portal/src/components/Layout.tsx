@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
+import { authApi } from '../services/authApi';
 import {
   Box,
   Drawer,
@@ -48,6 +49,9 @@ const Layout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Debug logging
+  console.log('Layout rendering for path:', location.pathname);
+
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
@@ -60,10 +64,15 @@ const Layout: React.FC = () => {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
-    // TODO: Implement logout logic
-    handleProfileMenuClose();
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      handleProfileMenuClose();
+      navigate('/login');
+    }
   };
 
   const handleNavigation = (path: string) => {
@@ -93,7 +102,8 @@ const Layout: React.FC = () => {
           <ListItem key={item.text} disablePadding>
             <ListItemButton
               selected={location.pathname === item.path}
-              onClick={() => handleNavigation(item.path)}
+              component={Link}
+              to={item.path}
               sx={{
                 '&.Mui-selected': {
                   backgroundColor: 'primary.main',
@@ -255,7 +265,7 @@ const Layout: React.FC = () => {
         }}
       >
         <Toolbar /> {/* Spacer for AppBar */}
-        <Outlet />
+        <Outlet key={location.pathname} />
       </Box>
     </Box>
   );

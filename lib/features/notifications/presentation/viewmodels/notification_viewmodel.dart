@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:connectivity_plus/connectivity_plus.dart';
+import '../../../../../core/services/connectivity_service.dart';
 import '../../../../core/architecture/base/base_viewmodel.dart';
 import '../../../../core/services/logger_service.dart';
 import '../../../../core/services/offline_queue_service.dart';
@@ -21,10 +21,9 @@ class NotificationViewModel extends BaseViewModel {
     LoggerService? logger,
   ])  : _repository = repository ?? NotificationRepository(
           NotificationRemoteDataSource(logger ?? LoggerService()),
-          NotificationLocalDataSource(LoggerService(), Connectivity()),
-          Connectivity(),
-          OfflineQueueService(LoggerService(), Connectivity()),
-          SyncService(LoggerService(), Connectivity()),
+          NotificationLocalDataSource(LoggerService()),
+          OfflineQueueService(LoggerService()),
+          SyncService(LoggerService()),
           LoggerService(),
         ),
         // _offlineQueueService = offlineQueueService ?? OfflineQueueService(LoggerService(), Connectivity()),

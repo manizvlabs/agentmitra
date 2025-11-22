@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import 'package:provider/provider.dart';
 import '../viewmodels/onboarding_viewmodel.dart';
 import '../../data/models/onboarding_step.dart';
@@ -17,11 +15,11 @@ class _DocumentVerificationStepState extends State<DocumentVerificationStep> {
   final _formKey = GlobalKey<FormState>();
   final _aadhaarController = TextEditingController();
   final _panController = TextEditingController();
-  final ImagePicker _imagePicker = ImagePicker();
+  // final ImagePicker _imagePicker = ImagePicker(); // Disabled for web compatibility
 
-  File? _aadhaarFrontImage;
-  File? _aadhaarBackImage;
-  File? _panImage;
+  dynamic _aadhaarFrontImage;
+  dynamic _aadhaarBackImage;
+  dynamic _panImage;
 
   @override
   void initState() {
@@ -45,32 +43,33 @@ class _DocumentVerificationStepState extends State<DocumentVerificationStep> {
     super.dispose();
   }
 
-  Future<void> _pickImage(ImageSource source, String documentType) async {
-    try {
-      final pickedFile = await _imagePicker.pickImage(
-        source: source,
-        imageQuality: 85,
-        maxWidth: 1024,
-        maxHeight: 1024,
-      );
+  Future<void> _pickImage(dynamic source, String documentType) async {
+    // TODO: Implement web-compatible image picking
+    // try {
+    //   final pickedFile = await _imagePicker.pickImage(
+    //     source: source,
+    //     imageQuality: 85,
+    //     maxWidth: 1024,
+    //     maxHeight: 1024,
+    //   );
 
-      if (pickedFile != null) {
-        setState(() {
-          switch (documentType) {
-            case 'aadhaar_front':
-              _aadhaarFrontImage = File(pickedFile.path);
-              break;
-            case 'aadhaar_back':
-              _aadhaarBackImage = File(pickedFile.path);
-              break;
-            case 'pan':
-              _panImage = File(pickedFile.path);
-              break;
-          }
-        });
+    //   if (pickedFile != null) {
+    //     setState(() {
+    //       switch (documentType) {
+    //         case 'aadhaar_front':
+    //           _aadhaarFrontImage = pickedFile.path; // Use path instead of File
+    //           break;
+    //         case 'aadhaar_back':
+    //           _aadhaarBackImage = pickedFile.path;
+    //           break;
+    //         case 'pan':
+    //           _panImage = pickedFile.path;
+    //           break;
+    //       }
+    //     });
 
-        // Save data
-        await _saveDocumentData();
+    //     // Save data
+    //     await _saveDocumentData();
       }
     } catch (e) {
       if (mounted) {

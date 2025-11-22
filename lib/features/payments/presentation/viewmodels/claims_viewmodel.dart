@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:dartz/dartz.dart';
 import '../../data/repositories/policy_repository.dart';
 import '../../data/datasources/policy_remote_datasource.dart';
@@ -19,8 +18,8 @@ class ClaimsViewModel extends ChangeNotifier {
   List<Claim> _claims = [];
   bool _isLoading = false;
   String? _error;
-  XFile? _selectedImage;
-  XFile? _selectedDocument;
+  dynamic _selectedImage;
+  dynamic _selectedDocument;
 
   // Form state
   String _claimType = '';
@@ -33,8 +32,8 @@ class ClaimsViewModel extends ChangeNotifier {
   List<Claim> get claims => _claims;
   bool get isLoading => _isLoading;
   String? get error => _error;
-  XFile? get selectedImage => _selectedImage;
-  XFile? get selectedDocument => _selectedDocument;
+  dynamic get selectedImage => _selectedImage;
+  dynamic get selectedDocument => _selectedDocument;
 
   // Form getters
   String get claimType => _claimType;
@@ -119,32 +118,35 @@ class ClaimsViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Image/Document selection
+  // Image/Document selection (disabled for web compatibility)
   Future<void> pickImage() async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      _selectedImage = image;
-      notifyListeners();
-    }
+    // TODO: Implement web-compatible image picking
+    // final picker = ImagePicker();
+    // final image = await picker.pickImage(source: ImageSource.gallery);
+    // if (image != null) {
+    //   _selectedImage = image;
+    //   notifyListeners();
+    // }
   }
 
   Future<void> pickDocument() async {
-    final picker = ImagePicker();
-    final document = await picker.pickImage(source: ImageSource.gallery);
-    if (document != null) {
-      _selectedDocument = document;
-      notifyListeners();
-    }
+    // TODO: Implement web-compatible document picking
+    // final picker = ImagePicker();
+    // final document = await picker.pickImage(source: ImageSource.gallery);
+    // if (document != null) {
+    //   _selectedDocument = document;
+    //   notifyListeners();
+    // }
   }
 
   Future<void> takePhoto() async {
-    final picker = ImagePicker();
-    final photo = await picker.pickImage(source: ImageSource.camera);
-    if (photo != null) {
-      _selectedImage = photo;
-      notifyListeners();
-    }
+    // TODO: Implement web-compatible camera access
+    // final picker = ImagePicker();
+    // final photo = await picker.pickImage(source: ImageSource.camera);
+    // if (photo != null) {
+    //   _selectedImage = photo;
+    //   notifyListeners();
+    // }
   }
 
   void clearSelectedFiles() {

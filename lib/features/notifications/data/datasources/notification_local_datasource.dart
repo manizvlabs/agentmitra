@@ -1,18 +1,17 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
+import '../../../../../core/services/connectivity_service.dart';
 import '../../../../core/services/logger_service.dart';
 
 /// Local data source for notifications
 class NotificationLocalDataSource {
   final LoggerService _logger;
-  final Connectivity _connectivity;
 
   static const String _notificationsKey = 'notifications';
   static const String _notificationSettingsKey = 'notification_settings';
   static const String _lastSyncKey = 'notifications_last_sync';
 
-  NotificationLocalDataSource(this._logger, this._connectivity);
+  NotificationLocalDataSource(this._logger);
 
   /// Get stored notifications
   Future<List<Map<String, dynamic>>> getNotifications() async {

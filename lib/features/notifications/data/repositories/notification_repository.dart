@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:connectivity_plus/connectivity_plus.dart';
+import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/architecture/base/base_repository.dart';
 import '../../../../core/services/logger_service.dart';
 import '../../../../core/services/offline_queue_service.dart';
@@ -12,7 +12,6 @@ import '../models/notification_model.dart';
 class NotificationRepository extends BaseRepository {
   final NotificationRemoteDataSource _remoteDataSource;
   final NotificationLocalDataSource _localDataSource;
-  final Connectivity _connectivity;
   final OfflineQueueService _offlineQueueService;
   final SyncService _syncService;
   final LoggerService _logger;
@@ -20,20 +19,16 @@ class NotificationRepository extends BaseRepository {
   NotificationRepository(
     this._remoteDataSource,
     this._localDataSource,
-    this._connectivity,
     this._offlineQueueService,
     this._syncService,
     this._logger,
   );
 
   /// Stream of connectivity changes
-  Stream<ConnectivityResult> get connectivityStream => _connectivity.onConnectivityChanged;
+  Stream<bool> get connectivityStream => ConnectivityService.onConnectivityChanged;
 
   /// Get current connectivity status
-  Future<bool> get isConnected async {
-    final result = await _connectivity.checkConnectivity();
-    return result != ConnectivityResult.none;
-  }
+  bool get isConnected => ConnectivityService.isConnected;
 
   /// Fetch notifications with offline support
   Future<List<NotificationModel>> getNotifications({

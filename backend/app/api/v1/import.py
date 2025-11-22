@@ -15,6 +15,7 @@ import json
 from app.core.database import get_db
 from app.core.auth import get_current_user_context
 from app.models.user import User
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/import", tags=["import"])
 
@@ -296,36 +297,165 @@ async def validate_file(
 async def import_data(
     request: Dict[str, Any],
     background_tasks: BackgroundTasks,
-    current_user = Depends(get_current_user_context)
+    current_user = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
 ):
     """Import validated data"""
+    from app.repositories.policy_repository import PolicyRepository, PolicyholderRepository
+    from app.repositories.user_repository import UserRepository
+
     file_id = request.get("fileId")
     template_id = request.get("templateId")
+    entity_type = request.get("entityType", "policies")
 
     if file_id not in _import_files:
         raise HTTPException(status_code=404, detail="File not found")
 
     file_data = _import_files[file_id]
     data = file_data["data"]
+    headers = file_data["headers"]
 
-    # Simulate import process
     import_id = str(uuid.uuid4())
-    result = ImportResult(
-        id=import_id,
-        file_id=file_id,
-        template_id=template_id,
-        total_rows=len(data),
-        valid_rows=len(data),  # Assume all valid for demo
-        invalid_rows=0,
-        imported_rows=len(data),
-        errors=[],
-        status="completed",
-        start_time=datetime.now(),
-        end_time=datetime.now(),
-        duration=1000  # 1 second for demo
-    )
+    start_time = datetime.now()
 
-    _import_results[import_id] = result
+    try:
+        imported_count = 0
+        errors = []
+
+        if entity_type == "policies":
+            policy_repo = PolicyRepository(db)
+            policyholder_repo = PolicyholderRepository(db)
+
+            for row_idx, row in enumerate(data):
+                try:
+                    # Convert row to dict using headers
+                    row_dict = dict(zip(headers, row))
+
+                    # Basic validation and data processing
+                    policy_number = row_dict.get("policy_number", "").strip()
+                    if not policy_number:
+                        errors.append(f"Row {row_idx + 1}: Missing policy number")
+                        continue
+
+                    # Check if policy already exists
+                    existing_policy = policy_repo.get_by_policy_number(policy_number)
+                    if existing_policy:
+                        errors.append(f"Row {row_idx + 1}: Policy {policy_number} already exists")
+                        continue
+
+                    # Find or create policyholder
+                    policyholder_id = row_dict.get("policyholder_id")
+                    if not policyholder_id:
+                        # Try to find by phone number or create new
+                        phone_number = row_dict.get("phone_number", "").strip()
+                        if phone_number:
+                            user_repo = UserRepository(db)
+                            user = user_repo.get_by_phone(phone_number)
+                            if user:
+                                # Find policyholder for this user
+                                policyholder = policyholder_repo.get_by_user_id(str(user.user_id))
+                                if policyholder:
+                                    policyholder_id = str(policyholder.policyholder_id)
+                                else:
+                                    # Create new policyholder
+                                    policyholder_data = {
+                                        "user_id": str(user.user_id),
+                                        "phone_number": phone_number,
+                                        "first_name": user.first_name,
+                                        "last_name": user.last_name,
+                                        "email": user.email
+                                    }
+                                    new_policyholder = policyholder_repo.create(policyholder_data)
+                                    policyholder_id = str(new_policyholder.policyholder_id)
+
+                    if not policyholder_id:
+                        errors.append(f"Row {row_idx + 1}: Could not find or create policyholder")
+                        continue
+
+                    # Create policy data
+                    policy_data = {
+                        "policy_number": policy_number,
+                        "policyholder_id": policyholder_id,
+                        "agent_id": current_user.user_id,  # Current user as agent
+                        "provider_id": "550e8400-e29b-41d4-a716-446655440000",  # Default provider
+                        "policy_type": row_dict.get("policy_type", "term_life"),
+                        "plan_name": row_dict.get("plan_name", "Standard Plan"),
+                        "premium_amount": float(row_dict.get("premium_amount", 0)),
+                        "premium_frequency": row_dict.get("premium_frequency", "monthly"),
+                        "sum_assured": float(row_dict.get("sum_assured", 0)),
+                        "status": "active"
+                    }
+
+                    policy = policy_repo.create(policy_data)
+                    imported_count += 1
+
+                except Exception as e:
+                    errors.append(f"Row {row_idx + 1}: {str(e)}")
+
+        elif entity_type == "customers":
+            # Handle customer import
+            user_repo = UserRepository(db)
+            policyholder_repo = PolicyholderRepository(db)
+
+            for row_idx, row in enumerate(data):
+                try:
+                    row_dict = dict(zip(headers, row))
+
+                    phone_number = row_dict.get("phone_number", "").strip()
+                    if not phone_number:
+                        errors.append(f"Row {row_idx + 1}: Missing phone number")
+                        continue
+
+                    # Check if user exists
+                    existing_user = user_repo.get_by_phone(phone_number)
+                    if existing_user:
+                        errors.append(f"Row {row_idx + 1}: User with phone {phone_number} already exists")
+                        continue
+
+                    # Create user
+                    user_data = {
+                        "phone_number": phone_number,
+                        "first_name": row_dict.get("first_name", "").strip(),
+                        "last_name": row_dict.get("last_name", "").strip(),
+                        "email": row_dict.get("email", "").strip(),
+                        "role": "policyholder"
+                    }
+
+                    user = user_repo.create(user_data)
+
+                    # Create policyholder
+                    policyholder_data = {
+                        "user_id": str(user.user_id),
+                        "phone_number": phone_number,
+                        "annual_income": float(row_dict.get("annual_income", 0)),
+                        "occupation": row_dict.get("occupation", "").strip()
+                    }
+
+                    policyholder_repo.create(policyholder_data)
+                    imported_count += 1
+
+                except Exception as e:
+                    errors.append(f"Row {row_idx + 1}: {str(e)}")
+
+        end_time = datetime.now()
+        duration = int((end_time - start_time).total_seconds() * 1000)
+
+        result = ImportResult(
+            id=import_id,
+            file_id=file_id,
+            template_id=template_id,
+            total_rows=len(data),
+            valid_rows=len(data) - len(errors),
+            invalid_rows=len(errors),
+            imported_rows=imported_count,
+            errors=errors,
+            status="completed",
+            start_time=start_time,
+            end_time=end_time,
+            duration=duration
+        )
+
+        _import_results[import_id] = result
 
     # Add to history
     history_item = {

@@ -30,7 +30,8 @@ class OTPService:
     @staticmethod
     def generate_and_store_otp(phone_number: str) -> str:
         """Generate OTP and store it with expiry"""
-        otp = generate_otp(6)
+        # For development/testing, use fixed OTP
+        otp = "123456" if settings.environment == "development" else generate_otp(6)
         expiry = datetime.utcnow() + timedelta(minutes=OTPService.OTP_EXPIRY_MINUTES)
         
         otp_data = {

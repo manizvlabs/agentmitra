@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
+import './connectivity_service.dart';
 import 'logger_service.dart';
 import 'api_service.dart';
 
@@ -86,7 +86,6 @@ class OfflineQueueService {
   static const String _syncStatusKey = 'offline_sync_status';
 
   final LoggerService _logger;
-  final Connectivity _connectivity;
 
   final StreamController<List<QueuedOperation>> _queueController = StreamController.broadcast();
   final StreamController<SyncStatus> _syncController = StreamController.broadcast();
@@ -94,7 +93,7 @@ class OfflineQueueService {
   Timer? _syncTimer;
   bool _isProcessing = false;
 
-  OfflineQueueService(this._logger, this._connectivity) {
+  OfflineQueueService(this._logger) {
     _initialize();
   }
 
@@ -106,8 +105,8 @@ class OfflineQueueService {
     await _loadSyncStatus();
 
     // Listen for connectivity changes
-    _connectivity.onConnectivityChanged.listen((result) {
-      if (result != ConnectivityResult.none) {
+    ConnectivityService.onConnectivityChanged.listen((isConnected) {
+      if (isConnected) {
         _startSyncTimer();
       } else {
         _stopSyncTimer();
@@ -115,7 +114,7 @@ class OfflineQueueService {
     });
 
     // Start sync timer if connected
-    if (await _isConnected()) {
+    if (ConnectivityService.isConnected) {
       _startSyncTimer();
     }
   }
@@ -138,10 +137,6 @@ class OfflineQueueService {
     }
   }
 
-  Future<bool> _isConnected() async {
-    final result = await _connectivity.checkConnectivity();
-    return result != ConnectivityResult.none;
-  }
 
   void _startSyncTimer() {
     _stopSyncTimer();
@@ -177,7 +172,7 @@ class OfflineQueueService {
     _logger.info('Added operation to offline queue: ${operation.type.name} ${operation.endpoint}');
 
     // Try to process immediately if connected
-    if (await _isConnected()) {
+    if (ConnectivityService.isConnected) {
       _processQueue();
     }
   }
@@ -392,7 +387,7 @@ class OfflineQueueService {
 
   /// Force immediate sync
   Future<void> forceSync() async {
-    if (await _isConnected()) {
+    if (ConnectivityService.isConnected) {
       await _processQueue();
     }
   }

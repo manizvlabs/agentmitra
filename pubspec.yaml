@@ -48,12 +48,7 @@ dependencies:
   carousel_slider: ^4.2.1
 
   # Image & Media
-  image_picker: ^1.0.7
-  video_player: ^2.8.2
   cached_network_image: ^3.3.1
-
-  # Biometric Authentication
-  local_auth: ^2.1.6
 
   # Rich Text Editing
   flutter_quill: ^8.1.1
@@ -66,16 +61,12 @@ dependencies:
 
   # Utilities
   uuid: ^4.2.1
-  path_provider: ^2.1.1
 
   # Charts & Analytics
   fl_chart: ^0.62.0
-  connectivity_plus: ^5.0.2
 
-  # Firebase & Push Notifications
-  firebase_core: ^2.24.2
-  firebase_messaging: ^14.7.10
-  flutter_local_notifications: ^16.3.2
+  # Web-compatible alternatives
+  # Note: Some mobile-specific features are disabled for web compatibility
 
 dev_dependencies:
   flutter_test:
@@ -95,3 +86,16 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+
+# Platform-specific dependencies
+dependency_overrides:
+  # Web-specific overrides can be added here if needed
+
+# Platform-specific configurations
+platforms:
+  android:
+    # Android-specific configurations can be added here
+  ios:
+    # iOS-specific configurations can be added here
+  web:
+    # Web-specific configurations can be added here

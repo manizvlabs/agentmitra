@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import '../providers/global_providers.dart';
 
 /// Offline indicator widget that shows connectivity and sync status
@@ -18,8 +17,8 @@ class OfflineIndicator extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final connectivityResult = ref.watch(connectivityProvider);
-    final isOffline = connectivityResult == ConnectivityResult.none;
+    final isConnected = ref.watch(connectivityProvider);
+    final isOffline = !isConnected;
 
     // Don't show anything if online and showWhenOnline is false
     if (!isOffline && !showWhenOnline) {
@@ -112,7 +111,7 @@ class OfflineStatusDialog extends ConsumerWidget {
             context,
             'Connection Status',
             _getConnectivityDescription(connectivityResult),
-            connectivityResult == ConnectivityResult.none ? Colors.red : Colors.orange,
+            !isConnected ? Colors.red : Colors.orange,
           ),
 
           const SizedBox(height: 12),
@@ -168,21 +167,8 @@ class OfflineStatusDialog extends ConsumerWidget {
     );
   }
 
-  String _getConnectivityDescription(ConnectivityResult result) {
-    switch (result) {
-      case ConnectivityResult.wifi:
-        return 'Connected via WiFi';
-      case ConnectivityResult.mobile:
-        return 'Connected via Mobile Data';
-      case ConnectivityResult.ethernet:
-        return 'Connected via Ethernet';
-      case ConnectivityResult.vpn:
-        return 'Connected via VPN';
-      case ConnectivityResult.none:
-        return 'No internet connection';
-      default:
-        return 'Unknown connection';
-    }
+  String _getConnectivityDescription(bool isConnected) {
+    return isConnected ? 'Connected to internet' : 'No internet connection';
   }
 
   Widget _buildStatusItem(BuildContext context, String label, String value, Color color) {
@@ -205,7 +191,7 @@ class OfflineStatusDialog extends ConsumerWidget {
     );
   }
 
-  Widget _buildFeatureList(BuildContext context, ConnectivityResult result) {
+  Widget _buildFeatureList(BuildContext context, bool isConnected) {
     final features = _getAvailableFeatures(result);
 
     return Column(
@@ -230,7 +216,7 @@ class OfflineStatusDialog extends ConsumerWidget {
     );
   }
 
-  List<String> _getAvailableFeatures(ConnectivityResult result) {
+  List<String> _getAvailableFeatures(bool isConnected) {
     // Features available in offline mode
     final offlineFeatures = [
       'View cached data',
@@ -240,7 +226,7 @@ class OfflineStatusDialog extends ConsumerWidget {
       'View agent profiles',
     ];
 
-    if (result != ConnectivityResult.none) {
+    if (isConnected) {
       // Additional features when partially connected
       offlineFeatures.addAll([
         'Send messages (queued)',
@@ -266,7 +252,7 @@ class SyncStatusIndicator extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // For now, we'll show a simple implementation
     // TODO: Connect to actual OfflineQueueService when implemented
-    final isOnline = ref.watch(connectivityProvider) != ConnectivityResult.none;
+    final isOnline = ref.watch(connectivityProvider);
 
     if (!isOnline && showOnlyWhenSyncing) {
       return const SizedBox.shrink();
@@ -307,8 +293,8 @@ class AppBarConnectivityIndicator extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final connectivityResult = ref.watch(connectivityProvider);
-    final isOffline = connectivityResult == ConnectivityResult.none;
+    final isConnected = ref.watch(connectivityProvider);
+    final isOffline = !isConnected;
 
     if (!isOffline) {
       return const SyncStatusIndicator();

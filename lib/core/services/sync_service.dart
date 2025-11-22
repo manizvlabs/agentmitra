@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
+import './connectivity_service.dart';
 import 'logger_service.dart';
 import 'api_service.dart';
 
@@ -12,18 +12,17 @@ class SyncService {
   static const String _pendingUploadsKey = 'pending_uploads';
 
   final LoggerService _logger;
-  final Connectivity _connectivity;
 
   final StreamController<SyncEvent> _syncController = StreamController.broadcast();
 
-  SyncService(this._logger, this._connectivity);
+  SyncService(this._logger);
 
   Stream<SyncEvent> get syncStream => _syncController.stream;
 
   /// Initialize sync service
   Future<void> initialize() async {
-    _connectivity.onConnectivityChanged.listen((result) {
-      if (result != ConnectivityResult.none) {
+    ConnectivityService.onConnectivityChanged.listen((isConnected) {
+      if (isConnected) {
         _startAutoSync();
       }
     });
@@ -31,7 +30,7 @@ class SyncService {
 
   /// Perform full synchronization
   Future<SyncResult> performFullSync() async {
-    if (!await _isConnected()) {
+    if (!ConnectivityService.isConnected) {
       return SyncResult.failure('No internet connection');
     }
 
@@ -429,11 +428,6 @@ class SyncService {
     await prefs.setString(_lastSyncKey, timestamp.toIso8601String());
   }
 
-  /// Check if device is connected
-  Future<bool> _isConnected() async {
-    final result = await _connectivity.checkConnectivity();
-    return result != ConnectivityResult.none;
-  }
 
   /// Start automatic sync when connected
   void _startAutoSync() {

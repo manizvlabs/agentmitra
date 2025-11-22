@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import '../services/logger_service.dart';
 import '../services/storage_service.dart';
+import '../services/connectivity_service.dart';
 
 /// Global Riverpod providers for app-wide state management
 
@@ -38,32 +38,27 @@ final appInitializationProvider = FutureProvider<bool>((ref) async {
   }
 });
 
-/// Network connectivity provider
-final connectivityProvider = StateNotifierProvider<ConnectivityNotifier, ConnectivityResult>((ref) {
+/// Network connectivity provider - simplified for web compatibility
+final connectivityProvider = StateNotifierProvider<ConnectivityNotifier, bool>((ref) {
   return ConnectivityNotifier();
 });
 
-class ConnectivityNotifier extends StateNotifier<ConnectivityResult> {
-  final Connectivity _connectivity = Connectivity();
+class ConnectivityNotifier extends StateNotifier<bool> {
   final LoggerService _logger = LoggerService();
 
-  ConnectivityNotifier() : super(ConnectivityResult.wifi) {
+  ConnectivityNotifier() : super(true) { // Assume connected by default
     _initialize();
   }
 
   Future<void> _initialize() async {
     try {
-      // Get initial connectivity status
-      final result = await _connectivity.checkConnectivity();
-      state = result;
-
-      // Listen for connectivity changes
-      _connectivity.onConnectivityChanged.listen((ConnectivityResult result) {
-        state = result;
-        _logger.info('Connectivity changed: ${result.name}', tag: 'Connectivity');
+      // Listen for connectivity changes using our custom service
+      ConnectivityService.onConnectivityChanged.listen((bool isConnected) {
+        state = isConnected;
+        _logger.info('Connectivity changed: $isConnected', tag: 'Connectivity');
 
         // TODO: Trigger sync operations when coming back online
-        if (_isConnected(result)) {
+        if (isConnected) {
           _handleReconnected();
         }
       });
@@ -72,11 +67,7 @@ class ConnectivityNotifier extends StateNotifier<ConnectivityResult> {
     }
   }
 
-  bool _isConnected(ConnectivityResult result) {
-    return result != ConnectivityResult.none;
-  }
-
-  bool get isConnected => _isConnected(state);
+  bool get isConnected => state;
 
   void _handleReconnected() {
     _logger.info('Device reconnected to network', tag: 'Connectivity');
@@ -86,8 +77,7 @@ class ConnectivityNotifier extends StateNotifier<ConnectivityResult> {
   /// Manually check connectivity
   Future<void> checkConnectivity() async {
     try {
-      final result = await _connectivity.checkConnectivity();
-      state = result;
+      state = ConnectivityService.isConnected;
     } catch (e) {
       _logger.error('Failed to check connectivity: $e', tag: 'Connectivity');
     }
