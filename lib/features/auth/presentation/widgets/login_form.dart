@@ -72,7 +72,7 @@ class _LoginFormState extends State<LoginForm> with TickerProviderStateMixin {
 
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) {
-      LoggerService().warning('Form validation failed', tag: 'LoginForm');
+      LoggerService().warning('Form validation failed');
       return;
     }
 

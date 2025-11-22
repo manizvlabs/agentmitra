@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/services/logger_service.dart';
+import '../../../../core/services/logger_service.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../widgets/login_form.dart';
 
@@ -59,12 +59,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         _isBiometricSupported = availableBiometrics.isNotEmpty;
       });
 
-      LoggerService().info(
-        'Biometric support checked - Available: $_biometricAvailable, Supported: $_isBiometricSupported',
-        tag: 'BiometricAuth',
-      );
+      LoggerService().info('Biometric support checked - Available: $_biometricAvailable, Supported: $_isBiometricSupported');
     } catch (e) {
-      LoggerService().error('Biometric support check failed: $e', tag: 'BiometricAuth');
+      LoggerService().error('Biometric support check failed: $e');
     }
   }
 
@@ -81,7 +78,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
       if (authenticated && mounted) {
         // Biometric authentication successful
-        LoggerService().info('Biometric authentication successful', tag: 'BiometricAuth');
+        LoggerService().info('Biometric authentication successful');
 
         // Navigate to dashboard or show success
         context.go('/customer-dashboard');
@@ -94,7 +91,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         );
       }
     } catch (e) {
-      LoggerService().error('Biometric authentication failed: $e', tag: 'BiometricAuth');
+      LoggerService().error('Biometric authentication failed: $e');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
