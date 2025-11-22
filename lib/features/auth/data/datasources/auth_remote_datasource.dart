@@ -25,7 +25,7 @@ class AuthRemoteDataSource {
   /// Send OTP to phone number
   Future<Map<String, dynamic>> sendOtp(String phoneNumber) async {
     return await ApiService.post(
-      ApiConstants.verifyOtp.replaceAll('/verify-otp', '/send-otp'),
+      ApiConstants.sendOtp,
       {'phone_number': phoneNumber},
     );
   }

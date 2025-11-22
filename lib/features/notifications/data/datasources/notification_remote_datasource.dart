@@ -33,7 +33,7 @@ class NotificationRemoteDataSource {
         queryParameters: queryParams,
       );
 
-      final notifications = (response['data'] as List)
+      final notifications = (response as List)
           .map((json) => NotificationModel.fromJson(json))
           .toList();
 

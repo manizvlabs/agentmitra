@@ -89,7 +89,7 @@ class AgentProfileViewModel extends ChangeNotifier {
           _branchName = profile.branchName ?? '';
           _designation = profile.designation ?? '';
           _licenseNumber = profile.licenseNumber ?? '';
-          _licenseExpiryDate = profile.licenseExpiryDate;
+          _licenseExpiryDate = profile.licenseExpiryDate != null ? DateTime.parse(profile.licenseExpiryDate!) : null;
         },
       );
 
@@ -193,7 +193,7 @@ class AgentProfileViewModel extends ChangeNotifier {
       _branchName = _profile!.branchName ?? '';
       _designation = _profile!.designation ?? '';
       _licenseNumber = _profile!.licenseNumber ?? '';
-      _licenseExpiryDate = _profile!.licenseExpiryDate;
+      _licenseExpiryDate = _profile!.licenseExpiryDate != null ? DateTime.parse(_profile!.licenseExpiryDate!) : null;
     }
     notifyListeners();
   }
@@ -202,31 +202,44 @@ class AgentProfileViewModel extends ChangeNotifier {
     // Mock data for Phase 5 testing
     _profile = AgentProfile(
       agentId: 'agent_123',
-      name: 'John Doe',
-      email: 'john.doe@agentmitra.com',
-      phone: '+91 9876543210',
+      userId: 'user_123',
+      agentCode: 'AGENT001',
       licenseNumber: 'LIC123456789',
-      licenseExpiryDate: DateTime(2025, 12, 31),
-      status: 'active',
-      joinDate: DateTime.now().subtract(const Duration(days: 365)),
-      profileImageUrl: null,
-      address: '123 Agent Street, Mumbai, Maharashtra',
-      panNumber: 'ABCDE1234F',
-      aadhaarNumber: '123456789012',
+      licenseExpiryDate: '2025-12-31',
+      companyName: 'Agent Mitra',
+      designation: 'Senior Agent',
+      joiningDate: DateTime.now().subtract(const Duration(days: 365)),
+      employmentStatus: 'active',
+      contactDetails: {
+        'email': 'john.doe@agentmitra.com',
+        'phone': '+91 9876543210',
+      },
+      addressDetails: {
+        'street': '123 Agent Street',
+        'city': 'Mumbai',
+        'state': 'Maharashtra',
+      },
+      documents: {
+        'pan': 'ABCDE1234F',
+        'aadhaar': '123456789012',
+      },
     );
 
     _performance = AgentPerformance(
       agentId: 'agent_123',
-      totalCommission: 45000.0,
+      periodStart: DateTime.now().subtract(const Duration(days: 30)),
+      periodEnd: DateTime.now(),
       policiesSold: 42,
+      premiumCollected: 52500.0,
+      commissionEarned: 45000.0,
       customersAcquired: 38,
-      conversionRate: 85.0,
-      averagePolicyValue: 1250.0,
-      monthlyData: [],
-      commissionByProduct: {'Life Insurance': 25000.0, 'Health Insurance': 15000.0, 'Motor Insurance': 5000.0},
+      claimsProcessed: 5,
+      customerSatisfactionScore: 4.8,
+      monthlyTargets: {'policies': 45, 'premium': 55000.0},
+      achievements: {'top_performer': true, 'customer_satisfaction': true},
+      performanceGrade: 'A',
     );
 
     _licenseExpiryDate = DateTime(2025, 12, 31);
-    _formattedLicenseExpiryDate = '31/12/2025';
   }
 }

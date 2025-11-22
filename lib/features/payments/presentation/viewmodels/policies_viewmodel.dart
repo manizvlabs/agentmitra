@@ -3,13 +3,14 @@ import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import '../../data/repositories/policy_repository.dart';
 import '../../data/datasources/policy_remote_datasource.dart';
+import '../../data/datasources/policy_local_datasource.dart';
 import '../../data/models/policy_model.dart';
 
 class PoliciesViewModel extends ChangeNotifier {
   final PolicyRepository _policyRepository;
 
   PoliciesViewModel([PolicyRepository? policyRepository])
-      : _policyRepository = policyRepository ?? PolicyRepository(PolicyRemoteDataSourceImpl(Dio()), PolicyLocalDataSourceImpl()) {
+      : _policyRepository = policyRepository ?? PolicyRepository(PolicyRemoteDataSourceImpl(), PolicyLocalDataSourceImpl()) {
     // Initialize with mock data for Phase 5 testing
     _initializeMockData();
   }
@@ -186,6 +187,5 @@ class PoliciesViewModel extends ChangeNotifier {
         status: 'active',
       ),
     ];
-    _totalPolicies = _policies.length;
   }
 }

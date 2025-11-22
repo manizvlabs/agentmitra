@@ -12,6 +12,7 @@ class ApiConstants {
   // Authentication Endpoints
   static const String login = '$apiVersion/auth/login';
   static const String register = '$apiVersion/auth/register';
+  static const String sendOtp = '$apiVersion/auth/send-otp';
   static const String verifyOtp = '$apiVersion/auth/verify-otp';
   static const String refreshToken = '$apiVersion/auth/refresh';
   static const String logout = '$apiVersion/auth/logout';

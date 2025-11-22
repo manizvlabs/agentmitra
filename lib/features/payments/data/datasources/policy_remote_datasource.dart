@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import '../../../../core/services/api_service.dart';
 import '../models/policy_model.dart';
 
 abstract class PolicyRemoteDataSource {
@@ -27,9 +27,7 @@ abstract class PolicyRemoteDataSource {
 }
 
 class PolicyRemoteDataSourceImpl implements PolicyRemoteDataSource {
-  final Dio dio;
-
-  PolicyRemoteDataSourceImpl(this.dio);
+  PolicyRemoteDataSourceImpl();
 
   @override
   Future<List<Policy>> getPolicies({
@@ -41,11 +39,11 @@ class PolicyRemoteDataSourceImpl implements PolicyRemoteDataSource {
     String? sortOrder,
   }) async {
     try {
-      final response = await dio.get(
+      final response = await ApiService.get(
         '/api/v1/policies',
         queryParameters: {
-          'page': page,
-          'limit': limit,
+          'page': page.toString(),
+          'limit': limit.toString(),
           if (status != null) 'status': status,
           if (search != null) 'search': search,
           if (sortBy != null) 'sort_by': sortBy,
@@ -53,7 +51,7 @@ class PolicyRemoteDataSourceImpl implements PolicyRemoteDataSource {
         },
       );
 
-      final List<dynamic> data = response.data['policies'] ?? [];
+      final List<dynamic> data = response as List<dynamic>;
       return data.map((json) => Policy.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to fetch policies: $e');
@@ -63,8 +61,8 @@ class PolicyRemoteDataSourceImpl implements PolicyRemoteDataSource {
   @override
   Future<Policy> getPolicyById(String policyId) async {
     try {
-      final response = await dio.get('/api/v1/policies/$policyId');
-      return Policy.fromJson(response.data);
+      final response = await ApiService.get('/api/v1/policies/$policyId');
+      return Policy.fromJson(response);
     } catch (e) {
       throw Exception('Failed to fetch policy: $e');
     }
@@ -73,8 +71,8 @@ class PolicyRemoteDataSourceImpl implements PolicyRemoteDataSource {
   @override
   Future<List<Premium>> getPremiumsByPolicyId(String policyId) async {
     try {
-      final response = await dio.get('/api/v1/policies/$policyId/premiums');
-      final List<dynamic> data = response.data['premiums'] ?? [];
+      final response = await ApiService.get('/api/v1/policies/$policyId/premiums');
+      final List<dynamic> data = response['premiums'] ?? [];
       return data.map((json) => Premium.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to fetch premiums: $e');
@@ -84,8 +82,8 @@ class PolicyRemoteDataSourceImpl implements PolicyRemoteDataSource {
   @override
   Future<List<Claim>> getClaimsByPolicyId(String policyId) async {
     try {
-      final response = await dio.get('/api/v1/policies/$policyId/claims');
-      final List<dynamic> data = response.data['claims'] ?? [];
+      final response = await ApiService.get('/api/v1/policies/$policyId/claims');
+      final List<dynamic> data = response['claims'] ?? [];
       return data.map((json) => Claim.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to fetch claims: $e');
@@ -95,8 +93,8 @@ class PolicyRemoteDataSourceImpl implements PolicyRemoteDataSource {
   @override
   Future<Policy> createPolicy(Map<String, dynamic> policyData) async {
     try {
-      final response = await dio.post('/api/v1/policies', data: policyData);
-      return Policy.fromJson(response.data);
+      final response = await ApiService.post('/api/v1/policies', policyData);
+      return Policy.fromJson(response);
     } catch (e) {
       throw Exception('Failed to create policy: $e');
     }
@@ -105,8 +103,8 @@ class PolicyRemoteDataSourceImpl implements PolicyRemoteDataSource {
   @override
   Future<Policy> updatePolicy(String policyId, Map<String, dynamic> policyData) async {
     try {
-      final response = await dio.put('/api/v1/policies/$policyId', data: policyData);
-      return Policy.fromJson(response.data);
+      final response = await ApiService.put('/api/v1/policies/$policyId', policyData);
+      return Policy.fromJson(response);
     } catch (e) {
       throw Exception('Failed to update policy: $e');
     }
@@ -115,7 +113,7 @@ class PolicyRemoteDataSourceImpl implements PolicyRemoteDataSource {
   @override
   Future<void> deletePolicy(String policyId) async {
     try {
-      await dio.delete('/api/v1/policies/$policyId');
+      await ApiService.delete('/api/v1/policies/$policyId');
     } catch (e) {
       throw Exception('Failed to delete policy: $e');
     }
@@ -124,8 +122,8 @@ class PolicyRemoteDataSourceImpl implements PolicyRemoteDataSource {
   @override
   Future<List<Coverage>> getCoverageByPolicyId(String policyId) async {
     try {
-      final response = await dio.get('/api/v1/policies/$policyId/coverage');
-      final List<dynamic> data = response.data['coverage'] ?? [];
+      final response = await ApiService.get('/api/v1/policies/$policyId/coverage');
+      final List<dynamic> data = response['coverage'] ?? [];
       return data.map((json) => Coverage.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to fetch coverage: $e');

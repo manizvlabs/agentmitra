@@ -73,6 +73,7 @@ class NotificationSettings(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationships
+    user = relationship("User", back_populates="notification_settings")
 
     def __repr__(self):
         return f"<NotificationSettings(user_id='{self.user_id}', push_enabled={self.enable_push_notifications})>"
@@ -83,7 +84,7 @@ class DeviceToken(Base):
     __table_args__ = {'schema': 'lic_schema'}
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.users.user_id"), nullable=False, index=True)
     token = Column(String(255), nullable=False, unique=True, index=True)
     device_type = Column(String(20), nullable=False)  # ios, android
 
@@ -92,6 +93,7 @@ class DeviceToken(Base):
     last_used_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationships
+    user = relationship("User", back_populates="device_tokens")
 
     def __repr__(self):
         return f"<DeviceToken(user_id='{self.user_id}', device_type='{self.device_type}')>"
