@@ -25,7 +25,7 @@ import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/otp_verification_page.dart';
 // Temporarily disable complex screens to focus on auth
 // import 'features/onboarding/presentation/pages/onboarding_page.dart';
-// import 'features/dashboard/presentation/pages/dashboard_page.dart';
+import 'features/dashboard/presentation/pages/dashboard_page.dart';
 // import 'features/chatbot/presentation/pages/chatbot_page.dart';
 // import 'features/notifications/presentation/pages/notification_page.dart';
 
@@ -83,7 +83,7 @@ class AgentMitraApp extends ConsumerWidget {
         provider.ChangeNotifierProvider(
           create: (_) => ServiceLocator.authViewModel,
         ),
-        // Temporarily disable dashboard to focus on auth
+        // Temporarily disable dashboard to focus on auth testing
         // provider.ChangeNotifierProvider(
         //   create: (_) => ServiceLocator.dashboardViewModel,
         // ),

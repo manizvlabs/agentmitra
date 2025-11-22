@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/global_providers.dart';
 import '../../../../features/presentations/presentation/widgets/presentation_carousel.dart';
-import '../viewmodels/dashboard_viewmodel.dart';
+// import '../viewmodels/dashboard_viewmodel.dart'; // Temporarily disabled
 import '../widgets/dashboard_analytics_cards.dart';
 import '../widgets/dashboard_quick_actions.dart';
 import '../widgets/dashboard_notifications.dart';

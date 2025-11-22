@@ -44,6 +44,10 @@ class ServiceLocator {
   static AuthViewModel get authViewModel =>
     AuthViewModel();
 
+  // /// Dashboard ViewModel - connects to real analytics APIs
+  // static DashboardViewModel get dashboardViewModel =>
+  //   DashboardViewModel();
+
   // Temporarily commented out problematic ViewModels
   // /// Dashboard ViewModel - connects to real analytics APIs
   // static DashboardViewModel get dashboardViewModel =>
