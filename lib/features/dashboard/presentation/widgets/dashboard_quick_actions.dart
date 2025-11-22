@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import '../viewmodels/dashboard_viewmodel.dart';
+import '../../../../core/mocks/mock_dashboard_viewmodel.dart';
 
 /// Quick Actions Widget for dashboard shortcuts
 class DashboardQuickActions extends StatelessWidget {
@@ -9,7 +9,7 @@ class DashboardQuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DashboardViewModel>(
+    return Consumer<MockDashboardViewModel>(
       builder: (context, viewModel, child) {
         final actions = viewModel.quickActions;
 

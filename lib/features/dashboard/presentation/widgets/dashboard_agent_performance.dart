@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../viewmodels/dashboard_viewmodel.dart';
-import '../../data/models/dashboard_data.dart';
+import '../../../../core/mocks/mock_dashboard_viewmodel.dart';
 
 /// Agent Performance Dashboard Widget
 class DashboardAgentPerformance extends StatelessWidget {
@@ -10,7 +9,7 @@ class DashboardAgentPerformance extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DashboardViewModel>(
+    return Consumer<MockDashboardViewModel>(
       builder: (context, viewModel, child) {
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -61,7 +60,7 @@ class DashboardAgentPerformance extends StatelessWidget {
     );
   }
 
-  Widget _buildKeyMetricsGrid(BuildContext context, DashboardViewModel viewModel) {
+  Widget _buildKeyMetricsGrid(BuildContext context, MockDashboardViewModel viewModel) {
     final performance = viewModel.agentPerformance;
 
     if (performance == null) {
@@ -222,7 +221,7 @@ class DashboardAgentPerformance extends StatelessWidget {
     );
   }
 
-  Widget _buildPerformanceCharts(BuildContext context, DashboardViewModel viewModel) {
+  Widget _buildPerformanceCharts(BuildContext context, MockDashboardViewModel viewModel) {
     final biData = viewModel.businessIntelligence;
 
     return Container(
@@ -347,7 +346,7 @@ class DashboardAgentPerformance extends StatelessWidget {
     );
   }
 
-  Widget _buildCommissionBreakdown(BuildContext context, DashboardViewModel viewModel) {
+  Widget _buildCommissionBreakdown(BuildContext context, MockDashboardViewModel viewModel) {
     final biData = viewModel.businessIntelligence;
 
     return Container(
@@ -430,7 +429,7 @@ class DashboardAgentPerformance extends StatelessWidget {
     }).toList();
   }
 
-  List<Widget> _buildProductLegend(Map<String, int> productPerformance, DashboardViewModel viewModel) {
+  List<Widget> _buildProductLegend(Map<String, int> productPerformance, MockDashboardViewModel viewModel) {
     final colors = [Colors.blue, Colors.green, Colors.orange, Colors.purple, Colors.red];
     final performance = viewModel.agentPerformance;
 
@@ -465,7 +464,7 @@ class DashboardAgentPerformance extends StatelessWidget {
     );
   }
 
-  Widget _buildMonthlyTrends(BuildContext context, DashboardViewModel viewModel) {
+  Widget _buildMonthlyTrends(BuildContext context, MockDashboardViewModel viewModel) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(

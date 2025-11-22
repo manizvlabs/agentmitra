@@ -5,7 +5,7 @@ import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/services/logger_service.dart';
-import '../viewmodels/auth_viewmodel.dart';
+import '../../../../core/mocks/mock_auth_viewmodel_simple.dart';
 import '../widgets/login_form.dart';
 
 class LoginPage extends StatefulWidget {
@@ -212,7 +212,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 ],
 
                 // Login Form
-                Consumer<AuthViewModel>(
+                Consumer<MockAuthViewModel>(
                   builder: (context, authViewModel, child) {
                     return LoginForm(
                       onLoginSuccess: () {

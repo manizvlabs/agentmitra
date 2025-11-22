@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../viewmodels/policies_viewmodel.dart';
+import '../../../../core/mocks/mock_policies_viewmodel_simple.dart';
 import '../widgets/policy_card.dart';
 import '../widgets/policy_filters.dart';
 
@@ -20,7 +20,7 @@ class _PoliciesListPageState extends State<PoliciesListPage> {
     super.initState();
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<PoliciesViewModel>().loadPolicies();
+      context.read<MockPoliciesViewModel>().loadPolicies();
     });
   }
 
@@ -33,7 +33,7 @@ class _PoliciesListPageState extends State<PoliciesListPage> {
 
   void _onScroll() {
     if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
-      context.read<PoliciesViewModel>().loadMorePolicies();
+      context.read<MockPoliciesViewModel>().loadMorePolicies();
     }
   }
 
@@ -66,7 +66,7 @@ class _PoliciesListPageState extends State<PoliciesListPage> {
           ),
         ],
       ),
-      body: Consumer<PoliciesViewModel>(
+      body: Consumer<MockPoliciesViewModel>(
         builder: (context, viewModel, child) {
           if (viewModel.isLoading && viewModel.policies.isEmpty) {
             return const Center(child: CircularProgressIndicator());
@@ -129,7 +129,7 @@ class _PoliciesListPageState extends State<PoliciesListPage> {
     );
   }
 
-  Widget _buildSummaryCards(PoliciesViewModel viewModel) {
+  Widget _buildSummaryCards(MockPoliciesViewModel viewModel) {
     return Container(
       height: 120,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -201,7 +201,7 @@ class _PoliciesListPageState extends State<PoliciesListPage> {
     );
   }
 
-  Widget _buildErrorView(PoliciesViewModel viewModel) {
+  Widget _buildErrorView(MockPoliciesViewModel viewModel) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -253,14 +253,14 @@ class _PoliciesListPageState extends State<PoliciesListPage> {
           TextButton(
             onPressed: () {
               _searchController.clear();
-              context.read<PoliciesViewModel>().clearFilters();
+              context.read<MockPoliciesViewModel>().clearFilters();
               Navigator.of(context).pop();
             },
             child: const Text('Clear'),
           ),
           ElevatedButton(
             onPressed: () {
-              context.read<PoliciesViewModel>().setSearchQuery(
+              context.read<MockPoliciesViewModel>().setSearchQuery(
                     _searchController.text.isEmpty ? null : _searchController.text,
                   );
               Navigator.of(context).pop();

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../viewmodels/onboarding_viewmodel.dart';
+import '../../../../core/mocks/mock_onboarding_viewmodel_simple.dart';
 import '../widgets/onboarding_progress_bar.dart';
 import '../widgets/agent_discovery_step.dart';
 import '../widgets/document_verification_step.dart';
@@ -30,7 +30,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Consumer<OnboardingViewModel>(
+      body: Consumer<MockOnboardingViewModel>(
         builder: (context, viewModel, child) {
           if (viewModel.isLoading) {
             return const Center(
@@ -78,7 +78,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     );
   }
 
-  Widget _buildNavigationButtons(BuildContext context, OnboardingViewModel viewModel) {
+  Widget _buildNavigationButtons(BuildContext context, MockOnboardingViewModel viewModel) {
     final currentStep = viewModel.currentStep!;
     final canComplete = viewModel.canCompleteCurrentStep();
 

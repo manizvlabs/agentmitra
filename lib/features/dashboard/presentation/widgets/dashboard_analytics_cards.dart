@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:fl_chart/fl_chart.dart';
-import '../viewmodels/dashboard_viewmodel.dart';
+import '../../../../core/mocks/mock_dashboard_viewmodel.dart';
 
 /// Analytics Cards Widget for dashboard metrics
 class DashboardAnalyticsCards extends StatelessWidget {
@@ -9,7 +8,7 @@ class DashboardAnalyticsCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DashboardViewModel>(
+    return Consumer<MockDashboardViewModel>(
       builder: (context, viewModel, child) {
         final analytics = viewModel.analytics;
 
@@ -189,7 +188,7 @@ class DashboardAnalyticsCards extends StatelessWidget {
     );
   }
 
-  Widget _buildRecentActivitySection(BuildContext context, DashboardViewModel viewModel) {
+  Widget _buildRecentActivitySection(BuildContext context, MockDashboardViewModel viewModel) {
     final analytics = viewModel.analytics;
     if (analytics == null) return const SizedBox.shrink();
 

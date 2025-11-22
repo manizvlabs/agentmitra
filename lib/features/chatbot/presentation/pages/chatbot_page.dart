@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../viewmodels/chatbot_viewmodel.dart';
+import '../../../../core/mocks/mock_chatbot_viewmodel_simple.dart';
 import '../widgets/chat_message_list.dart';
 import '../widgets/chat_input_field.dart';
 import '../widgets/chat_header.dart';
@@ -17,7 +17,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ChatbotViewModel>().initializeChat();
+      context.read<MockChatbotViewModel>().initializeChat();
     });
   }
 
@@ -40,7 +40,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
           ),
         ),
         actions: [
-          Consumer<ChatbotViewModel>(
+          Consumer<MockChatbotViewModel>(
             builder: (context, viewModel, child) {
               return PopupMenuButton<String>(
                 onSelected: (value) {
@@ -82,7 +82,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
           ),
         ],
       ),
-      body: Consumer<ChatbotViewModel>(
+      body: Consumer<MockChatbotViewModel>(
         builder: (context, viewModel, child) {
           if (viewModel.isLoading && viewModel.messages.isEmpty) {
             return const Center(child: CircularProgressIndicator());
@@ -124,7 +124,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
     );
   }
 
-  Widget _buildErrorView(ChatbotViewModel viewModel) {
+  Widget _buildErrorView(MockChatbotViewModel viewModel) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -157,7 +157,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
     );
   }
 
-  void _showEndSessionDialog(BuildContext context, ChatbotViewModel viewModel) {
+  void _showEndSessionDialog(BuildContext context, MockChatbotViewModel viewModel) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -184,7 +184,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
     );
   }
 
-  void _showTransferDialog(BuildContext context, ChatbotViewModel viewModel) {
+  void _showTransferDialog(BuildContext context, MockChatbotViewModel viewModel) {
     final reasonController = TextEditingController();
 
     showDialog(
@@ -225,7 +225,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
     );
   }
 
-  void _showClearChatDialog(BuildContext context, ChatbotViewModel viewModel) {
+  void _showClearChatDialog(BuildContext context, MockChatbotViewModel viewModel) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import '../viewmodels/dashboard_viewmodel.dart';
+import '../../../../core/mocks/mock_dashboard_viewmodel.dart';
 
 /// Business Intelligence Dashboard Widget
 class DashboardBusinessIntelligence extends StatefulWidget {
@@ -19,7 +19,7 @@ class _DashboardBusinessIntelligenceState extends State<DashboardBusinessIntelli
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DashboardViewModel>(
+    return Consumer<MockDashboardViewModel>(
       builder: (context, viewModel, child) {
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -93,7 +93,7 @@ class _DashboardBusinessIntelligenceState extends State<DashboardBusinessIntelli
     );
   }
 
-  Widget _buildBusinessMetricsGrid(BuildContext context, DashboardViewModel viewModel) {
+  Widget _buildBusinessMetricsGrid(BuildContext context, MockDashboardViewModel viewModel) {
     final biData = viewModel.businessIntelligence;
 
     return Column(
@@ -264,7 +264,7 @@ class _DashboardBusinessIntelligenceState extends State<DashboardBusinessIntelli
     );
   }
 
-  Widget _buildRevenueTrendsChart(BuildContext context, DashboardViewModel viewModel) {
+  Widget _buildRevenueTrendsChart(BuildContext context, MockDashboardViewModel viewModel) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -425,7 +425,7 @@ class _DashboardBusinessIntelligenceState extends State<DashboardBusinessIntelli
     );
   }
 
-  Widget _buildCustomerEngagement(BuildContext context, DashboardViewModel viewModel) {
+  Widget _buildCustomerEngagement(BuildContext context, MockDashboardViewModel viewModel) {
     final biData = viewModel.businessIntelligence;
 
     return Container(
@@ -594,7 +594,7 @@ class _DashboardBusinessIntelligenceState extends State<DashboardBusinessIntelli
     );
   }
 
-  Widget _buildROIAnalysis(BuildContext context, DashboardViewModel viewModel) {
+  Widget _buildROIAnalysis(BuildContext context, MockDashboardViewModel viewModel) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -778,7 +778,7 @@ class _DashboardBusinessIntelligenceState extends State<DashboardBusinessIntelli
     );
   }
 
-  Widget _buildGeographicDistribution(BuildContext context, DashboardViewModel viewModel) {
+  Widget _buildGeographicDistribution(BuildContext context, MockDashboardViewModel viewModel) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(

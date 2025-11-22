@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/services/logger_service.dart';
-import '../viewmodels/auth_viewmodel.dart';
+import '../../../../core/mocks/mock_auth_viewmodel_simple.dart';
 
 class LoginForm extends StatefulWidget {
   final VoidCallback? onLoginSuccess;
@@ -78,7 +78,7 @@ class _LoginFormState extends State<LoginForm> with TickerProviderStateMixin {
 
     LoggerService().info('Attempting login with phone: ${_phoneController.text}', tag: 'LoginForm');
 
-    final viewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final viewModel = Provider.of<MockAuthViewModel>(context, listen: false);
     final authResponse = await viewModel.login(
       phoneNumber: _phoneController.text.trim(),
       password: _useAgentCode ? null : _passwordController.text,
@@ -134,7 +134,7 @@ class _LoginFormState extends State<LoginForm> with TickerProviderStateMixin {
 
     LoggerService().info('Sending OTP to: ${_phoneController.text}', tag: 'LoginForm');
 
-    final viewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final viewModel = Provider.of<MockAuthViewModel>(context, listen: false);
     final success = await viewModel.sendOtp(_phoneController.text.trim());
 
     if (success && mounted) {
@@ -361,7 +361,7 @@ class _LoginFormState extends State<LoginForm> with TickerProviderStateMixin {
             const SizedBox(height: 24),
 
             // Login Buttons
-            Consumer<AuthViewModel>(
+            Consumer<MockAuthViewModel>(
               builder: (context, viewModel, child) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -427,7 +427,7 @@ class _LoginFormState extends State<LoginForm> with TickerProviderStateMixin {
             ),
 
             // Error Message
-            Consumer<AuthViewModel>(
+            Consumer<MockAuthViewModel>(
               builder: (context, viewModel, child) {
                 if (viewModel.hasError) {
                   return Padding(

@@ -1,8 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart' as provider;
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase/firebase_options.dart';
 import 'core/services/storage_service.dart';
+import 'core/mocks/mock_dashboard_viewmodel.dart';
+import 'core/mocks/mock_auth_viewmodel_simple.dart';
+import 'core/mocks/mock_notification_viewmodel_simple.dart';
+import 'core/mocks/mock_onboarding_viewmodel_simple.dart';
+import 'core/mocks/mock_chatbot_viewmodel_simple.dart';
+import 'core/mocks/mock_agent_profile_viewmodel_simple.dart';
+import 'core/mocks/mock_claims_viewmodel_simple.dart';
+import 'core/mocks/mock_policies_viewmodel_simple.dart';
+import 'core/providers/global_providers.dart';
+import 'shared/theme/app_theme.dart';
+import 'features/presentations/presentation/viewmodels/presentation_viewmodel.dart';
 // Import all screens for web-compatible routing (no GoRouter)
 import 'screens/splash_screen.dart';
 import 'screens/welcome_screen.dart';
@@ -48,24 +61,60 @@ void main() async {
   }
 
   runApp(
-    const AgentMitraApp(),
+    const ProviderScope(
+      child: AgentMitraApp(),
+    ),
   );
 }
 
-class AgentMitraApp extends StatelessWidget {
+class AgentMitraApp extends ConsumerWidget {
   const AgentMitraApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Agent Mitra',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
-      initialRoute: '/splash',
-      routes: {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Watch theme mode from Riverpod
+    final themeMode = ref.watch(themeModeProvider);
+
+    return provider.MultiProvider(
+      providers: [
+        // Mock ViewModels for web compatibility
+        provider.ChangeNotifierProvider(
+          create: (_) => MockDashboardViewModel(),
+        ),
+        provider.ChangeNotifierProvider(
+          create: (_) => MockAuthViewModel(),
+        ),
+        provider.ChangeNotifierProvider(
+          create: (_) => MockNotificationViewModel(),
+        ),
+        provider.ChangeNotifierProvider(
+          create: (_) => MockOnboardingViewModel(),
+        ),
+        provider.ChangeNotifierProvider(
+          create: (_) => MockChatbotViewModel('current-agent'),
+        ),
+        provider.ChangeNotifierProvider(
+          create: (_) => MockAgentProfileViewModel(),
+        ),
+        provider.ChangeNotifierProvider(
+          create: (_) => MockClaimsViewModel(),
+        ),
+        provider.ChangeNotifierProvider(
+          create: (_) => MockPoliciesViewModel(),
+        ),
+        // Real ViewModels (may need repositories in production)
+        provider.ChangeNotifierProvider(
+          create: (_) => PresentationViewModel(),
+        ),
+      ],
+      child: MaterialApp(
+        title: 'Agent Mitra',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: themeMode,
+        initialRoute: '/splash',
+        routes: {
         // Splash & Welcome Flow
         '/splash': (context) => const SplashScreen(),
         '/welcome': (context) => const WelcomeScreen(),
@@ -123,7 +172,7 @@ class AgentMitraApp extends StatelessWidget {
           ),
         );
       },
+    ),
     );
   }
 }
-

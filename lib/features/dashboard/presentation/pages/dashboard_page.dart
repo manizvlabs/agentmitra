@@ -11,6 +11,7 @@ import '../widgets/dashboard_quick_actions.dart';
 import '../widgets/dashboard_notifications.dart';
 import '../widgets/dashboard_priority_alerts.dart';
 import '../../../../core/widgets/offline_indicator.dart';
+import '../../../../core/mocks/mock_dashboard_viewmodel.dart';
 
 /// Enhanced Dashboard Page with real API integration and presentation carousel
 class DashboardPage extends ConsumerStatefulWidget {
@@ -53,7 +54,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
     // Load additional analytics data
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final viewModel = provider.Provider.of<DashboardViewModel>(context, listen: false);
+      final viewModel = provider.Provider.of<MockDashboardViewModel>(context, listen: false);
       viewModel.loadAgentPerformanceData();
       viewModel.loadBusinessIntelligenceData();
     });
@@ -77,7 +78,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
-            final viewModel = provider.Provider.of<DashboardViewModel>(context, listen: false);
+            final viewModel = provider.Provider.of<MockDashboardViewModel>(context, listen: false);
             await viewModel.refreshDashboard();
           },
           child: SlideTransition(
@@ -158,7 +159,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         ),
 
         // Notifications
-        provider.Consumer<DashboardViewModel>(
+        provider.Consumer<MockDashboardViewModel>(
           builder: (context, viewModel, child) {
             final unreadCount = viewModel.unreadNotificationsCount;
             return Stack(
@@ -170,7 +171,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                     size: 24,
                   ),
                   onPressed: () {
-                    context.push('/notifications');
+                    Navigator.of(context).pushNamed('/notifications');
                   },
                 ),
                 if (unreadCount > 0)
@@ -223,11 +224,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
           onSelected: (value) async {
             switch (value) {
               case 'refresh':
-                final viewModel = context.read<DashboardViewModel>();
+                final viewModel = provider.Provider.of<MockDashboardViewModel>(context, listen: false);
                 await viewModel.refreshDashboard();
                 break;
               case 'settings':
-                context.go('/settings');
+                Navigator.of(context).pushNamed('/settings');
                 break;
               case 'logout':
                 // TODO: Implement logout
@@ -275,7 +276,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   }
 
   Widget _buildWelcomeHeader() {
-    return provider.Consumer<DashboardViewModel>(
+    return provider.Consumer<MockDashboardViewModel>(
       builder: (context, viewModel, child) {
         final greeting = viewModel.getGreeting();
         final summary = viewModel.getAnalyticsSummary();

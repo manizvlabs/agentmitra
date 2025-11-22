@@ -61,7 +61,19 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
 
     _animationController.forward();
 
+    // Listen to OTP controller changes for auto-verification
+    _otpController.addListener(_onOtpChanged);
+
     LoggerService().info('OTP verification page initialized for: ${widget.phoneNumber}', tag: 'OTPVerification');
+  }
+
+  void _onOtpChanged() {
+    LoggerService().info('OTP changed: ${_otpController.text.length} digits', tag: 'OTPVerification');
+    // Auto-verify when OTP is complete (6 digits)
+    if (_otpController.text.length == 6 && !_isVerifying) {
+      LoggerService().info('Auto-verifying complete OTP', tag: 'OTPVerification');
+      _verifyOtp();
+    }
   }
 
   @override
@@ -115,16 +127,18 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
     });
 
     try {
-      final viewModel = Provider.of<AuthViewModel>(context, listen: false);
-      final authResponse = await viewModel.verifyOtp(
-        phoneNumber: widget.phoneNumber,
-        otp: otp,
-      );
+      // For web demo, simulate successful verification
+      // In a real app, this would use the AuthViewModel
+      LoggerService().info('OTP verification simulation for: ${widget.phoneNumber}', tag: 'OTPVerification');
 
-      if (authResponse != null && mounted) {
-        LoggerService().info('OTP verification successful', tag: 'OTPVerification');
+      // Simulate network delay
+      await Future.delayed(const Duration(seconds: 1));
 
-        context.go('/customer-dashboard');
+      // For demo purposes, accept any 6-digit OTP
+      if (otp.length == 6 && mounted) {
+        LoggerService().info('OTP verification successful (demo)', tag: 'OTPVerification');
+
+        Navigator.of(context).pushReplacementNamed('/customer-dashboard');
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -134,11 +148,11 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
           ),
         );
       } else {
-        LoggerService().warning('OTP verification failed', tag: 'OTPVerification');
+        LoggerService().warning('Invalid OTP format', tag: 'OTPVerification');
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Invalid OTP. Please try again.'),
+            content: Text('Invalid OTP. Please enter 6 digits.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -162,33 +176,24 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
   }
 
   Future<void> _resendOtp() async {
-    LoggerService().info('Resending OTP to: ${widget.phoneNumber}', tag: 'OTPVerification');
+    LoggerService().info('Resending OTP to: ${widget.phoneNumber} (demo)', tag: 'OTPVerification');
 
     setState(() {
       _isResending = true;
     });
 
     try {
-      final viewModel = Provider.of<AuthViewModel>(context, listen: false);
-      final success = await viewModel.sendOtp(widget.phoneNumber);
+      // For demo purposes, simulate successful OTP resend
+      await Future.delayed(const Duration(seconds: 1));
 
-      if (success && mounted) {
-        LoggerService().info('OTP resent successfully', tag: 'OTPVerification');
+      if (mounted) {
+        LoggerService().info('OTP resent successfully (demo)', tag: 'OTPVerification');
         _startTimer();
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('OTP sent successfully'),
             backgroundColor: Colors.green,
-          ),
-        );
-      } else {
-        LoggerService().warning('Failed to resend OTP', tag: 'OTPVerification');
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to resend OTP. Please try again.'),
-            backgroundColor: Colors.red,
           ),
         );
       }
@@ -267,7 +272,6 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
                   alignment: Alignment.center,
                   child: OtpInput(
                     controller: _otpController,
-                    onCompleted: _verifyOtp,
                   ),
                 ),
               ),
@@ -347,6 +351,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
               Center(
                 child: TextButton(
                   onPressed: () {
+                    LoggerService().info('Getting started CTA clicked', tag: 'OTPVerification');
                     // Navigate to getting started/onboarding flow
                     Navigator.of(context).pushReplacementNamed('/welcome');
                   },

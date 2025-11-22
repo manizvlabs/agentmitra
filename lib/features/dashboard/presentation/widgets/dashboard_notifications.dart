@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import '../viewmodels/dashboard_viewmodel.dart';
+import '../../../../core/mocks/mock_dashboard_viewmodel.dart';
 
 /// Notifications Widget for dashboard activity feed
 class DashboardNotifications extends StatelessWidget {
@@ -9,7 +9,7 @@ class DashboardNotifications extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DashboardViewModel>(
+    return Consumer<MockDashboardViewModel>(
       builder: (context, viewModel, child) {
         final notifications = viewModel.notifications.take(5).toList(); // Show latest 5
 
@@ -94,7 +94,7 @@ class DashboardNotifications extends StatelessWidget {
   Widget _buildNotificationItem(
     BuildContext context,
     dynamic notification,
-    DashboardViewModel viewModel,
+    MockDashboardViewModel viewModel,
   ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),

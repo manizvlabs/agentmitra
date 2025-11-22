@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../viewmodels/claims_viewmodel.dart';
+import '../../../../core/mocks/mock_claims_viewmodel_simple.dart';
 import '../widgets/claim_form.dart';
 import '../widgets/claims_history.dart';
 
@@ -28,7 +28,7 @@ class _ClaimsPageState extends State<ClaimsPage> with TickerProviderStateMixin {
     if (widget.policyId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _tabController.animateTo(1);
-        context.read<ClaimsViewModel>().setPolicyId(widget.policyId!);
+        context.read<MockClaimsViewModel>().setPolicyId(widget.policyId!);
       });
     }
   }
@@ -72,7 +72,7 @@ class _ClaimsPageState extends State<ClaimsPage> with TickerProviderStateMixin {
         controller: _tabController,
         children: [
           // Claims History Tab
-          Consumer<ClaimsViewModel>(
+          Consumer<MockClaimsViewModel>(
             builder: (context, viewModel, child) {
               if (widget.policyId != null && viewModel.claims.isEmpty) {
                 // Load claims for the specific policy
