@@ -2,13 +2,21 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 
 class ApiService {
   static const String baseUrl = 'http://localhost:8012';
   static const String apiVersion = '/api/v1';
-  
-  // Get full API URL
-  static String get apiUrl => '$baseUrl$apiVersion';
+
+  // Get full API URL - use relative URLs for web deployment
+  static String get apiUrl {
+    if (kIsWeb) {
+      // When running on web through Nginx, use relative API paths
+      return '/api/v1';
+    }
+    // For mobile/native apps, use direct backend URL
+    return '$baseUrl$apiVersion';
+  }
 
   // Get headers with authentication
   static Future<Map<String, String>> getHeaders() async {

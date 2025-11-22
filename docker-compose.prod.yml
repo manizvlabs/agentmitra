@@ -68,6 +68,8 @@ services:
       - REACT_APP_ENVIRONMENT=production
     ports:
       - "3013:80"
+    volumes:
+      - ./nginx/portal:/etc/nginx/conf.d:ro
     depends_on:
       - backend
     networks:

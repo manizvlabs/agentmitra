@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart' as provider;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'firebase/firebase_options.dart';
 import 'core/services/storage_service.dart';
 import 'core/services/logger_service.dart';
 import 'core/services/feature_flag_service.dart';
@@ -31,50 +33,17 @@ import 'core/services/api_service.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize Firebase
-  await Firebase.initializeApp();
-  LoggerService().info('Firebase initialized', tag: 'Firebase');
-
-  // Initialize core services
-  await StorageService.initialize();
-
-  // Initialize logging
-  await LoggerService().initialize(enableFileLogging: false);
-  LoggerService().info('Agent Mitra App Starting', tag: 'App');
-
-  // Initialize feature flags
-  await FeatureFlagService().initialize();
-  LoggerService().info('Feature flags initialized', tag: 'FeatureFlags');
-
-  // Initialize push notifications
-  final pushNotificationService = PushNotificationService();
-  await pushNotificationService.initialize();
-  LoggerService().info('Push notification service initialized', tag: 'PushNotifications');
-
-  // Initialize offline queue service
-  final offlineQueueService = OfflineQueueService(
-    LoggerService(),
-    Connectivity(),
-  );
-  LoggerService().info('Offline queue service initialized', tag: 'OfflineQueue');
-
-  // Initialize sync service
-  final syncService = SyncService(
-    LoggerService(),
-    Connectivity(),
-  );
-  await syncService.initialize();
-  LoggerService().info('Sync service initialized', tag: 'SyncService');
-
+void main() {
   runApp(
-    ProviderScope(
-      child: AgentMitraApp(
-        pushNotificationService: pushNotificationService,
-        offlineQueueService: offlineQueueService,
-        syncService: syncService,
+    const MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Text(
+            '🎉 Agent Mitra Web App is Working!\n\nIf you can see this message,\nthe Flutter web build is successful.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+        ),
       ),
     ),
   );
