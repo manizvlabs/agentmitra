@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:dartz/dartz.dart';
+import '../../../../core/services/api_service.dart';
 import '../../data/repositories/policy_repository.dart';
 import '../../data/datasources/policy_remote_datasource.dart';
 import '../../data/datasources/policy_local_datasource.dart';
@@ -162,19 +163,19 @@ class ClaimsViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // For now, create a mock claim response
-      // TODO: Replace with actual API call when backend claim endpoint is ready
-      final mockClaim = Claim(
-        claimId: DateTime.now().millisecondsSinceEpoch.toString(),
-        policyId: _policyId,
-        policyholderId: '', // Will be set by backend
-        claimType: _claimType,
-        description: _description,
-        incidentDate: _incidentDate,
-        claimDate: DateTime.now(),
-        claimedAmount: _claimedAmount,
-        status: 'pending',
-      );
+      // Call API to create claim
+      final claimData = {
+        'policy_id': _policyId,
+        'claim_type': _claimType,
+        'description': _description,
+        'incident_date': _incidentDate.toIso8601String().split('T')[0],
+        'claimed_amount': _claimedAmount,
+      };
+
+      final response = await ApiService.post('/api/v1/policies/$_policyId/claims', claimData);
+      
+      final data = response is Map ? response : (response['data'] ?? response);
+      final claim = Claim.fromJson(data);
 
       // Reset form
       _resetForm();
@@ -182,7 +183,7 @@ class ClaimsViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
 
-      return Right(mockClaim);
+      return Right(claim);
     } catch (e) {
       _isLoading = false;
       notifyListeners();
@@ -202,41 +203,5 @@ class ClaimsViewModel extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
-  }
-
-  void _initializeMockData() {
-    // Mock claims data for Phase 5 testing
-    _claims = [
-      Claim(
-        claimId: 'CLM001',
-        policyId: 'POL001',
-        policyholderId: 'PH001',
-        claimType: 'Medical',
-        description: 'Hospitalization due to accident',
-        incidentDate: DateTime.now().subtract(const Duration(days: 10)),
-        claimDate: DateTime.now().subtract(const Duration(days: 7)),
-        claimedAmount: 50000.0,
-        status: 'approved',
-        documents: {
-          'medical_report': 'medical_report.pdf',
-          'hospital_bill': 'hospital_bill.pdf',
-        },
-      ),
-      Claim(
-        claimId: 'CLM002',
-        policyId: 'POL002',
-        policyholderId: 'PH002',
-        claimType: 'Vehicle Damage',
-        description: 'Car accident damage',
-        incidentDate: DateTime.now().subtract(const Duration(days: 5)),
-        claimDate: DateTime.now().subtract(const Duration(days: 2)),
-        claimedAmount: 75000.0,
-        status: 'processing',
-        documents: {
-          'accident_report': 'accident_report.pdf',
-          'repair_estimate': 'repair_estimate.pdf',
-        },
-      ),
-    ];
   }
 }

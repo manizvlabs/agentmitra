@@ -376,8 +376,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
   Widget _buildPresentationPlaceholder() {
     return Container(
-      height: 200,
-      padding: const EdgeInsets.all(24),
+      constraints: const BoxConstraints(minHeight: 280),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
@@ -387,34 +387,51 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.slideshow,
-            size: 48,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Presentation Carousel',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
+          Flexible(
+            child: Icon(
+              Icons.slideshow,
+              size: 40,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Interactive presentations will be available here',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+          const SizedBox(height: 12),
+          Flexible(
+            child: Text(
+              'Presentation Carousel',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 6),
+          Flexible(
+            child: Text(
+              'Interactive presentations will be available here',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 12,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(height: 12),
           FilledButton.icon(
             onPressed: () {
               // TODO: Navigate to presentations management
             },
-            icon: const Icon(Icons.play_arrow),
-            label: const Text('Coming Soon'),
+            icon: const Icon(Icons.play_arrow, size: 18),
+            label: const Text('Coming Soon', style: TextStyle(fontSize: 12)),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            ),
           ),
         ],
       ),

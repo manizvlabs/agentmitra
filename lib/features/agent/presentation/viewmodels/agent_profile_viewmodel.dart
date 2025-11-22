@@ -194,49 +194,4 @@ class AgentProfileViewModel extends ChangeNotifier {
     }
     notifyListeners();
   }
-
-  void _initializeMockData() {
-    // Mock data for Phase 5 testing
-    _profile = AgentProfile(
-      agentId: 'agent_123',
-      userId: 'user_123',
-      agentCode: 'AGENT001',
-      licenseNumber: 'LIC123456789',
-      licenseExpiryDate: '2025-12-31',
-      companyName: 'Agent Mitra',
-      designation: 'Senior Agent',
-      joiningDate: DateTime.now().subtract(const Duration(days: 365)),
-      employmentStatus: 'active',
-      contactDetails: {
-        'email': 'john.doe@agentmitra.com',
-        'phone': '+91 9876543210',
-      },
-      addressDetails: {
-        'street': '123 Agent Street',
-        'city': 'Mumbai',
-        'state': 'Maharashtra',
-      },
-      documents: {
-        'pan': 'ABCDE1234F',
-        'aadhaar': '123456789012',
-      },
-    );
-
-    _performance = AgentPerformance(
-      agentId: 'agent_123',
-      periodStart: DateTime.now().subtract(const Duration(days: 30)),
-      periodEnd: DateTime.now(),
-      policiesSold: 42,
-      premiumCollected: 52500.0,
-      commissionEarned: 45000.0,
-      customersAcquired: 38,
-      claimsProcessed: 5,
-      customerSatisfactionScore: 4.8,
-      monthlyTargets: {'policies': 45, 'premium': 55000.0},
-      achievements: {'top_performer': true, 'customer_satisfaction': true},
-      performanceGrade: 'A',
-    );
-
-    _licenseExpiryDate = DateTime(2025, 12, 31);
-  }
 }

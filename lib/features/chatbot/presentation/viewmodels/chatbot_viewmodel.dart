@@ -49,13 +49,18 @@ class ChatbotViewModel extends ChangeNotifier {
       // Try to get existing active session first
       final sessionsResult = await _chatbotRepository.getAgentSessions(agentId, limit: 1);
       sessionsResult.fold(
-        (error) => _error = error.toString(),
+        (error) {
+          _error = error.toString();
+        },
         (sessions) {
           final activeSessions = sessions.where((s) => s.status == 'active');
           if (activeSessions.isNotEmpty) {
             final activeSession = activeSessions.first;
             _currentSession = activeSession;
             _loadMessages(activeSession.sessionId);
+          } else {
+            // If no active session, create new one
+            _createNewSession();
           }
         },
       );
@@ -75,7 +80,9 @@ class ChatbotViewModel extends ChangeNotifier {
   Future<void> _createNewSession() async {
     final sessionResult = await _chatbotRepository.createSession(agentId);
     sessionResult.fold(
-      (error) => _error = error.toString(),
+      (error) {
+        _error = error.toString();
+      },
       (session) => _currentSession = session,
     );
   }

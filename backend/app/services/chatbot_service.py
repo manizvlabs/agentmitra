@@ -261,11 +261,18 @@ class ChatbotService:
 
             return response.choices[0].message.content.strip()
 
+        except openai.RateLimitError as e:
+            # Handle quota exceeded / rate limit errors gracefully
+            print(f"OpenAI Rate Limit Error: {e}")
+            raise Exception("AI service quota exceeded. Please try again later or contact support.")
+        except openai.APIError as e:
+            # Handle other OpenAI API errors
+            print(f"OpenAI API Error: {e}")
+            raise Exception("AI service temporarily unavailable. Please try again later.")
         except Exception as e:
-            # Log the error for debugging
-            print(f"OpenAI API Error in _generate_response: {e}")
-            # Fallback response
-            return "I understand you're asking about insurance. Could you please provide more details so I can assist you better?"
+            # Handle any other errors
+            print(f"Unexpected error in OpenAI API: {e}")
+            raise Exception("Failed to generate AI response. Please try again later.")
 
     async def end_session(self, session_id: str, satisfaction_score: Optional[int] = None) -> bool:
         """End a chatbot session"""

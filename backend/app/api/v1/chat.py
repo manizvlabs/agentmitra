@@ -87,7 +87,14 @@ async def send_message(
 
         return ChatResponse(**result)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to process message: {str(e)}")
+        error_message = str(e)
+        # Handle OpenAI quota exceeded gracefully
+        if "quota exceeded" in error_message.lower() or "rate limit" in error_message.lower():
+            raise HTTPException(
+                status_code=429,
+                detail="AI service quota exceeded. Please try again later or contact support."
+            )
+        raise HTTPException(status_code=500, detail=f"Failed to process message: {error_message}")
 
 
 @router.put("/sessions/{session_id}/end")

@@ -153,7 +153,7 @@ class DashboardRepository extends BaseRepository {
         title: 'New Policy',
         subtitle: 'Create insurance policy',
         icon: Icons.add_circle_outline,
-        route: '/policy/create',
+        route: '/new-policy',
       ),
       const DashboardQuickAction(
         id: 'view_policies',
@@ -167,7 +167,7 @@ class DashboardRepository extends BaseRepository {
         title: 'File Claim',
         subtitle: 'Submit insurance claim',
         icon: Icons.assignment_outlined,
-        route: '/claims/new',
+        route: '/new-claim',
       ),
       const DashboardQuickAction(
         id: 'payments',

@@ -29,6 +29,8 @@ import 'features/notifications/presentation/pages/notification_page.dart';
 import 'features/agent/presentation/pages/agent_profile_page.dart';
 import 'features/payments/presentation/pages/claims_page.dart';
 import 'features/payments/presentation/pages/policies_list_page.dart';
+import 'features/payments/presentation/viewmodels/policies_viewmodel.dart';
+import 'features/customers/presentation/viewmodels/customer_viewmodel.dart';
 import 'screens/daily_quotes_screen.dart';
 import 'screens/my_policies_screen.dart';
 import 'screens/data_pending_screen.dart';
@@ -165,12 +167,20 @@ class AgentMitraApp extends ConsumerWidget {
         provider.ChangeNotifierProvider(
           create: (_) => ServiceLocator.policiesViewModel,
         ),
-        // Chatbot ViewModel - mock data for testing
+        // Chatbot ViewModel
         provider.ChangeNotifierProvider(
           create: (_) => ServiceLocator.createChatbotViewModel('current-agent'),
         ),
         provider.ChangeNotifierProvider(
           create: (_) => PresentationViewModel(),
+        ),
+        // Customer ViewModel
+        provider.ChangeNotifierProvider(
+          create: (_) => CustomerViewModel(),
+        ),
+        // Policies ViewModel (for New Claim page)
+        provider.ChangeNotifierProvider(
+          create: (_) => PoliciesViewModel(),
         ),
       ],
       child: MaterialApp(

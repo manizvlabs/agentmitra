@@ -35,8 +35,8 @@ class ApiService {
     try {
       var url = '$apiUrl$endpoint';
       if (queryParameters != null && queryParameters.isNotEmpty) {
-        final queryString = queryParameters.entries
-            .map((e) => '${e.key}=${e.value}')
+        final queryString = queryParameters!.entries
+            .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
             .join('&');
         url += '?$queryString';
       }
@@ -121,16 +121,21 @@ class ApiService {
   }
 
   // Handle HTTP response (public method for use by other services)
-  static Map<String, dynamic> handleResponse(http.Response response) {
+  static dynamic handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) {
-        return {'success': true};
+        return <String, dynamic>{'success': true};
       }
-      return jsonDecode(response.body) as Map<String, dynamic>;
+      final decoded = jsonDecode(response.body);
+      // Handle both List and Map responses
+      if (decoded is List) {
+        return decoded;
+      }
+      return decoded as Map<String, dynamic>;
     } else {
       try {
         final error = jsonDecode(response.body) as Map<String, dynamic>;
-        throw Exception(error['message'] ?? 'Request failed');
+        throw Exception(error['detail'] ?? error['message'] ?? 'Request failed');
       } catch (_) {
         throw Exception('Request failed with status ${response.statusCode}');
       }

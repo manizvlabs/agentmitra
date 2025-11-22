@@ -30,9 +30,9 @@ class DashboardQuickActions extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 1,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 1.1,
               ),
               itemCount: actions.length,
               itemBuilder: (context, index) {
@@ -40,6 +40,9 @@ class DashboardQuickActions extends StatelessWidget {
                 return _buildQuickActionCard(context, action);
               },
             ),
+
+            // Add bottom padding to prevent overflow
+            const SizedBox(height: 16),
           ],
         );
       },
@@ -67,12 +70,13 @@ class DashboardQuickActions extends StatelessWidget {
       },
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: Theme.of(context).dividerColor,
+            width: 1,
           ),
           boxShadow: [
             BoxShadow(
@@ -84,46 +88,58 @@ class DashboardQuickActions extends StatelessWidget {
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Icon
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                action.icon,
-                color: Theme.of(context).primaryColor,
-                size: 24,
+            Flexible(
+              flex: 2,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  action.icon,
+                  color: Theme.of(context).primaryColor,
+                  size: 20,
+                ),
               ),
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
 
             // Title
-            Text(
-              action.title,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).textTheme.bodyMedium?.color,
+            Flexible(
+              flex: 2,
+              child: Text(
+                action.title,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 11,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
 
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
 
             // Subtitle
-            Text(
-              action.subtitle,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6),
+            Flexible(
+              flex: 1,
+              child: Text(
+                action.subtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontSize: 9,
+                  color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6),
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

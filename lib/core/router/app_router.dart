@@ -17,6 +17,12 @@ import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/chatbot/presentation/pages/chatbot_page.dart';
 import '../../features/notifications/presentation/pages/notification_page.dart';
+import '../../features/payments/presentation/pages/new_policy_page.dart';
+import '../../features/payments/presentation/pages/new_claim_page.dart';
+import '../../features/analytics/presentation/pages/reports_page.dart';
+import '../../screens/my_policies_screen.dart';
+import '../../features/agent/presentation/pages/agent_profile_page.dart';
+import '../../features/customers/presentation/pages/customers_page.dart';
 
 /// Application Router Configuration
 /// Uses GoRouter for declarative routing with deep linking support
@@ -132,6 +138,52 @@ class AppRouter {
         path: '/campaign-builder',
         name: 'campaign-builder',
         builder: (context, state) => const MarketingCampaignBuilder(),
+      ),
+
+      // Policy Management Routes
+      GoRoute(
+        path: '/new-policy',
+        name: 'new-policy',
+        builder: (context, state) => const NewPolicyPage(),
+      ),
+
+      GoRoute(
+        path: '/new-claim',
+        name: 'new-claim',
+        builder: (context, state) => const NewClaimPage(),
+      ),
+
+      GoRoute(
+        path: '/policies',
+        name: 'policies',
+        builder: (context, state) => const MyPoliciesScreen(),
+      ),
+
+      GoRoute(
+        path: '/policy/create',
+        name: 'policy-create',
+        builder: (context, state) => const NewPolicyPage(),
+      ),
+
+      // Reports Route
+      GoRoute(
+        path: '/reports',
+        name: 'reports',
+        builder: (context, state) => const ReportsPage(),
+      ),
+
+      // Profile Route
+      GoRoute(
+        path: '/profile',
+        name: 'profile',
+        builder: (context, state) => const AgentProfilePage(),
+      ),
+
+      // Customers Route
+      GoRoute(
+        path: '/customers',
+        name: 'customers',
+        builder: (context, state) => const CustomersPage(),
       ),
 
       // Demo route (for development)
