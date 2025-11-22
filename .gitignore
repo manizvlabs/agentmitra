@@ -42,6 +42,11 @@ env/
 .pub-cache/
 .pub/
 build/
+android/
+ios/
+linux/
+macos/
+windows/
 
 # Config Portal Flutter (don't commit Flutter files in config-portal)
 config-portal/.dart_tool/
