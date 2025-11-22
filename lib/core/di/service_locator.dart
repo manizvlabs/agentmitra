@@ -62,7 +62,7 @@ class ServiceLocator {
 
   /// Chatbot ViewModel factory - requires agentId parameter
   static ChatbotViewModel createChatbotViewModel(String agentId) {
-    return ChatbotViewModel(ChatbotRepository(ChatbotRemoteDataSource()), agentId);
+    return ChatbotViewModel(ChatbotRepository(ChatbotRemoteDataSourceImpl()), agentId);
   }
 
   // ===========================================================================

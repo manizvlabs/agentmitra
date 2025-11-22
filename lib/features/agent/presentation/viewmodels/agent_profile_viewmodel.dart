@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
 import '../../data/repositories/agent_repository.dart';
 import '../../data/datasources/agent_remote_datasource.dart';
+import '../../data/datasources/agent_local_datasource.dart';
 import '../../data/models/agent_model.dart';
 
 class AgentProfileViewModel extends ChangeNotifier {
@@ -11,7 +13,7 @@ class AgentProfileViewModel extends ChangeNotifier {
   AgentProfileViewModel([
     AgentRepository? agentRepository,
     String? agentId,
-  ])  : _agentRepository = agentRepository ?? AgentRepository(AgentRemoteDataSource()),
+  ])  : _agentRepository = agentRepository ?? AgentRepository(AgentRemoteDataSourceImpl(Dio()), AgentLocalDataSourceImpl()),
         agentId = agentId ?? 'current-agent' {
     // Initialize with mock data for Phase 5 testing
     _initializeMockData();
@@ -50,13 +52,15 @@ class AgentProfileViewModel extends ChangeNotifier {
 
   bool get isLicenseExpiringSoon {
     if (_profile?.licenseExpiryDate == null) return false;
-    final daysUntilExpiry = _profile!.licenseExpiryDate!.difference(DateTime.now()).inDays;
+    final expiryDate = DateTime.parse(_profile!.licenseExpiryDate!);
+    final daysUntilExpiry = expiryDate.difference(DateTime.now()).inDays;
     return daysUntilExpiry <= 30 && daysUntilExpiry > 0;
   }
 
   bool get isLicenseExpired {
     if (_profile?.licenseExpiryDate == null) return false;
-    return _profile!.licenseExpiryDate!.isBefore(DateTime.now());
+    final expiryDate = DateTime.parse(_profile!.licenseExpiryDate!);
+    return expiryDate.isBefore(DateTime.now());
   }
 
   String get licenseStatus {

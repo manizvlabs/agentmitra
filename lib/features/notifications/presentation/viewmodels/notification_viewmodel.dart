@@ -5,8 +5,10 @@ import '../../../../core/architecture/base/base_viewmodel.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/logger_service.dart';
 import '../../../../core/services/offline_queue_service.dart';
+import '../../../../core/services/sync_service.dart';
 import '../../data/repositories/notification_repository.dart';
 import '../../data/datasources/notification_remote_datasource.dart';
+import '../../data/datasources/notification_local_datasource.dart';
 import '../../data/models/notification_model.dart';
 
 /// ViewModel for notification management
@@ -19,7 +21,14 @@ class NotificationViewModel extends BaseViewModel {
     NotificationRepository? repository,
     OfflineQueueService? offlineQueueService,
     LoggerService? logger,
-  ])  : _repository = repository ?? NotificationRepository(NotificationRemoteDataSource(ApiService(), LoggerService())),
+  ])  : _repository = repository ?? NotificationRepository(
+          NotificationRemoteDataSource(ApiService(), LoggerService()),
+          NotificationLocalDataSource(LoggerService(), Connectivity()),
+          Connectivity(),
+          OfflineQueueService(LoggerService(), Connectivity()),
+          SyncService(LoggerService(), Connectivity()),
+          LoggerService(),
+        ),
         _offlineQueueService = offlineQueueService ?? OfflineQueueService(LoggerService(), Connectivity()),
         _logger = logger ?? LoggerService() {
     // Initialize with mock data for Phase 5 testing

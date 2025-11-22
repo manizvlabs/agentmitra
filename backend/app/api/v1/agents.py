@@ -193,6 +193,65 @@ async def get_agents(
     return response
 
 
+@router.get("/profile", response_model=AgentResponse)
+async def get_agent_profile(
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Get current agent's profile
+    - Agents can view their own profile
+    """
+    agent_repo = AgentRepository(db)
+    agent = agent_repo.get_by_user_id(current_user.user_id)
+
+    if not agent:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Agent profile not found"
+        )
+
+    return AgentResponse(
+        agent_id=str(agent.agent_id),
+        user_id=str(agent.user_id),
+        provider_id=str(agent.provider_id) if agent.provider_id else None,
+        agent_code=agent.agent_code,
+        license_number=agent.license_number,
+        license_expiry_date=agent.license_expiry_date,
+        license_issuing_authority=agent.license_issuing_authority,
+        business_name=agent.business_name,
+        business_address=agent.business_address,
+        gst_number=agent.gst_number,
+        pan_number=agent.pan_number,
+        territory=agent.territory,
+        operating_regions=agent.operating_regions,
+        experience_years=agent.experience_years,
+        specializations=agent.specializations,
+        commission_rate=float(agent.commission_rate) if agent.commission_rate else None,
+        whatsapp_business_number=agent.whatsapp_business_number,
+        business_email=agent.business_email,
+        website=agent.website,
+        total_policies_sold=agent.total_policies_sold,
+        total_premium_collected=float(agent.total_premium_collected) if agent.total_premium_collected else None,
+        active_policyholders=agent.active_policyholders,
+        customer_satisfaction_score=float(agent.customer_satisfaction_score) if agent.customer_satisfaction_score else None,
+        status=agent.status,
+        verification_status=agent.verification_status,
+        approved_at=agent.approved_at,
+        created_at=agent.created_at,
+        updated_at=agent.updated_at,
+        user_info={
+            "full_name": agent.user.full_name,
+            "phone_number": agent.user.phone_number,
+            "email": agent.user.email
+        } if agent.user else None,
+        provider_info={
+            "provider_name": agent.provider.provider_name,
+            "provider_code": agent.provider.provider_code
+        } if agent.provider else None
+    )
+
+
 @router.get("/{agent_id}", response_model=AgentResponse)
 async def get_agent(
     agent_id: str,

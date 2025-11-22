@@ -126,7 +126,7 @@ class _AgentProfilePageState extends State<AgentProfilePage> {
                       if (viewModel.profile!.licenseExpiryDate != null)
                         _buildInfoRow(
                           'Expiry Date',
-                          _formatDate(viewModel.profile!.licenseExpiryDate!),
+                          _formatDateString(viewModel.profile!.licenseExpiryDate!),
                           valueColor: _getLicenseColor(viewModel),
                         ),
                       _buildInfoRow('Status', viewModel.licenseStatus, valueColor: _getLicenseColor(viewModel)),
@@ -390,6 +390,29 @@ class _AgentProfilePageState extends State<AgentProfilePage> {
 
   String _formatDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }
+
+  String _formatDateString(String dateString) {
+    try {
+      // Try parsing various date formats
+      DateTime? date;
+      if (dateString.contains('-')) {
+        date = DateTime.parse(dateString);
+      } else if (dateString.contains('/')) {
+        // Handle DD/MM/YYYY format
+        final parts = dateString.split('/');
+        if (parts.length == 3) {
+          date = DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+        }
+      }
+
+      if (date != null) {
+        return _formatDate(date);
+      }
+      return dateString; // Return original if parsing fails
+    } catch (e) {
+      return dateString; // Return original on error
+    }
   }
 
   void _navigateToEditProfile() {

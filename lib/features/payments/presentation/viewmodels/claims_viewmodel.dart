@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
 import '../../data/repositories/policy_repository.dart';
 import '../../data/datasources/policy_remote_datasource.dart';
 import '../../data/models/policy_model.dart';
@@ -9,7 +10,7 @@ class ClaimsViewModel extends ChangeNotifier {
   final PolicyRepository _policyRepository;
 
   ClaimsViewModel([PolicyRepository? policyRepository])
-      : _policyRepository = policyRepository ?? PolicyRepository(PolicyRemoteDataSource()) {
+      : _policyRepository = policyRepository ?? PolicyRepository(PolicyRemoteDataSourceImpl(Dio()), PolicyLocalDataSourceImpl()) {
     // Initialize with mock data for Phase 5 testing
     _initializeMockData();
   }

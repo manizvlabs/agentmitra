@@ -35,11 +35,55 @@ app = FastAPI(
     title="Agent Mitra API",
     description="Agent Mitra Backend API - Insurance Agent Management Platform",
     version="0.1.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url="/docs" if settings.environment == "development" else None,  # Disable docs in production
+    redoc_url="/redoc" if settings.environment == "development" else None,  # Disable redoc in production
 )
 
-# CORS middleware
+# Security middleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
+from starlette.middleware.trustedhost import TrustedHostMiddleware
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
+import time
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Add security headers to all responses"""
+
+    async def dispatch(self, request, call_next):
+        start_time = time.time()
+
+        response = await call_next(request)
+
+        # Add security headers
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"
+
+        # Add response time header for monitoring
+        process_time = time.time() - start_time
+        response.headers['X-Process-Time'] = str(process_time)
+
+        return response
+
+# Add trusted host middleware (configure for production)
+if settings.environment == "production":
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=["your-domain.com", "*.your-domain.com"]  # Configure for your domain
+    )
+
+# Add HTTPS redirect in production
+if settings.environment == "production":
+    app.add_middleware(HTTPSRedirectMiddleware)
+
+# Add security middleware
+app.add_middleware(SecurityHeadersMiddleware)
+
+# CORS middleware (restrict in production)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Configure properly for production

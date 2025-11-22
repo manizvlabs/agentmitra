@@ -42,8 +42,7 @@ class OnboardingViewModel extends BaseViewModel {
 
     final progress = await executeAsync(
       () async {
-        final result = await _repository.getOnboardingProgress();
-        _progress = result ?? _createDefaultProgress();
+        _progress = await _repository.getOnboardingProgress();
         await _loadAllStepData();
         return _progress;
       },
@@ -277,23 +276,31 @@ class OnboardingViewModel extends BaseViewModel {
     // Initialize mock data for each step
     _agentDiscoveryData = AgentDiscoveryData(
       agentCode: 'AGT123456',
-      companyName: 'ABC Insurance Brokers',
+      agentName: 'John Doe',
+      agentPhone: '+919876543210',
+      agentEmail: 'john.doe@insurance.com',
       branchName: 'Mumbai Central',
-      designation: 'Senior Insurance Agent',
+      branchAddress: '123 Insurance Street, Mumbai',
     );
 
     _documentVerificationData = DocumentVerificationData(
-      licenseDocument: 'license.pdf',
-      panDocument: 'pan.pdf',
-      aadhaarDocument: 'aadhaar.pdf',
-      addressProof: 'address.pdf',
-      bankDetails: 'bank.pdf',
+      panNumber: 'ABCDE1234F',
+      aadhaarNumber: '123456789012',
+      panImage: 'pan.pdf',
+      aadhaarFrontImage: 'aadhaar_front.pdf',
+      aadhaarBackImage: 'aadhaar_back.pdf',
     );
 
     _kycProcessData = KycProcessData(
-      kycStatus: 'pending',
-      verificationDocuments: ['license.pdf', 'pan.pdf', 'aadhaar.pdf'],
-      submittedAt: DateTime.now().subtract(const Duration(days: 2)),
+      fullName: 'John Doe',
+      dateOfBirth: DateTime(1985, 5, 15),
+      gender: 'Male',
+      address: '123 Insurance Street',
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      pincode: '400001',
+      occupation: 'Insurance Agent',
+      annualIncome: '500000',
     );
   }
 }
