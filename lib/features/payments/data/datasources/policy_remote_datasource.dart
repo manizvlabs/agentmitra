@@ -49,8 +49,11 @@ class PolicyRemoteDataSourceImpl implements PolicyRemoteDataSource {
         },
       );
 
-      final List<dynamic> data = response is List ? response : (response['data'] as List? ?? []);
-      return data.map((json) => Policy.fromJson(json)).toList();
+      if (response is Map<String, dynamic> && response['data'] is List) {
+        final data = response['data'] as List<dynamic>;
+        return data.map((json) => Policy.fromJson(json as Map<String, dynamic>)).toList();
+      }
+      return [];
     } catch (e) {
       throw Exception('Failed to fetch policies: $e');
     }
@@ -60,7 +63,8 @@ class PolicyRemoteDataSourceImpl implements PolicyRemoteDataSource {
   Future<Policy> getPolicyById(String policyId) async {
     try {
       final response = await ApiService.get('/api/v1/policies/$policyId');
-      return Policy.fromJson(response);
+      final data = response is Map ? response : (response['data'] ?? response);
+      return Policy.fromJson(data);
     } catch (e) {
       throw Exception('Failed to fetch policy: $e');
     }
@@ -70,10 +74,16 @@ class PolicyRemoteDataSourceImpl implements PolicyRemoteDataSource {
   Future<List<Premium>> getPremiumsByPolicyId(String policyId) async {
     try {
       final response = await ApiService.get('/api/v1/policies/$policyId/premiums');
-      final List<dynamic> data = response is List 
-          ? response 
-          : (response is Map ? (response['premiums'] as List? ?? response['data'] as List? ?? []) : []);
-      return data.map((json) => Premium.fromJson(json)).toList();
+      if (response is Map<String, dynamic>) {
+        List<dynamic> data = [];
+        if (response['premiums'] is List<dynamic>) {
+          data = response['premiums'] as List<dynamic>;
+        } else if (response['data'] is List<dynamic>) {
+          data = response['data'] as List<dynamic>;
+        }
+        return data.map((json) => Premium.fromJson(json as Map<String, dynamic>)).toList();
+      }
+      return [];
     } catch (e) {
       throw Exception('Failed to fetch premiums: $e');
     }
@@ -104,7 +114,8 @@ class PolicyRemoteDataSourceImpl implements PolicyRemoteDataSource {
   Future<Policy> updatePolicy(String policyId, Map<String, dynamic> policyData) async {
     try {
       final response = await ApiService.put('/api/v1/policies/$policyId', policyData);
-      return Policy.fromJson(response);
+      final data = response is Map ? response : (response['data'] ?? response);
+      return Policy.fromJson(data);
     } catch (e) {
       throw Exception('Failed to update policy: $e');
     }
@@ -123,8 +134,16 @@ class PolicyRemoteDataSourceImpl implements PolicyRemoteDataSource {
   Future<List<Coverage>> getCoverageByPolicyId(String policyId) async {
     try {
       final response = await ApiService.get('/api/v1/policies/$policyId/coverage');
-      final List<dynamic> data = response['coverage'] ?? [];
-      return data.map((json) => Coverage.fromJson(json)).toList();
+      if (response is Map<String, dynamic>) {
+        List<dynamic> data = [];
+        if (response['coverage'] is List<dynamic>) {
+          data = response['coverage'] as List<dynamic>;
+        } else if (response['data'] is List<dynamic>) {
+          data = response['data'] as List<dynamic>;
+        }
+        return data.map((json) => Coverage.fromJson(json as Map<String, dynamic>)).toList();
+      }
+      return [];
     } catch (e) {
       throw Exception('Failed to fetch coverage: $e');
     }

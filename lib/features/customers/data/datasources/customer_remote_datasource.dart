@@ -34,8 +34,9 @@ class CustomerRemoteDataSourceImpl implements CustomerRemoteDataSource {
 
       final response = await ApiService.get('/api/v1/users', queryParameters: queryParams);
       
-      if (response is List) {
-        return response.map((json) => Customer.fromJson(json)).toList();
+      if (response is Map<String, dynamic> && response['data'] is List) {
+        final data = response['data'] as List<dynamic>;
+        return data.map((json) => Customer.fromJson(json as Map<String, dynamic>)).toList();
       }
       return [];
     } catch (e) {
