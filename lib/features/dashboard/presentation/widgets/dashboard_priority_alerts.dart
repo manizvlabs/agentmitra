@@ -177,13 +177,22 @@ class DashboardPriorityAlerts extends StatelessWidget {
   void _handlePriorityAction(BuildContext context, String priorityType) {
     switch (priorityType) {
       case 'overdue_payments':
-        context.go('/payments');
+        // TODO: Navigate to payments page
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Payments page coming soon')),
+        );
         break;
       case 'expiring_policies':
-        context.go('/policies');
+        // TODO: Navigate to policies page
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Policies page coming soon')),
+        );
         break;
       case 'active_claims':
-        context.go('/claims');
+        // TODO: Navigate to claims page
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Claims page coming soon')),
+        );
         break;
       default:
         // Generic navigation for other types

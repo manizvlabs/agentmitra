@@ -81,7 +81,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         LoggerService().info('Biometric authentication successful');
 
         // Navigate to dashboard or show success
-        context.go('/customer-dashboard');
+        Navigator.pushNamed(context, '/customer-dashboard');
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -117,7 +117,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             Icons.arrow_back,
             color: Theme.of(context).iconTheme.color,
           ),
-          onPressed: () => context.go('/welcome'),
+          onPressed: () => Navigator.pushNamed(context, '/welcome'),
         ),
       ),
       body: SafeArea(
@@ -216,7 +216,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   builder: (context, authViewModel, child) {
                     return LoginForm(
                       onLoginSuccess: () {
-                        context.go('/customer-dashboard');
+                        Navigator.pushNamed(context, '/customer-dashboard');
                       },
                     );
                   },
@@ -329,7 +329,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             TextButton(
               onPressed: () {
                 // Navigate to registration or onboarding
-                context.go('/onboarding');
+                Navigator.pushNamed(context, '/onboarding');
               },
               style: TextButton.styleFrom(
                 padding: EdgeInsets.zero,

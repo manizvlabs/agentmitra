@@ -96,7 +96,7 @@ class _LoginFormState extends State<LoginForm> with TickerProviderStateMixin {
       if (widget.onLoginSuccess != null) {
         widget.onLoginSuccess!.call();
       } else {
-        context.go('/customer-dashboard');
+        Navigator.pushNamed(context, '/customer-dashboard');
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -139,7 +139,7 @@ class _LoginFormState extends State<LoginForm> with TickerProviderStateMixin {
 
     if (!viewModel.hasError && mounted) {
       LoggerService().info('OTP sent successfully', tag: 'LoginForm');
-      context.go('/otp-verification', extra: _phoneController.text.trim());
+      Navigator.pushNamed(context, '/otp-verification', arguments: _phoneController.text.trim());
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

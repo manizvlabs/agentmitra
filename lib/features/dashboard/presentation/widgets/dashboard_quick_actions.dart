@@ -52,7 +52,7 @@ class DashboardQuickActions extends StatelessWidget {
       onTap: () {
         // Navigate to the action route
         try {
-          context.go(action.route, extra: action.arguments);
+          Navigator.pushNamed(context, action.route, arguments: action.arguments);
         } catch (e) {
           // Fallback for routes that don't exist yet
           ScaffoldMessenger.of(context).showSnackBar(
