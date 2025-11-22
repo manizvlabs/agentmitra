@@ -53,7 +53,7 @@ flutter run
 ### Ports Configured
 
 - **Backend API:** Port **8012** ✅
-- **Portal:** Port **3012** ✅
+- **Portal:** Port **3013** ✅
 - **PostgreSQL:** Port 5432 ✅
 - **Redis:** Port 6379 ✅
 
@@ -114,6 +114,6 @@ All services verified and working:
 
 **Status:** ✅ **READY FOR DEVELOPMENT**  
 **Backend Port:** 8012  
-**Portal Port:** 3012  
+**Portal Port:** 3013  
 **Date:** 2024-11-21
 

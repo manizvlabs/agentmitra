@@ -1,15 +1,15 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
+  # PostgreSQL Database - TEMPORARILY ENABLED FOR TESTING
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: agentmitra_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: agentmitra
-      POSTGRES_USER: agentmitra_user
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: agentmitra_dev
+      POSTGRES_USER: manish
+      POSTGRES_PASSWORD: agentmitra_dev
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/migration:/docker-entrypoint-initdb.d
@@ -18,7 +18,7 @@ services:
     networks:
       - agentmitra_network
 
-  # Redis for caching and sessions
+  # Redis for caching and sessions - TEMPORARILY ENABLED FOR TESTING
   redis:
     image: redis:7-alpine
     container_name: agentmitra_redis
@@ -40,7 +40,7 @@ services:
     restart: unless-stopped
     environment:
       - ENVIRONMENT=production
-      - DATABASE_URL=postgresql://agentmitra_user:${DB_PASSWORD}@postgres:5432/agentmitra
+      - DATABASE_URL=postgresql://manish:agentmitra_dev@postgres:5432/agentmitra_dev?sslmode=disable
       - REDIS_URL=redis://redis:6379
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - CORS_ORIGINS=${CORS_ORIGINS}
@@ -70,7 +70,7 @@ services:
       - REACT_APP_API_URL=http://backend:8012
       - REACT_APP_ENVIRONMENT=production
     ports:
-      - "3000:80"
+      - "3013:80"
     depends_on:
       - backend
     networks:
@@ -101,7 +101,7 @@ services:
     container_name: agentmitra_prometheus
     restart: unless-stopped
     ports:
-      - "9090:9090"
+      - "9012:9090"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
@@ -124,7 +124,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
       - GF_USERS_ALLOW_SIGN_UP=false
     ports:
-      - "3001:3000"
+      - "3012:3000"
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro

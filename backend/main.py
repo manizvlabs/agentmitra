@@ -18,7 +18,7 @@ import os
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv("../.env.local")
+load_dotenv(".env")
 
 # Setup logging
 setup_logging(
@@ -123,10 +123,11 @@ async def api_health():
 if __name__ == "__main__":
     # Get port from environment or default to 8012
     port = int(os.getenv("API_PORT", "8012"))
+    reload_mode = os.getenv("ENVIRONMENT", "development") == "development"
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=port,
-        reload=True
+        reload=reload_mode
     )
 

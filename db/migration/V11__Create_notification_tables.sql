@@ -3,8 +3,8 @@
 
 -- Create notifications table
 CREATE TABLE IF NOT EXISTS notifications (
-    id VARCHAR(36) PRIMARY KEY,
-    user_id VARCHAR(36) NOT NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
     title VARCHAR(255) NOT NULL,
     body TEXT NOT NULL,
     type VARCHAR(50) NOT NULL,
@@ -40,7 +40,7 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id,
 -- Create notification_settings table
 CREATE TABLE IF NOT EXISTS notification_settings (
     id SERIAL PRIMARY KEY,
-    user_id VARCHAR(36) NOT NULL UNIQUE,
+    user_id UUID NOT NULL UNIQUE,
 
     -- Push notification settings
     enable_push_notifications BOOLEAN NOT NULL DEFAULT TRUE,
@@ -80,7 +80,7 @@ CREATE INDEX IF NOT EXISTS idx_notification_settings_user_id ON notification_set
 -- Create device_tokens table for push notifications
 CREATE TABLE IF NOT EXISTS device_tokens (
     id SERIAL PRIMARY KEY,
-    user_id VARCHAR(36) NOT NULL,
+    user_id UUID NOT NULL,
     token VARCHAR(255) NOT NULL UNIQUE,
     device_type VARCHAR(20) NOT NULL, -- ios, android
 

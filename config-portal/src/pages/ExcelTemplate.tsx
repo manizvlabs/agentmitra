@@ -146,7 +146,7 @@ const ExcelTemplate: React.FC = () => {
       setLoading(true);
       const entityDef = entityDefinitions.find(e => e.name === data.entityType);
       if (!entityDef) {
-        throw new Error('Invalid entity type');
+        throw 'Invalid entity type';
       }
 
       const newTemplate: Partial<ImportTemplate> = {
@@ -176,8 +176,8 @@ const ExcelTemplate: React.FC = () => {
         setSuccess('Template created successfully');
         setTimeout(() => setSuccess(null), 3000);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create template');
+    } catch (err: any) {
+      setError(err?.message || 'Failed to create template');
     } finally {
       setLoading(false);
     }
@@ -279,7 +279,7 @@ const ExcelTemplate: React.FC = () => {
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <TableContainer component={Paper} size="small">
+            <TableContainer component={Paper}>
               <Table>
                 <TableHead>
                   <TableRow>

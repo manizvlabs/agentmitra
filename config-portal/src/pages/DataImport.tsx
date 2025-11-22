@@ -99,8 +99,8 @@ const DataImport: React.FC = () => {
 
       setUploadedFile(processedFile);
       setActiveStep(1);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to process file');
+    } catch (err: any) {
+      setError(err?.message || 'Failed to process file');
     }
   }, []);
 
@@ -148,8 +148,8 @@ const DataImport: React.FC = () => {
 
       setValidationResult(result);
       setActiveStep(2);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Validation failed');
+    } catch (err: any) {
+      setError(err?.message || 'Validation failed');
     } finally {
       setImportProgress(null);
     }
@@ -194,8 +194,8 @@ const DataImport: React.FC = () => {
         setImportResult(response.results);
         setActiveStep(3);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Import failed');
+    } catch (err: any) {
+      setError(err?.message || 'Import failed');
     } finally {
       setIsImporting(false);
       setTimeout(() => setImportProgress(null), 2000);

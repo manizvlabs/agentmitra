@@ -557,7 +557,7 @@ pip install -r requirements.txt
 lsof -i :5432  # PostgreSQL
 lsof -i :6379  # Redis
 lsof -i :8012  # Backend API
-lsof -i :3012  # Portal
+lsof -i :3013  # Portal
 
 # Kill process if needed
 kill -9 <PID>

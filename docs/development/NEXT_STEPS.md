@@ -1226,7 +1226,7 @@ flyway -configFiles=flyway.conf migrate
 #### **Days 1-3: End-to-End Testing & QA** ✅
 - ✅ **Task 1:** Real Application Testing (No Dummy Tests)
   - Flutter web app running and accessible on port 9101
-  - React portal running and accessible on port 3000
+  - React portal running and accessible on port 3013
   - Backend API comprehensive endpoint testing script
   - Production deployment verification and validation
 

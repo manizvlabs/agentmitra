@@ -186,6 +186,17 @@ def get_current_user_optional(
         return None
 
 
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+) -> User:
+    """
+    Dependency to get current authenticated user
+    """
+    user_context = get_current_user_context(credentials, db)
+    return user_context.user
+
+
 def require_permission(permission: str):
     """
     Dependency factory for permission-based access control

@@ -17,7 +17,7 @@ This runbook provides comprehensive operational procedures for the Agent Mitra a
 ### Infrastructure Stack
 - **Docker Compose**: Container orchestration for development/production
 - **Nginx**: Reverse proxy and static file serving
-- **PostgreSQL 15**: Relational database
+- **PostgreSQL 16**: Relational database
 - **Redis 7**: In-memory data store
 - **Prometheus**: Metrics collection
 - **Grafana**: Dashboard visualization
@@ -82,8 +82,8 @@ docker-compose up -d --scale backend=1
 - `GET /api/v1/health/system` - System resources
 
 ### Monitoring Dashboards
-- **Grafana**: http://localhost:3001 (admin/admin)
-- **Prometheus**: http://localhost:9090
+- **Grafana**: http://localhost:3012 (admin/admin)
+- **Prometheus**: http://localhost:9012
 - **Application Monitoring**: http://localhost/monitoring.html
 
 ## Troubleshooting Guide

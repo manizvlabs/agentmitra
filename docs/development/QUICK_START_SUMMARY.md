@@ -1,6 +1,6 @@
 # Agent Mitra - Quick Start Summary
 
-> **Status:** ✅ Setup Complete | **Backend:** Port 8012 | **Portal:** Port 3012
+> **Status:** ✅ Setup Complete | **Backend:** Port 8012 | **Portal:** Port 3013
 
 ## ✅ Setup Complete!
 
@@ -40,12 +40,12 @@ python main.py
 flutter run
 ```
 
-### Start Portal (Port 3012)
+### Start Portal (Port 3013)
 
 ```bash
 cd config-portal/frontend
 npm start
-# Configure to use port 3012
+# Configure to use port 3013
 ```
 
 ### Database Migrations (Flyway)
@@ -75,8 +75,8 @@ API_PORT=8012
 API_URL=http://localhost:8012
 
 # Portal
-PORTAL_PORT=3012
-PORTAL_URL=http://localhost:3012
+PORTAL_PORT=3013
+PORTAL_URL=http://localhost:3013
 
 # Database
 DATABASE_URL=postgresql://agentmitra:agentmitra_dev@localhost:5432/agentmitra_dev
@@ -153,7 +153,7 @@ flutter run
 
 # 4. Start Portal (Terminal 3, optional)
 cd config-portal/frontend
-npm start  # Configure for port 3012
+npm start  # Configure for port 3013
 ```
 
 ### Verify Services
@@ -177,7 +177,7 @@ psql -U agentmitra -d agentmitra_dev -c "SELECT version();"
 ### Port Configuration
 
 - **Backend API:** Port **8012** (not 8000)
-- **Portal:** Port **3012** (not 3000)
+- **Portal:** Port **3013** (not 3000)
 - **PostgreSQL:** Port 5432 (default)
 - **Redis:** Port 6379 (default)
 
@@ -268,6 +268,6 @@ flutter run
 
 **Last Updated:** 2024-11-21  
 **Backend Port:** 8012  
-**Portal Port:** 3012  
+**Portal Port:** 3013  
 **Status:** ✅ Ready for Development
 

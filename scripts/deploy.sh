@@ -7,7 +7,7 @@ set -e
 
 # Configuration
 BACKEND_PORT=8012
-FRONTEND_PORT=3000
+FRONTEND_PORT=3013
 ENVIRONMENT=${1:-production}
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 

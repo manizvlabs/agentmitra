@@ -44,7 +44,7 @@ A React/TypeScript web application for agents to configure and manage customer d
    npm start
    ```
 
-   The portal will be available at `http://localhost:3000`
+   The portal will be available at `http://localhost:3013`
 
 ### Build for Production
 

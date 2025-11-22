@@ -95,7 +95,7 @@ curl -f http://localhost/api/v1/health
 # Application access
 # Frontend: http://localhost/portal/
 # API: http://localhost/api/v1/
-# Monitoring: http://localhost:3001 (admin/admin)
+# Monitoring: http://localhost:3012 (admin/admin)
 ```
 
 ### Option 2: Manual Installation
@@ -268,7 +268,7 @@ scrape_configs:
 ```
 
 ### Grafana Dashboards
-1. Access Grafana at http://your-server:3001
+1. Access Grafana at http://your-server:3012
 2. Import dashboard templates from `monitoring/grafana/dashboards/`
 3. Configure data sources for Prometheus
 
