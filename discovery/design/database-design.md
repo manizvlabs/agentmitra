@@ -330,7 +330,10 @@ CREATE TABLE lic_schema.user_sessions (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Session analytics
+-- Session analytics (NOT IMPLEMENTED)
+-- This table is defined in the design but not created in the database
+-- Session data is tracked through lic_schema.user_sessions table
+-- Detailed analytics can be derived from user_sessions and other analytics tables
 CREATE TABLE lic_schema.session_analytics (
     analytics_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     session_id UUID REFERENCES lic_schema.user_sessions(session_id),
@@ -827,11 +830,11 @@ CREATE TABLE lic_schema.video_content (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Video watch analytics
+-- Video watch analytics (IMPLEMENTED - V22 Migration)
 CREATE TABLE lic_schema.video_analytics (
     analytics_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    video_id UUID REFERENCES lic_schema.video_content(video_id),
-    user_id UUID REFERENCES lic_schema.users(user_id),
+    video_id UUID REFERENCES lic_schema.video_content(video_id) ON DELETE CASCADE,
+    user_id UUID REFERENCES lic_schema.users(user_id) ON DELETE SET NULL,
 
     -- Watch session
     watch_session_id UUID,
@@ -848,8 +851,16 @@ CREATE TABLE lic_schema.video_analytics (
     -- Device and context
     device_info JSONB,
     network_type VARCHAR(50),
-    playback_quality VARCHAR(20)
-) PARTITION BY RANGE (started_at);
+    playback_quality VARCHAR(20),
+    
+    -- Additional metadata (added in implementation)
+    ip_address INET,
+    user_agent TEXT,
+    location_info JSONB,
+    
+    created_at TIMESTAMP DEFAULT NOW()
+);
+-- Note: Partitioning by RANGE (started_at) can be added later if needed for performance
 ```
 
 #### Presentation Carousel Management
@@ -1164,8 +1175,13 @@ CREATE TRIGGER slide_media_usage_trigger
 ### 2.6 Analytics & Reporting Tables
 
 #### User Behavior Analytics
+
+> **Note:** The `user_events` table is **NOT implemented**. User behavior is tracked through the `customer_behavior_metrics` table (V10 migration) which provides aggregated metrics rather than raw event logs. If raw event tracking is needed, this table can be added in a future migration.
+
 ```sql
--- User behavior events
+-- User behavior events (NOT IMPLEMENTED - Use customer_behavior_metrics instead)
+-- This table is defined in the design but not created in the database
+-- Alternative: lic_schema.customer_behavior_metrics provides aggregated behavior metrics
 CREATE TABLE lic_schema.user_events (
     event_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES lic_schema.users(user_id),
@@ -1190,33 +1206,49 @@ CREATE TABLE lic_schema.user_events (
     timestamp TIMESTAMP DEFAULT NOW()
 ) PARTITION BY RANGE (timestamp);
 
--- User journey tracking
+-- User journey tracking (IMPLEMENTED - V22 Migration)
 CREATE TABLE lic_schema.user_journeys (
     journey_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES lic_schema.users(user_id),
+    user_id UUID REFERENCES lic_schema.users(user_id) ON DELETE CASCADE,
 
     -- Journey metadata
-    journey_type VARCHAR(100), -- 'onboarding', 'policy_purchase', 'claim_process'
+    journey_type VARCHAR(100) NOT NULL, -- 'onboarding', 'policy_purchase', 'claim_process', 'profile_setup', etc.
     started_at TIMESTAMP DEFAULT NOW(),
     completed_at TIMESTAMP,
-    status VARCHAR(50) DEFAULT 'active',
+    status VARCHAR(50) DEFAULT 'active', -- 'active', 'completed', 'abandoned', 'failed'
 
     -- Journey steps
     current_step INTEGER DEFAULT 1,
     total_steps INTEGER,
-    step_history JSONB,
+    step_history JSONB, -- Array of step objects with timestamps and metadata
 
     -- Conversion tracking
     converted BOOLEAN DEFAULT false,
     conversion_value DECIMAL(12,2),
     drop_off_step INTEGER,
-    drop_off_reason TEXT
+    drop_off_reason TEXT,
+    
+    -- Additional metadata (added in implementation)
+    journey_data JSONB, -- Flexible storage for journey-specific data
+    session_id UUID REFERENCES lic_schema.user_sessions(session_id) ON DELETE SET NULL,
+    
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 ```
 
 #### Business Intelligence Tables
+
+> **Note:** The `agent_performance` table is **NOT implemented**. Agent performance is tracked through:
+> - `agent_daily_metrics` (V10 migration) - Daily performance metrics
+> - `agent_monthly_summary` (V10 migration) - Monthly aggregated summaries
+> 
+> These tables provide more granular and practical performance tracking than the single `agent_performance` table.
+
 ```sql
--- Agent performance metrics
+-- Agent performance metrics (NOT IMPLEMENTED - Use agent_daily_metrics and agent_monthly_summary instead)
+-- This table is defined in the design but not created in the database
+-- Alternatives: lic_schema.agent_daily_metrics and lic_schema.agent_monthly_summary
 CREATE TABLE lic_schema.agent_performance (
     performance_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     agent_id UUID REFERENCES lic_schema.agents(agent_id),
@@ -1250,7 +1282,9 @@ CREATE TABLE lic_schema.agent_performance (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- System health and performance
+-- System health and performance (NOT IMPLEMENTED)
+-- This table is defined in the design but not created in the database
+-- System metrics are typically tracked through application monitoring tools (Prometheus, Grafana, etc.)
 CREATE TABLE lic_schema.system_metrics (
     metric_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
@@ -1692,7 +1726,9 @@ $$ LANGUAGE plpgsql;
 
 #### Performance Monitoring
 ```sql
--- Query performance monitoring
+-- Query performance monitoring (NOT IMPLEMENTED - Use analytics_query_log instead)
+-- This table is defined in the design but not created in the database
+-- Alternative: lic_schema.analytics_query_log (V10 migration) provides similar functionality
 CREATE TABLE lic_schema.query_performance_log (
     log_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     query_id VARCHAR(255),
