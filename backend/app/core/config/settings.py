@@ -90,8 +90,8 @@ class Settings(BaseSettings):
     email_host: str = os.getenv("EMAIL_HOST", "smtp.gmail.com")
     email_port: int = int(os.getenv("EMAIL_PORT", "587"))
     email_user: Optional[str] = os.getenv("EMAIL_USER")
-    email_password: Optional[str] = os.getenv("EMAIL_PASSWORD")
-    email_from: Optional[str] = os.getenv("EMAIL_FROM")
+    email_password: Optional[str] = os.getenv("EMAIL_PASSWORD")  # Gmail App Password
+    email_from: Optional[str] = os.getenv("EMAIL_FROM", os.getenv("EMAIL_USER"))
     
     # FeatureHub Configuration
     featurehub_url: str = os.getenv("FEATUREHUB_URL", "http://localhost:8071")

@@ -19,10 +19,13 @@ from app.core.security import (
 from app.core.auth import get_current_user_context, UserContext, require_permission
 from app.core.rate_limiter import otp_rate_limiter, auth_rate_limiter
 from app.core.audit_logger import AuditLogger
+from app.core.logging_config import get_logger
 from app.services.otp_service import OTPService
 from app.repositories.user_repository import UserRepository
 from datetime import datetime
 from fastapi import Request
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 security = HTTPBearer()
@@ -224,6 +227,10 @@ async def login(
         success=True,
         method=login_method
     )
+    
+    # Check trial period and subscription status
+    from app.core.trial_subscription import TrialSubscriptionService
+    trial_status = TrialSubscriptionService.check_trial_status(user)
 
     # Return token response with user info
     return TokenResponse(
@@ -303,9 +310,17 @@ async def send_otp(
         if request.phone_number:
             otp = OTPService.generate_and_store_otp(request.phone_number)
             # TODO: Send SMS OTP via SMS provider
+            print(f"[OTP Service] Generated OTP for {request.phone_number}: {otp}")
         elif request.email:
             otp = OTPService.generate_and_store_otp(request.email)
-            # TODO: Send Email OTP via Email provider
+            # Send Email OTP via Email provider
+            from app.services.email_service import get_email_service
+            email_service = get_email_service()
+            email_sent = email_service.send_otp_email(request.email, otp)
+            if not email_sent:
+                logger.warning(f"Failed to send OTP email to {request.email}, but OTP was generated: {otp}")
+            else:
+                logger.info(f"OTP email sent successfully to {request.email}")
         
         # Log OTP sent
         await AuditLogger.log_otp_sent(
@@ -338,6 +353,42 @@ async def send_otp(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to send OTP. Please try again."
         )
+
+
+@router.post("/send-email-otp")
+async def send_email_otp(
+    request: OTPRequest,
+    http_request: Request,
+    db: Session = Depends(get_db)
+):
+    """Send OTP to email address (dedicated email OTP endpoint as per design doc)"""
+    if not request.email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email address is required"
+        )
+    
+    # Use the existing send_otp logic but only for email
+    email_request = OTPRequest(email=request.email)
+    return await send_otp(email_request, http_request, db)
+
+
+@router.post("/verify-email-otp", response_model=TokenResponse)
+async def verify_email_otp(
+    request: OTPVerifyRequest,
+    http_request: Request,
+    db: Session = Depends(get_db)
+):
+    """Verify email OTP and return tokens (dedicated email OTP verification endpoint as per design doc)"""
+    if not request.email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email address is required"
+        )
+    
+    # Use the existing verify_otp logic but only for email
+    email_request = OTPVerifyRequest(email=request.email, otp=request.otp)
+    return await verify_otp(email_request, http_request, db)
 
 
 @router.post("/verify-otp", response_model=TokenResponse)
