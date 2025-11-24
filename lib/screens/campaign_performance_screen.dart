@@ -1,11 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../core/widgets/offline_indicator.dart';
+import '../features/campaigns/presentation/viewmodels/campaign_viewmodel.dart';
+import '../features/campaigns/data/models/campaign_model.dart';
+import 'package:intl/intl.dart';
 
 /// Campaign Performance Analytics Screen for Agent App
 /// Shows detailed analytics and performance metrics for marketing campaigns
 class CampaignPerformanceScreen extends StatefulWidget {
-  const CampaignPerformanceScreen({super.key});
+  final String campaignId;
+  final Campaign? campaign;
+
+  const CampaignPerformanceScreen({
+    super.key,
+    required this.campaignId,
+    this.campaign,
+  });
 
   @override
   State<CampaignPerformanceScreen> createState() => _CampaignPerformanceScreenState();
@@ -15,49 +25,80 @@ class _CampaignPerformanceScreenState extends State<CampaignPerformanceScreen> w
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  final CampaignViewModel _viewModel = CampaignViewModel();
+  
+  Campaign? _campaign;
+  Map<String, dynamic>? _analytics;
+  bool _isLoading = true;
 
-  // Mock campaign data
-  final Map<String, dynamic> campaignData = {
-    'name': 'March Renewal Drive',
-    'dates': 'Mar 01-15, 2024',
-    'targetAudience': 500,
-    'budget': 10000,
-    'status': 'Active',
-    'metrics': {
-      'sent': 485,
-      'delivered': 462,
-      'opened': 342,
-      'clicked': 98,
-      'converted': 23,
-      'revenue': 45000,
-      'roi': 350,
-    },
-    'performance': [
-      {'day': 1, 'sent': 50, 'opened': 35, 'clicked': 8},
-      {'day': 2, 'sent': 45, 'opened': 32, 'clicked': 7},
-      {'day': 3, 'sent': 55, 'opened': 38, 'clicked': 9},
-      {'day': 4, 'sent': 60, 'opened': 42, 'clicked': 12},
-      {'day': 5, 'sent': 58, 'opened': 41, 'clicked': 11},
-      {'day': 6, 'sent': 52, 'opened': 36, 'clicked': 8},
-      {'day': 7, 'sent': 48, 'opened': 34, 'clicked': 7},
-      {'day': 8, 'sent': 55, 'opened': 39, 'clicked': 10},
-      {'day': 9, 'sent': 62, 'opened': 45, 'clicked': 13},
-    ],
-    'segmentation': {
-      'highValue': {'sent': 150, 'opened': 120, 'clicked': 35, 'conversion': 12},
-      'regular': {'sent': 250, 'opened': 165, 'clicked': 45, 'conversion': 8},
-      'new': {'sent': 85, 'opened': 57, 'clicked': 18, 'conversion': 3},
-    },
-    'geographic': {
-      'mumbai': {'sent': 180, 'opened': 147, 'clicked': 42},
-      'delhi': {'sent': 135, 'opened': 110, 'clicked': 31},
-      'others': {'sent': 170, 'opened': 85, 'clicked': 25},
-    },
-  };
+  // Fallback campaign data if API fails
+  Map<String, dynamic> get campaignData {
+    if (_analytics != null) {
+      return {
+        'name': _campaign?.campaignName ?? 'Campaign',
+        'dates': _campaign?.createdAt != null
+            ? DateFormat('MMM dd, yyyy').format(_campaign!.createdAt!)
+            : 'N/A',
+        'targetAudience': _analytics!['estimated_reach'] ?? 0,
+        'budget': _analytics!['budget'] ?? 0,
+        'status': _campaign?.status ?? 'Unknown',
+        'metrics': {
+          'sent': _analytics!['total_sent'] ?? 0,
+          'delivered': _analytics!['total_delivered'] ?? 0,
+          'opened': _analytics!['total_opened'] ?? 0,
+          'clicked': _analytics!['total_clicked'] ?? 0,
+          'converted': _analytics!['total_converted'] ?? 0,
+          'revenue': _analytics!['total_revenue'] ?? 0.0,
+          'roi': _analytics!['roi_percentage'] ?? 0.0,
+        },
+        'performance': _analytics!['daily_performance'] ?? [],
+        'segmentation': _analytics!['segmentation'] ?? {},
+        'geographic': _analytics!['geographic'] ?? {},
+      };
+    }
+    return {
+      'name': 'March Renewal Drive',
+      'dates': 'Mar 01-15, 2024',
+      'targetAudience': 500,
+      'budget': 10000,
+      'status': 'Active',
+      'metrics': {
+        'sent': 485,
+        'delivered': 462,
+        'opened': 342,
+        'clicked': 98,
+        'converted': 23,
+        'revenue': 45000,
+        'roi': 350,
+      },
+      'performance': [
+        {'day': 1, 'sent': 50, 'opened': 35, 'clicked': 8},
+        {'day': 2, 'sent': 45, 'opened': 32, 'clicked': 7},
+        {'day': 3, 'sent': 55, 'opened': 38, 'clicked': 9},
+        {'day': 4, 'sent': 60, 'opened': 42, 'clicked': 12},
+        {'day': 5, 'sent': 58, 'opened': 41, 'clicked': 11},
+        {'day': 6, 'sent': 52, 'opened': 36, 'clicked': 8},
+        {'day': 7, 'sent': 48, 'opened': 34, 'clicked': 7},
+        {'day': 8, 'sent': 55, 'opened': 39, 'clicked': 10},
+        {'day': 9, 'sent': 62, 'opened': 45, 'clicked': 13},
+      ],
+      'segmentation': {
+        'highValue': {'sent': 150, 'opened': 120, 'clicked': 35, 'conversion': 12},
+        'regular': {'sent': 250, 'opened': 165, 'clicked': 45, 'conversion': 8},
+        'new': {'sent': 85, 'opened': 57, 'clicked': 18, 'conversion': 3},
+      },
+      'geographic': {
+        'mumbai': {'sent': 180, 'opened': 147, 'clicked': 42},
+        'delhi': {'sent': 135, 'opened': 110, 'clicked': 31},
+        'others': {'sent': 170, 'opened': 85, 'clicked': 25},
+      },
+    };
+  }
 
   @override
   void initState() {
     super.initState();
+    _campaign = widget.campaign;
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 600),
@@ -80,7 +121,24 @@ class _CampaignPerformanceScreenState extends State<CampaignPerformanceScreen> w
       curve: Curves.easeOutCubic,
     ));
 
+    _loadCampaignData();
     _animationController.forward();
+  }
+
+  Future<void> _loadCampaignData() async {
+    setState(() => _isLoading = true);
+    
+    // Load campaign details if not provided
+    if (_campaign == null) {
+      await _viewModel.loadCampaign(widget.campaignId);
+      _campaign = _viewModel.selectedCampaign;
+    }
+    
+    // Load analytics
+    await _viewModel.loadCampaignAnalytics(widget.campaignId);
+    _analytics = _viewModel.analytics;
+    
+    setState(() => _isLoading = false);
   }
 
   @override
@@ -91,6 +149,40 @@ class _CampaignPerformanceScreenState extends State<CampaignPerformanceScreen> w
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: _buildAppBar(),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_viewModel.hasError) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: _buildAppBar(),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(
+                _viewModel.errorMessage ?? 'Failed to load campaign data',
+                style: const TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadCampaignData,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: _buildAppBar(),
@@ -166,11 +258,16 @@ class _CampaignPerformanceScreenState extends State<CampaignPerformanceScreen> w
       actions: [
         IconButton(
           icon: const Icon(Icons.refresh, color: Colors.white),
-          onPressed: () {
-            // TODO: Refresh data
+          onPressed: () async {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Refreshing campaign data...')),
             );
+            await _loadCampaignData();
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Data refreshed')),
+              );
+            }
           },
         ),
         IconButton(
@@ -355,6 +452,8 @@ class _CampaignPerformanceScreenState extends State<CampaignPerformanceScreen> w
   }
 
   Widget _buildDetailedAnalytics() {
+    final performance = campaignData['performance'] as List? ?? [];
+    
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -379,77 +478,73 @@ class _CampaignPerformanceScreenState extends State<CampaignPerformanceScreen> w
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
-            '📈 Day 1-3: 45% open rate • Day 4-7: 38% open',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            '📈 Day 8-10: 52% open rate • Day 11-15: 41% open',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 200,
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(show: false),
-                titlesData: FlTitlesData(
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: (value, meta) {
-                        return Text('D${value.toInt() + 1}');
-                      },
+          if (performance.isEmpty)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32.0),
+                child: Text('No performance data available yet'),
+              ),
+            )
+          else ...[
+            SizedBox(
+              height: 200,
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(show: false),
+                  titlesData: FlTitlesData(
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
                     ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, meta) {
+                          if (value.toInt() < performance.length) {
+                            return Text('D${value.toInt() + 1}');
+                          }
+                          return const Text('');
+                        },
+                      ),
+                    ),
+                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  borderData: FlBorderData(show: false),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: performance.asMap().entries.map<FlSpot>((entry) {
+                        final day = entry.value as Map<String, dynamic>;
+                        return FlSpot(entry.key.toDouble(), (day['opened'] ?? 0).toDouble());
+                      }).toList(),
+                      isCurved: true,
+                      color: Colors.blue,
+                      barWidth: 3,
+                      dotData: FlDotData(show: false),
+                    ),
+                    LineChartBarData(
+                      spots: performance.asMap().entries.map<FlSpot>((entry) {
+                        final day = entry.value as Map<String, dynamic>;
+                        return FlSpot(entry.key.toDouble(), (day['clicked'] ?? 0).toDouble());
+                      }).toList(),
+                      isCurved: true,
+                      color: Colors.green,
+                      barWidth: 2,
+                      dotData: FlDotData(show: false),
+                    ),
+                  ],
                 ),
-                borderData: FlBorderData(show: false),
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: campaignData['performance'].map<FlSpot>((day) {
-                      final index = campaignData['performance'].indexOf(day);
-                      return FlSpot(index.toDouble(), day['opened'].toDouble());
-                    }).toList(),
-                    isCurved: true,
-                    color: Colors.blue,
-                    barWidth: 3,
-                    dotData: FlDotData(show: false),
-                  ),
-                  LineChartBarData(
-                    spots: campaignData['performance'].map<FlSpot>((day) {
-                      final index = campaignData['performance'].indexOf(day);
-                      return FlSpot(index.toDouble(), day['clicked'].toDouble());
-                    }).toList(),
-                    isCurved: true,
-                    color: Colors.green,
-                    barWidth: 2,
-                    dotData: FlDotData(show: false),
-                  ),
-                ],
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildLegendItem(Colors.blue, 'Opened'),
-              const SizedBox(width: 16),
-              _buildLegendItem(Colors.green, 'Clicked'),
-            ],
-          ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildLegendItem(Colors.blue, 'Opened'),
+                const SizedBox(width: 16),
+                _buildLegendItem(Colors.green, 'Clicked'),
+              ],
+            ),
+          ],
         ],
       ),
     );

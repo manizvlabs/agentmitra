@@ -18,6 +18,8 @@ import ImportSuccess from './pages/ImportSuccess';
 import ExcelTemplate from './pages/ExcelTemplate';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
+import CampaignManagement from './pages/CampaignManagement';
+import CallbackManagement from './pages/CallbackManagement';
 
 // Theme configuration
 const theme = createTheme({
@@ -135,6 +137,8 @@ function App() {
                 <Route path="import-success" element={<ImportSuccess />} />
                 <Route path="excel-template" element={<ExcelTemplate />} />
                 <Route path="settings" element={<Settings />} />
+                <Route path="campaigns" element={<CampaignManagement />} />
+                <Route path="callbacks" element={<CallbackManagement />} />
               </Route>
             </Routes>
           </Router>

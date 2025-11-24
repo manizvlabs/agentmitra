@@ -26,6 +26,8 @@ import {
   Settings,
   AccountCircle,
   Logout,
+  Campaign,
+  PhoneCallback,
 } from '@mui/icons-material';
 
 const drawerWidth = 280;
@@ -39,6 +41,8 @@ interface NavigationItem {
 const navigationItems: NavigationItem[] = [
   { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
   { text: 'Data Import', icon: <CloudUpload />, path: '/data-import' },
+  { text: 'Campaigns', icon: <Campaign />, path: '/campaigns' },
+  { text: 'Callbacks', icon: <PhoneCallback />, path: '/callbacks' },
   { text: 'Excel Template', icon: <Description />, path: '/excel-template' },
   { text: 'Settings', icon: <Settings />, path: '/settings' },
 ];
