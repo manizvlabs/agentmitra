@@ -44,9 +44,9 @@ else
 fi
 
 # Check required variables
-# Use SaaS Admin SDK URL if FEATUREHUB_ADMIN_SDK_URL not set
+# Use SaaS Admin SDK base URL (without /vanilla/{id} - SDK appends /mr-api internally)
 if [ -z "$FEATUREHUB_ADMIN_SDK_URL" ]; then
-    FEATUREHUB_ADMIN_SDK_URL="https://app.featurehub.io/vanilla/913a7a7d-3523-4f7b-85ca-9564ad10e858"
+    FEATUREHUB_ADMIN_SDK_URL="https://app.featurehub.io"
     echo "⚠️  Using default Admin SDK URL: $FEATUREHUB_ADMIN_SDK_URL"
 fi
 
