@@ -94,7 +94,7 @@ class Settings(BaseSettings):
     email_from: Optional[str] = os.getenv("EMAIL_FROM")
     
     # FeatureHub Configuration
-    featurehub_url: str = os.getenv("FEATUREHUB_URL", "http://localhost:8080")
+    featurehub_url: str = os.getenv("FEATUREHUB_URL", "http://localhost:8071")
     featurehub_api_key: Optional[str] = os.getenv("FEATUREHUB_API_KEY")
     featurehub_environment: str = os.getenv("FEATUREHUB_ENVIRONMENT", "development")
     featurehub_sdk_key: Optional[str] = os.getenv("FEATUREHUB_SDK_KEY")

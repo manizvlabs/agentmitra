@@ -14,7 +14,7 @@ if ! curl -f http://localhost:8012/health > /dev/null 2>&1; then
 fi
 
 # Check if FeatureHub is running
-if ! curl -f http://localhost:8080/health > /dev/null 2>&1; then
+if ! curl -f http://localhost:8071/health > /dev/null 2>&1; then
     echo "⚠️  FeatureHub Edge server is not running. Starting it..."
     docker-compose -f docker-compose.dev.yml up -d featurehub
     sleep 5

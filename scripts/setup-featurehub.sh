@@ -23,8 +23,8 @@ sleep 10
 
 # Check FeatureHub Edge health
 echo "🔍 Checking FeatureHub Edge server..."
-if curl -f http://localhost:8080/health > /dev/null 2>&1; then
-    echo "✅ FeatureHub Edge server is running at http://localhost:8080"
+if curl -f http://localhost:8071/health > /dev/null 2>&1; then
+    echo "✅ FeatureHub Edge server is running at http://localhost:8071"
 else
     echo "⚠️  FeatureHub Edge server may not be ready yet. Check logs: docker-compose -f docker-compose.dev.yml logs featurehub"
 fi
