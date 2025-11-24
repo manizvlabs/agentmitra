@@ -28,13 +28,26 @@ class FeatureHubAdminService:
         self.sdk_key = settings.featurehub_sdk_key
         
         # Extract application and environment IDs from SDK key
-        # Format: {portfolio_id}/{application_id}/{environment_id}/{key}
+        # Format can be: {portfolio_id}/{application_id}/{environment_id}/{key} OR {application_id}/{environment_id}/{key}
         if self.sdk_key:
             parts = self.sdk_key.split('/')
             if len(parts) >= 3:
-                self.portfolio_id = parts[0] if parts[0] != 'default' else None
-                self.application_id = parts[1]
-                self.environment_id = parts[2]
+                # Check if first part is 'default' or a portfolio ID
+                if parts[0] == 'default' or len(parts) == 4:
+                    # Format: portfolio/app_id/env_id/key
+                    self.portfolio_id = parts[0] if parts[0] != 'default' else None
+                    self.application_id = parts[1]
+                    self.environment_id = parts[2]
+                else:
+                    # Format: app_id/env_id/key
+                    self.portfolio_id = None
+                    self.application_id = parts[0]
+                    self.environment_id = parts[1]
+            elif len(parts) == 2:
+                # Format: app_id/env_id (no key part)
+                self.portfolio_id = None
+                self.application_id = parts[0]
+                self.environment_id = parts[1]
             else:
                 self.portfolio_id = None
                 self.application_id = None

@@ -4,10 +4,18 @@ Script to programmatically create FeatureHub feature flags
 """
 import asyncio
 import sys
+import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from backend/.env.local
+backend_dir = Path(__file__).parent.parent / "backend"
+env_local = backend_dir / ".env.local"
+if env_local.exists():
+    load_dotenv(env_local, override=True)
+    print(f"✅ Loaded environment from {env_local}")
 
 # Add backend to path
-backend_dir = Path(__file__).parent.parent / "backend"
 sys.path.insert(0, str(backend_dir))
 
 from app.services.featurehub_admin_service import get_featurehub_admin_service
@@ -40,13 +48,26 @@ async def main():
         admin_service = await get_featurehub_admin_service()
         
         # Extract IDs from SDK key
+        # Format can be: portfolio/app_id/env_id/key OR app_id/env_id/key
         sdk_parts = settings.featurehub_sdk_key.split('/')
         if len(sdk_parts) >= 3:
-            application_id = sdk_parts[1]
-            environment_id = sdk_parts[2]
+            # Check if first part is 'default' or a portfolio ID
+            if sdk_parts[0] == 'default' or len(sdk_parts) == 4:
+                # Format: portfolio/app_id/env_id/key
+                application_id = sdk_parts[1]
+                environment_id = sdk_parts[2]
+            else:
+                # Format: app_id/env_id/key
+                application_id = sdk_parts[0]
+                environment_id = sdk_parts[1]
+        elif len(sdk_parts) == 2:
+            # Format: app_id/env_id (no key part)
+            application_id = sdk_parts[0]
+            environment_id = sdk_parts[1]
         else:
             print("❌ Error: Invalid SDK key format")
-            print("   Expected format: portfolio/app_id/env_id/key")
+            print(f"   Received: {settings.featurehub_sdk_key}")
+            print("   Expected format: app_id/env_id/key or portfolio/app_id/env_id/key")
             sys.exit(1)
         
         print(f"Application ID: {application_id}")
