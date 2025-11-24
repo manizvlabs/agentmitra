@@ -3,7 +3,7 @@ Agent Mitra - API v1 Router
 Main API router that combines all endpoint routers
 """
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from . import auth, users, providers, agents, policies, presentations, chat, analytics, feature_flags, health, notifications
@@ -79,43 +79,37 @@ async def get_test_policies(db: Session = Depends(get_db)):
 
 @api_router.get("/test/notifications")
 async def get_test_notifications(db: Session = Depends(get_db)):
-    """Test endpoint for notifications (no auth required)"""
-    # TODO: Connect to real notification repository when implemented
-    # For now, return mock data that would come from database
-    return [
-        {
-            "id": "notif_001",
-            "title": "Policy Renewal Due",
-            "body": "Your policy LIC123456789 is due for renewal in 7 days.",
-            "type": "renewal",
-            "is_read": False
-        },
-        {
-            "id": "notif_002",
-            "title": "Claim Approved",
-            "body": "Your claim CLM001 for ₹45,000 has been approved.",
-            "type": "claim",
-            "is_read": False
-        },
-        {
-            "id": "notif_003",
-            "title": "Payment Due",
-            "body": "Premium payment of ₹2,500 is due in 3 days.",
-            "type": "payment",
-            "is_read": True
-        },
-        {
-            "id": "notif_004",
-            "title": "New Feature Available",
-            "body": "Try our new claims filing feature with AI assistance.",
-            "type": "marketing",
-            "is_read": False
-        }
-    ]
+    """Test endpoint for notifications - returns real data from database"""
+    from app.models.notification import Notification
+    from sqlalchemy import desc
+    
+    # Get recent notifications from database (limit 10)
+    notifications = db.query(Notification)\
+        .order_by(desc(Notification.created_at))\
+        .limit(10)\
+        .all()
+    
+    if notifications:
+        return [
+            {
+                "id": str(notif.id),
+                "title": notif.title,
+                "body": notif.body,
+                "type": notif.type,
+                "priority": notif.priority,
+                "is_read": notif.is_read,
+                "created_at": notif.created_at.isoformat() if notif.created_at else None,
+                "read_at": notif.read_at.isoformat() if notif.read_at else None,
+            }
+            for notif in notifications
+        ]
+    else:
+        # Return empty array if no notifications in database
+        return []
 
 @api_router.get("/test/agent/profile")
 async def get_test_agent_profile(db: Session = Depends(get_db)):
-    """Test endpoint for agent profile (no auth required)"""
+    """Test endpoint for agent profile - returns real data from database"""
     from app.repositories.agent_repository import AgentRepository
 
     repo = AgentRepository(db)
@@ -124,6 +118,15 @@ async def get_test_agent_profile(db: Session = Depends(get_db)):
 
     if agents:
         agent = agents[0]
+        # Get real user info from database
+        user_info = None
+        if agent.user:
+            user_info = {
+                "full_name": agent.user.full_name,
+                "phone_number": agent.user.phone_number,
+                "email": agent.user.email
+            }
+        
         return {
             "agent_id": str(agent.agent_id),
             "user_id": str(agent.user_id) if agent.user_id else None,
@@ -134,36 +137,17 @@ async def get_test_agent_profile(db: Session = Depends(get_db)):
             "territory": agent.territory,
             "experience_years": agent.experience_years,
             "total_policies_sold": agent.total_policies_sold,
-            "total_premium_collected": agent.total_premium_collected,
+            "total_premium_collected": float(agent.total_premium_collected) if agent.total_premium_collected else 0.0,
             "status": agent.status,
             "verification_status": agent.verification_status,
-            "user_info": {
-                "full_name": "Agent User",  # Simplified for now
-                "phone_number": "+919876543210",
-                "email": "agent@test.com"
-            }
+            "user_info": user_info
         }
     else:
-        # Return mock data if no agents in database
-        return {
-            "agent_id": "test-agent-001",
-            "user_id": "test-user-001",
-            "agent_code": "AGENT001",
-            "license_number": "LIC123456789",
-            "license_expiry_date": "2025-12-31",
-            "business_name": "Test Insurance Solutions",
-            "territory": "Mumbai",
-            "experience_years": 5,
-            "total_policies_sold": 25,
-            "total_premium_collected": 35500.0,
-            "status": "active",
-            "verification_status": "approved",
-            "user_info": {
-                "full_name": "John Doe",
-                "phone_number": "+919876543210",
-                "email": "john.doe@test.com"
-            }
-        }
+        # Return empty response if no agents in database
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No agents found in database"
+        )
 
 # Include all endpoint routers
 api_router.include_router(auth.router, prefix="/auth", tags=["authentication"])

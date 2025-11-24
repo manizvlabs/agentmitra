@@ -17,9 +17,12 @@ from app.core.security import (
     blacklist_token,
 )
 from app.core.auth import get_current_user_context, UserContext, require_permission
+from app.core.rate_limiter import otp_rate_limiter, auth_rate_limiter
+from app.core.audit_logger import AuditLogger
 from app.services.otp_service import OTPService
 from app.repositories.user_repository import UserRepository
 from datetime import datetime
+from fastapi import Request
 
 router = APIRouter()
 security = HTTPBearer()
@@ -32,11 +35,13 @@ class LoginRequest(BaseModel):
 
 
 class OTPRequest(BaseModel):
-    phone_number: str
+    phone_number: Optional[str] = None
+    email: Optional[str] = None
 
 
 class OTPVerifyRequest(BaseModel):
-    phone_number: str
+    phone_number: Optional[str] = None
+    email: Optional[str] = None
     otp: str
 
 
@@ -48,17 +53,43 @@ class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
-    expires_in: int = 1800  # 30 minutes
+    expires_in: int = 900  # 15 minutes
     user: Optional[dict] = None
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(request: LoginRequest, db: Session = Depends(get_db)):
+async def login(
+    request: LoginRequest,
+    http_request: Request,
+    db: Session = Depends(get_db)
+):
     """
     Login endpoint - supports multiple authentication methods:
     1. Phone + Password (for registered users)
     2. Agent Code (for agents)
     """
+    # Rate limiting
+    ip_address = http_request.client.host if http_request.client else "unknown"
+    user_agent = http_request.headers.get("user-agent")
+    
+    is_allowed, remaining = auth_rate_limiter.is_allowed(ip_address)
+    if not is_allowed:
+        await AuditLogger.log_login_attempt(
+            db=db,
+            user_id=None,
+            phone_number=request.phone_number,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            success=False,
+            method="rate_limited",
+            error_message="Rate limit exceeded"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many login attempts. Please try again later.",
+            headers={"X-RateLimit-Remaining": str(remaining)}
+        )
+    
     user_repo = UserRepository(db)
 
     # Find user by phone number or agent code
@@ -101,7 +132,17 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
             )
 
         if not verify_password(request.password, user.password_hash):
-            # TODO: Implement failed login attempt tracking
+            # Log failed login attempt
+            await AuditLogger.log_login_attempt(
+                db=db,
+                user_id=str(user.user_id),
+                phone_number=user.phone_number,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                success=False,
+                method=login_method,
+                error_message="Invalid password"
+            )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid password"
@@ -114,12 +155,43 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
             detail="Password is required for phone number login"
         )
 
-    # Create token pair
+    # Get feature flags and permissions for user
+    from app.services.featurehub_service import get_featurehub_service
+    from app.core.auth import PERMISSIONS, ROLE_HIERARCHY
+    
+    # Build user context for FeatureHub
+    user_context = {
+        "userId": str(user.user_id),
+        "role": user.role,
+        "email": user.email,
+        "phoneNumber": user.phone_number,
+    }
+    
+    # Get feature flags from FeatureHub
+    featurehub_service = await get_featurehub_service()
+    feature_flags = await featurehub_service.get_all_flags(user_context=user_context)
+    
+    # Calculate permissions based on role
+    permissions = []
+    user_level = ROLE_HIERARCHY.get(user.role, 0)
+    for permission, allowed_roles in PERMISSIONS.items():
+        if "*" in allowed_roles or user.role in allowed_roles:
+            permissions.append(permission)
+        else:
+            for role in allowed_roles:
+                if ROLE_HIERARCHY.get(role, 0) <= user_level:
+                    permissions.append(permission)
+                    break
+    
+    # Create token pair with feature flags, permissions, and tenant_id
     user_data = {
         "user_id": str(user.user_id),
         "phone_number": user.phone_number,
         "role": user.role,
         "email": user.email,
+        "tenant_id": str(user.tenant_id) if hasattr(user, 'tenant_id') else "",
+        "permissions": permissions,
+        "feature_flags": feature_flags,
     }
 
     token_response = create_token_pair(user_data)
@@ -141,6 +213,17 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
     except Exception as e:
         # Log error but don't fail login
         print(f"Failed to update last login: {e}")
+    
+    # Log successful login
+    await AuditLogger.log_login_attempt(
+        db=db,
+        user_id=str(user.user_id),
+        phone_number=user.phone_number,
+        ip_address=ip_address,
+        user_agent=user_agent,
+        success=True,
+        method=login_method
+    )
 
     # Return token response with user info
     return TokenResponse(
@@ -153,68 +236,216 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
             "phone_number": user.phone_number,
             "full_name": user.full_name,
             "role": user.role,
-            "is_verified": getattr(user, 'phone_verified', False),
+            "is_verified": getattr(user, 'phone_verified', False) or getattr(user, 'email_verified', False),
             "email": user.email,
+            "trial_status": trial_status,
         }
     )
 
 
 @router.post("/send-otp")
-async def send_otp(request: OTPRequest, db: Session = Depends(get_db)):
-    """Send OTP to phone number"""
+async def send_otp(
+    request: OTPRequest,
+    http_request: Request,
+    db: Session = Depends(get_db)
+):
+    """Send OTP to phone number or email"""
+    # Validate input
+    if not request.phone_number and not request.email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Either phone_number or email must be provided"
+        )
+    
+    # Rate limiting for OTP requests
+    ip_address = http_request.client.host if http_request.client else "unknown"
+    user_agent = http_request.headers.get("user-agent")
+    
+    # Use phone number or email as identifier for rate limiting
+    identifier = request.phone_number or request.email
+    is_allowed, remaining = otp_rate_limiter.is_allowed(identifier)
+    if not is_allowed:
+        await AuditLogger.log_otp_sent(
+            db=db,
+            phone_number=request.phone_number,
+            email=request.email,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            success=False,
+            error_message="Rate limit exceeded"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Too many OTP requests. Maximum {otp_rate_limiter.limit} per {otp_rate_limiter.window_str}. Please try again later.",
+            headers={"X-RateLimit-Remaining": str(remaining)}
+        )
+    
     user_repo = UserRepository(db)
     
     # Check if user exists, if not create one
-    user = user_repo.get_by_phone(request.phone_number)
+    user = None
+    if request.phone_number:
+        user = user_repo.get_by_phone(request.phone_number)
+    elif request.email:
+        user = user_repo.get_by_email(request.email)
+    
     if not user:
         # Create new user
         user = user_repo.create({
             "phone_number": request.phone_number,
+            "email": request.email,
             "role": "policyholder",
             "is_verified": False,
         })
     
     # Generate and store OTP
-    otp = OTPService.generate_and_store_otp(request.phone_number)
-    
-    return {
-        "message": "OTP sent successfully",
-        "phone_number": request.phone_number,
-        "expires_in": OTPService.OTP_EXPIRY_MINUTES * 60
-    }
+    try:
+        if request.phone_number:
+            otp = OTPService.generate_and_store_otp(request.phone_number)
+            # TODO: Send SMS OTP via SMS provider
+        elif request.email:
+            otp = OTPService.generate_and_store_otp(request.email)
+            # TODO: Send Email OTP via Email provider
+        
+        # Log OTP sent
+        await AuditLogger.log_otp_sent(
+            db=db,
+            phone_number=request.phone_number,
+            email=request.email,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            success=True
+        )
+        
+        return {
+            "message": "OTP sent successfully",
+            "phone_number": request.phone_number,
+            "email": request.email,
+            "expires_in": OTPService.OTP_EXPIRY_MINUTES * 60
+        }
+    except Exception as e:
+        # Log failure
+        await AuditLogger.log_otp_sent(
+            db=db,
+            phone_number=request.phone_number,
+            email=request.email,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            success=False,
+            error_message=str(e)
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send OTP. Please try again."
+        )
 
 
 @router.post("/verify-otp", response_model=TokenResponse)
-async def verify_otp(request: OTPVerifyRequest, db: Session = Depends(get_db)):
-    """Verify OTP and return tokens"""
+async def verify_otp(
+    request: OTPVerifyRequest,
+    http_request: Request,
+    db: Session = Depends(get_db)
+):
+    """Verify OTP and return tokens (supports both phone and email)"""
+    # Validate input
+    if not request.phone_number and not request.email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Either phone_number or email must be provided"
+        )
+    
     user_repo = UserRepository(db)
+    ip_address = http_request.client.host if http_request.client else "unknown"
+    user_agent = http_request.headers.get("user-agent")
+    
+    # Get identifier for OTP verification
+    identifier = request.phone_number or request.email
+    
+    # Get user to track attempts
+    user = None
+    if request.phone_number:
+        user = user_repo.get_by_phone(request.phone_number)
+    elif request.email:
+        user = user_repo.get_by_email(request.email)
+    
+    user_id = str(user.user_id) if user else None
     
     # Verify OTP
-    if not OTPService.verify_otp(request.phone_number, request.otp):
+    otp_valid = OTPService.verify_otp(identifier, request.otp)
+    
+    if not otp_valid:
+        # Log failed OTP verification
+        await AuditLogger.log_otp_verification(
+            db=db,
+            phone_number=request.phone_number,
+            user_id=user_id,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            success=False,
+            attempts=OTPService.OTP_MAX_ATTEMPTS,  # Will be tracked by service
+            error_message="Invalid or expired OTP"
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired OTP"
         )
     
     # Get or create user
-    user = user_repo.get_by_phone(request.phone_number)
     if not user:
         user = user_repo.create({
             "phone_number": request.phone_number,
+            "email": request.email,
             "role": "policyholder",
-            "phone_verified": True,
+            "phone_verified": bool(request.phone_number),
+            "email_verified": bool(request.email),
             "status": "active",
         })
     else:
         # Mark user as verified
-        user_repo.update(user.user_id, {"phone_verified": True})
+        update_data = {}
+        if request.phone_number:
+            update_data["phone_verified"] = True
+        if request.email:
+            update_data["email_verified"] = True
+        user_repo.update(user.user_id, update_data)
 
-    # Create token pair
+    # Get feature flags and permissions for user
+    from app.services.featurehub_service import get_featurehub_service
+    from app.core.auth import PERMISSIONS, ROLE_HIERARCHY
+    
+    # Build user context for FeatureHub
+    user_context = {
+        "userId": str(user.user_id),
+        "role": user.role,
+        "email": user.email,
+        "phoneNumber": user.phone_number,
+    }
+    
+    # Get feature flags from FeatureHub
+    featurehub_service = await get_featurehub_service()
+    feature_flags = await featurehub_service.get_all_flags(user_context=user_context)
+    
+    # Calculate permissions based on role
+    permissions = []
+    user_level = ROLE_HIERARCHY.get(user.role, 0)
+    for permission, allowed_roles in PERMISSIONS.items():
+        if "*" in allowed_roles or user.role in allowed_roles:
+            permissions.append(permission)
+        else:
+            for role in allowed_roles:
+                if ROLE_HIERARCHY.get(role, 0) <= user_level:
+                    permissions.append(permission)
+                    break
+    
+    # Create token pair with feature flags, permissions, and tenant_id
     user_data = {
         "user_id": str(user.user_id),
         "phone_number": user.phone_number,
         "role": user.role,
         "email": user.email,
+        "tenant_id": str(user.tenant_id) if hasattr(user, 'tenant_id') else "",
+        "permissions": permissions,
+        "feature_flags": feature_flags,
     }
 
     token_response = create_token_pair(user_data)
@@ -236,6 +467,25 @@ async def verify_otp(request: OTPVerifyRequest, db: Session = Depends(get_db)):
     except Exception as e:
         # Log error but don't fail login
         print(f"Failed to update last login: {e}")
+    
+    # Log successful OTP verification
+    await AuditLogger.log_otp_verification(
+        db=db,
+        phone_number=request.phone_number,
+        user_id=str(user.user_id),
+        ip_address=ip_address,
+        user_agent=user_agent,
+        success=True,
+        attempts=1
+    )
+    
+    # Check trial period and subscription status
+    from app.core.trial_subscription import TrialSubscriptionService
+    
+    trial_status = TrialSubscriptionService.check_trial_status(user)
+    
+    # Include trial/subscription info in token response (will be added to user data)
+    # Note: We allow login even if trial expired - frontend will handle feature restrictions
 
     return TokenResponse(
         access_token=token_response["access_token"],
@@ -247,8 +497,9 @@ async def verify_otp(request: OTPVerifyRequest, db: Session = Depends(get_db)):
             "phone_number": user.phone_number,
             "full_name": user.full_name,
             "role": user.role,
-            "is_verified": getattr(user, 'phone_verified', False),
+            "is_verified": getattr(user, 'phone_verified', False) or getattr(user, 'email_verified', False),
             "email": user.email,
+            "trial_status": trial_status,
         }
     )
 
@@ -273,6 +524,10 @@ async def refresh_token(request: RefreshTokenRequest, db: Session = Depends(get_
         user = user_repo.get_by_id(user_id) if user_id else None
 
         if user:
+            # Get trial status
+            from app.core.trial_subscription import TrialSubscriptionService
+            trial_status = TrialSubscriptionService.check_trial_status(user)
+            
             return TokenResponse(
                 access_token=token_response["access_token"],
                 refresh_token=request.refresh_token,  # Return same refresh token
@@ -283,8 +538,9 @@ async def refresh_token(request: RefreshTokenRequest, db: Session = Depends(get_
                     "phone_number": user.phone_number,
                     "full_name": user.full_name,
                     "role": user.role,
-                    "is_verified": getattr(user, 'phone_verified', False),
+                    "is_verified": getattr(user, 'phone_verified', False) or getattr(user, 'email_verified', False),
                     "email": user.email,
+                    "trial_status": trial_status,
                 }
             )
 
@@ -299,10 +555,14 @@ async def refresh_token(request: RefreshTokenRequest, db: Session = Depends(get_
 
 @router.post("/logout")
 async def logout(
+    http_request: Request,
     current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """Logout endpoint - blacklist current access token"""
+    ip_address = http_request.client.host if http_request.client else "unknown"
+    user_agent = http_request.headers.get("user-agent")
+    
     # Blacklist the current access token
     auth_header = current_user.token_data.get("token")
     if auth_header:
@@ -310,6 +570,14 @@ async def logout(
 
     # Invalidate user sessions (optional - could be done in background)
     # For now, just return success
+    
+    # Log logout
+    await AuditLogger.log_logout(
+        db=db,
+        user_id=current_user.user_id,
+        ip_address=ip_address,
+        user_agent=user_agent
+    )
 
     return {"message": "Logged out successfully"}
 

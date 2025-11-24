@@ -137,12 +137,16 @@ def validate_jwt_token(token: str, token_type: str = "access") -> Optional[Dict]
 def create_token_pair(user_data: Dict) -> Dict[str, str]:
     """
     Create both access and refresh tokens for a user
+    Includes feature flags, permissions, and tenant_id as per authentication design
     """
     token_data = {
         "sub": str(user_data.get("user_id", "")),
         "phone_number": user_data.get("phone_number", ""),
         "role": user_data.get("role", ""),
         "email": user_data.get("email", ""),
+        "tenant_id": str(user_data.get("tenant_id", "")),
+        "permissions": user_data.get("permissions", []),
+        "feature_flags": user_data.get("feature_flags", {}),
     }
 
     access_token = create_access_token(token_data)
@@ -159,18 +163,22 @@ def create_token_pair(user_data: Dict) -> Dict[str, str]:
 def refresh_access_token(refresh_token: str) -> Optional[Dict[str, str]]:
     """
     Create new access token from valid refresh token
+    Preserves feature flags, permissions, and tenant_id from refresh token
     """
     # Validate refresh token
     payload = validate_jwt_token(refresh_token, "refresh")
     if not payload:
         return None
 
-    # Create new access token with same data
+    # Create new access token with same data (including feature flags, permissions, tenant_id)
     token_data = {
         "sub": payload.get("sub"),
         "phone_number": payload.get("phone_number", ""),
         "role": payload.get("role", ""),
         "email": payload.get("email", ""),
+        "tenant_id": payload.get("tenant_id", ""),
+        "permissions": payload.get("permissions", []),
+        "feature_flags": payload.get("feature_flags", {}),
     }
 
     access_token = create_access_token(token_data)

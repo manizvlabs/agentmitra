@@ -44,6 +44,12 @@ services:
       - REDIS_URL=redis://host.docker.internal:6379
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - CORS_ORIGINS=${CORS_ORIGINS}
+      - FEATUREHUB_URL=http://featurehub:8080
+      - FEATUREHUB_API_KEY=${FEATUREHUB_API_KEY}
+      - FEATUREHUB_SDK_KEY=${FEATUREHUB_SDK_KEY}
+      - FEATUREHUB_ENVIRONMENT=${FEATUREHUB_ENVIRONMENT:-production}
+    depends_on:
+      - featurehub
     ports:
       - "8012:8012"
     volumes:
@@ -131,11 +137,65 @@ services:
     networks:
       - agentmitra_network
 
+  # FeatureHub Edge Server for Feature Flag Management
+  featurehub:
+    image: featurehub/edge:latest
+    container_name: agentmitra_featurehub
+    restart: unless-stopped
+    environment:
+      - FEATUREHUB_MODE=edge
+      - FEATUREHUB_EDGE_URL=http://featurehub:8080
+      - FEATUREHUB_REPOSITORY_URL=${FEATUREHUB_REPOSITORY_URL:-http://featurehub-admin:8085}
+    ports:
+      - "8080:8080"
+    networks:
+      - agentmitra_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # FeatureHub Admin UI (optional, for self-hosted setup)
+  featurehub-admin:
+    image: featurehub/admin:latest
+    container_name: agentmitra_featurehub_admin
+    restart: unless-stopped
+    environment:
+      - FEATUREHUB_DATABASE_URL=${FEATUREHUB_DATABASE_URL:-postgresql://featurehub:featurehub@featurehub-db:5432/featurehub}
+      - FEATUREHUB_EDGE_URL=http://featurehub:8080
+    ports:
+      - "8085:8085"
+    depends_on:
+      - featurehub-db
+    networks:
+      - agentmitra_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8085/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # FeatureHub Database (for Admin UI)
+  featurehub-db:
+    image: postgres:16-alpine
+    container_name: agentmitra_featurehub_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: featurehub
+      POSTGRES_USER: featurehub
+      POSTGRES_PASSWORD: featurehub
+    volumes:
+      - featurehub_db_data:/var/lib/postgresql/data
+    networks:
+      - agentmitra_network
+
 volumes:
   # postgres_data:  # Commented out - using local MacBook PostgreSQL
   # redis_data:     # Commented out - using local MacBook Redis
   prometheus_data:
   grafana_data:
+  featurehub_db_data:
 
 networks:
   agentmitra_network:

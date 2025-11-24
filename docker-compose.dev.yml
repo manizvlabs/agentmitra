@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # FeatureHub Edge Server for Feature Flag Management (Development)
+  # Using official FeatureHub Edge Docker image
+  # For full setup with Admin UI, see: https://docs.featurehub.io/getting-started/self-hosted
+  featurehub-edge:
+    image: featurehub/edge:latest
+    container_name: agentmitra_featurehub_edge_dev
+    restart: unless-stopped
+    environment:
+      - FEATUREHUB_MODE=edge
+      - FEATUREHUB_REPOSITORY_URL=${FEATUREHUB_REPOSITORY_URL:-http://featurehub-admin:8085}
+    ports:
+      - "8080:8080"
+    networks:
+      - agentmitra_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8080/health || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # FeatureHub Admin UI (optional - for managing flags via UI)
+  # Note: Requires database. For simple testing, Edge server can work standalone
+  featurehub-admin:
+    image: featurehub/admin:latest
+    container_name: agentmitra_featurehub_admin_dev
+    restart: unless-stopped
+    environment:
+      - FEATUREHUB_DATABASE_URL=postgresql://featurehub:featurehub@featurehub-db:5432/featurehub
+      - FEATUREHUB_EDGE_URL=http://featurehub-edge:8080
+    ports:
+      - "8085:8085"
+    depends_on:
+      - featurehub-db
+    networks:
+      - agentmitra_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8085/health || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # FeatureHub Database (for Admin UI)
+  featurehub-db:
+    image: postgres:16-alpine
+    container_name: agentmitra_featurehub_db_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: featurehub
+      POSTGRES_USER: featurehub
+      POSTGRES_PASSWORD: featurehub
+    volumes:
+      - featurehub_db_data_dev:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"  # Different port to avoid conflict with main DB
+    networks:
+      - agentmitra_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U featurehub"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  featurehub_db_data_dev:
+
+networks:
+  agentmitra_network:
+    driver: bridge
+

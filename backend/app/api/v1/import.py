@@ -537,22 +537,44 @@ async def get_entity_fields(
 @router.get("/sample-data/{entity_type}")
 async def get_sample_data(
     entity_type: str,
-    current_user = Depends(get_current_user_context)
+    current_user = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
 ):
-    """Get sample data for an entity type"""
-    # Mock sample data
-    sample_data = {
-        "customers": [
-            ["John Doe", "john@example.com", "+91-9876543210", "1990-01-15"],
-            ["Jane Smith", "jane@example.com", "+91-9876543211", "1985-03-22"],
-        ],
-        "policies": [
-            ["POL001", "Life Insurance", "John Doe", "5000"],
-            ["POL002", "Health Insurance", "Jane Smith", "3000"],
+    """Get sample data for an entity type from real database"""
+    from app.repositories.user_repository import UserRepository
+    from app.repositories.policy_repository import PolicyRepository
+    
+    if entity_type == "customers":
+        # Get real customers (policyholders) from database
+        user_repo = UserRepository(db)
+        users = user_repo.search_users({"role": "policyholder"}, limit=5)
+        
+        return [
+            [
+                user.full_name or f"{user.first_name} {user.last_name}".strip() or "N/A",
+                user.email or "N/A",
+                user.phone_number or "N/A",
+                user.date_of_birth.isoformat() if user.date_of_birth else "N/A"
+            ]
+            for user in users
         ]
-    }
-
-    return sample_data.get(entity_type, [])
+    elif entity_type == "policies":
+        # Get real policies from database
+        policy_repo = PolicyRepository(db)
+        policies = policy_repo.get_all(limit=5)
+        
+        return [
+            [
+                policy.policy_number or "N/A",
+                policy.policy_type or "N/A",
+                policy.policyholder.user.full_name if policy.policyholder and policy.policyholder.user else "N/A",
+                str(policy.premium_amount) if policy.premium_amount else "0"
+            ]
+            for policy in policies
+        ]
+    else:
+        # Return empty array for unknown entity types
+        return []
 
 @router.get("/templates/{entity_type}/download")
 async def download_template(

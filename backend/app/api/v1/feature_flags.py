@@ -1,52 +1,70 @@
 """
 Feature Flags API Endpoints
-Provides runtime feature flag configuration
+Provides runtime feature flag configuration using FeatureHub
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import Dict, Optional
 from pydantic import BaseModel
+from datetime import datetime
 
 from app.core.database import get_db
 from app.core.config.settings import settings
+from app.core.auth import get_current_user_context, UserContext
+from app.services.featurehub_service import get_featurehub_service, get_all_feature_flags
 
 router = APIRouter()
 
 
 class FeatureFlagsResponse(BaseModel):
     """Feature flags response model"""
-    flags: Dict[str, bool]
+    flags: Dict[str, any]
     last_updated: Optional[str] = None
     environment: str
+    source: str = "featurehub"  # "featurehub" or "fallback"
 
 
 @router.get("/feature-flags", response_model=FeatureFlagsResponse)
 async def get_feature_flags(
     environment: Optional[str] = None,
+    current_user: Optional[UserContext] = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """
     Get feature flags for the current environment
     
-    Returns feature flags based on:
-    1. Environment (development, staging, production)
-    2. Database configuration (if feature flags table exists)
-    3. Default values from settings
+    Returns feature flags from FeatureHub with user context for targeting.
+    Falls back to default flags if FeatureHub is unavailable.
     """
     env = environment or settings.environment
     
-    # Default feature flags based on environment
-    flags = _get_default_flags(env)
+    # Build user context for FeatureHub targeting
+    user_context = None
+    if current_user:
+        user_context = {
+            "userId": current_user.user_id,
+            "role": current_user.role,
+            "email": current_user.email,
+            "phoneNumber": current_user.phone_number,
+        }
     
-    # TODO: Load from database if feature_flags table exists
-    # This allows runtime configuration without code deployment
-    # db_flags = _load_flags_from_db(db, env)
-    # flags.update(db_flags)
+    try:
+        # Get flags from FeatureHub
+        service = await get_featurehub_service()
+        flags = await service.get_all_flags(user_context=user_context)
+        last_updated = service._last_update.isoformat() if service._last_update else None
+        source = "featurehub"
+    except Exception as e:
+        # Fallback to default flags
+        flags = _get_default_flags(env)
+        last_updated = None
+        source = "fallback"
     
     return FeatureFlagsResponse(
         flags=flags,
-        last_updated=None,  # TODO: Get from database
-        environment=env
+        last_updated=last_updated,
+        environment=env,
+        source=source
     )
 
 

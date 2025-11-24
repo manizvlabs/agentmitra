@@ -20,7 +20,9 @@ except Exception:
 class OTPService:
     """Service for OTP generation and verification"""
     
-    OTP_EXPIRY_MINUTES = 10
+    OTP_EXPIRY_MINUTES = settings.otp_expiry_minutes
+    OTP_MAX_ATTEMPTS = settings.otp_max_attempts
+    OTP_RATE_LIMIT_PER_HOUR = settings.otp_rate_limit_per_hour
     
     @staticmethod
     def _get_key(phone_number: str) -> str:
@@ -57,12 +59,23 @@ class OTPService:
     
     @staticmethod
     def verify_otp(phone_number: str, otp: str) -> bool:
-        """Verify OTP"""
+        """Verify OTP with attempt tracking"""
         if redis_client:
             stored_otp = redis_client.get(OTPService._get_key(phone_number))
+            attempts_key = f"otp_attempts:{phone_number}"
+            attempts = int(redis_client.get(attempts_key) or 0)
+            
+            if attempts >= OTPService.OTP_MAX_ATTEMPTS:
+                return False
+            
             if stored_otp and stored_otp == otp:
                 redis_client.delete(OTPService._get_key(phone_number))
+                redis_client.delete(attempts_key)
                 return True
+            
+            # Increment attempts
+            redis_client.incr(attempts_key)
+            redis_client.expire(attempts_key, OTPService.OTP_EXPIRY_MINUTES * 60)
             return False
         else:
             # Fallback to in-memory storage
@@ -74,12 +87,17 @@ class OTPService:
                     del _otp_storage[phone_number]
                     return False
                 
+                # Check attempts
+                if otp_data["attempts"] >= OTPService.OTP_MAX_ATTEMPTS:
+                    del _otp_storage[phone_number]
+                    return False
+                
                 if otp_data["otp"] == otp:
                     del _otp_storage[phone_number]
                     return True
                 
                 otp_data["attempts"] += 1
-                if otp_data["attempts"] >= 5:
+                if otp_data["attempts"] >= OTPService.OTP_MAX_ATTEMPTS:
                     del _otp_storage[phone_number]
             
             return False

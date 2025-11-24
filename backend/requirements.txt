@@ -34,6 +34,11 @@ psutil==6.0.0
 # AI/ML
 openai==1.51.0
 
+# Feature Flag Management - FeatureHub
+# Install FeatureHub SDK: pip install featurehub-sdk
+# Using httpx for REST API integration (can switch to SDK later)
+# featurehub-sdk==1.0.0
+
 # Testing
 pytest==8.3.3
 pytest-asyncio==0.24.0

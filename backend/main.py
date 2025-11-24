@@ -83,6 +83,10 @@ if settings.environment == "production":
 # Add security middleware
 app.add_middleware(SecurityHeadersMiddleware)
 
+# Add rate limiting middleware
+from app.core.rate_limiter import rate_limit_middleware
+app.middleware("http")(rate_limit_middleware)
+
 # CORS middleware (restrict in production)
 app.add_middleware(
     CORSMiddleware,
