@@ -39,11 +39,17 @@ public class FeatureHubAdminService {
     public FeatureHubAdminService(String baseUrl, String accessToken) {
         // Initialize API client
         apiClient = new ApiClient();
+        
+        // For SaaS, use setBasePath with full URL (as per documentation)
+        // The Admin SDK will handle URL construction internally
         apiClient.setBasePath(baseUrl);
+        
+        logger.info("Setting base path to: {}", baseUrl);
         
         // Set bearer token for authentication
         apiClient.setRequestInterceptor(builder -> {
             builder.header("Authorization", "Bearer " + accessToken);
+            logger.debug("Added Authorization header to request");
         });
         
         // Set as default API client
@@ -70,6 +76,9 @@ public class FeatureHubAdminService {
     public Feature createFeature(UUID applicationId, String key, String name, 
                                  String description, FeatureValueType valueType) {
         try {
+            // Log the base URL being used
+            logger.info("Creating feature '{}' for application: {}", key, applicationId);
+            
             Feature feature = new Feature()
                 .name(name)
                 .key(key)
@@ -78,6 +87,8 @@ public class FeatureHubAdminService {
             if (description != null && !description.isEmpty()) {
                 feature.setDescription(description);
             }
+            
+            logger.info("Calling createFeaturesForApplication with appId: {}, feature key: {}", applicationId, key);
             
             // createFeaturesForApplication requires: UUID, Feature, Boolean (includeEnvironments)
             List<Feature> features = featureService.createFeaturesForApplication(applicationId, feature, false);
@@ -91,8 +102,18 @@ public class FeatureHubAdminService {
             logger.warn("Feature creation returned empty list for: {}", key);
             return null;
             
+        } catch (io.featurehub.admin.ApiException e) {
+            logger.error("API Exception creating feature '{}': Status={}, Message={}", 
+                        key, e.getCode(), e.getMessage());
+            logger.error("Response body: {}", e.getResponseBody());
+            logger.error("Full exception: ", e);
+            return null;
         } catch (Exception e) {
             logger.error("Failed to create feature '{}': {}", key, e.getMessage(), e);
+            logger.error("Exception type: {}", e.getClass().getName());
+            if (e.getCause() != null) {
+                logger.error("Cause: {}", e.getCause().getMessage());
+            }
             return null;
         }
     }
