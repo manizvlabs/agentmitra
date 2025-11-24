@@ -58,11 +58,12 @@ echo "  Environment ID: $ENVIRONMENT_ID"
 echo ""
 
 # Run Java service
-java -jar "$JAR_FILE" create-all \
+java -jar "$JAR_FILE" \
     --base-url "$FEATUREHUB_ADMIN_SDK_URL" \
     --token "$FEATUREHUB_ADMIN_TOKEN" \
     --application-id "$APPLICATION_ID" \
-    --environment-id "$ENVIRONMENT_ID"
+    --environment-id "$ENVIRONMENT_ID" \
+    create-all
 
 EXIT_CODE=$?
 
