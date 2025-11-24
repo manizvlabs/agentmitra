@@ -71,7 +71,10 @@ class Settings(BaseSettings):
     # Rate Limiting
     rate_limiting_enabled: bool = os.getenv("RATE_LIMITING_ENABLED", "true").lower() == "true"
     rate_limit_default: str = os.getenv("RATE_LIMIT_DEFAULT", "100/minute")
-    rate_limit_auth: str = os.getenv("RATE_LIMIT_AUTH", "10/minute")
+    # Development: Allow 1000 logins per hour (effectively unlimited for testing)
+    # Production: 10/minute (600/hour)
+    _env = os.getenv("ENVIRONMENT", "development")
+    rate_limit_auth: str = os.getenv("RATE_LIMIT_AUTH", "1000/hour" if _env == "development" else "10/minute")
     rate_limit_otp: str = os.getenv("RATE_LIMIT_OTP", "5/hour")
     rate_limit_import: str = os.getenv("RATE_LIMIT_IMPORT", "5/minute")
     rate_limit_analytics: str = os.getenv("RATE_LIMIT_ANALYTICS", "50/minute")

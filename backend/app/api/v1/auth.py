@@ -71,59 +71,76 @@ async def login(
     1. Phone + Password (for registered users)
     2. Agent Code (for agents)
     """
-    # Rate limiting
-    ip_address = http_request.client.host if http_request.client else "unknown"
-    user_agent = http_request.headers.get("user-agent")
-    
-    is_allowed, remaining = auth_rate_limiter.is_allowed(ip_address)
-    if not is_allowed:
-        await AuditLogger.log_login_attempt(
-            db=db,
-            user_id=None,
-            phone_number=request.phone_number,
-            ip_address=ip_address,
-            user_agent=user_agent,
-            success=False,
-            method="rate_limited",
-            error_message="Rate limit exceeded"
-        )
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many login attempts. Please try again later.",
-            headers={"X-RateLimit-Remaining": str(remaining)}
-        )
-    
-    user_repo = UserRepository(db)
+    try:
+        # Rate limiting
+        ip_address = http_request.client.host if http_request.client else "unknown"
+        user_agent = http_request.headers.get("user-agent")
+        
+        is_allowed, remaining = auth_rate_limiter.is_allowed(ip_address)
+        if not is_allowed:
+            await AuditLogger.log_login_attempt(
+                db=db,
+                user_id=None,
+                phone_number=request.phone_number,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                success=False,
+                method="rate_limited",
+                error_message="Rate limit exceeded"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Too many login attempts. Please try again later.",
+                headers={"X-RateLimit-Remaining": str(remaining)}
+            )
+        
+        user_repo = UserRepository(db)
 
-    # Find user by phone number or agent code
-    user = None
-    login_method = None
+        # Find user by phone number or agent code
+        user = None
+        login_method = None
 
-    if request.agent_code:
-        # Agent code login - find agent through agent table
-        user = user_repo.get_by_agent_code(request.agent_code)
-        login_method = "agent_code"
-    elif request.phone_number:
-        # Phone login - find user directly
-        user = user_repo.get_by_phone(request.phone_number)
-        login_method = "phone"
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Either phone_number or agent_code must be provided"
-        )
+        if request.agent_code:
+            # Agent code login - find agent through agent table
+            try:
+                user = user_repo.get_by_agent_code(request.agent_code)
+                login_method = "agent_code"
+                logger.debug(f"Agent code lookup: {request.agent_code}, found user: {user.user_id if user else None}")
+            except Exception as e:
+                logger.error(f"Error looking up agent code {request.agent_code}: {e}", exc_info=True)
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Error during authentication: {str(e)}"
+                )
+        elif request.phone_number:
+            # Phone login - find user directly
+            user = user_repo.get_by_phone(request.phone_number)
+            login_method = "phone"
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Either phone_number or agent_code must be provided"
+            )
 
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials"
-        )
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid credentials"
+            )
 
-    # Check if user account is active
-    if hasattr(user, 'status') and user.status != 'active':
+        # Check if user account is active
+        if hasattr(user, 'status') and user.status != 'active':
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Account is not active"
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error during login: {e}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account is not active"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error during authentication: {str(e)}"
         )
 
     # Verify password if provided (required for phone login)
@@ -163,16 +180,53 @@ async def login(
     from app.core.auth import PERMISSIONS, ROLE_HIERARCHY
     
     # Build user context for FeatureHub
-    user_context = {
-        "userId": str(user.user_id),
-        "role": user.role,
-        "email": user.email,
-        "phoneNumber": user.phone_number,
-    }
+    try:
+        user_context = {
+            "userId": str(user.user_id),
+            "role": getattr(user, 'role', 'agent'),
+            "email": getattr(user, 'email', None) or "",
+            "phoneNumber": getattr(user, 'phone_number', None) or "",
+        }
+    except Exception as e:
+        logger.error(f"Error building user context: {e}", exc_info=True)
+        user_context = {
+            "userId": str(user.user_id) if hasattr(user, 'user_id') else "",
+            "role": "agent",
+            "email": "",
+            "phoneNumber": "",
+        }
     
-    # Get feature flags from FeatureHub
-    featurehub_service = await get_featurehub_service()
-    feature_flags = await featurehub_service.get_all_flags(user_context=user_context)
+    # Get feature flags from FeatureHub (with fallback to defaults)
+    feature_flags = {}
+    try:
+        featurehub_service = await get_featurehub_service()
+        feature_flags = await featurehub_service.get_all_flags(user_context=user_context)
+        # Ensure we have a dict even if service returns empty
+        if not feature_flags:
+            raise ValueError("Empty flags returned")
+    except Exception as e:
+        # FeatureHub unavailable - use fallback flags from settings/env
+        logger.warning(f"FeatureHub unavailable, using fallback flags: {e}")
+        # Use default feature flags - these match the fallback in FeatureHubService
+        feature_flags = {
+            "phone_auth_enabled": True,
+            "email_auth_enabled": True,
+            "otp_verification_enabled": True,
+            "agent_code_login_enabled": True,
+            "dashboard_enabled": True,
+            "policies_enabled": True,
+            "chat_enabled": True,
+            "notifications_enabled": True,
+            "whatsapp_integration_enabled": True,
+            "chatbot_enabled": True,
+            "callback_management_enabled": True,
+            "analytics_enabled": True,
+            "roi_dashboards_enabled": True,
+            "portal_enabled": True,
+            "data_import_enabled": True,
+            "marketing_campaigns_enabled": True,
+            "campaign_builder_enabled": True,
+        }
     
     # Calculate permissions based on role
     permissions = []
@@ -187,15 +241,22 @@ async def login(
                     break
     
     # Create token pair with feature flags, permissions, and tenant_id
-    user_data = {
-        "user_id": str(user.user_id),
-        "phone_number": user.phone_number,
-        "role": user.role,
-        "email": user.email,
-        "tenant_id": str(user.tenant_id) if hasattr(user, 'tenant_id') else "",
-        "permissions": permissions,
-        "feature_flags": feature_flags,
-    }
+    try:
+        user_data = {
+            "user_id": str(user.user_id),
+            "phone_number": getattr(user, 'phone_number', None) or "",
+            "role": getattr(user, 'role', 'agent'),
+            "email": getattr(user, 'email', None) or "",
+            "tenant_id": str(user.tenant_id) if hasattr(user, 'tenant_id') and user.tenant_id else "",
+            "permissions": permissions,
+            "feature_flags": feature_flags,
+        }
+    except Exception as e:
+        logger.error(f"Error building user_data: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error preparing user data: {str(e)}"
+        )
 
     token_response = create_token_pair(user_data)
 
@@ -465,16 +526,53 @@ async def verify_otp(
     from app.core.auth import PERMISSIONS, ROLE_HIERARCHY
     
     # Build user context for FeatureHub
-    user_context = {
-        "userId": str(user.user_id),
-        "role": user.role,
-        "email": user.email,
-        "phoneNumber": user.phone_number,
-    }
+    try:
+        user_context = {
+            "userId": str(user.user_id),
+            "role": getattr(user, 'role', 'agent'),
+            "email": getattr(user, 'email', None) or "",
+            "phoneNumber": getattr(user, 'phone_number', None) or "",
+        }
+    except Exception as e:
+        logger.error(f"Error building user context: {e}", exc_info=True)
+        user_context = {
+            "userId": str(user.user_id) if hasattr(user, 'user_id') else "",
+            "role": "agent",
+            "email": "",
+            "phoneNumber": "",
+        }
     
-    # Get feature flags from FeatureHub
-    featurehub_service = await get_featurehub_service()
-    feature_flags = await featurehub_service.get_all_flags(user_context=user_context)
+    # Get feature flags from FeatureHub (with fallback to defaults)
+    feature_flags = {}
+    try:
+        featurehub_service = await get_featurehub_service()
+        feature_flags = await featurehub_service.get_all_flags(user_context=user_context)
+        # Ensure we have a dict even if service returns empty
+        if not feature_flags:
+            raise ValueError("Empty flags returned")
+    except Exception as e:
+        # FeatureHub unavailable - use fallback flags from settings/env
+        logger.warning(f"FeatureHub unavailable, using fallback flags: {e}")
+        # Use default feature flags - these match the fallback in FeatureHubService
+        feature_flags = {
+            "phone_auth_enabled": True,
+            "email_auth_enabled": True,
+            "otp_verification_enabled": True,
+            "agent_code_login_enabled": True,
+            "dashboard_enabled": True,
+            "policies_enabled": True,
+            "chat_enabled": True,
+            "notifications_enabled": True,
+            "whatsapp_integration_enabled": True,
+            "chatbot_enabled": True,
+            "callback_management_enabled": True,
+            "analytics_enabled": True,
+            "roi_dashboards_enabled": True,
+            "portal_enabled": True,
+            "data_import_enabled": True,
+            "marketing_campaigns_enabled": True,
+            "campaign_builder_enabled": True,
+        }
     
     # Calculate permissions based on role
     permissions = []
@@ -489,15 +587,22 @@ async def verify_otp(
                     break
     
     # Create token pair with feature flags, permissions, and tenant_id
-    user_data = {
-        "user_id": str(user.user_id),
-        "phone_number": user.phone_number,
-        "role": user.role,
-        "email": user.email,
-        "tenant_id": str(user.tenant_id) if hasattr(user, 'tenant_id') else "",
-        "permissions": permissions,
-        "feature_flags": feature_flags,
-    }
+    try:
+        user_data = {
+            "user_id": str(user.user_id),
+            "phone_number": getattr(user, 'phone_number', None) or "",
+            "role": getattr(user, 'role', 'agent'),
+            "email": getattr(user, 'email', None) or "",
+            "tenant_id": str(user.tenant_id) if hasattr(user, 'tenant_id') and user.tenant_id else "",
+            "permissions": permissions,
+            "feature_flags": feature_flags,
+        }
+    except Exception as e:
+        logger.error(f"Error building user_data: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error preparing user data: {str(e)}"
+        )
 
     token_response = create_token_pair(user_data)
 

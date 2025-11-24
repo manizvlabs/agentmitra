@@ -68,9 +68,9 @@ class CallbackRequest(Base, TimestampMixin):
     )
     
     # Relationships
-    policyholder = relationship("Policyholder", backref="callback_requests")
-    agent = relationship("Agent", backref="callback_requests")
-    activities = relationship("CallbackActivity", back_populates="callback_request", cascade="all, delete-orphan")
+    policyholder = relationship("Policyholder", foreign_keys=[policyholder_id], backref="callback_requests")
+    agent = relationship("Agent", foreign_keys=[agent_id], backref="callback_requests")
+    activities = relationship("CallbackActivity", primaryjoin="CallbackRequest.callback_request_id == CallbackActivity.callback_request_id", back_populates="callback_request", cascade="all, delete-orphan")
 
 
 class CallbackActivity(Base, TimestampMixin):
@@ -89,9 +89,9 @@ class CallbackActivity(Base, TimestampMixin):
     contact_method = Column(String(50))
     contact_outcome = Column(String(100))
     notes = Column(Text)
-    metadata = Column(JSONB, default={})
+    activity_metadata = Column(JSONB, default={})
     
     # Relationships
-    callback_request = relationship("CallbackRequest", back_populates="activities")
-    agent = relationship("Agent", backref="callback_activities")
+    callback_request = relationship("CallbackRequest", primaryjoin="CallbackActivity.callback_request_id == CallbackRequest.callback_request_id", back_populates="activities")
+    agent = relationship("Agent", foreign_keys=[agent_id], backref="callback_activities")
 

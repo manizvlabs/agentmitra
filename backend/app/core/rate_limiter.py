@@ -114,6 +114,25 @@ class RateLimiter:
         """Get remaining requests for identifier"""
         _, remaining = self.is_allowed(identifier)
         return remaining or 0
+    
+    def reset(self, identifier: str) -> None:
+        """Reset rate limit for identifier (useful for testing)"""
+        key = self._get_key(identifier)
+        if redis_client:
+            redis_client.delete(key)
+        else:
+            if identifier in _rate_limit_storage:
+                del _rate_limit_storage[identifier]
+    
+    def reset_all(self) -> None:
+        """Reset all rate limits (useful for testing)"""
+        if redis_client:
+            # Delete all rate limit keys
+            keys = redis_client.keys("rate_limit:*")
+            if keys:
+                redis_client.delete(*keys)
+        else:
+            _rate_limit_storage.clear()
 
 
 # Pre-configured rate limiters

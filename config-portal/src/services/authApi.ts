@@ -74,12 +74,21 @@ class AuthApiService {
           if (refreshToken) {
             try {
               const refreshResponse = await this.refreshToken(refreshToken);
-              localStorage.setItem('access_token', refreshResponse.data.access_token);
-              localStorage.setItem('refresh_token', refreshResponse.data.refresh_token);
+              // Check if response data exists and has required fields
+              if (refreshResponse && refreshResponse.data && refreshResponse.data.access_token && refreshResponse.data.refresh_token) {
+                localStorage.setItem('access_token', refreshResponse.data.access_token);
+                localStorage.setItem('refresh_token', refreshResponse.data.refresh_token);
 
-              // Retry the original request
-              error.config.headers.Authorization = `Bearer ${refreshResponse.data.access_token}`;
-              return this.axiosInstance(error.config);
+                // Retry the original request
+                if (error.config && error.config.headers) {
+                  error.config.headers.Authorization = `Bearer ${refreshResponse.data.access_token}`;
+                  return this.axiosInstance(error.config);
+                }
+              } else {
+                // Invalid refresh response, logout user
+                this.logout();
+                throw new Error('Invalid refresh token response');
+              }
             } catch (refreshError) {
               // Refresh failed, logout user
               this.logout();
