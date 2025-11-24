@@ -8,12 +8,12 @@ import 'package:intl/intl.dart';
 /// Campaign Performance Analytics Screen for Agent App
 /// Shows detailed analytics and performance metrics for marketing campaigns
 class CampaignPerformanceScreen extends StatefulWidget {
-  final String campaignId;
+  final String? campaignId;
   final Campaign? campaign;
 
   const CampaignPerformanceScreen({
     super.key,
-    required this.campaignId,
+    this.campaignId,
     this.campaign,
   });
 
@@ -129,14 +129,16 @@ class _CampaignPerformanceScreenState extends State<CampaignPerformanceScreen> w
     setState(() => _isLoading = true);
     
     // Load campaign details if not provided
-    if (_campaign == null) {
-      await _viewModel.loadCampaign(widget.campaignId);
+    if (_campaign == null && widget.campaignId != null && widget.campaignId!.isNotEmpty) {
+      await _viewModel.loadCampaign(widget.campaignId!);
       _campaign = _viewModel.selectedCampaign;
     }
     
     // Load analytics
-    await _viewModel.loadCampaignAnalytics(widget.campaignId);
-    _analytics = _viewModel.analytics;
+    if (widget.campaignId != null && widget.campaignId!.isNotEmpty) {
+      await _viewModel.loadCampaignAnalytics(widget.campaignId!);
+      _analytics = _viewModel.analytics;
+    }
     
     setState(() => _isLoading = false);
   }

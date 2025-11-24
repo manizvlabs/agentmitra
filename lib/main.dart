@@ -240,7 +240,10 @@ class AgentMitraApp extends ConsumerWidget {
         '/agent-chat': (context) => const AgentChatScreen(),
         '/reminders': (context) => const RemindersScreen(),
         '/presentations': (context) => const PresentationsScreen(),
-        '/campaign-performance': (context) => const CampaignPerformanceScreen(),
+        '/campaign-performance': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          return CampaignPerformanceScreen(campaignId: args is String ? args : null);
+        },
         '/content-performance': (context) => const ContentPerformanceScreen(),
         '/accessibility-settings': (context) => const AccessibilitySettingsScreen(),
         '/language-selection': (context) => const LanguageSelectionScreen(),
