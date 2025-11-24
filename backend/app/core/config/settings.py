@@ -101,6 +101,7 @@ class Settings(BaseSettings):
     featurehub_poll_interval: int = int(os.getenv("FEATUREHUB_POLL_INTERVAL", "30"))
     featurehub_streaming: bool = os.getenv("FEATUREHUB_STREAMING", "true").lower() == "true"
     featurehub_admin_token: Optional[str] = os.getenv("FEATUREHUB_ADMIN_TOKEN")
+    featurehub_admin_sdk_url: Optional[str] = os.getenv("FEATUREHUB_ADMIN_SDK_URL")
     
     # Feature Flags (Legacy - will be replaced by FeatureHub)
     enable_mock_data: bool = os.getenv("ENABLE_MOCK_DATA", "false").lower() == "true"

@@ -22,11 +22,15 @@ class FeatureHubAdminService:
     """
     
     def __init__(self):
-        # FeatureHub Cloud Admin API base URL
-        self.admin_base_url = settings.featurehub_url.rstrip('/')
+        # FeatureHub Cloud Admin SDK base URL (preferred)
+        # Format: https://app.featurehub.io/vanilla/{id}
+        self.admin_base_url = (settings.featurehub_admin_sdk_url or 
+                               os.getenv("FEATUREHUB_ADMIN_SDK_URL") or 
+                               settings.featurehub_url).rstrip('/')
         self.api_key = settings.featurehub_api_key
         self.sdk_key = settings.featurehub_sdk_key
-        self.admin_token = settings.featurehub_admin_token  # Service account access token
+        # Service account access token for Admin API
+        self.admin_token = settings.featurehub_admin_token or os.getenv("FEATUREHUB_ADMIN_TOKEN")
         
         # Extract application and environment IDs from SDK key
         # Format can be: {portfolio_id}/{application_id}/{environment_id}/{key} OR {application_id}/{environment_id}/{key}
