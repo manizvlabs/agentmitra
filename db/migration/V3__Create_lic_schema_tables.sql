@@ -64,7 +64,7 @@ CREATE TYPE lic_schema.payment_status_enum AS ENUM (
 -- =====================================================
 
 -- Multi-tenant users table (schema-based)
-CREATE TABLE lic_schema.users (
+CREATE TABLE IF NOT EXISTS lic_schema.users (
     user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000', -- Fixed for schema isolation
     email VARCHAR(255) UNIQUE,
@@ -125,7 +125,7 @@ CREATE TABLE lic_schema.users (
 );
 
 -- User sessions with Redis backup
-CREATE TABLE lic_schema.user_sessions (
+CREATE TABLE IF NOT EXISTS lic_schema.user_sessions (
     session_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES lic_schema.users(user_id) ON DELETE CASCADE,
     session_token VARCHAR(255) UNIQUE NOT NULL,
@@ -140,7 +140,7 @@ CREATE TABLE lic_schema.user_sessions (
 );
 
 -- Roles definition
-CREATE TABLE lic_schema.roles (
+CREATE TABLE IF NOT EXISTS lic_schema.roles (
     role_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     role_name VARCHAR(100) UNIQUE NOT NULL,
     role_description TEXT,
@@ -150,7 +150,7 @@ CREATE TABLE lic_schema.roles (
 );
 
 -- User role assignments
-CREATE TABLE lic_schema.user_roles (
+CREATE TABLE IF NOT EXISTS lic_schema.user_roles (
     assignment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES lic_schema.users(user_id) ON DELETE CASCADE,
     role_id UUID REFERENCES lic_schema.roles(role_id) ON DELETE CASCADE,
@@ -161,7 +161,7 @@ CREATE TABLE lic_schema.user_roles (
 );
 
 -- Permissions granular control
-CREATE TABLE lic_schema.permissions (
+CREATE TABLE IF NOT EXISTS lic_schema.permissions (
     permission_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     permission_name VARCHAR(100) UNIQUE NOT NULL,
     permission_description TEXT,
@@ -171,7 +171,7 @@ CREATE TABLE lic_schema.permissions (
 );
 
 -- Role permission assignments
-CREATE TABLE lic_schema.role_permissions (
+CREATE TABLE IF NOT EXISTS lic_schema.role_permissions (
     assignment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     role_id UUID REFERENCES lic_schema.roles(role_id) ON DELETE CASCADE,
     permission_id UUID REFERENCES lic_schema.permissions(permission_id) ON DELETE CASCADE,
@@ -184,7 +184,7 @@ CREATE TABLE lic_schema.role_permissions (
 -- =====================================================
 
 -- Insurance agents
-CREATE TABLE lic_schema.agents (
+CREATE TABLE IF NOT EXISTS lic_schema.agents (
     agent_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES lic_schema.users(user_id) ON DELETE CASCADE,
     provider_id UUID REFERENCES shared.insurance_providers(provider_id),
@@ -239,7 +239,7 @@ CREATE TABLE lic_schema.agents (
 );
 
 -- Policyholder profiles
-CREATE TABLE lic_schema.policyholders (
+CREATE TABLE IF NOT EXISTS lic_schema.policyholders (
     policyholder_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES lic_schema.users(user_id) ON DELETE CASCADE,
     agent_id UUID REFERENCES lic_schema.agents(agent_id),
@@ -283,7 +283,7 @@ CREATE TABLE lic_schema.policyholders (
 );
 
 -- Insurance policies (core business entity)
-CREATE TABLE lic_schema.insurance_policies (
+CREATE TABLE IF NOT EXISTS lic_schema.insurance_policies (
     policy_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     policy_number VARCHAR(100) UNIQUE NOT NULL,
     provider_policy_id VARCHAR(100), -- Provider's internal ID
@@ -348,7 +348,7 @@ CREATE TABLE lic_schema.insurance_policies (
 -- =====================================================
 
 -- Premium payment transactions
-CREATE TABLE lic_schema.premium_payments (
+CREATE TABLE IF NOT EXISTS lic_schema.premium_payments (
     payment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     policy_id UUID REFERENCES lic_schema.insurance_policies(policy_id),
     policyholder_id UUID REFERENCES lic_schema.policyholders(policyholder_id),
@@ -386,7 +386,7 @@ CREATE TABLE lic_schema.premium_payments (
 );
 
 -- User payment methods
-CREATE TABLE lic_schema.user_payment_methods (
+CREATE TABLE IF NOT EXISTS lic_schema.user_payment_methods (
     payment_method_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES lic_schema.users(user_id) ON DELETE CASCADE,
 
@@ -422,7 +422,7 @@ CREATE TABLE lic_schema.user_payment_methods (
 -- =====================================================
 
 -- WhatsApp message logs
-CREATE TABLE lic_schema.whatsapp_messages (
+CREATE TABLE IF NOT EXISTS lic_schema.whatsapp_messages (
     message_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     whatsapp_message_id VARCHAR(255) UNIQUE,
 
@@ -455,8 +455,8 @@ CREATE TABLE lic_schema.whatsapp_messages (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- WhatsApp templates (in shared schema)
-CREATE TABLE shared.whatsapp_templates (
+-- WhatsApp templates (in lic_schema)
+CREATE TABLE IF NOT EXISTS lic_schema.whatsapp_templates (
     template_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     template_name VARCHAR(100) UNIQUE NOT NULL,
     category VARCHAR(50), -- 'marketing', 'utility', 'authentication'
@@ -469,7 +469,7 @@ CREATE TABLE shared.whatsapp_templates (
 );
 
 -- Chatbot conversation sessions
-CREATE TABLE lic_schema.chatbot_sessions (
+CREATE TABLE IF NOT EXISTS lic_schema.chatbot_sessions (
     session_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES lic_schema.users(user_id),
     conversation_id VARCHAR(255),
@@ -493,7 +493,7 @@ CREATE TABLE lic_schema.chatbot_sessions (
 );
 
 -- Individual chat messages
-CREATE TABLE lic_schema.chat_messages (
+CREATE TABLE IF NOT EXISTS lic_schema.chat_messages (
     message_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     session_id UUID REFERENCES lic_schema.chatbot_sessions(session_id),
     user_id UUID REFERENCES lic_schema.users(user_id),
@@ -517,7 +517,7 @@ CREATE TABLE lic_schema.chat_messages (
 );
 
 -- Agent-uploaded video content
-CREATE TABLE lic_schema.video_content (
+CREATE TABLE IF NOT EXISTS lic_schema.video_content (
     video_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     agent_id UUID REFERENCES lic_schema.agents(agent_id),
 
@@ -562,27 +562,27 @@ CREATE TABLE lic_schema.video_content (
 -- =====================================================
 
 -- User indexes
-CREATE INDEX idx_users_tenant_status ON lic_schema.users(tenant_id, status);
-CREATE INDEX idx_users_email ON lic_schema.users(email) WHERE email IS NOT NULL;
-CREATE INDEX idx_users_phone ON lic_schema.users(phone_number) WHERE phone_number IS NOT NULL;
-CREATE INDEX idx_users_created_at ON lic_schema.users(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_users_tenant_status ON lic_schema.users(tenant_id, status);
+CREATE INDEX IF NOT EXISTS idx_users_email ON lic_schema.users(email) WHERE email IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_users_phone ON lic_schema.users(phone_number) WHERE phone_number IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_users_created_at ON lic_schema.users(created_at DESC);
 
 -- Agent indexes
-CREATE INDEX idx_agents_user_status ON lic_schema.agents(user_id, status);
-CREATE INDEX idx_agents_provider ON lic_schema.agents(provider_id);
-CREATE INDEX idx_agents_territory ON lic_schema.agents(territory);
+CREATE INDEX IF NOT EXISTS idx_agents_user_status ON lic_schema.agents(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_agents_provider ON lic_schema.agents(provider_id);
+CREATE INDEX IF NOT EXISTS idx_agents_territory ON lic_schema.agents(territory);
 
 -- Policy indexes
-CREATE INDEX idx_policies_policyholder_status ON lic_schema.insurance_policies(policyholder_id, status);
-CREATE INDEX idx_policies_agent_provider ON lic_schema.insurance_policies(agent_id, provider_id);
-CREATE INDEX idx_policies_status_dates ON lic_schema.insurance_policies(status, start_date, maturity_date);
+CREATE INDEX IF NOT EXISTS idx_policies_policyholder_status ON lic_schema.insurance_policies(policyholder_id, status);
+CREATE INDEX IF NOT EXISTS idx_policies_agent_provider ON lic_schema.insurance_policies(agent_id, provider_id);
+CREATE INDEX IF NOT EXISTS idx_policies_status_dates ON lic_schema.insurance_policies(status, start_date, maturity_date);
 
 -- Payment indexes
-CREATE INDEX idx_payments_policy_status ON lic_schema.premium_payments(policy_id, status);
-CREATE INDEX idx_payments_date_amount ON lic_schema.premium_payments(payment_date DESC, amount);
+CREATE INDEX IF NOT EXISTS idx_payments_policy_status ON lic_schema.premium_payments(policy_id, status);
+CREATE INDEX IF NOT EXISTS idx_payments_date_amount ON lic_schema.premium_payments(payment_date DESC, amount);
 
 -- Communication indexes
-CREATE INDEX idx_whatsapp_messages_agent ON lic_schema.whatsapp_messages(agent_id);
-CREATE INDEX idx_chatbot_sessions_user ON lic_schema.chatbot_sessions(user_id);
-CREATE INDEX idx_video_content_agent ON lic_schema.video_content(agent_id);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_agent ON lic_schema.whatsapp_messages(agent_id);
+CREATE INDEX IF NOT EXISTS idx_chatbot_sessions_user ON lic_schema.chatbot_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_video_content_agent ON lic_schema.video_content(agent_id);
 

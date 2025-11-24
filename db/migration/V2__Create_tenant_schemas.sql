@@ -6,13 +6,13 @@
 -- =====================================================
 
 -- Master tenant registry
-CREATE TABLE shared.tenants (
+CREATE TABLE IF NOT EXISTS lic_schema.tenants (
     tenant_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_code VARCHAR(20) UNIQUE NOT NULL,
     tenant_name VARCHAR(255) NOT NULL,
     tenant_type VARCHAR(50) NOT NULL, -- 'insurance_provider', 'independent_agent', 'agent_network'
     schema_name VARCHAR(100) UNIQUE,
-    parent_tenant_id UUID REFERENCES shared.tenants(tenant_id),
+    parent_tenant_id UUID REFERENCES lic_schema.tenants(tenant_id),
     status VARCHAR(20) DEFAULT 'active',
     subscription_plan VARCHAR(50),
     trial_end_date TIMESTAMP,
@@ -24,9 +24,9 @@ CREATE TABLE shared.tenants (
 );
 
 -- Tenant configuration
-CREATE TABLE shared.tenant_config (
+CREATE TABLE IF NOT EXISTS lic_schema.tenant_config (
     config_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id UUID REFERENCES shared.tenants(tenant_id),
+    tenant_id UUID REFERENCES lic_schema.tenants(tenant_id),
     config_key VARCHAR(100) NOT NULL,
     config_value JSONB,
     config_type VARCHAR(50) DEFAULT 'string', -- 'string', 'number', 'boolean', 'json'
@@ -41,7 +41,7 @@ CREATE TABLE shared.tenant_config (
 -- =====================================================
 
 -- Countries and regions
-CREATE TABLE shared.countries (
+CREATE TABLE IF NOT EXISTS lic_schema.countries (
     country_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     country_code VARCHAR(3) UNIQUE NOT NULL, -- ISO 3166-1 alpha-3
     country_name VARCHAR(100) NOT NULL,
@@ -52,7 +52,7 @@ CREATE TABLE shared.countries (
 );
 
 -- Languages supported
-CREATE TABLE shared.languages (
+CREATE TABLE IF NOT EXISTS lic_schema.languages (
     language_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     language_code VARCHAR(10) UNIQUE NOT NULL, -- ISO 639-1
     language_name VARCHAR(100) NOT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE shared.languages (
 );
 
 -- Insurance product categories
-CREATE TABLE shared.insurance_categories (
+CREATE TABLE IF NOT EXISTS lic_schema.insurance_categories (
     category_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     category_code VARCHAR(20) UNIQUE NOT NULL,
     category_name VARCHAR(100) NOT NULL,
@@ -72,7 +72,7 @@ CREATE TABLE shared.insurance_categories (
 );
 
 -- Insurance providers (shared across tenants)
-CREATE TABLE shared.insurance_providers (
+CREATE TABLE IF NOT EXISTS lic_schema.insurance_providers (
     provider_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     provider_code VARCHAR(20) UNIQUE NOT NULL, -- LIC, HDFC_LIFE, ICICI_PRUDENTIAL
     provider_name VARCHAR(255) NOT NULL,
@@ -110,7 +110,7 @@ CREATE TABLE shared.insurance_providers (
 -- =====================================================
 
 -- Data import/export tracking for agent configuration portal
-CREATE TABLE shared.data_imports (
+CREATE TABLE IF NOT EXISTS lic_schema.data_imports (
     import_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     agent_id UUID, -- Will reference lic_schema.agents(agent_id) after that table is created
     file_name VARCHAR(255) NOT NULL,
@@ -129,9 +129,9 @@ CREATE TABLE shared.data_imports (
 );
 
 -- Import job queue for background processing
-CREATE TABLE shared.import_jobs (
+CREATE TABLE IF NOT EXISTS lic_schema.import_jobs (
     job_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    import_id UUID REFERENCES shared.data_imports(import_id),
+    import_id UUID REFERENCES lic_schema.data_imports(import_id),
     job_type VARCHAR(50) NOT NULL, -- 'validate', 'process', 'cleanup'
     priority INTEGER DEFAULT 1, -- 1=low, 5=high
     status VARCHAR(50) DEFAULT 'queued', -- 'queued', 'processing', 'completed', 'failed'
@@ -144,9 +144,9 @@ CREATE TABLE shared.import_jobs (
 );
 
 -- Customer data mapping for Excel imports
-CREATE TABLE shared.customer_data_mapping (
+CREATE TABLE IF NOT EXISTS lic_schema.customer_data_mapping (
     mapping_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    import_id UUID REFERENCES shared.data_imports(import_id),
+    import_id UUID REFERENCES lic_schema.data_imports(import_id),
     excel_row_number INTEGER NOT NULL,
     customer_name VARCHAR(255),
     phone_number VARCHAR(15),
@@ -162,7 +162,7 @@ CREATE TABLE shared.customer_data_mapping (
 );
 
 -- Data sync status tracking
-CREATE TABLE shared.data_sync_status (
+CREATE TABLE IF NOT EXISTS lic_schema.data_sync_status (
     sync_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     agent_id UUID, -- Will reference lic_schema.agents(agent_id) after that table is created
     customer_id UUID, -- Will reference lic_schema.policyholders(policyholder_id) after that table is created
@@ -180,17 +180,17 @@ CREATE TABLE shared.data_sync_status (
 -- INDEXES
 -- =====================================================
 
-CREATE INDEX idx_tenants_tenant_code ON shared.tenants(tenant_code);
-CREATE INDEX idx_tenants_status ON shared.tenants(status);
-CREATE INDEX idx_tenant_config_tenant_id ON shared.tenant_config(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_tenants_tenant_code ON lic_schema.tenants(tenant_code);
+CREATE INDEX IF NOT EXISTS idx_tenants_status ON lic_schema.tenants(status);
+CREATE INDEX IF NOT EXISTS idx_tenant_config_tenant_id ON lic_schema.tenant_config(tenant_id);
 
-CREATE INDEX idx_countries_country_code ON shared.countries(country_code);
-CREATE INDEX idx_languages_language_code ON shared.languages(language_code);
-CREATE INDEX idx_insurance_categories_category_code ON shared.insurance_categories(category_code);
-CREATE INDEX idx_insurance_providers_provider_code ON shared.insurance_providers(provider_code);
+CREATE INDEX IF NOT EXISTS idx_countries_country_code ON lic_schema.countries(country_code);
+CREATE INDEX IF NOT EXISTS idx_languages_language_code ON lic_schema.languages(language_code);
+CREATE INDEX IF NOT EXISTS idx_insurance_categories_category_code ON lic_schema.insurance_categories(category_code);
+CREATE INDEX IF NOT EXISTS idx_insurance_providers_provider_code ON lic_schema.insurance_providers(provider_code);
 
-CREATE INDEX idx_data_imports_agent_status ON shared.data_imports(agent_id, status);
-CREATE INDEX idx_import_jobs_status ON shared.import_jobs(status);
-CREATE INDEX idx_customer_data_mapping_import ON shared.customer_data_mapping(import_id);
-CREATE INDEX idx_data_sync_status_agent ON shared.data_sync_status(agent_id);
+CREATE INDEX IF NOT EXISTS idx_data_imports_agent_status ON lic_schema.data_imports(agent_id, status);
+CREATE INDEX IF NOT EXISTS idx_import_jobs_status ON lic_schema.import_jobs(status);
+CREATE INDEX IF NOT EXISTS idx_customer_data_mapping_import ON lic_schema.customer_data_mapping(import_id);
+CREATE INDEX IF NOT EXISTS idx_data_sync_status_agent ON lic_schema.data_sync_status(agent_id);
 

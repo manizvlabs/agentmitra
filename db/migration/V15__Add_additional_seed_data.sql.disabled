@@ -1,0 +1,151 @@
+-- Agent Mitra - Migration V15: Additional Seed Data
+-- This migration adds more comprehensive seed data to tables that need it
+-- Uses existing data relationships to maintain referential integrity
+
+-- =====================================================
+-- ADD MORE POLICYHOLDERS
+-- =====================================================
+
+INSERT INTO lic_schema.policyholders (
+    user_id, agent_id, customer_id, salutation, marital_status, occupation,
+    annual_income, address, family_members, communication_preferences
+) VALUES
+(gen_random_uuid(), (SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'LIC_AG_001'), 'CUST_016', 'Mr.', 'Married', 'IT Manager',
+ 2000000, '{"street": "456 Brigade Road", "city": "Bangalore", "state": "Karnataka", "pincode": "560025"}', '[{"name": "Mrs. Priya Sharma", "relation": "Spouse"}]', '{"email": true, "sms": true, "whatsapp": true, "calls": false}'),
+(gen_random_uuid(), (SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'LIC_AG_002'), 'CUST_017', 'Mrs.', 'Single', 'Doctor',
+ 1800000, '{"street": "789 MG Road", "city": "Bangalore", "state": "Karnataka", "pincode": "560001"}', '[{"name": "Dr. Reddy", "relation": "Brother"}]', '{"email": true, "sms": false, "whatsapp": true, "calls": true}'),
+(gen_random_uuid(), (SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'HDFC_AG_001'), 'CUST_018', 'Mr.', 'Married', 'Business Owner',
+ 2500000, '{"street": "321 Commercial Street", "city": "Bangalore", "state": "Karnataka", "pincode": "560001"}', '[{"name": "Mrs. Meera Singh", "relation": "Spouse"}, {"name": "Rahul Singh", "relation": "Son", "age": 15}]', '{"email": true, "sms": true, "whatsapp": false, "calls": true}'),
+(gen_random_uuid(), (SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'ICICI_AG_001'), 'CUST_019', 'Mr.', 'Married', 'Chartered Accountant',
+ 2200000, '{"street": "654 JP Nagar", "city": "Bangalore", "state": "Karnataka", "pincode": "560078"}', '[{"name": "Mrs. Rekha Mehta", "relation": "Spouse"}]', '{"email": true, "sms": true, "whatsapp": true, "calls": false}'),
+(gen_random_uuid(), (SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'BAJAJ_AG_001'), 'CUST_020', 'Mrs.', 'Widowed', 'Retired Professor',
+ 600000, '{"street": "987 Whitefield", "city": "Bangalore", "state": "Karnataka", "pincode": "560066"}', '[{"name": "Prof. Gupta", "relation": "Son"}, {"name": "Mrs. Anita Gupta", "relation": "Daughter-in-law"}]', '{"email": false, "sms": true, "whatsapp": true, "calls": true}'),
+(gen_random_uuid(), (SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'SBI_AG_001'), 'CUST_021', 'Mr.', 'Married', 'Software Architect',
+ 2800000, '{"street": "147 Richmond Road", "city": "Bangalore", "state": "Karnataka", "pincode": "560025"}', '[{"name": "Mrs. Sunita Rao", "relation": "Spouse"}, {"name": "Karthik Rao", "relation": "Son", "age": 16}]', '{"email": true, "sms": true, "whatsapp": true, "calls": false}'),
+(gen_random_uuid(), (SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'TATA_AG_001'), 'CUST_022', 'Mr.', 'Single', 'Investment Banker',
+ 3500000, '{"street": "258 Koramangala", "city": "Bangalore", "state": "Karnataka", "pincode": "560034"}', '[{"name": "Mr. Nair", "relation": "Father"}]', '{"email": true, "sms": false, "whatsapp": true, "calls": true}'),
+(gen_random_uuid(), (SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'MAX_AG_001'), 'CUST_023', 'Mrs.', 'Married', 'HR Director',
+ 1900000, '{"street": "369 HSR Layout", "city": "Bangalore", "state": "Karnataka", "pincode": "560102"}', '[{"name": "Mr. Rajesh Shah", "relation": "Spouse"}, {"name": "Aryan Shah", "relation": "Son", "age": 6}]', '{"email": true, "sms": true, "whatsapp": true, "calls": true}'),
+(gen_random_uuid(), (SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'PNB_AG_001'), 'CUST_024', 'Mr.', 'Married', 'Civil Engineer',
+ 1600000, '{"street": "741 Sadashivanagar", "city": "Bangalore", "state": "Karnataka", "pincode": "560080"}', '[{"name": "Mrs. Kavita Verma", "relation": "Spouse"}, {"name": "Ishaan Verma", "relation": "Son", "age": 14}]', '{"email": true, "sms": true, "whatsapp": false, "calls": true}'),
+(gen_random_uuid(), (SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'LIC_AG_003'), 'CUST_025', 'Mrs.', 'Widowed', 'Retired Banker',
+ 800000, '{"street": "852 Rajajinagar", "city": "Bangalore", "state": "Karnataka", "pincode": "560010"}', '[{"name": "Mr. Kumar Iyer", "relation": "Son"}]', '{"email": false, "sms": true, "whatsapp": true, "calls": true}')
+ON CONFLICT (customer_id) DO NOTHING;
+
+-- =====================================================
+-- ADD MORE INSURANCE POLICIES
+-- =====================================================
+
+INSERT INTO lic_schema.insurance_policies (
+    policy_number, policyholder_id, agent_id, provider_id, policy_type,
+    plan_name, sum_assured, premium_amount, premium_frequency, application_date,
+    start_date, status, coverage_details
+) VALUES
+('LIC001234567905', (SELECT policyholder_id FROM lic_schema.policyholders WHERE customer_id = 'CUST_016'), (SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'LIC_AG_001'), (SELECT provider_id FROM lic_schema.insurance_providers WHERE provider_code = 'LIC'), 'term_life',
+ 'Jeevan Amar', 6000000, 30000, 'annual', '2024-04-15', '2024-05-01', 'active', '{"riders": ["Critical Illness Rider", "Waiver of Premium"], "term": 20}'),
+('LIC001234567906', (SELECT policyholder_id FROM lic_schema.policyholders WHERE customer_id = 'CUST_017'), (SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'LIC_AG_002'), (SELECT provider_id FROM lic_schema.insurance_providers WHERE provider_code = 'LIC'), 'health_insurance',
+ 'Health Shield', 500000, 15000, 'annual', '2024-04-20', '2024-05-05', 'active', '{"coverage": ["Hospitalization", "Day Care Procedures"], "term": 1}'),
+('HDFC001234567903', (SELECT policyholder_id FROM lic_schema.policyholders WHERE customer_id = 'CUST_018'), (SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'HDFC_AG_001'), (SELECT provider_id FROM lic_schema.insurance_providers WHERE provider_code = 'HDFC_LIFE'), 'ulip',
+ 'HDFC Life ProGrowth', 4000000, 35000, 'annual', '2024-04-25', '2024-05-10', 'active', '{"funds": ["Equity", "Balanced"], "term": 15}'),
+('ICICI001234567904', (SELECT policyholder_id FROM lic_schema.policyholders WHERE customer_id = 'CUST_019'), (SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'ICICI_AG_001'), (SELECT provider_id FROM lic_schema.insurance_providers WHERE provider_code = 'ICICI_PRU'), 'endowment',
+ 'ICICI Pru SmartLife', 3000000, 28000, 'annual', '2024-05-01', '2024-05-15', 'active', '{"bonus_rate": "4.5%", "term": 20}'),
+('BAJAJ001234567896', (SELECT policyholder_id FROM lic_schema.policyholders WHERE customer_id = 'CUST_020'), (SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'BAJAJ_AG_001'), (SELECT provider_id FROM lic_schema.insurance_providers WHERE provider_code = 'BAJAJ_ALLIANZ'), 'term_life',
+ 'Bajaj Allianz Life Guard', 2000000, 18000, 'annual', '2024-05-05', '2024-05-20', 'active', '{"riders": ["Accidental Death Benefit"], "term": 25}'),
+('SBI001234567897', (SELECT policyholder_id FROM lic_schema.policyholders WHERE customer_id = 'CUST_021'), (SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'SBI_AG_001'), (SELECT provider_id FROM lic_schema.insurance_providers WHERE provider_code = 'SBI_LIFE'), 'whole_life',
+ 'SBI Life Unnati', 3500000, 42000, 'annual', '2024-05-10', '2024-05-25', 'active', '{"riders": ["Critical Illness Rider"], "term": "whole life"}'),
+('TATA001234567898', (SELECT policyholder_id FROM lic_schema.policyholders WHERE customer_id = 'CUST_022'), (SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'TATA_AG_001'), (SELECT provider_id FROM lic_schema.insurance_providers WHERE provider_code = 'TATA_AIA'), 'ulip',
+ 'Tata Life Wealth Builder', 5000000, 40000, 'annual', '2024-05-15', '2024-05-30', 'active', '{"funds": ["Aggressive", "Conservative"], "term": 20}'),
+('MAX001234567899', (SELECT policyholder_id FROM lic_schema.policyholders WHERE customer_id = 'CUST_023'), (SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'MAX_AG_001'), (SELECT provider_id FROM lic_schema.insurance_providers WHERE provider_code = 'MAX_LIFE'), 'term_life',
+ 'Max Life Online Term', 4500000, 24000, 'annual', '2024-05-20', '2024-06-05', 'active', '{"riders": ["Critical Illness Rider", "Income Benefit"], "term": 30}'),
+('PNB001234567900', (SELECT policyholder_id FROM lic_schema.policyholders WHERE customer_id = 'CUST_024'), (SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'PNB_AG_001'), (SELECT provider_id FROM lic_schema.insurance_providers WHERE provider_code = 'PNB_METLIFE'), 'endowment',
+ 'PNB MetLife Whole Life', 2500000, 26000, 'annual', '2024-05-25', '2024-06-10', 'active', '{"bonus_rate": "4.2%", "term": 25}'),
+('LIC001234567907', (SELECT policyholder_id FROM lic_schema.policyholders WHERE customer_id = 'CUST_025'), (SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'LIC_AG_003'), (SELECT provider_id FROM lic_schema.insurance_providers WHERE provider_code = 'LIC'), 'health_insurance',
+ 'Cancer Care', 1000000, 25000, 'annual', '2024-05-30', '2024-06-15', 'active', '{"coverage": ["Cancer Treatment", "Post Treatment Care"], "term": 1}')
+ON CONFLICT (policy_number) DO NOTHING;
+
+-- =====================================================
+-- ADD MORE PREMIUM PAYMENTS
+-- =====================================================
+
+INSERT INTO lic_schema.premium_payments (
+    policy_id, policyholder_id, amount, currency, payment_date, due_date,
+    payment_method, payment_gateway, status
+) VALUES
+((SELECT policy_id FROM lic_schema.insurance_policies WHERE policy_number = 'LIC001234567905'), (SELECT policyholder_id FROM lic_schema.policyholders WHERE customer_id = 'CUST_016'), 30000, 'INR', '2024-05-01', '2024-05-01', 'upi', 'razorpay', 'completed'),
+((SELECT policy_id FROM lic_schema.insurance_policies WHERE policy_number = 'LIC001234567906'), (SELECT policyholder_id FROM lic_schema.policyholders WHERE customer_id = 'CUST_017'), 15000, 'INR', '2024-05-05', '2024-05-05', 'credit_card', 'paytm', 'completed'),
+((SELECT policy_id FROM lic_schema.insurance_policies WHERE policy_number = 'HDFC001234567903'), (SELECT policyholder_id FROM lic_schema.policyholders WHERE customer_id = 'CUST_018'), 35000, 'INR', '2024-05-10', '2024-05-10', 'net_banking', 'razorpay', 'completed'),
+((SELECT policy_id FROM lic_schema.insurance_policies WHERE policy_number = 'ICICI001234567904'), (SELECT policyholder_id FROM lic_schema.policyholders WHERE customer_id = 'CUST_019'), 28000, 'INR', '2024-05-15', '2024-05-15', 'upi', 'phonepe', 'completed'),
+((SELECT policy_id FROM lic_schema.insurance_policies WHERE policy_number = 'BAJAJ001234567896'), (SELECT policyholder_id FROM lic_schema.policyholders WHERE customer_id = 'CUST_020'), 18000, 'INR', '2024-05-20', '2024-05-20', 'debit_card', 'paytm', 'completed'),
+((SELECT policy_id FROM lic_schema.insurance_policies WHERE policy_number = 'SBI001234567897'), (SELECT policyholder_id FROM lic_schema.policyholders WHERE customer_id = 'CUST_021'), 42000, 'INR', '2024-05-25', '2024-05-25', 'credit_card', 'razorpay', 'completed'),
+((SELECT policy_id FROM lic_schema.insurance_policies WHERE policy_number = 'TATA001234567898'), (SELECT policyholder_id FROM lic_schema.policyholders WHERE customer_id = 'CUST_022'), 40000, 'INR', '2024-05-30', '2024-05-30', 'net_banking', 'phonepe', 'completed'),
+((SELECT policy_id FROM lic_schema.insurance_policies WHERE policy_number = 'MAX001234567899'), (SELECT policyholder_id FROM lic_schema.policyholders WHERE customer_id = 'CUST_023'), 24000, 'INR', '2024-06-05', '2024-06-05', 'upi', 'paytm', 'completed'),
+((SELECT policy_id FROM lic_schema.insurance_policies WHERE policy_number = 'PNB001234567900'), (SELECT policyholder_id FROM lic_schema.policyholders WHERE customer_id = 'CUST_024'), 26000, 'INR', '2024-06-10', '2024-06-10', 'debit_card', 'razorpay', 'completed'),
+((SELECT policy_id FROM lic_schema.insurance_policies WHERE policy_number = 'LIC001234567907'), (SELECT policyholder_id FROM lic_schema.policyholders WHERE customer_id = 'CUST_025'), 25000, 'INR', '2024-06-15', '2024-06-15', 'credit_card', 'phonepe', 'completed')
+ON CONFLICT DO NOTHING;
+
+-- =====================================================
+-- ADD MORE VIDEO CONTENT
+-- =====================================================
+
+INSERT INTO lic_schema.video_content (
+    agent_id, title, description, video_url, thumbnail_url, duration_seconds,
+    category, tags, language, difficulty_level, target_audience,
+    view_count, average_rating, total_ratings, status
+) VALUES
+((SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'LIC_AG_001'), 'Understanding ULIP Investments', 'Complete guide to ULIP investments and benefits', 'https://videos.agentmitra.com/lic/ulip-guide.mp4', 'https://videos.agentmitra.com/lic/thumbnails/ulip.jpg', 480,
+ 'investment', ARRAY['ulip', 'investment', 'guide', 'beginners'], 'en', 'beginner', ARRAY['policyholders', 'investors'], 850, 4.3, 67, 'published'),
+((SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'LIC_AG_002'), 'Health Insurance for Senior Citizens', 'Specialized health insurance for elderly parents', 'https://videos.agentmitra.com/lic/senior-health.mp4', 'https://videos.agentmitra.com/lic/thumbnails/senior.jpg', 360,
+ 'health_insurance', ARRAY['senior', 'health', 'elderly', 'parents'], 'hi', 'intermediate', ARRAY['families', 'senior_citizens'], 1200, 4.6, 89, 'published'),
+((SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'HDFC_AG_001'), 'Tax Saving with Life Insurance', 'How life insurance helps in tax planning', 'https://videos.agentmitra.com/hdfc/tax-saving.mp4', 'https://videos.agentmitra.com/hdfc/thumbnails/tax.jpg', 290,
+ 'taxation', ARRAY['tax', 'saving', '80c', 'planning'], 'en', 'beginner', ARRAY['tax_payers', 'policyholders'], 650, 4.1, 45, 'published'),
+((SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'ICICI_AG_001'), 'Investment Planning for Retirement', 'Secure your retirement with smart investments', 'https://videos.agentmitra.com/icici/retirement.mp4', 'https://videos.agentmitra.com/icici/thumbnails/retirement.jpg', 420,
+ 'retirement', ARRAY['retirement', 'planning', 'investment', 'security'], 'en', 'intermediate', ARRAY['working_professionals', 'middle_aged'], 780, 4.4, 56, 'published'),
+((SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'BAJAJ_AG_001'), 'Family Protection Planning', 'Complete family insurance planning guide', 'https://videos.agentmitra.com/bajaj/family-planning.mp4', 'https://videos.agentmitra.com/bajaj/thumbnails/family.jpg', 380,
+ 'family_protection', ARRAY['family', 'protection', 'planning', 'comprehensive'], 'hi', 'beginner', ARRAY['families', 'policyholders'], 950, 4.5, 78, 'published'),
+((SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'SBI_AG_001'), 'Understanding Policy Maturity', 'What happens when your policy matures', 'https://videos.agentmitra.com/sbi/maturity.mp4', 'https://videos.agentmitra.com/sbi/thumbnails/maturity.jpg', 310,
+ 'policy_management', ARRAY['maturity', 'benefits', 'payout', 'understanding'], 'en', 'beginner', ARRAY['policyholders', 'senior_citizens'], 580, 4.2, 43, 'published'),
+((SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'TATA_AG_001'), 'Child Education Insurance Benefits', 'Planning for your child''s education expenses', 'https://videos.agentmitra.com/tata/child-education.mp4', 'https://videos.agentmitra.com/tata/thumbnails/child-edu.jpg', 350,
+ 'child_plans', ARRAY['child', 'education', 'planning', 'future'], 'en', 'beginner', ARRAY['parents', 'families'], 1100, 4.7, 92, 'published'),
+((SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'MAX_AG_001'), 'Critical Illness Insurance Explained', 'Understanding critical illness coverage', 'https://videos.agentmitra.com/max/critical-illness.mp4', 'https://videos.agentmitra.com/max/thumbnails/critical.jpg', 270,
+ 'health_insurance', ARRAY['critical', 'illness', 'coverage', 'explained'], 'en', 'intermediate', ARRAY['policyholders', 'working_professionals'], 720, 4.3, 51, 'published'),
+((SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'PNB_AG_001'), 'Motor Insurance Essentials', 'Complete guide to vehicle insurance', 'https://videos.agentmitra.com/pnb/motor-insurance.mp4', 'https://videos.agentmitra.com/pnb/thumbnails/motor.jpg', 390,
+ 'motor_insurance', ARRAY['motor', 'vehicle', 'insurance', 'guide'], 'hi', 'beginner', ARRAY['vehicle_owners', 'prospects'], 680, 4.1, 38, 'published'),
+((SELECT agent_id FROM lic_schema.agents WHERE agent_code = 'LIC_AG_003'), 'Insurance for Self-Employed', 'Insurance solutions for business owners', 'https://videos.agentmitra.com/lic/self-employed.mp4', 'https://videos.agentmitra.com/lic/thumbnails/business.jpg', 430,
+ 'business_insurance', ARRAY['self-employed', 'business', 'owners', 'insurance'], 'en', 'intermediate', ARRAY['business_owners', 'entrepreneurs'], 450, 4.0, 29, 'published')
+ON CONFLICT DO NOTHING;
+
+-- =====================================================
+-- ADD MORE NOTIFICATIONS
+-- =====================================================
+
+INSERT INTO lic_schema.notifications (
+    user_id, title, body, type, priority, data, created_at
+) VALUES
+((SELECT user_id FROM lic_schema.users WHERE email = 'rajesh.sharma@lic.com'), 'New Policy Application Received', 'New term life policy application received from customer CUST_016. Amount: ₹60 lakhs', 'policy', 'medium', '{"customer_id": "CUST_016", "amount": 6000000, "type": "application"}', NOW() - INTERVAL '2 hours'),
+((SELECT user_id FROM lic_schema.users WHERE email = 'priya.verma@lic.com'), 'Health Policy Renewal Due', 'Health insurance policy LIC001234567906 renewal due in 5 days. Customer: CUST_017', 'payment', 'high', '{"policy_number": "LIC001234567906", "customer_id": "CUST_017", "due_date": "2024-12-30"}', NOW() - INTERVAL '1 hour'),
+((SELECT user_id FROM lic_schema.users WHERE email = 'amit.patel@lic.com'), 'ULIP Fund Switch Completed', 'Fund switch completed for HDFC001234567903. New allocation: 60% Equity, 40% Debt', 'policy', 'low', '{"policy_number": "HDFC001234567903", "action": "fund_switch"}', NOW() - INTERVAL '45 minutes'),
+((SELECT user_id FROM lic_schema.users WHERE email = 'vikas.singh@lic.com'), 'Bonus Credited to Policy', 'Annual bonus of ₹13,500 credited to policy ICICI001234567904', 'policy', 'low', '{"policy_number": "ICICI001234567904", "bonus_amount": 13500, "type": "bonus"}', NOW() - INTERVAL '30 minutes'),
+((SELECT user_id FROM lic_schema.users WHERE email = 'sunita.kumar@lic.com'), 'Regional Performance Update', 'Delhi NCR region achieved 145% of monthly target. Top performer: Rajesh Sharma', 'report', 'medium', '{"region": "Delhi NCR", "achievement": "145%", "period": "monthly"}', NOW() - INTERVAL '25 minutes'),
+((SELECT user_id FROM lic_schema.users WHERE email = 'meera.iyer@lic.com'), 'Medical Checkup Reminder', 'Annual medical checkup due for policy LIC001234567894. Customer: CUST_005', 'policy', 'medium', '{"policy_number": "LIC001234567894", "customer_id": "CUST_005", "checkup_type": "annual"}', NOW() - INTERVAL '20 minutes'),
+((SELECT user_id FROM lic_schema.users WHERE email = 'arun.gupta@lic.com'), 'Claim Settlement Completed', 'Claim #CLM-2024-002 settled. Amount ₹2,50,000 transferred to customer account', 'claim', 'high', '{"claim_id": "CLM-2024-002", "amount": 250000, "status": "settled"}', NOW() - INTERVAL '15 minutes'),
+((SELECT user_id FROM lic_schema.users WHERE email = 'rahul.mehta@lic.com'), 'Commission Statement Available', 'Monthly commission statement for November 2024 is now available for download', 'payment', 'low', '{"period": "November 2024", "action": "download"}', NOW() - INTERVAL '10 minutes'),
+((SELECT user_id FROM lic_schema.users WHERE email = 'pooja.chopra@lic.com'), 'Presentation Performance Report', 'Your "Child Future Planning" presentation received 45 views this week', 'analytics', 'low', '{"presentation": "Child Future Planning", "views": 45, "period": "weekly"}', NOW() - INTERVAL '5 minutes'),
+((SELECT user_id FROM lic_schema.users WHERE email = 'anita.shah@lic.com'), 'Customer Feedback Alert', 'Customer CUST_009 rated your service 5 stars. "Excellent guidance on critical illness insurance"', 'feedback', 'low', '{"customer_id": "CUST_009", "rating": 5, "feedback": "Excellent guidance on critical illness insurance"}', NOW())
+ON CONFLICT DO NOTHING;
+
+-- =====================================================
+-- COMPLETION MESSAGE
+-- =====================================================
+
+DO $$
+BEGIN
+    RAISE NOTICE 'Additional seed data migration V15 completed successfully!';
+    RAISE NOTICE 'Added data to:';
+    RAISE NOTICE '  - 10 more policyholders (total: 15)';
+    RAISE NOTICE '  - 10 more insurance policies (total: 15)';
+    RAISE NOTICE '  - 10 more premium payments (total: 13)';
+    RAISE NOTICE '  - 10 more video content (total: 10)';
+    RAISE NOTICE '  - 10 more notifications (total: 10)';
+    RAISE NOTICE '';
+    RAISE NOTICE 'Database now has substantial test data for development and testing!';
+END $$;

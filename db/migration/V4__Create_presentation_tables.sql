@@ -6,7 +6,7 @@
 -- =====================================================
 
 -- Presentation carousel (agent promotional content)
-CREATE TABLE lic_schema.presentations (
+CREATE TABLE IF NOT EXISTS lic_schema.presentations (
     presentation_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     agent_id UUID REFERENCES lic_schema.agents(agent_id) ON DELETE CASCADE,
     
@@ -46,7 +46,7 @@ CREATE TABLE lic_schema.presentations (
 );
 
 -- Presentation slides (individual carousel slides)
-CREATE TABLE lic_schema.presentation_slides (
+CREATE TABLE IF NOT EXISTS lic_schema.presentation_slides (
     slide_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     presentation_id UUID REFERENCES lic_schema.presentations(presentation_id) ON DELETE CASCADE,
     
@@ -90,7 +90,7 @@ CREATE TABLE lic_schema.presentation_slides (
 );
 
 -- Presentation templates (pre-built templates for agents)
-CREATE TABLE lic_schema.presentation_templates (
+CREATE TABLE IF NOT EXISTS lic_schema.presentation_templates (
     template_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
     -- Template details
@@ -127,7 +127,7 @@ CREATE TABLE lic_schema.presentation_templates (
 );
 
 -- Presentation analytics (tracking views, engagement, etc.)
-CREATE TABLE lic_schema.presentation_analytics (
+CREATE TABLE IF NOT EXISTS lic_schema.presentation_analytics (
     analytics_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     presentation_id UUID REFERENCES lic_schema.presentations(presentation_id) ON DELETE CASCADE,
     slide_id UUID REFERENCES lic_schema.presentation_slides(slide_id) ON DELETE SET NULL,
@@ -157,7 +157,7 @@ CREATE TABLE lic_schema.presentation_analytics (
 );
 
 -- Presentation media storage (tracking uploaded media files)
-CREATE TABLE lic_schema.presentation_media (
+CREATE TABLE IF NOT EXISTS lic_schema.presentation_media (
     media_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     agent_id UUID REFERENCES lic_schema.agents(agent_id),
     
@@ -194,7 +194,7 @@ CREATE TABLE lic_schema.presentation_media (
 );
 
 -- Agent presentation preferences (customization settings)
-CREATE TABLE lic_schema.agent_presentation_preferences (
+CREATE TABLE IF NOT EXISTS lic_schema.agent_presentation_preferences (
     preference_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     agent_id UUID REFERENCES lic_schema.agents(agent_id) UNIQUE,
     
@@ -228,31 +228,31 @@ CREATE TABLE lic_schema.agent_presentation_preferences (
 -- INDEXES
 -- =====================================================
 
-CREATE INDEX idx_presentations_agent_status ON lic_schema.presentations(agent_id, status);
-CREATE INDEX idx_presentations_active ON lic_schema.presentations(agent_id, is_active) WHERE is_active = true;
-CREATE INDEX idx_presentations_template ON lic_schema.presentations(template_id) WHERE template_id IS NOT NULL;
-CREATE INDEX idx_presentations_published ON lic_schema.presentations(published_at DESC) WHERE status = 'published';
+CREATE INDEX IF NOT EXISTS idx_presentations_agent_status ON lic_schema.presentations(agent_id, status);
+CREATE INDEX IF NOT EXISTS idx_presentations_active ON lic_schema.presentations(agent_id, is_active) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_presentations_template ON lic_schema.presentations(template_id) WHERE template_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_presentations_published ON lic_schema.presentations(published_at DESC) WHERE status = 'published';
 
-CREATE INDEX idx_slides_presentation_order ON lic_schema.presentation_slides(presentation_id, slide_order);
-CREATE INDEX idx_slides_type ON lic_schema.presentation_slides(slide_type);
+CREATE INDEX IF NOT EXISTS idx_slides_presentation_order ON lic_schema.presentation_slides(presentation_id, slide_order);
+CREATE INDEX IF NOT EXISTS idx_slides_type ON lic_schema.presentation_slides(slide_type);
 
-CREATE INDEX idx_templates_category_public ON lic_schema.presentation_templates(category, is_public) WHERE is_public = true;
-CREATE INDEX idx_templates_status ON lic_schema.presentation_templates(status) WHERE status = 'active';
+CREATE INDEX IF NOT EXISTS idx_templates_category_public ON lic_schema.presentation_templates(category, is_public) WHERE is_public = true;
+CREATE INDEX IF NOT EXISTS idx_templates_status ON lic_schema.presentation_templates(status) WHERE status = 'active';
 
-CREATE INDEX idx_analytics_presentation ON lic_schema.presentation_analytics(presentation_id, event_timestamp DESC);
-CREATE INDEX idx_analytics_slide ON lic_schema.presentation_analytics(slide_id, event_type) WHERE slide_id IS NOT NULL;
-CREATE INDEX idx_analytics_agent ON lic_schema.presentation_analytics(agent_id, event_timestamp DESC);
-CREATE INDEX idx_analytics_event_type ON lic_schema.presentation_analytics(event_type, event_timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_analytics_presentation ON lic_schema.presentation_analytics(presentation_id, event_timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_analytics_slide ON lic_schema.presentation_analytics(slide_id, event_type) WHERE slide_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_analytics_agent ON lic_schema.presentation_analytics(agent_id, event_timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_analytics_event_type ON lic_schema.presentation_analytics(event_type, event_timestamp DESC);
 
-CREATE INDEX idx_media_agent_status ON lic_schema.presentation_media(agent_id, status);
-CREATE INDEX idx_media_hash ON lic_schema.presentation_media(file_hash) WHERE file_hash IS NOT NULL;
-CREATE INDEX idx_media_type ON lic_schema.presentation_media(media_type);
+CREATE INDEX IF NOT EXISTS idx_media_agent_status ON lic_schema.presentation_media(agent_id, status);
+CREATE INDEX IF NOT EXISTS idx_media_hash ON lic_schema.presentation_media(file_hash) WHERE file_hash IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_media_type ON lic_schema.presentation_media(media_type);
 
 -- JSONB indexes for flexible queries
-CREATE INDEX idx_slides_cta_button ON lic_schema.presentation_slides USING GIN(cta_button) WHERE cta_button IS NOT NULL;
-CREATE INDEX idx_slides_agent_branding ON lic_schema.presentation_slides USING GIN(agent_branding) WHERE agent_branding IS NOT NULL;
-CREATE INDEX idx_analytics_event_data ON lic_schema.presentation_analytics USING GIN(event_data);
-CREATE INDEX idx_templates_slides ON lic_schema.presentation_templates USING GIN(slides);
+CREATE INDEX IF NOT EXISTS idx_slides_cta_button ON lic_schema.presentation_slides USING GIN(cta_button) WHERE cta_button IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_slides_agent_branding ON lic_schema.presentation_slides USING GIN(agent_branding) WHERE agent_branding IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_analytics_event_data ON lic_schema.presentation_analytics USING GIN(event_data);
+CREATE INDEX IF NOT EXISTS idx_templates_slides ON lic_schema.presentation_templates USING GIN(slides);
 
 -- =====================================================
 -- FUNCTIONS & TRIGGERS

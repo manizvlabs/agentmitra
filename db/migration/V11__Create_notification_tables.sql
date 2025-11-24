@@ -34,7 +34,7 @@ CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON lic_schema.notifications
 CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON lic_schema.notifications(user_id, is_read);
 
 -- Create lic_schema.notification_settings table
-CREATE TABLE IF NOT EXISTS lic_schema.lic_schema.notification_settings (
+CREATE TABLE IF NOT EXISTS lic_schema.notification_settings (
     id SERIAL PRIMARY KEY,
     user_id UUID NOT NULL UNIQUE,
 
@@ -67,10 +67,10 @@ CREATE TABLE IF NOT EXISTS lic_schema.lic_schema.notification_settings (
 );
 
 -- Create index for lic_schema.notification_settings table
-CREATE INDEX IF NOT EXISTS idx_lic_schema.notification_settings_user_id ON lic_schema.lic_schema.notification_settings(user_id);
+CREATE INDEX IF NOT EXISTS idx_notification_settings_user_id ON lic_schema.notification_settings(user_id);
 
 -- Create lic_schema.device_tokens table for push notifications
-CREATE TABLE IF NOT EXISTS lic_schema.lic_schema.device_tokens (
+CREATE TABLE IF NOT EXISTS lic_schema.device_tokens (
     id SERIAL PRIMARY KEY,
     user_id UUID NOT NULL,
     token VARCHAR(255) NOT NULL UNIQUE,
@@ -82,11 +82,11 @@ CREATE TABLE IF NOT EXISTS lic_schema.lic_schema.device_tokens (
 );
 
 -- Create indexes for lic_schema.device_tokens table
-CREATE INDEX IF NOT EXISTS idx_lic_schema.device_tokens_user_id ON lic_schema.lic_schema.device_tokens(user_id);
-CREATE INDEX IF NOT EXISTS idx_lic_schema.device_tokens_token ON lic_schema.lic_schema.device_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_device_tokens_user_id ON lic_schema.device_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_device_tokens_token ON lic_schema.device_tokens(token);
 
 -- Create trigger to update updated_at timestamp for lic_schema.notification_settings
-CREATE OR REPLACE FUNCTION update_lic_schema.notification_settings_updated_at()
+CREATE OR REPLACE FUNCTION lic_schema.update_notification_settings_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
@@ -94,13 +94,13 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER trigger_update_lic_schema.notification_settings_updated_at
+CREATE TRIGGER trigger_update_notification_settings_updated_at
     BEFORE UPDATE ON lic_schema.notification_settings
     FOR EACH ROW
-    EXECUTE FUNCTION update_lic_schema.notification_settings_updated_at();
+    EXECUTE FUNCTION lic_schema.update_notification_settings_updated_at();
 
 -- Create trigger to update last_used_at for lic_schema.device_tokens
-CREATE OR REPLACE FUNCTION update_lic_schema.device_tokens_last_used_at()
+CREATE OR REPLACE FUNCTION lic_schema.update_device_tokens_last_used_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.last_used_at = CURRENT_TIMESTAMP;
@@ -108,10 +108,10 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER trigger_update_lic_schema.device_tokens_last_used_at
+CREATE TRIGGER trigger_update_device_tokens_last_used_at
     BEFORE UPDATE ON lic_schema.device_tokens
     FOR EACH ROW
-    EXECUTE FUNCTION update_lic_schema.device_tokens_last_used_at();
+    EXECUTE FUNCTION lic_schema.update_device_tokens_last_used_at();
 
 -- Insert default notification settings for existing users (DISABLED)
 -- -- INSERT INTO lic_schema.notification_settings (
