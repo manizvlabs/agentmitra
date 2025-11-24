@@ -3,10 +3,20 @@
 FeatureHub Admin Service - Python Implementation
 Creates feature flags programmatically using FeatureHub Admin API
 
-This service works around the current 500 server error by:
-1. Using correct endpoint structure from OpenAPI spec
-2. Providing clear error messages
-3. Being ready to work once server issue is resolved
+Based on ADK (Admin Development Kit) OpenAPI spec:
+https://github.com/featurehub-io/featurehub/blob/main/adks/final.yaml
+
+Endpoint: POST /mr-api/application/{id}/features
+Request Body: Single Feature object (not array)
+Required Fields: name, key, valueType
+
+This service:
+1. Uses correct endpoint structure from ADK OpenAPI spec
+2. Provides clear error messages
+3. Ready to work once server issue is resolved
+
+Current Issue: Server returns 500 (empty body) for POST requests
+This is a FeatureHub SaaS server-side issue, not a client issue.
 """
 
 import httpx

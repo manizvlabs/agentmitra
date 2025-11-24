@@ -2,6 +2,15 @@
 
 ## Date: 2024-11-24
 
+## ADK Spec Reference
+**Admin Development Kit (ADK) OpenAPI Spec**: https://github.com/featurehub-io/featurehub/blob/main/adks/final.yaml
+
+**Verified**: Our implementation matches the ADK spec exactly:
+- Endpoint: `POST /mr-api/application/{id}/features` ✅
+- Request Body: Single `Feature` object (not array) ✅
+- Required Fields: `name` (schema), but server requires `key` and `valueType` too ✅
+- Operation ID: `createFeaturesForApplication` ✅
+
 ## Issue Summary
 
 **Problem**: POST requests to create feature flags return **500 Server Error** with empty response body.
