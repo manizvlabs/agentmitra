@@ -21,25 +21,33 @@ if [ ! -f "$JAR_FILE" ]; then
     cd "$PROJECT_ROOT"
 fi
 
-# Extract application and environment IDs from SDK key
+# Extract application ID from SDK key (first part before /)
+# Note: Environment ID is not a UUID - it's in the SDK key format
+# For now, we'll use the application ID and skip environment-specific operations
 if [ -z "$FEATUREHUB_SDK_KEY" ]; then
     echo "❌ Error: FEATUREHUB_SDK_KEY not set"
     exit 1
 fi
 
 SDK_PARTS=($(echo $FEATUREHUB_SDK_KEY | tr '/' ' '))
-if [ ${#SDK_PARTS[@]} -ge 2 ]; then
+if [ ${#SDK_PARTS[@]} -ge 1 ]; then
     APPLICATION_ID=${SDK_PARTS[0]}
-    ENVIRONMENT_ID=${SDK_PARTS[1]}
+    # Environment ID from SDK key is not a UUID format
+    # Use FEATUREHUB_ENVIRONMENT_ID if set, otherwise skip environment operations
+    if [ -z "$ENVIRONMENT_ID" ]; then
+        ENVIRONMENT_ID=""
+        echo "⚠️  Warning: Environment ID not set - features will be created without environment values"
+    fi
 else
     echo "❌ Error: Invalid SDK key format"
     exit 1
 fi
 
 # Check required variables
+# Use correct MR API base URL if FEATUREHUB_ADMIN_SDK_URL not set
 if [ -z "$FEATUREHUB_ADMIN_SDK_URL" ]; then
-    echo "❌ Error: FEATUREHUB_ADMIN_SDK_URL not set"
-    exit 1
+    FEATUREHUB_ADMIN_SDK_URL="https://api.dev.featurehub.io"
+    echo "⚠️  Using default Admin SDK URL: $FEATUREHUB_ADMIN_SDK_URL"
 fi
 
 if [ -z "$FEATUREHUB_ADMIN_TOKEN" ]; then
@@ -58,12 +66,20 @@ echo "  Environment ID: $ENVIRONMENT_ID"
 echo ""
 
 # Run Java service
-java -jar "$JAR_FILE" \
-    --base-url "$FEATUREHUB_ADMIN_SDK_URL" \
-    --token "$FEATUREHUB_ADMIN_TOKEN" \
-    --application-id "$APPLICATION_ID" \
-    --environment-id "$ENVIRONMENT_ID" \
-    create-all
+if [ -n "$ENVIRONMENT_ID" ]; then
+    java -jar "$JAR_FILE" \
+        --base-url "$FEATUREHUB_ADMIN_SDK_URL" \
+        --token "$FEATUREHUB_ADMIN_TOKEN" \
+        --application-id "$APPLICATION_ID" \
+        --environment-id "$ENVIRONMENT_ID" \
+        create-all
+else
+    java -jar "$JAR_FILE" \
+        --base-url "$FEATUREHUB_ADMIN_SDK_URL" \
+        --token "$FEATUREHUB_ADMIN_TOKEN" \
+        --application-id "$APPLICATION_ID" \
+        create-all
+fi
 
 EXIT_CODE=$?
 
