@@ -148,13 +148,37 @@ class FeatureHubAdminService:
         await self.initialize()
         try:
             app_id = application_id or self.application_id
-            portfolio = self.portfolio_id or "default"
             
-            response = await self._client.get(
-                f"/api/v2/portfolios/{portfolio}/applications/{app_id}/features"
-            )
-            response.raise_for_status()
-            return response.json()
+            if not app_id:
+                return []
+            
+            # Based on Admin SDK: FeatureServiceApi
+            # GET /mr/api/application/{applicationId}/feature
+            endpoints = [
+                f"/mr/api/application/{app_id}/feature",
+                f"/api/mr/application/{app_id}/feature",
+                f"/api/v2/application/{app_id}/feature",
+                f"/application/{app_id}/feature",
+            ]
+            
+            for endpoint in endpoints:
+                try:
+                    response = await self._client.get(endpoint)
+                    if response.status_code == 200:
+                        result = response.json()
+                        if isinstance(result, list):
+                            return result
+                        elif isinstance(result, dict):
+                            # Might be wrapped
+                            if "features" in result:
+                                return result["features"]
+                            return [result]
+                    elif response.status_code == 404:
+                        continue
+                except:
+                    continue
+            
+            return []
         except httpx.HTTPStatusError as e:
             logger.error(f"Failed to get features: {e.response.status_code} - {e.response.text[:200]}")
             return []
@@ -171,7 +195,9 @@ class FeatureHubAdminService:
         application_id: Optional[str] = None
     ) -> Optional[Dict[str, Any]]:
         """
-        Create a new feature flag
+        Create a new feature flag using FeatureHub Admin SDK API
+        
+        Based on: https://docs.featurehub.io/featurehub/latest/admin-development-kit.html
         
         Args:
             key: Feature flag key (e.g., "phone_auth_enabled")
@@ -186,40 +212,77 @@ class FeatureHubAdminService:
         await self.initialize()
         
         app_id = application_id or self.application_id
-        portfolio = self.portfolio_id or "default"
         
         if not app_id:
             logger.error("Application ID not available. Cannot create feature.")
             return None
         
+        # Map value type to FeatureHub format
+        value_type_map = {
+            "BOOLEAN": "BOOLEAN",
+            "STRING": "STRING",
+            "NUMBER": "NUMBER",
+            "JSON": "JSON"
+        }
+        feature_value_type = value_type_map.get(value_type.upper(), "BOOLEAN")
+        
         try:
+            # Based on Admin SDK documentation:
+            # POST /mr/api/application/{applicationId}/feature
+            # Payload: { "name": "...", "key": "...", "valueType": "..." }
             payload = {
-                "key": key,
                 "name": name,
-                "description": description or f"Feature flag for {name}",
-                "valueType": value_type
+                "key": key,
+                "valueType": feature_value_type,
+                "description": description or f"Feature flag for {name}"
             }
             
-            response = await self._client.post(
-                f"/api/v2/portfolios/{portfolio}/applications/{app_id}/features",
-                json=payload
-            )
-            response.raise_for_status()
+            # Try multiple endpoint patterns based on Admin SDK structure
+            endpoints = [
+                f"/mr/api/application/{app_id}/feature",
+                f"/api/mr/application/{app_id}/feature",
+                f"/api/v2/application/{app_id}/feature",
+                f"/application/{app_id}/feature",
+            ]
             
-            feature = response.json()
-            logger.info(f"Created feature flag: {key}")
-            return feature
+            feature = None
+            for endpoint in endpoints:
+                try:
+                    response = await self._client.post(endpoint, json=payload)
+                    
+                    if response.status_code == 200 or response.status_code == 201:
+                        result = response.json()
+                        # API returns List<Feature> according to docs
+                        if isinstance(result, list) and len(result) > 0:
+                            feature = result[0]
+                        elif isinstance(result, dict):
+                            feature = result
+                        logger.info(f"Created feature flag: {key}")
+                        return feature
+                    elif response.status_code == 409:
+                        logger.warning(f"Feature flag '{key}' already exists")
+                        # Try to get existing feature
+                        features = await self.get_features(app_id)
+                        if features:
+                            for f in features:
+                                if f.get("key") == key:
+                                    return f
+                        continue
+                    elif response.status_code == 404:
+                        continue  # Try next endpoint
+                    else:
+                        logger.debug(f"Endpoint {endpoint} returned {response.status_code}")
+                        continue
+                except Exception as e:
+                    logger.debug(f"Endpoint {endpoint} failed: {e}")
+                    continue
+            
+            if not feature:
+                logger.error(f"Failed to create feature '{key}' - all endpoints failed")
+                return None
             
         except httpx.HTTPStatusError as e:
-            if e.response.status_code == 409:
-                logger.warning(f"Feature flag '{key}' already exists")
-                # Try to get existing feature
-                features = await self.get_features(app_id)
-                for feature in features:
-                    if feature.get("key") == key:
-                        return feature
-            else:
-                logger.error(f"Failed to create feature '{key}': {e.response.status_code} - {e.response.text}")
+            logger.error(f"Failed to create feature '{key}': {e.response.status_code} - {e.response.text[:500]}")
             return None
         except Exception as e:
             logger.error(f"Unexpected error creating feature '{key}': {e}")
@@ -233,7 +296,9 @@ class FeatureHubAdminService:
         application_id: Optional[str] = None
     ) -> bool:
         """
-        Set feature flag value for an environment
+        Set feature flag value for an environment using EnvironmentFeatureServiceApi
+        
+        Based on: https://docs.featurehub.io/featurehub/latest/admin-development-kit.html
         
         Args:
             feature_id: Feature ID
@@ -248,7 +313,6 @@ class FeatureHubAdminService:
         
         app_id = application_id or self.application_id
         env_id = environment_id or self.environment_id
-        portfolio = self.portfolio_id or "default"
         
         if not app_id or not env_id:
             logger.error("Application ID or Environment ID not available")
@@ -261,22 +325,41 @@ class FeatureHubAdminService:
             elif isinstance(value, dict):
                 import json
                 value_str = json.dumps(value)
+            elif value is None:
+                value_str = None
             else:
                 value_str = str(value)
             
+            # Based on Admin SDK: EnvironmentFeatureServiceApi
+            # PUT /mr/api/environment/{environmentId}/feature/{featureId}
             payload = {
                 "value": value_str,
-                "environmentId": env_id
+                "locked": False  # Default to unlocked
             }
             
-            response = await self._client.put(
-                f"/api/v2/portfolios/{portfolio}/applications/{app_id}/features/{feature_id}/values",
-                json=payload
-            )
-            response.raise_for_status()
+            # Try multiple endpoint patterns
+            endpoints = [
+                f"/mr/api/environment/{env_id}/feature/{feature_id}",
+                f"/api/mr/environment/{env_id}/feature/{feature_id}",
+                f"/api/v2/environment/{env_id}/feature/{feature_id}",
+                f"/environment/{env_id}/feature/{feature_id}",
+            ]
             
-            logger.info(f"Set feature '{feature_id}' value to '{value_str}' in environment '{env_id}'")
-            return True
+            for endpoint in endpoints:
+                try:
+                    response = await self._client.put(endpoint, json=payload)
+                    
+                    if response.status_code == 200 or response.status_code == 204:
+                        logger.info(f"Set feature '{feature_id}' value to '{value_str}' in environment '{env_id}'")
+                        return True
+                    elif response.status_code == 404:
+                        continue  # Try next endpoint
+                except Exception as e:
+                    logger.debug(f"Endpoint {endpoint} failed: {e}")
+                    continue
+            
+            logger.error(f"Failed to set feature value - all endpoints failed")
+            return False
             
         except Exception as e:
             logger.error(f"Failed to set feature value: {e}")
