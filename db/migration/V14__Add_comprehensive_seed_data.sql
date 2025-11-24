@@ -1,4 +1,4 @@
--- Agent Mitra - Migration V15: Add Comprehensive Seed Data
+-- Agent Mitra - Migration V14: Add Comprehensive Seed Data
 -- This migration ensures all remaining tables in lic_schema have at least 10 records
 -- Data is inserted in dependency order to maintain referential integrity
 
@@ -107,5 +107,5 @@ BEGIN
         RAISE NOTICE 'Added premium payments data';
     END IF;
 
-    RAISE NOTICE 'V15 migration completed successfully! All core tables now have minimum seed data.';
+    RAISE NOTICE 'V14 migration completed successfully! All core tables now have minimum seed data.';
 END $$;

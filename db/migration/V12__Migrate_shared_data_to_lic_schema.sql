@@ -1,4 +1,4 @@
--- Agent Mitra - Migration V13: Migrate Existing Data from Shared to Lic Schema
+-- Agent Mitra - Migration V12: Migrate Existing Data from Shared to Lic Schema
 -- This migration safely migrates all existing data from shared schema tables to lic_schema tables
 -- Only runs if the shared schema tables exist and contain data
 
