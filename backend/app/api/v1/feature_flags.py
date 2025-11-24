@@ -4,7 +4,7 @@ Provides runtime feature flag configuration using FeatureHub
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -18,7 +18,7 @@ router = APIRouter()
 
 class FeatureFlagsResponse(BaseModel):
     """Feature flags response model"""
-    flags: Dict[str, any]
+    flags: Dict[str, Any]
     last_updated: Optional[str] = None
     environment: str
     source: str = "featurehub"  # "featurehub" or "fallback"
