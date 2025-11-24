@@ -1,4 +1,4 @@
--- Agent Mitra - Migration V16: Fix Schema Foreign Key Issues
+-- Agent Mitra - Migration V14: Fix Schema Foreign Key Constraints
 -- This migration fixes the foreign key constraint issues that were preventing
 -- proper seeding of data. The agents table was referencing shared.insurance_providers
 -- instead of lic_schema.insurance_providers
@@ -102,5 +102,5 @@ BEGIN
         RAISE NOTICE 'Added users data';
     END IF;
 
-    RAISE NOTICE 'V16 migration completed successfully!';
+    RAISE NOTICE 'V14 migration completed successfully!';
 END $$;
