@@ -26,6 +26,7 @@ class FeatureHubAdminService:
         self.admin_base_url = settings.featurehub_url.rstrip('/')
         self.api_key = settings.featurehub_api_key
         self.sdk_key = settings.featurehub_sdk_key
+        self.admin_token = settings.featurehub_admin_token  # Service account access token
         
         # Extract application and environment IDs from SDK key
         # Format can be: {portfolio_id}/{application_id}/{environment_id}/{key} OR {application_id}/{environment_id}/{key}
@@ -64,19 +65,23 @@ class FeatureHubAdminService:
         if self._client:
             return
         
-        # FeatureHub Cloud uses API key in Authorization header
-        # Format: Bearer {api_key} or just {api_key}
+        # FeatureHub Cloud Admin API uses service account access token
         headers = {
             "Content-Type": "application/json",
             "Accept": "application/json"
         }
         
-        # Try different authentication methods
-        if self.api_key:
-            # Method 1: Bearer token
+        # Use admin token (service account access token) if available
+        # Otherwise fall back to API key
+        if self.admin_token:
+            headers["Authorization"] = f"Bearer {self.admin_token}"
+            logger.info("Using FeatureHub Admin service account token")
+        elif self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
-            # Method 2: X-API-Key header (alternative)
             headers["X-API-Key"] = self.api_key
+            logger.info("Using FeatureHub API key (fallback)")
+        else:
+            logger.warning("No authentication token configured for Admin API")
         
         self._client = httpx.AsyncClient(
             base_url=self.admin_base_url,
@@ -84,7 +89,7 @@ class FeatureHubAdminService:
             headers=headers,
             follow_redirects=True
         )
-        logger.info("FeatureHub Admin service initialized")
+        logger.info(f"FeatureHub Admin service initialized with base URL: {self.admin_base_url}")
     
     async def get_portfolios(self) -> List[Dict[str, Any]]:
         """Get all portfolios"""
@@ -105,12 +110,12 @@ class FeatureHubAdminService:
         await self.initialize()
         try:
             portfolio = portfolio_id or self.portfolio_id or "default"
-            response = await self._client.get(
-                f"/api/v2/portfolios/{portfolio}/applications",
-                headers={"Authorization": f"Bearer {self.api_key}"}
-            )
+            response = await self._client.get(f"/api/v2/portfolios/{portfolio}/applications")
             response.raise_for_status()
             return response.json()
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Failed to get applications: {e.response.status_code} - {e.response.text[:200]}")
+            return []
         except Exception as e:
             logger.error(f"Failed to get applications: {e}")
             return []
@@ -123,11 +128,13 @@ class FeatureHubAdminService:
             portfolio = self.portfolio_id or "default"
             
             response = await self._client.get(
-                f"/api/v2/portfolios/{portfolio}/applications/{app_id}/environments",
-                headers={"Authorization": f"Bearer {self.api_key}"}
+                f"/api/v2/portfolios/{portfolio}/applications/{app_id}/environments"
             )
             response.raise_for_status()
             return response.json()
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Failed to get environments: {e.response.status_code} - {e.response.text[:200]}")
+            return []
         except Exception as e:
             logger.error(f"Failed to get environments: {e}")
             return []
@@ -140,11 +147,13 @@ class FeatureHubAdminService:
             portfolio = self.portfolio_id or "default"
             
             response = await self._client.get(
-                f"/api/v2/portfolios/{portfolio}/applications/{app_id}/features",
-                headers={"Authorization": f"Bearer {self.api_key}"}
+                f"/api/v2/portfolios/{portfolio}/applications/{app_id}/features"
             )
             response.raise_for_status()
             return response.json()
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Failed to get features: {e.response.status_code} - {e.response.text[:200]}")
+            return []
         except Exception as e:
             logger.error(f"Failed to get features: {e}")
             return []
@@ -189,8 +198,7 @@ class FeatureHubAdminService:
             
             response = await self._client.post(
                 f"/api/v2/portfolios/{portfolio}/applications/{app_id}/features",
-                json=payload,
-                headers={"Authorization": f"Bearer {self.api_key}"}
+                json=payload
             )
             response.raise_for_status()
             
@@ -259,8 +267,7 @@ class FeatureHubAdminService:
             
             response = await self._client.put(
                 f"/api/v2/portfolios/{portfolio}/applications/{app_id}/features/{feature_id}/values",
-                json=payload,
-                headers={"Authorization": f"Bearer {self.api_key}"}
+                json=payload
             )
             response.raise_for_status()
             
