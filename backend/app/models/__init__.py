@@ -24,7 +24,7 @@ from .shared import (
     InsuranceProvider, Country, Language, InsuranceCategory,
     WhatsappTemplate, Tenant
 )
-# Temporarily commented out RBAC models to debug startup issues
+# RBAC models temporarily disabled due to TextClause error - models need debugging
 # from .rbac import Role, Permission, UserRole
 # from .feature_flags import FeatureFlag, FeatureFlagOverride
 # from .rbac_audit import RbacAuditLog

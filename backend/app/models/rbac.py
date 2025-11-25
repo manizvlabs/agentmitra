@@ -79,9 +79,9 @@ class UserRole(Base):
     assigned_at = Column(TIMESTAMP, default=func.now())
 
     # Relationships
-    user = relationship("User", foreign_keys=[user_id])
-    role = relationship("Role")
-    assigner = relationship("User", foreign_keys=[assigned_by])
+    user = relationship("User", back_populates="role_associations")
+    role = relationship("Role", back_populates="users_associations")
+    assigner = relationship("User")
 
     def __repr__(self):
         return f"<UserRole(user_id={self.user_id}, role_id={self.role_id})>"

@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from . import auth, users, providers, agents, policies, presentations, chat, analytics, feature_flags, health, notifications, campaigns, callbacks, tenants
-# Temporarily commented out RBAC router to debug startup issues
+# Temporarily commented out RBAC router to debug TextClause error
 # , rbac
 
 # Create main API router
@@ -166,6 +166,6 @@ api_router.include_router(feature_flags.router, tags=["feature-flags"])
 api_router.include_router(health.router, tags=["health"])
 api_router.include_router(notifications.router, tags=["notifications"])
 api_router.include_router(tenants.router, prefix="/tenants", tags=["tenants"])
-# Temporarily commented out RBAC router to debug startup issues
+# Temporarily commented out RBAC router to debug TextClause error
 # api_router.include_router(rbac.router, prefix="/rbac", tags=["rbac"])
 

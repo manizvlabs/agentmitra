@@ -23,6 +23,10 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
         """Process each request with tenant context"""
+        # Skip tenant validation for certain endpoints
+        if self._should_skip_tenant_validation(request):
+            return await call_next(request)
+
         try:
             # Extract tenant context from request
             tenant_context = await self._extract_tenant_context(request)
@@ -139,7 +143,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
     async def _extract_tenant_from_jwt(self, request: Request) -> Optional[str]:
         """Extract tenant ID from JWT token if present"""
-        from app.core.auth import verify_token
+        from app.core.security import verify_token
         import json
 
         auth_header = request.headers.get('Authorization', '')
@@ -164,6 +168,21 @@ class TenantMiddleware(BaseHTTPMiddleware):
             logger.warning(f"Failed to extract tenant from JWT: {e}")
 
         return None
+
+    def _should_skip_tenant_validation(self, request: Request) -> bool:
+        """Check if tenant validation should be skipped for this request"""
+        # Skip tenant validation for auth endpoints and health checks
+        skip_paths = [
+            "/api/v1/auth/",
+            "/api/v1/health",
+            "/health",
+            "/docs",
+            "/redoc",
+            "/openapi.json"
+        ]
+
+        path = request.url.path
+        return any(path.startswith(skip_path) for skip_path in skip_paths)
 
     def _get_client_ip(self, request: Request) -> str:
         """Get client IP address from request"""
