@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_current_user_context, UserContext, auth_service
 from app.core.audit_service import AuditService
-from app.models.user import UserRole, Role, RolePermission, Permission
+from app.models.rbac import UserRole, Role, RolePermission, Permission
 
 router = APIRouter()
 
