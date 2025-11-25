@@ -24,6 +24,8 @@ import '../../screens/my_policies_screen.dart';
 import '../../features/agent/presentation/pages/agent_profile_page.dart';
 import '../../features/customers/presentation/pages/customers_page.dart';
 import '../../screens/tenant_onboarding_screen.dart';
+import '../../screens/role_assignment_screen.dart';
+import '../../screens/compliance_reporting_screen.dart';
 
 /// Application Router Configuration
 /// Uses GoRouter for declarative routing with deep linking support
@@ -194,6 +196,28 @@ class AppRouter {
         builder: (context, state) => const TenantOnboardingScreen(),
       ),
 
+      // Role Assignment Route (Admin only)
+      GoRoute(
+        path: '/role-assignment/:userId',
+        name: 'role-assignment',
+        builder: (context, state) {
+          final userId = state.pathParameters['userId']!;
+          final extra = state.extra as Map<String, dynamic>?;
+          return RoleAssignmentScreen(
+            userId: userId,
+            userName: extra?['userName'] ?? 'Unknown User',
+            userEmail: extra?['userEmail'] ?? '',
+          );
+        },
+      ),
+
+      // Compliance Reporting Route (Admin only)
+      GoRoute(
+        path: '/compliance-reports',
+        name: 'compliance-reports',
+        builder: (context, state) => const ComplianceReportingScreen(),
+      ),
+
       // Demo route (for development)
       GoRoute(
         path: '/demo',
@@ -351,6 +375,20 @@ class _DemoNavigation extends StatelessWidget {
             '🏗️ Tenant Onboarding',
             'Super Admin tenant provisioning & management',
             () => context.go('/tenant-onboarding'),
+          ),
+
+          _buildDemoButton(
+            context,
+            '👥 Role Assignment',
+            'Assign roles and permissions to users',
+            () => context.go('/role-assignment/demo-user-123'),
+          ),
+
+          _buildDemoButton(
+            context,
+            '📊 Compliance Reports',
+            'RBAC audit logs and access reports',
+            () => context.go('/compliance-reports'),
           ),
 
           const SizedBox(height: 32),

@@ -22,15 +22,28 @@ logger = get_logger(__name__)
 security = HTTPBearer(auto_error=False)
 
 
-# Role hierarchy and permissions
+# Role hierarchy for permission inheritance
 ROLE_HIERARCHY = {
     "super_admin": 100,
-    "provider_admin": 80,
+    "compliance_officer": 95,
+    "customer_support_lead": 90,
+    "insurance_provider_admin": 80,
     "regional_manager": 60,
     "senior_agent": 40,
     "junior_agent": 20,
+    "support_staff": 15,
     "policyholder": 10,
     "guest": 0,
+}
+
+# Role inheritance mapping (higher roles inherit permissions from lower roles)
+ROLE_INHERITANCE = {
+    "super_admin": ["compliance_officer", "customer_support_lead", "insurance_provider_admin", "regional_manager", "senior_agent", "junior_agent", "support_staff", "policyholder", "guest"],
+    "insurance_provider_admin": ["regional_manager", "senior_agent", "junior_agent", "support_staff", "policyholder"],
+    "regional_manager": ["senior_agent", "junior_agent", "support_staff"],
+    "senior_agent": ["junior_agent"],
+    "customer_support_lead": ["support_staff"],
+    # Other roles don't inherit from lower roles
 }
 
 PERMISSIONS = {
@@ -92,10 +105,14 @@ class AuthorizationService:
     # ==================== PERMISSION CHECKING ====================
 
     def has_permission(self, user_id: str, permission: str, db: Session, tenant_id: str = None) -> bool:
-        """Check if user has a specific permission"""
+        """Check if user has a specific permission with tenant context"""
         try:
             # Get user's roles and their permissions
             user_permissions = self._get_user_permissions(user_id, db)
+
+            # Check tenant access if tenant_id is provided
+            if tenant_id and not self._has_tenant_access(user_id, tenant_id, db):
+                return False
 
             # Check if user has the permission or a wildcard permission
             return (
@@ -105,6 +122,33 @@ class AuthorizationService:
             )
         except Exception as e:
             logger.error(f"Error checking permission {permission} for user {user_id}: {e}")
+            return False
+
+    def _has_tenant_access(self, user_id: str, tenant_id: str, db: Session) -> bool:
+        """Check if user has access to the specified tenant"""
+        try:
+            from app.models.user import TenantUser
+
+            # Check if user is assigned to tenant
+            tenant_user = db.query(TenantUser).filter(
+                TenantUser.user_id == user_id,
+                TenantUser.tenant_id == tenant_id,
+                TenantUser.status == 'active'
+            ).first()
+
+            # If user is assigned to tenant, allow access
+            if tenant_user:
+                return True
+
+            # Check if user has super_admin role (can access all tenants)
+            user_roles = self._get_user_roles(user_id, db)
+            if "super_admin" in user_roles:
+                return True
+
+            return False
+
+        except Exception as e:
+            logger.error(f"Error checking tenant access for user {user_id}, tenant {tenant_id}: {e}")
             return False
 
     def has_any_permission(self, user_id: str, permissions: List[str], db: Session, tenant_id: str = None) -> bool:
@@ -387,7 +431,7 @@ class AuthorizationService:
     # ==================== PRIVATE METHODS ====================
 
     def _get_user_permissions(self, user_id: str, db: Session) -> List[str]:
-        """Get all permissions for a user from database"""
+        """Get all permissions for a user from database with hierarchical inheritance"""
         cache_key = f"user_permissions:{user_id}"
 
         # Check cache first
@@ -397,16 +441,24 @@ class AuthorizationService:
                 return cached_data
 
         try:
-            # Query user permissions from database
-            permissions = db.query(Permission).\
-                join(RolePermission).\
-                join(Role).\
-                join(UserRole).\
-                filter(UserRole.user_id == user_id).\
-                distinct().\
-                all()
+            # Get user's direct roles
+            user_roles = self._get_user_roles(user_id, db)
 
-            permission_list = [p.permission_name for p in permissions]
+            # Expand roles with inheritance
+            all_roles = self._expand_roles_with_inheritance(user_roles)
+
+            # Query permissions for all roles (direct + inherited)
+            if all_roles:
+                permissions = db.query(Permission).\
+                    join(RolePermission).\
+                    join(Role).\
+                    filter(Role.role_name.in_(all_roles)).\
+                    distinct().\
+                    all()
+
+                permission_list = [p.permission_name for p in permissions]
+            else:
+                permission_list = []
 
             # Cache the result
             self._permission_cache[cache_key] = (permission_list, time.time())
@@ -416,6 +468,18 @@ class AuthorizationService:
         except Exception as e:
             logger.error(f"Error getting permissions for user {user_id}: {e}")
             return []
+
+    def _expand_roles_with_inheritance(self, user_roles: List[str]) -> List[str]:
+        """Expand user roles with inherited roles"""
+        all_roles = set(user_roles)
+
+        # Add inherited roles for each user role
+        for role in user_roles:
+            if role in ROLE_INHERITANCE:
+                inherited_roles = ROLE_INHERITANCE[role]
+                all_roles.update(inherited_roles)
+
+        return list(all_roles)
 
     def _get_user_roles(self, user_id: str, db: Session) -> List[str]:
         """Get all roles for a user from database"""
