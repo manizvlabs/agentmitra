@@ -1,15 +1,33 @@
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'api_service.dart';
 
 /// Feature Flag Service for dynamic UI rendering based on permissions
 class FeatureFlagService {
-  final ApiService _apiService;
   final Map<String, bool> _cache = {};
   final Map<String, DateTime> _cacheTimestamps = {};
   final Duration _cacheDuration = const Duration(minutes: 5);
 
-  FeatureFlagService(this._apiService);
+  FeatureFlagService();
+
+  /// Initialize the service (async for future use)
+  Future<void> initialize() async {
+    // Placeholder for future initialization logic
+    return;
+  }
+
+  /// Synchronous check for feature flag (checks cache only)
+  bool isFeatureEnabledSync(String flagName, {String? userId, String? tenantId}) {
+    final cacheKey = _getCacheKey(flagName, userId, tenantId);
+    if (_cache.containsKey(cacheKey)) {
+      final cachedTime = _cacheTimestamps[cacheKey];
+      if (cachedTime != null &&
+          DateTime.now().difference(cachedTime) < _cacheDuration) {
+        return _cache[cacheKey]!;
+      }
+    }
+    // Default to true if not cached
+    return true;
+  }
 
   /// Check if a feature flag is enabled
   Future<bool> isFeatureEnabled(String flagName, {String? userId, String? tenantId}) async {
@@ -25,12 +43,9 @@ class FeatureFlagService {
 
     try {
       // Check via API
-      final response = await _apiService.get(
+      final response = await ApiService.get(
         '/rbac/check-permission',
-        queryParameters: {
-          'permission': flagName,
-          if (userId != null) 'user_id': userId,
-        },
+        queryParameters: {'permission': flagName, if (userId != null) 'user_id': userId},
       );
 
       final isEnabled = response['has_permission'] as bool;
@@ -50,12 +65,9 @@ class FeatureFlagService {
   /// Check if user has a specific permission
   Future<bool> hasPermission(String permission, {String? userId}) async {
     try {
-      final response = await _apiService.get(
+      final response = await ApiService.get(
         '/rbac/check-permission',
-        queryParameters: {
-          'permission': permission,
-          if (userId != null) 'user_id': userId,
-        },
+        queryParameters: {'permission': permission, if (userId != null) 'user_id': userId},
       );
 
       return response['has_permission'] as bool;
@@ -68,9 +80,7 @@ class FeatureFlagService {
   /// Get user permissions
   Future<List<String>> getUserPermissions({String? userId}) async {
     try {
-      final response = await _apiService.get(
-        '/rbac/users/${userId ?? 'current'}/roles',
-      );
+      final response = await ApiService.get('/rbac/users/${userId ?? 'current'}/roles');
 
       return List<String>.from(response['permissions'] as List);
     } catch (e) {
@@ -82,9 +92,7 @@ class FeatureFlagService {
   /// Get user roles
   Future<List<String>> getUserRoles({String? userId}) async {
     try {
-      final response = await _apiService.get(
-        '/rbac/users/${userId ?? 'current'}/roles',
-      );
+      final response = await ApiService.get('/rbac/users/${userId ?? 'current'}/roles');
 
       return List<String>.from(response['roles'] as List);
     } catch (e) {
@@ -170,7 +178,6 @@ class FeatureFlagBuilder extends StatefulWidget {
 }
 
 class _FeatureFlagBuilderState extends State<FeatureFlagBuilder> {
-  late final FeatureFlagService _featureFlagService;
   bool? _isEnabled;
   bool _isLoading = true;
 
@@ -182,12 +189,6 @@ class _FeatureFlagBuilderState extends State<FeatureFlagBuilder> {
     _loadFeatureFlag();
   }
 
-  @override
-  void didUpdateDependencies() {
-    super.didUpdateDependencies();
-    // Reload if parameters changed
-    _loadFeatureFlag();
-  }
 
   Future<void> _loadFeatureFlag() async {
     setState(() => _isLoading = true);

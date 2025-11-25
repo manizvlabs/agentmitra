@@ -1,14 +1,22 @@
 /// Authentication ViewModel
 import '../../../../core/architecture/base/base_viewmodel.dart';
+import '../../../../core/services/rbac_service.dart';
+import '../../../../core/services/api_service.dart';
+import '../../../../core/services/logger_service.dart';
+import '../../../../core/utils/jwt_decoder.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/models/auth_response.dart';
 import '../../data/models/user_model.dart';
 
 class AuthViewModel extends BaseViewModel {
   final AuthRepository _authRepository;
+  final RbacService _rbacService;
 
-  AuthViewModel({AuthRepository? authRepository})
-      : _authRepository = authRepository ?? AuthRepository();
+  AuthViewModel({
+    AuthRepository? authRepository,
+    RbacService? rbacService,
+  }) : _authRepository = authRepository ?? AuthRepository(),
+       _rbacService = rbacService ?? RbacService(ApiService(), LoggerService());
 
   UserModel? _currentUser;
   bool _isAuthenticated = false;
@@ -24,6 +32,18 @@ class AuthViewModel extends BaseViewModel {
       _isAuthenticated = _authRepository.isLoggedIn();
       if (_isAuthenticated) {
         _currentUser = await _authRepository.getCurrentUser();
+
+        // Initialize RBAC with stored JWT token if available
+        final storedToken = await _authRepository.getStoredToken();
+        if (storedToken != null && storedToken.isNotEmpty) {
+          await _rbacService.initializeWithJwtToken(storedToken);
+
+          // Update user model with roles and permissions from stored JWT
+          _currentUser = _currentUser?.copyWith(
+            roles: JwtDecoder.extractRoles(storedToken),
+            permissions: JwtDecoder.extractPermissions(storedToken),
+          );
+        }
       }
     } catch (e) {
       setError('Failed to initialize authentication: $e');
@@ -47,10 +67,21 @@ class AuthViewModel extends BaseViewModel {
         password: password,
         agentCode: agentCode,
       );
-      
+
       _currentUser = authResponse.user;
       _isAuthenticated = true;
-      
+
+      // Initialize RBAC with JWT token data
+      if (authResponse.accessToken != null) {
+        await _rbacService.initializeWithJwtToken(authResponse.accessToken!);
+
+        // Update user model with roles and permissions from JWT
+        _currentUser = _currentUser?.copyWith(
+          roles: JwtDecoder.extractRoles(authResponse.accessToken!),
+          permissions: JwtDecoder.extractPermissions(authResponse.accessToken!),
+        );
+      }
+
       return authResponse;
     } catch (e) {
       setError('Login failed: $e');
@@ -89,10 +120,21 @@ class AuthViewModel extends BaseViewModel {
         phoneNumber: phoneNumber,
         otp: otp,
       );
-      
+
       _currentUser = authResponse.user;
       _isAuthenticated = true;
-      
+
+      // Initialize RBAC with JWT token data
+      if (authResponse.accessToken != null) {
+        await _rbacService.initializeWithJwtToken(authResponse.accessToken!);
+
+        // Update user model with roles and permissions from JWT
+        _currentUser = _currentUser?.copyWith(
+          roles: JwtDecoder.extractRoles(authResponse.accessToken!),
+          permissions: JwtDecoder.extractPermissions(authResponse.accessToken!),
+        );
+      }
+
       return authResponse;
     } catch (e) {
       setError('OTP verification failed: $e');

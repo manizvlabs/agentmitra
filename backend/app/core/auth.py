@@ -507,6 +507,10 @@ class AuthorizationService:
         """Expand user roles with inherited roles"""
         all_roles = set(user_roles)
 
+        # Super Admin gets full access without inheritance from lower roles
+        if "super_admin" in user_roles:
+            return ["super_admin"]
+
         # Add inherited roles for each user role
         for role in user_roles:
             if role in ROLE_INHERITANCE:

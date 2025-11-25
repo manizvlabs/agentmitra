@@ -182,6 +182,10 @@ class AgentMitraApp extends ConsumerWidget {
         provider.ChangeNotifierProvider(
           create: (_) => PoliciesViewModel(),
         ),
+        // RBAC Service Provider
+        provider.Provider(
+          create: (_) => ServiceLocator.rbacService,
+        ),
       ],
       child: MaterialApp(
         title: 'Agent Mitra',

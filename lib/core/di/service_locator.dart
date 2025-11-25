@@ -1,4 +1,6 @@
 import '../services/logger_service.dart';
+import '../services/rbac_service.dart';
+import '../services/api_service.dart';
 import '../../features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../features/dashboard/presentation/viewmodels/dashboard_viewmodel.dart';
 import '../../features/notifications/presentation/viewmodels/notification_viewmodel.dart';
@@ -60,6 +62,10 @@ class ServiceLocator {
   /// Analytics ViewModel - connects to advanced analytics APIs
   static AnalyticsViewModel get analyticsViewModel =>
     AnalyticsViewModel();
+
+  /// RBAC Service - Role-Based Access Control
+  static RbacService get rbacService =>
+    RbacService(ApiService(), LoggerService());
 
   // ===========================================================================
   // UTILITY METHODS

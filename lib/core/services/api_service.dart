@@ -1,7 +1,7 @@
 /// API Service for HTTP communication with backend
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
 
 class ApiService {
@@ -20,13 +20,13 @@ class ApiService {
 
   // Get headers with authentication
   static Future<Map<String, String>> getHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('access_token');
+    const secureStorage = FlutterSecureStorage();
+    final token = await secureStorage.read(key: 'access_token');
 
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
     };
   }
 
@@ -35,7 +35,7 @@ class ApiService {
     try {
       var url = '$apiUrl$endpoint';
       if (queryParameters != null && queryParameters.isNotEmpty) {
-        final queryString = queryParameters!.entries
+        final queryString = queryParameters.entries
             .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
             .join('&');
         url += '?$queryString';

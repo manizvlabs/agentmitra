@@ -5,7 +5,9 @@ class UserModel {
   final String? email;
   final String? fullName;
   final String? agentCode;
-  final String? role; // 'agent', 'customer', 'admin'
+  final String? role; // Legacy field for backward compatibility
+  final List<String> roles; // RBAC roles
+  final List<String> permissions; // RBAC permissions
   final bool isVerified;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -17,6 +19,8 @@ class UserModel {
     this.fullName,
     this.agentCode,
     this.role,
+    this.roles = const [],
+    this.permissions = const [],
     this.isVerified = false,
     this.createdAt,
     this.updatedAt,
@@ -30,6 +34,8 @@ class UserModel {
       fullName: json['full_name'] ?? json['fullName'],
       agentCode: json['agent_code'] ?? json['agentCode'],
       role: json['role'],
+      roles: List<String>.from(json['roles'] ?? []),
+      permissions: List<String>.from(json['permissions'] ?? []),
       isVerified: json['is_verified'] ?? json['isVerified'] ?? false,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
@@ -48,10 +54,41 @@ class UserModel {
       'full_name': fullName,
       'agent_code': agentCode,
       'role': role,
+      'roles': roles,
+      'permissions': permissions,
       'is_verified': isVerified,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
+  }
+
+  /// Create a copy of this UserModel with modified fields
+  UserModel copyWith({
+    String? userId,
+    String? phoneNumber,
+    String? email,
+    String? fullName,
+    String? agentCode,
+    String? role,
+    List<String>? roles,
+    List<String>? permissions,
+    bool? isVerified,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return UserModel(
+      userId: userId ?? this.userId,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      email: email ?? this.email,
+      fullName: fullName ?? this.fullName,
+      agentCode: agentCode ?? this.agentCode,
+      role: role ?? this.role,
+      roles: roles ?? this.roles,
+      permissions: permissions ?? this.permissions,
+      isVerified: isVerified ?? this.isVerified,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
   }
 }
 

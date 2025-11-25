@@ -9,6 +9,8 @@ import '../widgets/dashboard_notifications.dart';
 import '../widgets/dashboard_priority_alerts.dart';
 import '../widgets/agent_side_drawer.dart';
 import '../../../../core/widgets/offline_indicator.dart';
+import '../../../../core/widgets/permission_widgets.dart';
+import '../../../../core/services/rbac_service.dart';
 
 /// Enhanced Dashboard Page with real API integration and presentation carousel
 class DashboardPage extends ConsumerStatefulWidget {

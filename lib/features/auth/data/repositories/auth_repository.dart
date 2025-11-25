@@ -64,14 +64,14 @@ class AuthRepository extends BaseRepository {
 
   /// Refresh access token
   Future<AuthResponse> refreshToken() async {
-    final refreshToken = _localDataSource.getRefreshToken();
+    final refreshToken = await _localDataSource.getRefreshToken();
     if (refreshToken == null) {
       throw Exception('No refresh token available');
     }
-    
+
     final authResponse = await _remoteDataSource.refreshToken(refreshToken);
     await _localDataSource.saveAuthTokens(authResponse);
-    
+
     return authResponse;
   }
 
@@ -105,9 +105,14 @@ class AuthRepository extends BaseRepository {
     return _localDataSource.isLoggedIn();
   }
 
+  /// Get stored access token
+  Future<String?> getStoredToken() async {
+    return await _localDataSource.getAccessToken();
+  }
+
   /// Get access token
-  String? getAccessToken() {
-    return _localDataSource.getAccessToken();
+  Future<String?> getAccessToken() async {
+    return await _localDataSource.getAccessToken();
   }
 }
 
