@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 
 from app.core.database import get_db
+from app.core.auth import get_current_user_context, UserContext
 from app.services.chatbot_service import ChatbotService
 from app.models.analytics import (
     ChatbotSession,
@@ -51,6 +52,7 @@ class CreateSessionRequest(BaseModel):
 @router.post("/sessions", response_model=ChatbotSession)
 async def create_chat_session(
     request: CreateSessionRequest,
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """Create a new chatbot session"""
@@ -70,6 +72,7 @@ async def send_message(
     session_id: str,
     request: ChatMessageRequest,
     background_tasks: BackgroundTasks,
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """Send a message to the chatbot and get AI-powered response"""
@@ -101,6 +104,7 @@ async def send_message(
 async def end_chat_session(
     session_id: str,
     satisfaction_score: Optional[int] = None,
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """End a chatbot session"""
@@ -125,6 +129,7 @@ async def end_chat_session(
 @router.get("/sessions/{session_id}/analytics")
 async def get_session_analytics(
     session_id: str,
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """Get analytics for a specific chat session"""
@@ -165,6 +170,7 @@ class UpdateArticleRequest(BaseModel):
 @router.post("/knowledge-base/articles", response_model=KnowledgeBaseArticle)
 async def create_knowledge_article(
     request: CreateArticleRequest,
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """Create a new knowledge base article"""
@@ -185,6 +191,7 @@ async def create_knowledge_article(
 async def update_knowledge_article(
     article_id: str,
     request: UpdateArticleRequest,
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """Update an existing knowledge base article"""
@@ -212,6 +219,7 @@ async def update_knowledge_article(
 async def search_knowledge_base(
     query: str,
     limit: int = 10,
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """Search knowledge base articles"""
@@ -231,6 +239,7 @@ async def search_knowledge_base(
 @router.delete("/knowledge-base/articles/{article_id}")
 async def delete_knowledge_article(
     article_id: str,
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """Delete a knowledge base article"""
@@ -259,6 +268,7 @@ class CreateIntentRequest(BaseModel):
 @router.post("/intents", response_model=ChatbotIntent)
 async def create_intent(
     request: CreateIntentRequest,
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """Create a new chatbot intent"""
@@ -277,6 +287,7 @@ async def create_intent(
 
 @router.get("/intents/stats")
 async def get_intent_statistics(
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """Get statistics about intent usage"""
@@ -298,6 +309,7 @@ async def get_intent_statistics(
 
 @router.get("/analytics", response_model=ChatbotAnalytics)
 async def get_chatbot_analytics(
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """Get comprehensive chatbot analytics"""

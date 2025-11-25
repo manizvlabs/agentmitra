@@ -6,15 +6,19 @@ Main API router that combines all endpoint routers
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
+from app.core.auth import get_current_user_context, UserContext
 from . import auth, users, providers, agents, policies, presentations, chat, analytics, feature_flags, health, notifications, campaigns, callbacks, tenants, rbac
 
 # Create main API router
 api_router = APIRouter(prefix="/api/v1", tags=["api"])
 
-# Dashboard endpoint (simplified for Flutter app compatibility)
+# Dashboard endpoint (requires authentication)
 @api_router.get("/dashboard/analytics")
-async def get_dashboard_analytics(db: Session = Depends(get_db)):
-    """Simple dashboard analytics endpoint for Flutter app"""
+async def get_dashboard_analytics(
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """Dashboard analytics endpoint for authenticated users"""
     try:
         from app.repositories.analytics_repository import AnalyticsRepository
         from app.repositories.policy_repository import InsurancePolicyRepository
@@ -58,10 +62,13 @@ async def get_dashboard_analytics(db: Session = Depends(get_db)):
             "recentClaims": []
         }
 
-# Test endpoints (temporary - remove in production)
+# Test endpoints (protected - remove in production)
 @api_router.get("/test/policies")
-async def get_test_policies(db: Session = Depends(get_db)):
-    """Test endpoint for policies (no auth required)"""
+async def get_test_policies(
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """Test endpoint for policies (requires authentication)"""
     from app.repositories.policy_repository import PolicyRepository
 
     repo = PolicyRepository(db)
@@ -78,8 +85,11 @@ async def get_test_policies(db: Session = Depends(get_db)):
     ]
 
 @api_router.get("/test/notifications")
-async def get_test_notifications(db: Session = Depends(get_db)):
-    """Test endpoint for notifications - returns real data from database"""
+async def get_test_notifications(
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """Test endpoint for notifications - returns real data from database (requires authentication)"""
     from app.models.notification import Notification
     from sqlalchemy import desc
     
@@ -108,8 +118,11 @@ async def get_test_notifications(db: Session = Depends(get_db)):
         return []
 
 @api_router.get("/test/agent/profile")
-async def get_test_agent_profile(db: Session = Depends(get_db)):
-    """Test endpoint for agent profile - returns real data from database"""
+async def get_test_agent_profile(
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """Test endpoint for agent profile - returns real data from database (requires authentication)"""
     from app.repositories.agent_repository import AgentRepository
 
     repo = AgentRepository(db)

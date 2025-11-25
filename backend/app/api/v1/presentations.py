@@ -8,6 +8,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.auth import get_current_user_context, UserContext
 from app.repositories.presentation_repository import PresentationRepository
 from app.repositories.agent_repository import AgentRepository
 
@@ -108,6 +109,7 @@ async def get_agent_presentations(
     presentation_status: Optional[str] = None,
     limit: int = 20,
     offset: int = 0,
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """Get all presentations for an agent (accepts both agent_id and user_id)"""
@@ -143,6 +145,7 @@ async def get_agent_presentations(
 async def create_presentation(
     agent_id: str,
     presentation: PresentationModel,
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """Create a new presentation"""
@@ -200,6 +203,7 @@ async def update_presentation(
     agent_id: str,
     presentation_id: str,
     presentation: PresentationModel,
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """Update an existing presentation"""
@@ -259,6 +263,7 @@ async def update_presentation(
 async def get_templates(
     category: Optional[str] = None,
     is_public: bool = True,
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """Get presentation templates"""

@@ -4,7 +4,7 @@ Authentication API Endpoints
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, validator
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -58,6 +58,7 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     expires_in: int = 900  # 15 minutes
     user: Optional[dict] = None
+    permissions: Optional[List[str]] = None
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -183,7 +184,7 @@ async def login(
     try:
         user_context = {
             "userId": str(user.user_id),
-            "role": getattr(user, 'role', 'agent'),
+            "role": user_role,  # Use role from RBAC system
             "email": getattr(user, 'email', None) or "",
             "phoneNumber": getattr(user, 'phone_number', None) or "",
         }
@@ -228,23 +229,26 @@ async def login(
             "campaign_builder_enabled": True,
         }
     
-    # Get permissions from RBAC system
+    # Get permissions and role from RBAC system
     try:
         # Create UserContext to load permissions from database
         from app.core.auth import UserContext
         auth_user_context = UserContext(user, {"sub": str(user.user_id)}, db)
         permissions = auth_user_context.permissions
-        logger.info(f"Loaded {len(permissions)} permissions for user {user.user_id}")
+        # Use role from UserContext to ensure it's from RBAC system
+        user_role = auth_user_context.role
+        logger.info(f"Loaded {len(permissions)} permissions and role '{user_role}' for user {user.user_id}")
     except Exception as e:
         logger.error(f"Error loading permissions from RBAC system: {e}", exc_info=True)
         permissions = []  # Fallback to empty permissions
+        user_role = getattr(user, 'role', 'agent')  # Fallback to user object role
     
     # Create token pair with feature flags, permissions, and tenant_id
     try:
         user_data = {
             "user_id": str(user.user_id),
             "phone_number": getattr(user, 'phone_number', None) or "",
-            "role": getattr(user, 'role', 'agent'),
+            "role": user_role,  # Use role from RBAC system
             "email": getattr(user, 'email', None) or "",
             "tenant_id": str(user.tenant_id) if hasattr(user, 'tenant_id') and user.tenant_id else "",
             "permissions": permissions,
@@ -298,6 +302,7 @@ async def login(
         refresh_token=token_response["refresh_token"],
         token_type=token_response["token_type"],
         expires_in=token_response["expires_in"],
+        permissions=permissions,
         user={
             "user_id": str(user.user_id),
             "phone_number": user.phone_number,
@@ -561,7 +566,7 @@ async def verify_otp(
     try:
         user_context = {
             "userId": str(user.user_id),
-            "role": getattr(user, 'role', 'agent'),
+            "role": user_role,  # Use role from RBAC system
             "email": getattr(user, 'email', None) or "",
             "phoneNumber": getattr(user, 'phone_number', None) or "",
         }
@@ -606,23 +611,26 @@ async def verify_otp(
             "campaign_builder_enabled": True,
         }
     
-    # Get permissions from RBAC system
+    # Get permissions and role from RBAC system
     try:
         # Create UserContext to load permissions from database
         from app.core.auth import UserContext
         auth_user_context = UserContext(user, {"sub": str(user.user_id)}, db)
         permissions = auth_user_context.permissions
-        logger.info(f"Loaded {len(permissions)} permissions for user {user.user_id}")
+        # Use role from UserContext to ensure it's from RBAC system
+        user_role = auth_user_context.role
+        logger.info(f"Loaded {len(permissions)} permissions and role '{user_role}' for user {user.user_id}")
     except Exception as e:
         logger.error(f"Error loading permissions from RBAC system: {e}", exc_info=True)
         permissions = []  # Fallback to empty permissions
+        user_role = getattr(user, 'role', 'agent')  # Fallback to user object role
     
     # Create token pair with feature flags, permissions, and tenant_id
     try:
         user_data = {
             "user_id": str(user.user_id),
             "phone_number": getattr(user, 'phone_number', None) or "",
-            "role": getattr(user, 'role', 'agent'),
+            "role": user_role,  # Use role from RBAC system
             "email": getattr(user, 'email', None) or "",
             "tenant_id": str(user.tenant_id) if hasattr(user, 'tenant_id') and user.tenant_id else "",
             "permissions": permissions,
@@ -711,20 +719,33 @@ async def refresh_token(request: RefreshTokenRequest, db: Session = Depends(get_
         user = user_repo.get_by_id(user_id) if user_id else None
 
         if user:
+            # Get permissions and role from RBAC system
+            try:
+                from app.core.auth import UserContext
+                auth_user_context = UserContext(user, {"sub": str(user.user_id)}, db)
+                permissions = auth_user_context.permissions
+                user_role = auth_user_context.role
+                logger.info(f"Loaded {len(permissions)} permissions and role '{user_role}' for refresh token")
+            except Exception as e:
+                logger.error(f"Error loading permissions for refresh: {e}", exc_info=True)
+                permissions = []
+                user_role = getattr(user, 'role', 'agent')
+
             # Get trial status
             from app.core.trial_subscription import TrialSubscriptionService
             trial_status = TrialSubscriptionService.check_trial_status(user)
-            
+
             return TokenResponse(
                 access_token=token_response["access_token"],
                 refresh_token=request.refresh_token,  # Return same refresh token
                 token_type=token_response["token_type"],
                 expires_in=token_response["expires_in"],
+                permissions=permissions,
                 user={
                     "user_id": str(user.user_id),
                     "phone_number": user.phone_number,
                     "full_name": user.full_name,
-                    "role": user.role,
+                    "role": user_role,
                     "is_verified": getattr(user, 'phone_verified', False) or getattr(user, 'email_verified', False),
                     "email": user.email,
                     "trial_status": trial_status,
