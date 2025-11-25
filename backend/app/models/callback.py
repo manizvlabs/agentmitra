@@ -11,7 +11,7 @@ import uuid
 from .base import Base, TimestampMixin
 
 
-class CallbackRequest(Base, TimestampMixin):
+class CallbackRequest(Base):
     """Callback request model"""
     __tablename__ = "callback_requests"
     __table_args__ = {"schema": "lic_schema"}
@@ -20,42 +20,44 @@ class CallbackRequest(Base, TimestampMixin):
     tenant_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.UUID('00000000-0000-0000-0000-000000000000'))
     policyholder_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.policyholders.policyholder_id"), nullable=False)
     agent_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.agents.agent_id"))
-    
+
     # Request details
     request_type = Column(String(100), nullable=False)
     description = Column(Text, nullable=False)
     priority = Column(String(20), default='low')
     priority_score = Column(DECIMAL(5, 2), default=0.00)
     status = Column(String(50), default='pending')
-    
+
     # Customer contact information (cached)
     customer_name = Column(String(200), nullable=False)
     customer_phone = Column(String(20), nullable=False)
     customer_email = Column(String(255))
-    
+
     # SLA and time management
     sla_hours = Column(Integer, default=24)
+    created_at = Column(DateTime, default=datetime.utcnow)
     assigned_at = Column(DateTime)
     scheduled_at = Column(DateTime)
     due_at = Column(DateTime)
     started_at = Column(DateTime)
     completed_at = Column(DateTime)
-    
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
     # Source tracking
     source = Column(String(50), default='mobile')
     source_reference_id = Column(String(200))
-    
+
     # Metadata and categorization
     tags = Column(ARRAY(String), default=[])
     category = Column(String(100))
     urgency_level = Column(String(20), default='medium')
     customer_value = Column(String(20), default='bronze')
-    
+
     # Resolution details
     resolution = Column(Text)
     resolution_category = Column(String(100))
     satisfaction_rating = Column(Integer)
-    
+
     # Audit fields
     created_by = Column(UUID(as_uuid=True), ForeignKey("lic_schema.users.user_id"))
     assigned_by = Column(UUID(as_uuid=True), ForeignKey("lic_schema.users.user_id"))

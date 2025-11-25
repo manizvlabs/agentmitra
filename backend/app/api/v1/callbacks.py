@@ -11,6 +11,9 @@ from uuid import UUID
 from app.core.database import get_db
 from app.services.callback_service import CallbackService, CallbackPriorityManager
 from app.core.auth import get_current_user_context, UserContext
+from app.core.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -102,7 +105,9 @@ async def list_callback_requests(
 ):
     """List callback requests"""
     try:
-        agent_id = UUID(current_user.agent_id) if current_user.agent_id else None
+        # Get agent_id safely - handle None case
+        agent_id_str = getattr(current_user, 'agent_id', None)
+        agent_id = UUID(agent_id_str) if agent_id_str else None
 
         callbacks = CallbackService.get_callback_requests(
             db=db,
@@ -119,6 +124,7 @@ async def list_callback_requests(
                 {
                     "callback_request_id": str(c.callback_request_id),
                     "policyholder_id": str(c.policyholder_id),
+                    "agent_id": str(c.agent_id) if c.agent_id else None,
                     "request_type": c.request_type,
                     "description": c.description,
                     "priority": c.priority,
@@ -126,6 +132,7 @@ async def list_callback_requests(
                     "status": c.status,
                     "customer_name": c.customer_name,
                     "customer_phone": c.customer_phone,
+                    "customer_email": c.customer_email,
                     "due_at": c.due_at.isoformat() if c.due_at else None,
                     "created_at": c.created_at.isoformat() if c.created_at else None,
                 }
@@ -135,6 +142,9 @@ async def list_callback_requests(
         }
 
     except Exception as e:
+        import traceback
+        logger.error(f"Error listing callback requests: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list callback requests: {str(e)}"

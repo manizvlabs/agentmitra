@@ -74,14 +74,43 @@ PERMISSIONS = {
 class UserContext:
     """User context for authenticated requests"""
 
-    def __init__(self, user: User, token_data: Dict[str, Any]):
+    def __init__(self, user: User, token_data: Dict[str, Any], db: Optional[Session] = None):
         self.user = user
         self.user_id = str(user.user_id)
         self.phone_number = user.phone_number
         self.role = user.role
         self.email = user.email
         self.token_data = token_data
+        self._db = db
+        self._agent_id = None
         self.permissions = self._get_permissions()
+    
+    @property
+    def agent_id(self) -> Optional[str]:
+        """Get agent_id for the user if they are an agent"""
+        if self._agent_id is not None:
+            return self._agent_id
+        
+        # Only lookup if user is an agent role
+        if self.role not in ['junior_agent', 'senior_agent', 'regional_manager']:
+            self._agent_id = None
+            return None
+        
+        # Lookup agent_id from database
+        if self._db:
+            try:
+                from app.models.agent import Agent
+                agent = self._db.query(Agent).filter(Agent.user_id == self.user.user_id).first()
+                if agent:
+                    self._agent_id = str(agent.agent_id)
+                    return self._agent_id
+            except Exception as e:
+                logger.warning(f"Error looking up agent_id for user {self.user_id}: {e}")
+                self._agent_id = None
+                return None
+        
+        self._agent_id = None
+        return None
 
     def _get_permissions(self) -> List[str]:
         """Get user permissions based on role"""
@@ -170,7 +199,7 @@ def get_current_user_context(
             detail="User account is not active",
         )
 
-    return UserContext(user, token_data)
+    return UserContext(user, token_data, db)
 
 
 def get_current_user_optional(
