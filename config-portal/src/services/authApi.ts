@@ -64,14 +64,22 @@ class AuthApiService {
       (error) => Promise.reject(error)
     );
 
-    // Add response interceptor for token refresh
+    // Add response interceptor for token refresh and error handling
     this.axiosInstance.interceptors.response.use(
       (response) => response,
       async (error) => {
+        // Handle network errors
+        if (!error.response) {
+          console.error('Network error:', error.message);
+          throw new Error('Unable to connect to server. Please check your connection.');
+        }
+
         if (error.response?.status === 401) {
-          // Token expired, try to refresh
+          // Token expired, try to refresh (but not for auth endpoints)
+          const isAuthEndpoint = error.config?.url?.includes('/auth/');
           const refreshToken = localStorage.getItem('refresh_token');
-          if (refreshToken) {
+          
+          if (!isAuthEndpoint && refreshToken) {
             try {
               const refreshResponse = await this.refreshToken(refreshToken);
               // Check if response data exists and has required fields
@@ -87,13 +95,16 @@ class AuthApiService {
               } else {
                 // Invalid refresh response, logout user
                 this.logout();
-                throw new Error('Invalid refresh token response');
+                throw new Error('Session expired. Please login again.');
               }
             } catch (refreshError) {
               // Refresh failed, logout user
               this.logout();
               throw refreshError;
             }
+          } else {
+            // No refresh token or auth endpoint - logout
+            this.logout();
           }
         }
         return Promise.reject(error);
@@ -119,7 +130,17 @@ class AuthApiService {
       phone_number: phoneNumber,
       otp: otp
     });
-    return response.data;
+    // Backend returns TokenResponse directly, wrap it in ApiResponse format
+    const tokenResponse = response.data;
+    return {
+      success: true,
+      data: {
+        access_token: tokenResponse.access_token,
+        refresh_token: tokenResponse.refresh_token,
+        token_type: tokenResponse.token_type || 'bearer',
+        user: tokenResponse.user
+      }
+    };
   }
 
   async refreshToken(refreshToken: string): Promise<ApiResponse<AuthResponse>> {

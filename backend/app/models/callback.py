@@ -2,6 +2,7 @@
 Callback Request Management Models
 """
 from sqlalchemy import Column, String, Text, Integer, Boolean, DateTime, ForeignKey, DECIMAL, ARRAY, CheckConstraint
+from sqlalchemy.orm import foreign
 from sqlalchemy.dialects.postgresql import UUID, JSONB, ENUM
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -70,7 +71,14 @@ class CallbackRequest(Base, TimestampMixin):
     # Relationships
     policyholder = relationship("Policyholder", foreign_keys=[policyholder_id], backref="callback_requests")
     agent = relationship("Agent", foreign_keys=[agent_id], backref="callback_requests")
-    activities = relationship("CallbackActivity", primaryjoin="CallbackRequest.callback_request_id == CallbackActivity.callback_request_id", back_populates="callback_request", cascade="all, delete-orphan")
+    # Relationship - FK constraint managed by Flyway, specify join explicitly
+    activities = relationship(
+        "CallbackActivity", 
+        primaryjoin="CallbackRequest.callback_request_id == CallbackActivity.callback_request_id",
+        foreign_keys="[CallbackActivity.callback_request_id]",
+        back_populates="callback_request", 
+        cascade="all, delete-orphan"
+    )
 
 
 class CallbackActivity(Base, TimestampMixin):
@@ -79,8 +87,11 @@ class CallbackActivity(Base, TimestampMixin):
     __table_args__ = {"schema": "lic_schema"}
 
     callback_activity_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    callback_request_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.callback_requests.callback_request_id"), nullable=False)
-    agent_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.agents.agent_id"))
+    # Foreign key constraint is managed by Flyway migrations, not SQLAlchemy
+    # Using plain Column to avoid SQLAlchemy FK validation at import time
+    # The actual FK constraint exists in the database (created by V23 migration)
+    callback_request_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    agent_id = Column(UUID(as_uuid=True), index=True)
     
     # Activity details
     activity_type = Column(String(50), nullable=False)
@@ -91,7 +102,18 @@ class CallbackActivity(Base, TimestampMixin):
     notes = Column(Text)
     activity_metadata = Column(JSONB, default={})
     
-    # Relationships
-    callback_request = relationship("CallbackRequest", primaryjoin="CallbackActivity.callback_request_id == CallbackRequest.callback_request_id", back_populates="activities")
-    agent = relationship("Agent", foreign_keys=[agent_id], backref="callback_activities")
+    # Relationships - FK constraints managed by Flyway, specify join explicitly
+    callback_request = relationship(
+        "CallbackRequest", 
+        primaryjoin="CallbackActivity.callback_request_id == CallbackRequest.callback_request_id",
+        foreign_keys="[CallbackActivity.callback_request_id]",
+        back_populates="activities"
+    )
+    # Agent relationship - FK managed by Flyway
+    agent = relationship(
+        "Agent", 
+        primaryjoin="CallbackActivity.agent_id == Agent.agent_id",
+        foreign_keys="[CallbackActivity.agent_id]",
+        backref="callback_activities"
+    )
 

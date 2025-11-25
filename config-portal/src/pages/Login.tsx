@@ -32,11 +32,21 @@ const Login: React.FC = () => {
     setSuccess('');
 
     try {
-      await authApi.sendOtp(phoneNumber);
-      setSuccess('OTP sent successfully!');
-      setActiveStep(1);
+      const response = await authApi.sendOtp(phoneNumber);
+      if (response.success) {
+        setSuccess(response.message || 'OTP sent successfully!');
+        setActiveStep(1);
+      } else {
+        setError(response.message || 'Failed to send OTP. Please try again.');
+      }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to send OTP. Please try again.');
+      // Handle different error response formats
+      const errorMessage = err.response?.data?.detail || 
+                          err.response?.data?.message || 
+                          err.message || 
+                          'Failed to send OTP. Please try again.';
+      setError(errorMessage);
+      console.error('Send OTP error:', err);
     } finally {
       setLoading(false);
     }
@@ -53,10 +63,16 @@ const Login: React.FC = () => {
         authApi.setAuthData(response.data);
         navigate('/dashboard');
       } else {
-        setError('Invalid OTP. Please try again.');
+        setError(response.message || 'Invalid OTP. Please try again.');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'OTP verification failed. Please try again.');
+      // Handle different error response formats
+      const errorMessage = err.response?.data?.detail || 
+                          err.response?.data?.message || 
+                          err.message || 
+                          'OTP verification failed. Please try again.';
+      setError(errorMessage);
+      console.error('OTP verification error:', err);
     } finally {
       setLoading(false);
     }

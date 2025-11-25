@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -7,15 +8,21 @@ import {
   CardContent,
   Box,
   LinearProgress,
+  Button,
 } from '@mui/material';
 import {
   People,
   Description,
   TrendingUp,
   Warning,
+  Campaign,
+  PhoneCallback,
+  ArrowForward,
 } from '@mui/icons-material';
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
+  
   // Mock data - replace with real API calls
   const stats = {
     totalCustomers: 1247,
@@ -98,6 +105,96 @@ const Dashboard: React.FC = () => {
               <Typography variant="h3" component="div" color="warning.main">
                 {stats.pendingValidations}
               </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Quick Navigation Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} md={6}>
+          <Card
+            sx={{
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: 4,
+              },
+            }}
+            onClick={() => navigate('/campaigns')}
+          >
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box display="flex" alignItems="center">
+                  <Campaign color="primary" sx={{ fontSize: 48, mr: 2 }} />
+                  <Box>
+                    <Typography variant="h5" component="h2" gutterBottom>
+                      Campaign Management
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Create, manage, and track marketing campaigns
+                    </Typography>
+                  </Box>
+                </Box>
+                <ArrowForward color="primary" />
+              </Box>
+              <Button
+                variant="contained"
+                fullWidth
+                sx={{ mt: 2 }}
+                startIcon={<Campaign />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate('/campaigns');
+                }}
+              >
+                Go to Campaigns
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Card
+            sx={{
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: 4,
+              },
+            }}
+            onClick={() => navigate('/callbacks')}
+          >
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box display="flex" alignItems="center">
+                  <PhoneCallback color="secondary" sx={{ fontSize: 48, mr: 2 }} />
+                  <Box>
+                    <Typography variant="h5" component="h2" gutterBottom>
+                      Callback Management
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Manage callback requests and customer follow-ups
+                    </Typography>
+                  </Box>
+                </Box>
+                <ArrowForward color="secondary" />
+              </Box>
+              <Button
+                variant="contained"
+                color="secondary"
+                fullWidth
+                sx={{ mt: 2 }}
+                startIcon={<PhoneCallback />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate('/callbacks');
+                }}
+              >
+                Go to Callbacks
+              </Button>
             </CardContent>
           </Card>
         </Grid>

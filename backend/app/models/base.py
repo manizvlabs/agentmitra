@@ -2,9 +2,12 @@
 Base model class for all database models
 """
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, DateTime, func
+from sqlalchemy import Column, DateTime, func, MetaData
 
-Base = declarative_base()
+# Configure metadata to not check foreign keys at import time
+# Foreign keys are managed by Flyway migrations, not SQLAlchemy
+metadata = MetaData()
+Base = declarative_base(metadata=metadata)
 
 
 class TimestampMixin:

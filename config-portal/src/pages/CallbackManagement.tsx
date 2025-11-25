@@ -76,6 +76,13 @@ const CallbackManagement: React.FC = () => {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('access_token') || localStorage.getItem('authToken');
+      
+      if (!token) {
+        setError('Authentication required. Please login.');
+        setLoading(false);
+        return;
+      }
+      
       const params: any = {};
       
       if (filterPriority !== 'all') {
@@ -100,8 +107,16 @@ const CallbackManagement: React.FC = () => {
         setError('Failed to load callback requests');
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to load callback requests');
+      const errorMessage = err.response?.data?.detail || err.response?.data?.message || 'Failed to load callback requests';
+      setError(errorMessage);
       console.error('Error loading callbacks:', err);
+      
+      // If unauthorized, clear token and redirect to login
+      if (err.response?.status === 401) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/login';
+      }
     } finally {
       setLoading(false);
     }

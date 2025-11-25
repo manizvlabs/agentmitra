@@ -318,101 +318,134 @@ async def send_otp(
     db: Session = Depends(get_db)
 ):
     """Send OTP to phone number or email"""
-    # Validate input
-    if not request.phone_number and not request.email:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Either phone_number or email must be provided"
-        )
-    
-    # Rate limiting for OTP requests
-    ip_address = http_request.client.host if http_request.client else "unknown"
-    user_agent = http_request.headers.get("user-agent")
-    
-    # Use phone number or email as identifier for rate limiting
-    identifier = request.phone_number or request.email
-    is_allowed, remaining = otp_rate_limiter.is_allowed(identifier)
-    if not is_allowed:
-        await AuditLogger.log_otp_sent(
-            db=db,
-            phone_number=request.phone_number,
-            email=request.email,
-            ip_address=ip_address,
-            user_agent=user_agent,
-            success=False,
-            error_message="Rate limit exceeded"
-        )
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=f"Too many OTP requests. Maximum {otp_rate_limiter.limit} per {otp_rate_limiter.window_str}. Please try again later.",
-            headers={"X-RateLimit-Remaining": str(remaining)}
-        )
-    
-    user_repo = UserRepository(db)
-    
-    # Check if user exists, if not create one
-    user = None
-    if request.phone_number:
-        user = user_repo.get_by_phone(request.phone_number)
-    elif request.email:
-        user = user_repo.get_by_email(request.email)
-    
-    if not user:
-        # Create new user
-        user = user_repo.create({
-            "phone_number": request.phone_number,
-            "email": request.email,
-            "role": "policyholder",
-            "is_verified": False,
-        })
-    
-    # Generate and store OTP
     try:
+        # Validate input
+        if not request.phone_number and not request.email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Either phone_number or email must be provided"
+            )
+        
+        # Rate limiting for OTP requests
+        ip_address = http_request.client.host if http_request.client else "unknown"
+        user_agent = http_request.headers.get("user-agent")
+        
+        # Use phone number or email as identifier for rate limiting
+        identifier = request.phone_number or request.email
+        is_allowed, remaining = otp_rate_limiter.is_allowed(identifier)
+        
+        if not is_allowed:
+            await AuditLogger.log_otp_sent(
+                db=db,
+                phone_number=request.phone_number,
+                email=request.email,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                success=False,
+                error_message="Rate limit exceeded"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Too many OTP requests. Maximum {otp_rate_limiter.limit} per {otp_rate_limiter.window_str}. Please try again later.",
+                headers={"X-RateLimit-Remaining": str(remaining)}
+            )
+        
+        user_repo = UserRepository(db)
+        
+        # Check if user exists, if not create one
+        user = None
         if request.phone_number:
-            otp = OTPService.generate_and_store_otp(request.phone_number)
-            # TODO: Send SMS OTP via SMS provider
-            print(f"[OTP Service] Generated OTP for {request.phone_number}: {otp}")
+            user = user_repo.get_by_phone(request.phone_number)
         elif request.email:
-            otp = OTPService.generate_and_store_otp(request.email)
-            # Send Email OTP via Email provider
-            from app.services.email_service import get_email_service
-            email_service = get_email_service()
-            email_sent = email_service.send_otp_email(request.email, otp)
-            if not email_sent:
-                logger.warning(f"Failed to send OTP email to {request.email}, but OTP was generated: {otp}")
-            else:
-                logger.info(f"OTP email sent successfully to {request.email}")
+            user = user_repo.get_by_email(request.email)
         
-        # Log OTP sent
-        await AuditLogger.log_otp_sent(
-            db=db,
-            phone_number=request.phone_number,
-            email=request.email,
-            ip_address=ip_address,
-            user_agent=user_agent,
-            success=True
-        )
+        if not user:
+            # Create new user
+            user = user_repo.create({
+                "phone_number": request.phone_number,
+                "email": request.email,
+                "role": "junior_agent",  # Default role for portal users (valid enum value)
+                "phone_verified": False,
+            })
         
-        return {
-            "message": "OTP sent successfully",
-            "phone_number": request.phone_number,
-            "email": request.email,
-            "expires_in": OTPService.OTP_EXPIRY_MINUTES * 60
-        }
+        # Generate and store OTP
+        try:
+            if request.phone_number:
+                otp = OTPService.generate_and_store_otp(request.phone_number)
+                # TODO: Send SMS OTP via SMS provider
+                print(f"[OTP Service] Generated OTP for {request.phone_number}: {otp}")
+            elif request.email:
+                otp = OTPService.generate_and_store_otp(request.email)
+                # Send Email OTP via Email provider
+                from app.services.email_service import get_email_service
+                email_service = get_email_service()
+                email_sent = email_service.send_otp_email(request.email, otp)
+                if not email_sent:
+                    logger.warning(f"Failed to send OTP email to {request.email}, but OTP was generated: {otp}")
+                else:
+                    logger.info(f"OTP email sent successfully to {request.email}")
+            
+            # Log OTP sent
+            await AuditLogger.log_otp_sent(
+                db=db,
+                phone_number=request.phone_number,
+                email=request.email,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                success=True
+            )
+            
+            return {
+                "success": True,
+                "message": "OTP sent successfully",
+                "data": {
+                    "phone_number": request.phone_number,
+                    "email": request.email,
+                    "expires_in": OTPService.OTP_EXPIRY_MINUTES * 60
+                }
+            }
+        except HTTPException:
+            # Re-raise HTTP exceptions as-is
+            raise
+        except Exception as e:
+            # Log the actual error for debugging
+            logger.error(f"Error sending OTP: {str(e)}", exc_info=True)
+            
+            # Try to log failure (but don't fail if logging fails)
+            try:
+                await AuditLogger.log_otp_sent(
+                    db=db,
+                    phone_number=request.phone_number,
+                    email=request.email,
+                    ip_address=ip_address,
+                    user_agent=user_agent,
+                    success=False,
+                    error_message=str(e)
+                )
+            except Exception as log_error:
+                logger.error(f"Failed to log OTP error: {str(log_error)}")
+            
+            # Always show error details for debugging
+            error_detail = f"Failed to send OTP: {str(e)}"
+            logger.error(f"OTP send error details: {error_detail}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=error_detail
+            )
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
     except Exception as e:
-        # Log failure
-        await AuditLogger.log_otp_sent(
-            db=db,
-            phone_number=request.phone_number,
-            email=request.email,
-            ip_address=ip_address,
-            user_agent=user_agent,
-            success=False,
-            error_message=str(e)
-        )
+        # Catch any other errors that might occur
+        import traceback
+        error_detail = f"Unexpected error: {str(e)}"
+        logger.error(f"Unexpected error in send_otp: {error_detail}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to send OTP. Please try again."
+            detail=error_detail
         )
 
 

@@ -54,12 +54,25 @@ def get_db_config() -> Dict[str, Any]:
             "poolclass": NullPool,    # No pooling in dev for easier debugging
             "echo": settings.debug,   # Log SQL queries in debug mode
         })
+    
+    # Set schema search path for PostgreSQL
+    # This ensures SQLAlchemy can find tables in the lic_schema
+    if "postgresql" in settings.database_url:
+        base_config["connect_args"]["options"] = "-c search_path=lic_schema,public"
 
     return base_config
 
 # Create database engine with optimized configuration
 engine_config = get_db_config()
 engine = create_engine(settings.database_url, **engine_config)
+
+# Set schema search path after engine creation
+@event.listens_for(engine, "connect", insert=True)
+def set_search_path(dbapi_conn, connection_record):
+    """Set PostgreSQL search path to include lic_schema"""
+    with dbapi_conn.cursor() as cursor:
+        cursor.execute("SET search_path TO lic_schema, public")
+        dbapi_conn.commit()
 
 # Create session factory with optimized settings
 SessionLocal = sessionmaker(
@@ -84,17 +97,33 @@ def get_db():
 
 def init_db():
     """
-    Initialize database - create all tables
-    Call this on application startup
+    Verify database connection on startup.
+    
+    NOTE: Database schema is managed strictly through Flyway migrations.
+    Do NOT use SQLAlchemy's create_all() - all tables must be created via Flyway.
+    Run migrations with: flyway -configFiles=flyway.conf migrate
     """
-    Base.metadata.create_all(bind=engine)
+    # Only verify connection, do not create tables
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        logger.info("Database connection verified successfully")
+    except Exception as e:
+        logger.error(f"Database connection verification failed: {e}")
+        raise
 
 
 def drop_db():
     """
     Drop all tables - use with caution!
+    
+    NOTE: This function is disabled. Database schema is managed strictly through Flyway migrations.
+    To drop tables, use Flyway: flyway -configFiles=flyway.conf clean
     """
-    Base.metadata.drop_all(bind=engine)
+    raise NotImplementedError(
+        "drop_db() is disabled. Database schema is managed through Flyway migrations. "
+        "Use 'flyway -configFiles=flyway.conf clean' to drop tables."
+    )
 
 
 # Health check and monitoring functions

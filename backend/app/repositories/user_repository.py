@@ -42,21 +42,43 @@ class UserRepository:
 
     def create(self, user_data: dict) -> User:
         """Create a new user"""
-        user = User(
-            user_id=uuid.uuid4(),
-            phone_number=user_data.get("phone_number"),
-            email=user_data.get("email"),
-            first_name=user_data.get("first_name") or user_data.get("full_name", "").split()[0] if user_data.get("full_name") else None,
-            last_name=user_data.get("last_name") or " ".join(user_data.get("full_name", "").split()[1:]) if user_data.get("full_name") and len(user_data.get("full_name", "").split()) > 1 else None,
-            display_name=user_data.get("display_name") or user_data.get("full_name"),
-            role=user_data.get("role", "policyholder"),
-            phone_verified=user_data.get("phone_verified", user_data.get("is_verified", False)),
-            password_hash=user_data.get("password_hash", ""),
-        )
-        self.db.add(user)
-        self.db.commit()
-        self.db.refresh(user)
-        return user
+        # Generate a default password hash if not provided (for OTP-only users)
+        password_hash = user_data.get("password_hash")
+        if not password_hash:
+            # Use a placeholder hash for users created via OTP (they'll set password later)
+            from app.core.security import get_password_hash
+            password_hash = get_password_hash("temp_password_" + str(uuid.uuid4()))
+        
+        # Default tenant_id for new users
+        tenant_id = user_data.get("tenant_id")
+        if tenant_id is None:
+            tenant_id = uuid.UUID('00000000-0000-0000-0000-000000000000')
+        elif isinstance(tenant_id, str):
+            tenant_id = uuid.UUID(tenant_id)
+        
+        try:
+            user = User(
+                user_id=uuid.uuid4(),
+                tenant_id=tenant_id,
+                phone_number=user_data.get("phone_number"),
+                email=user_data.get("email"),
+                first_name=user_data.get("first_name") or user_data.get("full_name", "").split()[0] if user_data.get("full_name") else None,
+                last_name=user_data.get("last_name") or " ".join(user_data.get("full_name", "").split()[1:]) if user_data.get("full_name") and len(user_data.get("full_name", "").split()) > 1 else None,
+                display_name=user_data.get("display_name") or user_data.get("full_name"),
+                role=user_data.get("role", "policyholder"),
+                phone_verified=user_data.get("phone_verified", user_data.get("is_verified", False)),
+                password_hash=password_hash,
+            )
+            self.db.add(user)
+            self.db.commit()
+            self.db.refresh(user)
+            return user
+        except Exception as e:
+            self.db.rollback()
+            from app.core.logging_config import get_logger
+            logger = get_logger(__name__)
+            logger.error(f"Error creating user: {str(e)}", exc_info=True)
+            raise
 
     def update(self, user_id, user_data: dict) -> Optional[User]:
         """Update user"""

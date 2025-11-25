@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { authApi } from './services/authApi';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import { Box, CircularProgress } from '@mui/material';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { ErrorBoundary } from 'react-error-boundary';
 
@@ -93,17 +94,34 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   useEffect(() => {
     const checkAuth = () => {
-      setIsAuthenticated(authApi.isAuthenticated());
+      const authStatus = authApi.isAuthenticated();
+      setIsAuthenticated(authStatus);
+      
+      // If not authenticated, ensure we redirect
+      if (!authStatus) {
+        // Small delay to ensure state is set before redirect
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 100);
+      }
     };
 
     checkAuth();
   }, []);
 
   if (isAuthenticated === null) {
-    return <div>Loading...</div>; // Or a proper loading component
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
 };
 
 // Error boundary fallback component
@@ -121,7 +139,12 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          <Router>
+          <Router
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true,
+            }}
+          >
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/" element={
