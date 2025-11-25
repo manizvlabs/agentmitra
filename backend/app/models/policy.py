@@ -30,6 +30,7 @@ class Policyholder(Base, TimestampMixin):
     __table_args__ = {'schema': 'lic_schema'}
 
     policyholder_id = Column(UUID(as_uuid=True), primary_key=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey('lic_schema.tenants.tenant_id'), nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.users.user_id", ondelete="CASCADE"), nullable=False)
     agent_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.agents.agent_id"))
 
@@ -82,6 +83,7 @@ class InsurancePolicy(Base, TimestampMixin):
     __table_args__ = {'schema': 'lic_schema'}
 
     policy_id = Column(UUID(as_uuid=True), primary_key=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey('lic_schema.tenants.tenant_id'), nullable=False)
     policy_number = Column(String(100), unique=True, nullable=False)
     provider_policy_id = Column(String(100))  # Provider's internal ID
 
@@ -152,6 +154,7 @@ class PremiumPayment(Base, TimestampMixin):
     __table_args__ = {'schema': 'lic_schema'}
 
     payment_id = Column(UUID(as_uuid=True), primary_key=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey('lic_schema.tenants.tenant_id'), nullable=False)
     policy_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.insurance_policies.policy_id"), nullable=False)
     policyholder_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.policyholders.policyholder_id"), nullable=False)
 
@@ -179,3 +182,45 @@ class PremiumPayment(Base, TimestampMixin):
 
     def __repr__(self):
         return f"<PremiumPayment(payment_id={self.payment_id}, amount={self.amount}, status={self.status})>"
+
+
+class Commission(Base, TimestampMixin):
+    """Commission tracking for agents"""
+    __tablename__ = "commissions"
+    __table_args__ = {'schema': 'lic_schema'}
+
+    commission_id = Column(UUID(as_uuid=True), primary_key=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey('lic_schema.tenants.tenant_id'), nullable=False)
+
+    # Commission details
+    agent_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.agents.agent_id"), nullable=False)
+    policy_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.insurance_policies.policy_id"), nullable=False)
+    payment_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.premium_payments.payment_id"), nullable=False)
+
+    # Commission calculation
+    commission_amount = Column(DECIMAL(10, 2), nullable=False)
+    commission_rate = Column(DECIMAL(5, 2))  # Percentage
+    commission_type = Column(String(20), nullable=False)  # 'first_year', 'renewal', 'bonus'
+
+    # Payment status
+    status = Column(String(20), default='pending')  # 'pending', 'paid', 'cancelled'
+    paid_date = Column(TIMESTAMP)
+    payment_reference = Column(String(255))
+
+    # Audit
+    created_at = Column(TIMESTAMP, default=func.now())
+    updated_at = Column(TIMESTAMP, default=func.now())
+
+    # Relationships
+    tenant = relationship("Tenant", backref="commissions")
+    agent = relationship("Agent", backref="commissions")
+    policy = relationship("InsurancePolicy", backref="commissions")
+    payment = relationship("PremiumPayment", backref="commissions")
+
+    @property
+    def is_paid(self):
+        """Check if commission has been paid"""
+        return self.status == 'paid'
+
+    def __repr__(self):
+        return f"<Commission(commission_id={self.commission_id}, agent_id={self.agent_id}, amount={self.commission_amount}, status={self.status})>"

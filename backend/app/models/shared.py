@@ -103,18 +103,107 @@ class WhatsappTemplate(Base):
 
 
 class Tenant(Base):
-    """Tenant (insurance provider) configuration"""
+    """Tenant (insurance provider) configuration - matching lic_schema.tenants"""
     __tablename__ = "tenants"
-    __table_args__ = {'schema': 'shared'}
+    __table_args__ = {'schema': 'lic_schema'}
 
-    tenant_code = Column(String(20), primary_key=True)
+    tenant_id = Column(UUID(as_uuid=True), primary_key=True, default=func.gen_random_uuid())
+    tenant_code = Column(String(20), unique=True, nullable=False)
     tenant_name = Column(String(255), nullable=False)
-    tenant_type = Column(String(50), default='insurance_provider')
-    schema_name = Column(String(100), nullable=False)
+    tenant_type = Column(String(50), nullable=False)  # 'insurance_provider', 'independent_agent', 'agent_network'
+    schema_name = Column(String(100), unique=True)
+    parent_tenant_id = Column(UUID(as_uuid=True), ForeignKey('lic_schema.tenants.tenant_id'))
     status = Column(String(20), default='active')
     subscription_plan = Column(String(50))
-    max_users = Column(Integer)
-    storage_limit_gb = Column(Integer)
-    api_rate_limit = Column(Integer)
+    trial_end_date = Column(TIMESTAMP)
+    max_users = Column(Integer, default=1000)
+    storage_limit_gb = Column(Integer, default=10)
+    api_rate_limit = Column(Integer, default=1000)
+
+    # Contact information
+    contact_email = Column(String(255))
+    contact_phone = Column(String(20))
+    business_address = Column(JSONB)
+
+    # Branding and customization
+    branding_settings = Column(JSONB)
+    theme_settings = Column(JSONB)
+
+    # Compliance and legal
+    compliance_status = Column(JSONB)
+    regulatory_approvals = Column(JSONB)
+
+    # Metadata
+    metadata = Column(JSONB)
+
     created_at = Column(TIMESTAMP, default=func.now())
     updated_at = Column(TIMESTAMP, default=func.now())
+
+    # Relationships
+    parent_tenant = relationship("Tenant", remote_side=[tenant_id], backref="child_tenants")
+
+    @property
+    def is_active(self):
+        """Check if tenant is active"""
+        return self.status == 'active'
+
+    def __repr__(self):
+        return f"<Tenant(tenant_code={self.tenant_code}, name={self.tenant_name})>"
+
+
+class TenantConfig(Base):
+    """Tenant-specific configuration"""
+    __tablename__ = "tenant_config"
+    __table_args__ = {'schema': 'lic_schema'}
+
+    config_id = Column(UUID(as_uuid=True), primary_key=True, default=func.gen_random_uuid())
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey('lic_schema.tenants.tenant_id'), nullable=False)
+    config_key = Column(String(100), nullable=False)
+    config_value = Column(JSONB)
+    config_type = Column(String(50), default='string')  # 'string', 'number', 'boolean', 'json'
+    is_encrypted = Column(Boolean, default=False)
+    created_at = Column(TIMESTAMP, default=func.now())
+    updated_at = Column(TIMESTAMP, default=func.now())
+
+    # Relationships
+    tenant = relationship("Tenant", backref="configs")
+
+    __table_args__ = (
+        {'schema': 'lic_schema'},
+        UniqueConstraint('tenant_id', 'config_key', name='unique_tenant_config')
+    )
+
+    def __repr__(self):
+        return f"<TenantConfig(tenant_id={self.tenant_id}, key={self.config_key})>"
+
+
+class TenantUser(Base):
+    """Many-to-many relationship between tenants and users"""
+    __tablename__ = "tenant_users"
+    __table_args__ = {'schema': 'lic_schema'}
+
+    tenant_user_id = Column(UUID(as_uuid=True), primary_key=True, default=func.gen_random_uuid())
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey('lic_schema.tenants.tenant_id'), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('lic_schema.users.user_id'), nullable=False)
+    role = Column(String(50), nullable=False)
+    permissions = Column(JSONB)
+    is_primary = Column(Boolean, default=False)
+    joined_at = Column(TIMESTAMP, default=func.now())
+    status = Column(String(20), default='active')
+
+    # Relationships
+    tenant = relationship("Tenant", backref="tenant_users")
+    user = relationship("User", backref="tenant_memberships")
+
+    __table_args__ = (
+        {'schema': 'lic_schema'},
+        UniqueConstraint('tenant_id', 'user_id', name='unique_tenant_user')
+    )
+
+    @property
+    def is_active(self):
+        """Check if tenant user relationship is active"""
+        return self.status == 'active'
+
+    def __repr__(self):
+        return f"<TenantUser(tenant_id={self.tenant_id}, user_id={self.user_id}, role={self.role})>"

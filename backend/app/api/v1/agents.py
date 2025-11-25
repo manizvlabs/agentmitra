@@ -1,5 +1,5 @@
 """
-Agent Management API Endpoints
+Agent Management API Endpoints - Multi-tenant aware
 """
 from fastapi import APIRouter, HTTPException, Depends, Query, status
 from pydantic import BaseModel, validator
@@ -13,6 +13,8 @@ from app.core.auth import (
     require_any_permission,
     require_role_level
 )
+from app.core.tenant_middleware import get_tenant_context, get_tenant_service, get_audit_service
+from app.core.tenant_aware_service import AgentService
 from app.repositories.agent_repository import AgentRepository
 from app.repositories.user_repository import UserRepository
 from app.models.agent import Agent
@@ -256,76 +258,101 @@ async def get_agent_profile(
 async def get_agent(
     agent_id: str,
     current_user: UserContext = Depends(get_current_user_context),
+    tenant_context: Dict = Depends(get_tenant_context),
+    tenant_service = Depends(get_tenant_service),
+    audit_service = Depends(get_audit_service),
     db: Session = Depends(get_db)
 ):
     """
-    Get specific agent by ID
+    Get specific agent by ID - Multi-tenant aware
     - Agents can view their own profile
     - Managers can view agents in their territory
     - Admins can view any agent
     """
-    agent_repo = AgentRepository(db)
-    agent = agent_repo.get_by_id(agent_id)
-
-    if not agent:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Agent not found"
+    try:
+        # Use tenant-aware service
+        agent_service = AgentService(tenant_service)
+        agent_data = agent_service.get_agent_profile(
+            tenant_id=tenant_context['tenant_id'],
+            agent_id=agent_id,
+            user_id=current_user.user_id
         )
 
-    # Check permissions
-    can_view = (
-        current_user.user_id == str(agent.user_id) or  # Own profile
-        current_user.has_role_level("regional_manager") or  # Managers can view
-        current_user.has_permission("agents.read")  # Admins can view
-    )
-
-    if not can_view:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions to view this agent"
+        # Audit the access
+        audit_service.audit_user_access(
+            tenant_id=tenant_context['tenant_id'],
+            user_id=current_user.user_id,
+            resource_type='agent',
+            resource_id=agent_id,
+            action='read',
+            success=True,
+            ip_address=tenant_context.get('ip_address')
         )
 
-    user_info = None
-    if agent.user:
-        user_info = {
-            "full_name": agent.user.full_name,
-            "phone_number": agent.user.phone_number,
-            "email": agent.user.email,
-            "role": agent.user.role
-        }
+        # Get additional user info
+        user_repo = UserRepository(db)
+        user = user_repo.get_by_id(agent_data['user_id'])
 
-    return AgentResponse(
-        agent_id=str(agent.agent_id),
-        user_id=str(agent.user_id),
-        provider_id=str(agent.provider_id) if agent.provider_id else None,
-        agent_code=agent.agent_code,
-        license_number=agent.license_number,
-        license_expiry_date=agent.license_expiry_date,
-        license_issuing_authority=agent.license_issuing_authority,
-        business_name=agent.business_name,
-        business_address=agent.business_address,
-        gst_number=agent.gst_number,
-        pan_number=agent.pan_number,
-        territory=agent.territory,
-        operating_regions=agent.operating_regions,
-        experience_years=agent.experience_years,
-        specializations=agent.specializations,
-        commission_rate=float(agent.commission_rate) if agent.commission_rate else None,
-        whatsapp_business_number=agent.whatsapp_business_number,
-        business_email=agent.business_email,
-        website=agent.website,
-        total_policies_sold=agent.total_policies_sold,
-        total_premium_collected=float(agent.total_premium_collected) if agent.total_premium_collected else None,
-        active_policyholders=agent.active_policyholders,
-        customer_satisfaction_score=float(agent.customer_satisfaction_score) if agent.customer_satisfaction_score else None,
-        status=agent.status or "active",
-        verification_status=agent.verification_status or "pending",
-        approved_at=agent.approved_at,
-        created_at=agent.created_at,
-        updated_at=agent.updated_at,
-        user_info=user_info
-    )
+        user_info = None
+        if user:
+            user_info = {
+                "full_name": user.full_name,
+                "phone_number": user.phone_number,
+                "email": user.email,
+                "role": user.role
+            }
+
+        # Get the agent from database for additional fields
+        agent_repo = AgentRepository(db)
+        agent = agent_repo.get_by_id(agent_id)
+
+        return AgentResponse(
+            agent_id=agent_data['agent_id'],
+            user_id=agent_data['user_id'],
+            provider_id=agent_data.get('provider_id'),
+            agent_code=agent_data['agent_code'],
+            license_number=agent_data.get('license_number'),
+            license_expiry_date=agent_data.get('license_expiry_date'),
+            license_issuing_authority=agent.license_issuing_authority if agent else None,
+            business_name=agent.business_name if agent else None,
+            business_address=agent.business_address if agent else None,
+            gst_number=agent.gst_number if agent else None,
+            pan_number=agent.pan_number if agent else None,
+            territory=agent.territory if agent else None,
+            operating_regions=agent.operating_regions if agent else None,
+            experience_years=agent.experience_years if agent else None,
+            specializations=agent.specializations if agent else None,
+            commission_rate=agent_data.get('commission_rate'),
+            whatsapp_business_number=agent.whatsapp_business_number if agent else None,
+            business_email=agent.business_email if agent else None,
+            website=agent.website if agent else None,
+            total_policies_sold=agent_data.get('total_policies_sold'),
+            total_premium_collected=agent_data.get('total_premium_collected'),
+            active_policyholders=agent_data.get('active_policyholders'),
+            customer_satisfaction_score=agent.customer_satisfaction_score if agent else None,
+            status=agent_data.get('status', 'active'),
+            verification_status=agent.verification_status if agent else 'pending',
+            approved_at=agent.approved_at if agent else None,
+            created_at=agent.created_at if agent else None,
+            updated_at=agent.updated_at if agent else None,
+            user_info=user_info
+        )
+
+    except Exception as e:
+        # Audit failed access
+        audit_service.audit_user_access(
+            tenant_id=tenant_context['tenant_id'],
+            user_id=current_user.user_id,
+            resource_type='agent',
+            resource_id=agent_id,
+            action='read',
+            success=False,
+            ip_address=tenant_context.get('ip_address')
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving agent: {str(e)}"
+        )
 
 
 @router.post("/", response_model=AgentResponse)

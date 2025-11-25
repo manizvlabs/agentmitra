@@ -13,6 +13,7 @@ class Agent(Base, TimestampMixin):
     __table_args__ = {'schema': 'lic_schema'}
 
     agent_id = Column(UUID(as_uuid=True), primary_key=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey('lic_schema.tenants.tenant_id'), nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.users.user_id", ondelete="CASCADE"), nullable=False)
     provider_id = Column(UUID(as_uuid=True), ForeignKey("shared.insurance_providers.provider_id"), nullable=True)
 
