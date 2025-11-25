@@ -262,14 +262,7 @@ async def login(
             detail=f"Error preparing user data: {str(e)}"
         )
 
-    # Temporarily disabled JWT creation for debugging
-    # token_response = create_token_pair(user_data)
-    token_response = {
-        "access_token": "debug_token",
-        "refresh_token": "debug_refresh",
-        "token_type": "bearer",
-        "expires_in": 900
-    }
+    token_response = create_token_pair(user_data)
 
     # Create session in database
     try:
@@ -652,14 +645,7 @@ async def verify_otp(
             detail=f"Error preparing user data: {str(e)}"
         )
 
-    # Temporarily disabled JWT creation for debugging
-    # token_response = create_token_pair(user_data)
-    token_response = {
-        "access_token": "debug_token",
-        "refresh_token": "debug_refresh",
-        "token_type": "bearer",
-        "expires_in": 900
-    }
+    token_response = create_token_pair(user_data)
 
     # Create session in database
     try:

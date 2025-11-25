@@ -24,10 +24,6 @@ from .shared import (
     InsuranceProvider, Country, Language, InsuranceCategory,
     WhatsappTemplate, Tenant
 )
-# RBAC models temporarily disabled due to TextClause error - models need debugging
-# from .rbac import Role, Permission, UserRole
-# from .feature_flags import FeatureFlag, FeatureFlagOverride
-# from .rbac_audit import RbacAuditLog
 
 __all__ = [
     "Base",
@@ -57,4 +53,10 @@ __all__ = [
     "WhatsappTemplate",
     "Tenant",
 ]
+
+# RBAC models disabled due to persistent TextClause errors
+# TODO: Fix RBAC model definitions - SQLAlchemy TextClause error during mapper initialization
+# from .rbac import Role, Permission, RolePermission, UserRole
+# from .feature_flags import FeatureFlag, FeatureFlagOverride
+# from .rbac_audit import RbacAuditLog
 

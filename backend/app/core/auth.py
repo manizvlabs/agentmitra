@@ -10,9 +10,8 @@ from app.core.security import validate_jwt_token, extract_token_from_header
 from app.core.logging_config import get_logger
 from app.repositories.user_repository import UserRepository
 from app.models.user import User
-# RBAC models temporarily disabled due to TextClause error
-# from app.models.rbac import Role, Permission, UserRole
-# from app.models.feature_flags import FeatureFlag, FeatureFlagOverride
+from app.models.rbac import Role, Permission, UserRole
+from app.models.feature_flags import FeatureFlag, FeatureFlagOverride
 
 # Fallback constants for when RBAC models are disabled
 PERMISSIONS = {}
