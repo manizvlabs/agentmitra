@@ -9,7 +9,12 @@ from app.core.database import get_db
 from app.core.security import validate_jwt_token, extract_token_from_header
 from app.core.logging_config import get_logger
 from app.repositories.user_repository import UserRepository
-from app.models.user import User
+from app.models.user import User, UserRole, Role, RolePermission, Permission
+from app.models.feature_flags import FeatureFlag, FeatureFlagOverride
+from datetime import datetime
+import time
+from typing import Set
+from sqlalchemy import text
 
 logger = get_logger(__name__)
 
@@ -71,6 +76,433 @@ PERMISSIONS = {
 }
 
 
+# Import feature flag models
+from app.models.feature_flags import FeatureFlag, FeatureFlagOverride
+
+# Database-driven Authorization Service
+class AuthorizationService:
+    """Comprehensive database-driven authorization service with RBAC"""
+
+    def __init__(self):
+        self._permission_cache: Dict[str, tuple] = {}
+        self._role_cache: Dict[str, tuple] = {}
+        self._feature_flag_cache: Dict[str, tuple] = {}
+        self._cache_ttl = 300  # 5 minutes
+
+    # ==================== PERMISSION CHECKING ====================
+
+    def has_permission(self, user_id: str, permission: str, db: Session, tenant_id: str = None) -> bool:
+        """Check if user has a specific permission"""
+        try:
+            # Get user's roles and their permissions
+            user_permissions = self._get_user_permissions(user_id, db)
+
+            # Check if user has the permission or a wildcard permission
+            return (
+                permission in user_permissions or
+                "*" in user_permissions or
+                self._matches_wildcard(permission, user_permissions)
+            )
+        except Exception as e:
+            logger.error(f"Error checking permission {permission} for user {user_id}: {e}")
+            return False
+
+    def has_any_permission(self, user_id: str, permissions: List[str], db: Session, tenant_id: str = None) -> bool:
+        """Check if user has any of the specified permissions"""
+        for permission in permissions:
+            if self.has_permission(user_id, permission, db, tenant_id):
+                return True
+        return False
+
+    def has_all_permissions(self, user_id: str, permissions: List[str], db: Session, tenant_id: str = None) -> bool:
+        """Check if user has all of the specified permissions"""
+        for permission in permissions:
+            if not self.has_permission(user_id, permission, db, tenant_id):
+                return False
+        return True
+
+    # ==================== ROLE CHECKING ====================
+
+    def has_role(self, user_id: str, role_name: str, db: Session) -> bool:
+        """Check if user has a specific role"""
+        try:
+            user_roles = self._get_user_roles(user_id, db)
+            return role_name in user_roles
+        except Exception as e:
+            logger.error(f"Error checking role {role_name} for user {user_id}: {e}")
+            return False
+
+    def has_any_role(self, user_id: str, role_names: List[str], db: Session) -> bool:
+        """Check if user has any of the specified roles"""
+        for role_name in role_names:
+            if self.has_role(user_id, role_name, db):
+                return True
+        return False
+
+    def has_role_level(self, user_id: str, min_role_level: int, db: Session) -> bool:
+        """Check if user has role at or above specified level"""
+        try:
+            user_roles = self._get_user_roles(user_id, db)
+            for role_name in user_roles:
+                if ROLE_HIERARCHY.get(role_name, 0) >= min_role_level:
+                    return True
+            return False
+        except Exception as e:
+            logger.error(f"Error checking role level for user {user_id}: {e}")
+            return False
+
+    # ==================== FEATURE FLAG CHECKING ====================
+
+    def is_feature_enabled(self, flag_name: str, user_id: str = None, tenant_id: str = None, db: Session = None) -> bool:
+        """Check if a feature flag is enabled for user/tenant"""
+        try:
+            # Check user-specific override first
+            if user_id and db:
+                user_override = db.query(FeatureFlagOverride).\
+                    join(FeatureFlag).\
+                    filter(
+                        FeatureFlag.flag_name == flag_name,
+                        FeatureFlagOverride.user_id == user_id
+                    ).first()
+
+                if user_override:
+                    return user_override.override_value.lower() == 'true'
+
+            # Check role-based override
+            if user_id and db:
+                user_roles = self._get_user_roles(user_id, db)
+                for role_name in user_roles:
+                    role = db.query(Role).filter(Role.role_name == role_name).first()
+                    if role:
+                        role_override = db.query(FeatureFlagOverride).\
+                            join(FeatureFlag).\
+                            filter(
+                                FeatureFlag.flag_name == flag_name,
+                                FeatureFlagOverride.role_id == role.role_id,
+                                FeatureFlagOverride.tenant_id == tenant_id
+                            ).first()
+
+                        if role_override:
+                            return role_override.override_value.lower() == 'true'
+
+            # Check tenant-specific flag
+            if tenant_id and db:
+                tenant_flag = db.query(FeatureFlag).\
+                    filter(
+                        FeatureFlag.flag_name == flag_name,
+                        FeatureFlag.tenant_id == tenant_id
+                    ).first()
+
+                if tenant_flag:
+                    return tenant_flag.is_enabled
+
+            # Check global flag
+            if db:
+                global_flag = db.query(FeatureFlag).\
+                    filter(
+                        FeatureFlag.flag_name == flag_name,
+                        FeatureFlag.tenant_id.is_(None)
+                    ).first()
+
+                if global_flag:
+                    return global_flag.is_enabled
+
+            # Default to enabled if flag doesn't exist
+            return True
+
+        except Exception as e:
+            logger.error(f"Error checking feature flag {flag_name}: {e}")
+            return True  # Default to enabled on error
+
+    # ==================== DATA RETRIEVAL ====================
+
+    def get_user_permissions(self, user_id: str, db: Session) -> List[str]:
+        """Get all permissions for a user"""
+        return self._get_user_permissions(user_id, db)
+
+    def get_user_roles(self, user_id: str, db: Session) -> List[str]:
+        """Get all roles for a user"""
+        return self._get_user_roles(user_id, db)
+
+    def get_all_roles(self, db: Session) -> List[Dict[str, Any]]:
+        """Get all available roles"""
+        try:
+            roles = db.query(Role).all()
+            return [{
+                'role_id': str(r.role_id),
+                'role_name': r.role_name,
+                'description': r.role_description,
+                'is_system_role': r.is_system_role
+            } for r in roles]
+        except Exception as e:
+            logger.error(f"Error getting all roles: {e}")
+            return []
+
+    def get_role_permissions(self, role_name: str, db: Session) -> List[str]:
+        """Get all permissions for a specific role"""
+        try:
+            permissions = db.query(Permission).\
+                join(RolePermission).\
+                join(Role).\
+                filter(Role.role_name == role_name).\
+                all()
+
+            return [p.permission_name for p in permissions]
+        except Exception as e:
+            logger.error(f"Error getting permissions for role {role_name}: {e}")
+            return []
+
+    # ==================== ROLE MANAGEMENT ====================
+
+    def assign_role_to_user(self, user_id: str, role_name: str, assigned_by: str, db: Session, tenant_id: str = None) -> bool:
+        """Assign a role to a user"""
+        try:
+            # Get role
+            role = db.query(Role).filter(Role.role_name == role_name).first()
+            if not role:
+                logger.error(f"Role {role_name} not found")
+                return False
+
+            # Check if assignment already exists
+            existing = db.query(UserRole).filter(
+                UserRole.user_id == user_id,
+                UserRole.role_id == role.role_id
+            ).first()
+
+            if existing:
+                logger.warning(f"User {user_id} already has role {role_name}")
+                return True
+
+            # Create assignment
+            user_role = UserRole(
+                user_id=user_id,
+                role_id=role.role_id,
+                assigned_by=assigned_by
+            )
+            db.add(user_role)
+            db.commit()
+
+            # Invalidate cache
+            self.invalidate_user_cache(user_id)
+
+            # Audit log
+            self._audit_log(db, {
+                'tenant_id': tenant_id,
+                'user_id': assigned_by,
+                'action': 'role_assigned',
+                'target_user_id': user_id,
+                'target_role_id': str(role.role_id),
+                'details': {'assigned_role': role_name}
+            })
+
+            logger.info(f"Assigned role {role_name} to user {user_id}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Error assigning role {role_name} to user {user_id}: {e}")
+            db.rollback()
+            return False
+
+    def remove_role_from_user(self, user_id: str, role_name: str, removed_by: str, db: Session, tenant_id: str = None) -> bool:
+        """Remove a role from a user"""
+        try:
+            # Delete assignment
+            role = db.query(Role).filter(Role.role_name == role_name).first()
+            if not role:
+                return False
+
+            deleted = db.query(UserRole).filter(
+                UserRole.user_id == user_id,
+                UserRole.role_id == role.role_id
+            ).delete()
+
+            if deleted > 0:
+                db.commit()
+                self.invalidate_user_cache(user_id)
+
+                # Audit log
+                self._audit_log(db, {
+                    'tenant_id': tenant_id,
+                    'user_id': removed_by,
+                    'action': 'role_removed',
+                    'target_user_id': user_id,
+                    'target_role_id': str(role.role_id),
+                    'details': {'removed_role': role_name}
+                })
+
+                logger.info(f"Removed role {role_name} from user {user_id}")
+                return True
+            else:
+                logger.warning(f"Role {role_name} not found for user {user_id}")
+                return False
+
+        except Exception as e:
+            logger.error(f"Error removing role {role_name} from user {user_id}: {e}")
+            db.rollback()
+            return False
+
+    # ==================== FEATURE FLAG MANAGEMENT ====================
+
+    def set_feature_flag(self, flag_name: str, enabled: bool, updated_by: str, tenant_id: str = None, db: Session = None) -> bool:
+        """Enable/disable a feature flag"""
+        try:
+            # Find or create flag
+            flag = db.query(FeatureFlag).filter(
+                FeatureFlag.flag_name == flag_name,
+                FeatureFlag.tenant_id == tenant_id
+            ).first()
+
+            if flag:
+                flag.is_enabled = enabled
+                flag.updated_by = updated_by
+                flag.updated_at = datetime.utcnow()
+            else:
+                flag = FeatureFlag(
+                    flag_name=flag_name,
+                    is_enabled=enabled,
+                    tenant_id=tenant_id,
+                    created_by=updated_by,
+                    updated_by=updated_by
+                )
+                db.add(flag)
+
+            db.commit()
+
+            # Audit log
+            self._audit_log(db, {
+                'tenant_id': tenant_id,
+                'user_id': updated_by,
+                'action': 'feature_flag_changed',
+                'target_flag_id': str(flag.flag_id),
+                'details': {'flag_name': flag_name, 'enabled': enabled}
+            })
+
+            return True
+
+        except Exception as e:
+            logger.error(f"Error setting feature flag {flag_name}: {e}")
+            db.rollback()
+            return False
+
+    # ==================== PRIVATE METHODS ====================
+
+    def _get_user_permissions(self, user_id: str, db: Session) -> List[str]:
+        """Get all permissions for a user from database"""
+        cache_key = f"user_permissions:{user_id}"
+
+        # Check cache first
+        if cache_key in self._permission_cache:
+            cached_data, timestamp = self._permission_cache[cache_key]
+            if time.time() - timestamp < self._cache_ttl:
+                return cached_data
+
+        try:
+            # Query user permissions from database
+            permissions = db.query(Permission).\
+                join(RolePermission).\
+                join(Role).\
+                join(UserRole).\
+                filter(UserRole.user_id == user_id).\
+                distinct().\
+                all()
+
+            permission_list = [p.permission_name for p in permissions]
+
+            # Cache the result
+            self._permission_cache[cache_key] = (permission_list, time.time())
+
+            return permission_list
+
+        except Exception as e:
+            logger.error(f"Error getting permissions for user {user_id}: {e}")
+            return []
+
+    def _get_user_roles(self, user_id: str, db: Session) -> List[str]:
+        """Get all roles for a user from database"""
+        cache_key = f"user_roles:{user_id}"
+
+        # Check cache first
+        if cache_key in self._role_cache:
+            cached_data, timestamp = self._role_cache[cache_key]
+            if time.time() - timestamp < self._cache_ttl:
+                return cached_data
+
+        try:
+            # Query user roles from database
+            roles = db.query(Role).\
+                join(UserRole).\
+                filter(UserRole.user_id == user_id).\
+                all()
+
+            role_list = [r.role_name for r in roles]
+
+            # Cache the result
+            self._role_cache[cache_key] = (role_list, time.time())
+
+            return role_list
+
+        except Exception as e:
+            logger.error(f"Error getting roles for user {user_id}: {e}")
+            return []
+
+    def _matches_wildcard(self, permission: str, user_permissions: List[str]) -> bool:
+        """Check if permission matches any wildcard patterns"""
+        for user_perm in user_permissions:
+            if user_perm == "*":
+                return True
+            if user_perm.endswith(".*"):
+                prefix = user_perm[:-2]  # Remove .*
+                if permission.startswith(prefix + "."):
+                    return True
+        return False
+
+    def _audit_log(self, db: Session, audit_data: Dict[str, Any]):
+        """Log authorization actions"""
+        try:
+            # This would integrate with the audit service
+            # For now, we'll log to the RBAC audit table
+            audit_entry = {
+                'tenant_id': audit_data.get('tenant_id'),
+                'user_id': audit_data.get('user_id'),
+                'action': audit_data.get('action'),
+                'target_user_id': audit_data.get('target_user_id'),
+                'target_role_id': audit_data.get('target_role_id'),
+                'target_permission_id': audit_data.get('target_permission_id'),
+                'target_flag_id': audit_data.get('target_flag_id'),
+                'details': audit_data.get('details', {}),
+                'success': True
+            }
+
+            # Insert into rbac_audit_log table
+            db.execute(text("""
+                INSERT INTO lic_schema.rbac_audit_log
+                (tenant_id, user_id, action, target_user_id, target_role_id,
+                 target_permission_id, target_flag_id, details, success)
+                VALUES (:tenant_id, :user_id, :action, :target_user_id, :target_role_id,
+                       :target_permission_id, :target_flag_id, :details, :success)
+            """), audit_entry)
+
+        except Exception as e:
+            logger.error(f"Error creating audit log: {e}")
+
+    def invalidate_user_cache(self, user_id: str):
+        """Invalidate cached permissions and roles for a user"""
+        self._permission_cache.pop(f"user_permissions:{user_id}", None)
+        self._role_cache.pop(f"user_roles:{user_id}", None)
+
+    def clear_all_cache(self):
+        """Clear all cached authorization data"""
+        self._permission_cache.clear()
+        self._role_cache.clear()
+        self._feature_flag_cache.clear()
+
+# Global authorization service instance
+auth_service = AuthorizationService()
+
+# Global authorization service instance
+auth_service = AuthorizationService()
+
+
 class UserContext:
     """User context for authenticated requests"""
 
@@ -113,28 +545,35 @@ class UserContext:
         return None
 
     def _get_permissions(self) -> List[str]:
-        """Get user permissions based on role"""
-        user_role = self.role
-        permissions = []
+        """Get user permissions from database"""
+        if self._db:
+            return auth_service.get_user_permissions(self.user_id, self._db)
+        else:
+            # Fallback to hardcoded permissions if no database connection
+            logger.warning(f"No database connection for user {self.user_id}, using fallback permissions")
+            user_role = self.role
+            permissions = []
 
-        # Add all permissions for user's role and lower roles
-        user_level = ROLE_HIERARCHY.get(user_role, 0)
+            # Add all permissions for user's role and lower roles
+            user_level = ROLE_HIERARCHY.get(user_role, 0)
 
-        for permission, allowed_roles in PERMISSIONS.items():
-            if "*" in allowed_roles or user_role in allowed_roles:
-                permissions.append(permission)
-            else:
-                # Check role hierarchy
-                for role in allowed_roles:
-                    if ROLE_HIERARCHY.get(role, 0) <= user_level:
-                        permissions.append(permission)
-                        break
+            for permission, allowed_roles in PERMISSIONS.items():
+                if "*" in allowed_roles or user_role in allowed_roles:
+                    permissions.append(permission)
+                else:
+                    # Check role hierarchy
+                    for role in allowed_roles:
+                        if ROLE_HIERARCHY.get(role, 0) <= user_level:
+                            permissions.append(permission)
+                            break
 
-        return permissions
+            return permissions
 
     def has_permission(self, permission: str) -> bool:
         """Check if user has specific permission"""
-        return permission in self.permissions
+        if self._db:
+            return auth_service.has_permission(self.user_id, permission, self._db)
+        return permission in self.permissions  # Fallback
 
     def has_any_permission(self, permissions: List[str]) -> bool:
         """Check if user has any of the specified permissions"""
