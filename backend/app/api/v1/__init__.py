@@ -6,7 +6,7 @@ Main API router that combines all endpoint routers
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from . import auth, users, providers, agents, policies, presentations, chat, analytics, feature_flags, health, notifications, campaigns, callbacks
+from . import auth, users, providers, agents, policies, presentations, chat, analytics, feature_flags, health, notifications, campaigns, callbacks, tenants
 
 # Create main API router
 api_router = APIRouter(prefix="/api/v1", tags=["api"])
@@ -163,4 +163,5 @@ api_router.include_router(callbacks.router, prefix="/callbacks", tags=["callback
 api_router.include_router(feature_flags.router, tags=["feature-flags"])
 api_router.include_router(health.router, tags=["health"])
 api_router.include_router(notifications.router, tags=["notifications"])
+api_router.include_router(tenants.router, prefix="/tenants", tags=["tenants"])
 

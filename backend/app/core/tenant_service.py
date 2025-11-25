@@ -271,6 +271,229 @@ class TenantService:
 
             return tenant_user
 
+    def create_tenant(self, tenant_data: Dict) -> Dict:
+        """Create a new tenant with full provisioning"""
+        try:
+            with SessionLocal() as session:
+                # Validate tenant data
+                self._validate_tenant_creation_data(tenant_data)
+
+                # Create tenant record
+                tenant = Tenant(
+                    tenant_code=tenant_data['tenant_code'],
+                    tenant_name=tenant_data['tenant_name'],
+                    tenant_type=tenant_data['tenant_type'],
+                    status='provisioning',  # Start in provisioning state
+                    subscription_plan=tenant_data.get('subscription_plan', 'trial'),
+                    max_users=tenant_data.get('max_users', 100),
+                    storage_limit_gb=tenant_data.get('storage_limit_gb', 5),
+                    api_rate_limit=tenant_data.get('api_rate_limit', 1000),
+                    contact_email=tenant_data.get('contact_email'),
+                    contact_phone=tenant_data.get('contact_phone'),
+                    business_address=tenant_data.get('business_address'),
+                    compliance_status={'status': 'pending', 'last_review': None},
+                    regulatory_approvals=tenant_data.get('regulatory_approvals', {}),
+                    metadata=tenant_data.get('metadata', {})
+                )
+
+                session.add(tenant)
+                session.flush()  # Get the tenant_id
+
+                # Create default tenant configurations
+                self._create_default_tenant_configs(session, tenant.tenant_id, tenant_data)
+
+                # Set tenant status to active
+                tenant.status = 'active'
+                session.commit()
+
+                # Invalidate cache and return tenant context
+                self.invalidate_tenant_cache(str(tenant.tenant_id))
+                return self.get_tenant_context(str(tenant.tenant_id))
+
+        except Exception as e:
+            logger.error(f"Failed to create tenant: {e}")
+            raise
+
+    def _validate_tenant_creation_data(self, tenant_data: Dict) -> None:
+        """Validate tenant creation data"""
+        required_fields = ['tenant_code', 'tenant_name', 'tenant_type']
+
+        for field in required_fields:
+            if field not in tenant_data or not tenant_data[field]:
+                raise ValueError(f"Missing required field: {field}")
+
+        # Validate tenant_code uniqueness
+        with SessionLocal() as session:
+            existing = session.query(Tenant).filter(
+                Tenant.tenant_code == tenant_data['tenant_code']
+            ).first()
+            if existing:
+                raise ValueError(f"Tenant code {tenant_data['tenant_code']} already exists")
+
+        # Validate tenant_type
+        valid_types = ['insurance_provider', 'independent_agent', 'agent_network']
+        if tenant_data['tenant_type'] not in valid_types:
+            raise ValueError(f"Invalid tenant_type. Must be one of: {valid_types}")
+
+    def _create_default_tenant_configs(self, session: Session, tenant_id: str, tenant_data: Dict) -> None:
+        """Create default configuration for new tenant"""
+        default_configs = [
+            # Feature flags
+            {'key': 'features.enabled', 'value': ['user_management', 'policy_management'], 'type': 'json'},
+            {'key': 'features.beta', 'value': [], 'type': 'json'},
+
+            # Security settings
+            {'key': 'security.mfa_required', 'value': False, 'type': 'boolean'},
+            {'key': 'security.session_timeout', 'value': 3600, 'type': 'number'},
+
+            # Business rules
+            {'key': 'business.commission_calculation', 'value': 'percentage_based', 'type': 'string'},
+            {'key': 'business.payment_gateway', 'value': 'razorpay', 'type': 'string'},
+
+            # Notification preferences
+            {'key': 'notifications.email_enabled', 'value': True, 'type': 'boolean'},
+            {'key': 'notifications.sms_enabled', 'value': True, 'type': 'boolean'},
+            {'key': 'notifications.whatsapp_enabled', 'value': True, 'type': 'boolean'},
+
+            # Branding (if provided)
+            {'key': 'branding.primary_color', 'value': '#007bff', 'type': 'string'},
+            {'key': 'branding.logo_url', 'value': None, 'type': 'string'},
+
+            # Compliance settings
+            {'key': 'compliance.gdpr_enabled', 'value': True, 'type': 'boolean'},
+            {'key': 'compliance.irda_compliance', 'value': True, 'type': 'boolean'},
+            {'key': 'compliance.audit_retention_days', 'value': 2555, 'type': 'number'},  # 7 years
+        ]
+
+        for config in default_configs:
+            tenant_config = TenantConfig(
+                tenant_id=tenant_id,
+                config_key=config['key'],
+                config_value=config['value'],
+                config_type=config['type']
+            )
+            session.add(tenant_config)
+
+    def provision_tenant_admin(self, tenant_id: str, admin_data: Dict) -> Dict:
+        """Provision the first admin user for a tenant"""
+        try:
+            with SessionLocal() as session:
+                # Create admin user if doesn't exist
+                from app.repositories.user_repository import UserRepository
+                from app.services.otp_service import OTPService
+
+                user_repo = UserRepository(session)
+                otp_service = OTPService()
+
+                # Check if user already exists
+                user = user_repo.get_by_phone_number(admin_data['phone_number'])
+                if not user:
+                    # Create new user
+                    user = user_repo.create_user({
+                        'phone_number': admin_data['phone_number'],
+                        'email': admin_data.get('email'),
+                        'first_name': admin_data.get('first_name'),
+                        'last_name': admin_data.get('last_name'),
+                        'role': 'insurance_provider_admin' if admin_data.get('tenant_type') == 'insurance_provider' else 'regional_manager'
+                    })
+
+                # Create tenant-user relationship
+                tenant_user = self.create_tenant_user(
+                    tenant_id=tenant_id,
+                    user_id=str(user.user_id),
+                    role='super_admin',  # First user is super admin
+                    permissions={'*': True}  # All permissions
+                )
+
+                # Send welcome notification
+                self._send_tenant_welcome_notification(tenant_id, user, admin_data)
+
+                return {
+                    'user_id': str(user.user_id),
+                    'tenant_user_id': str(tenant_user.tenant_user_id),
+                    'role': tenant_user.role,
+                    'status': 'provisioned'
+                }
+
+        except Exception as e:
+            logger.error(f"Failed to provision tenant admin: {e}")
+            raise
+
+    def _send_tenant_welcome_notification(self, tenant_id: str, user, admin_data: Dict) -> None:
+        """Send welcome notification to new tenant admin"""
+        try:
+            # This would integrate with the notification service
+            welcome_message = f"""
+            Welcome to Agent Mitra!
+
+            Your tenant has been successfully provisioned:
+            - Tenant: {admin_data.get('tenant_name', 'Unknown')}
+            - Role: Administrator
+            - Login: Use your registered phone number
+
+            Please complete your profile setup and configure your tenant settings.
+
+            Best regards,
+            Agent Mitra Team
+            """
+
+            logger.info(f"Welcome notification sent to user {user.user_id} for tenant {tenant_id}")
+            # TODO: Implement actual notification sending via email/SMS/WhatsApp
+
+        except Exception as e:
+            logger.error(f"Failed to send welcome notification: {e}")
+
+    def deactivate_tenant(self, tenant_id: str, reason: str = None) -> bool:
+        """Deactivate a tenant"""
+        try:
+            with SessionLocal() as session:
+                tenant = session.query(Tenant).filter(Tenant.tenant_id == tenant_id).first()
+                if not tenant:
+                    raise ValueError(f"Tenant {tenant_id} not found")
+
+                tenant.status = 'inactive'
+                tenant.metadata = tenant.metadata or {}
+                tenant.metadata['deactivation_reason'] = reason
+                tenant.metadata['deactivated_at'] = datetime.utcnow().isoformat()
+
+                session.commit()
+
+                # Invalidate cache
+                self.invalidate_tenant_cache(tenant_id)
+
+                # Audit the deactivation
+                logger.info(f"Tenant {tenant_id} deactivated: {reason}")
+
+                return True
+
+        except Exception as e:
+            logger.error(f"Failed to deactivate tenant {tenant_id}: {e}")
+            return False
+
+    def reactivate_tenant(self, tenant_id: str) -> bool:
+        """Reactivate a deactivated tenant"""
+        try:
+            with SessionLocal() as session:
+                tenant = session.query(Tenant).filter(Tenant.tenant_id == tenant_id).first()
+                if not tenant:
+                    raise ValueError(f"Tenant {tenant_id} not found")
+
+                tenant.status = 'active'
+                tenant.metadata = tenant.metadata or {}
+                tenant.metadata['reactivated_at'] = datetime.utcnow().isoformat()
+
+                session.commit()
+
+                # Invalidate cache
+                self.invalidate_tenant_cache(tenant_id)
+
+                logger.info(f"Tenant {tenant_id} reactivated")
+                return True
+
+        except Exception as e:
+            logger.error(f"Failed to reactivate tenant {tenant_id}: {e}")
+            return False
+
     def update_tenant_config(self, tenant_id: str, config_key: str, config_value: any, config_type: str = 'string') -> None:
         """Update tenant configuration"""
         with SessionLocal() as session:
