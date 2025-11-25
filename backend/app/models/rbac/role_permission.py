@@ -3,6 +3,7 @@ Role-Permission Association Model
 """
 from sqlalchemy import Column, DateTime, func, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from ..base import Base
 
 
@@ -16,6 +17,8 @@ class RolePermission(Base):
     permission_id = Column(UUID(as_uuid=True), ForeignKey('lic_schema.permissions.permission_id'), nullable=False)
     assigned_by = Column(UUID(as_uuid=True), ForeignKey('lic_schema.users.user_id'))
     assigned_at = Column(DateTime, default=func.now())
+
+    # Not used with JSONB permissions approach
 
     def __repr__(self):
         return f"<RolePermission(role_id={self.role_id}, permission_id={self.permission_id})>"

@@ -5,8 +5,7 @@ from .base import Base
 from .user import User, UserSession
 from .agent import Agent
 from .presentation import Presentation, Slide, PresentationTemplate
-# Temporarily commented out policy models to debug relationship issues
-# from .policy import Policyholder, InsurancePolicy, PremiumPayment
+from .policy import Policyholder, InsurancePolicy, PremiumPayment
 from .notification import Notification, NotificationSettings, DeviceToken
 from .campaign import Campaign, CampaignTrigger, CampaignExecution, CampaignTemplate, CampaignResponse
 # Import callback models lazily to avoid SQLAlchemy FK validation issues at import time
@@ -54,9 +53,8 @@ __all__ = [
     "Tenant",
 ]
 
-# RBAC models disabled due to persistent TextClause errors
-# TODO: Fix RBAC model definitions - SQLAlchemy TextClause error during mapper initialization
-# from .rbac import Role, Permission, RolePermission, UserRole
-# from .feature_flags import FeatureFlag, FeatureFlagOverride
-# from .rbac_audit import RbacAuditLog
+# RBAC models - gradually enabling relationships to fix TextClause errors
+from .rbac import Role, Permission, RolePermission, UserRole
+from .feature_flags import FeatureFlag, FeatureFlagOverride
+# from .rbac_audit import RbacAuditLog  # Enable later
 

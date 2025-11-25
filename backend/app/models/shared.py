@@ -136,6 +136,7 @@ class Tenant(Base):
 
     # Relationships
     parent_tenant = relationship("Tenant", remote_side=[tenant_id], backref="child_tenants")
+    feature_flags = relationship("FeatureFlag", back_populates="tenant", cascade="all, delete-orphan")
 
     @property
     def is_active(self):

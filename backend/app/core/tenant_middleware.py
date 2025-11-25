@@ -25,6 +25,10 @@ class TenantMiddleware(BaseHTTPMiddleware):
         """Process each request with tenant context"""
         # Skip tenant validation for certain endpoints
         if self._should_skip_tenant_validation(request):
+            # Still set up tenant service for super admin endpoints
+            if request.url.path.startswith("/api/v1/tenants/"):
+                request.state.tenant_service = self.tenant_service
+                request.state.audit_service = self.audit_service
             return await call_next(request)
 
         try:
@@ -175,6 +179,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
         skip_paths = [
             "/api/v1/auth/",
             "/api/v1/health",
+            "/api/v1/tenants/",  # Super admins need to manage tenants
             "/health",
             "/docs",
             "/redoc",

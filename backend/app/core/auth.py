@@ -22,7 +22,14 @@ import json
 from typing import Set, Dict, Any
 from sqlalchemy import text
 
-logger = get_logger(__name__)
+# Initialize logger with fallback
+try:
+    logger = get_logger(__name__)
+except Exception:
+    # Fallback logger if get_logger fails during import
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
 
 # Security scheme
 security = HTTPBearer(auto_error=False)
@@ -92,6 +99,10 @@ PERMISSIONS = {
     # Analytics & Reporting
     "analytics.read": ["super_admin", "provider_admin", "regional_manager", "senior_agent"],
     "reports.generate": ["super_admin", "provider_admin", "regional_manager"],
+    "tenants.read": ["super_admin"],
+    "tenants.create": ["super_admin"],
+    "tenants.update": ["super_admin"],
+    "tenants.delete": ["super_admin"],
 }
 
 
@@ -453,18 +464,25 @@ class AuthorizationService:
             # Expand roles with inheritance
             all_roles = self._expand_roles_with_inheritance(user_roles)
 
-            # Query permissions for all roles (direct + inherited)
+            # Query permissions from the JSONB field in roles table
             if all_roles:
-                permissions = db.query(Permission).\
-                    join(RolePermission).\
-                    join(Role).\
-                    filter(Role.role_name.in_(all_roles)).\
-                    distinct().\
-                    all()
+                from app.models.rbac import Role
+                roles_data = db.query(Role).filter(Role.role_name.in_(all_roles)).all()
 
-                permission_list = [p.permission_name for p in permissions]
+                permission_list = []
+                for role in roles_data:
+                    if role.permissions:
+                        # permissions is a JSONB field containing a list of permission strings
+                        if isinstance(role.permissions, list):
+                            permission_list.extend(role.permissions)
+                        elif isinstance(role.permissions, str):
+                            # Handle comma-separated string if needed
+                            permission_list.extend([p.strip() for p in role.permissions.split(',')])
             else:
                 permission_list = []
+
+            # Remove duplicates
+            permission_list = list(set(permission_list))
 
             # Cache the result
             self._set_cache(cache_key, permission_list)
@@ -609,19 +627,29 @@ class AuthorizationService:
         except Exception as e:
             logger.error(f"Error clearing all cache: {e}")
 
-# Global authorization service instance
-# Try to initialize with Redis if available
-try:
-    import redis
-    from app.core.config.settings import settings
-    redis_client = redis.from_url(settings.redis_url)
-    # Test connection
-    redis_client.ping()
-    auth_service = AuthorizationService(redis_client)
-    logger.info("AuthorizationService initialized with Redis caching")
-except Exception as e:
-    logger.warning(f"Redis not available for authorization caching, using in-memory cache: {e}")
-    auth_service = AuthorizationService()
+# Global authorization service instance - lazy loaded
+_auth_service = None
+
+def get_auth_service() -> AuthorizationService:
+    """Get or create the authorization service instance"""
+    global _auth_service
+    if _auth_service is None:
+        # Try to initialize with Redis if available
+        try:
+            import redis
+            from app.core.config.settings import settings
+            redis_client = redis.from_url(settings.redis_url)
+            # Test connection
+            redis_client.ping()
+            _auth_service = AuthorizationService(redis_client)
+            logger.info("AuthorizationService initialized with Redis caching")
+        except Exception as e:
+            logger.warning(f"Redis not available for authorization caching, using in-memory cache: {e}")
+            _auth_service = AuthorizationService()
+    return _auth_service
+
+# For backward compatibility
+auth_service = None  # Will be set by get_auth_service()
 
 
 class UserContext:
@@ -668,7 +696,12 @@ class UserContext:
     def _get_permissions(self) -> List[str]:
         """Get user permissions from database"""
         if self._db:
-            return auth_service.get_user_permissions(self.user_id, self._db)
+            try:
+                auth_svc = get_auth_service()
+                return auth_svc.get_user_permissions(self.user_id, self._db)
+            except Exception as e:
+                logger.error(f"Failed to get permissions from database: {e}")
+                return []
         else:
             # Fallback to hardcoded permissions if no database connection
             logger.warning(f"No database connection for user {self.user_id}, using fallback permissions")
@@ -692,9 +725,20 @@ class UserContext:
 
     def has_permission(self, permission: str) -> bool:
         """Check if user has specific permission"""
+        # First check JWT permissions (faster)
+        if permission in self.permissions:
+            return True
+
+        # If JWT doesn't have it, check database if available
         if self._db:
-            return auth_service.has_permission(self.user_id, permission, self._db)
-        return permission in self.permissions  # Fallback
+            try:
+                auth_svc = get_auth_service()
+                return auth_svc.has_permission(self.user_id, permission, self._db)
+            except Exception as e:
+                logger.error(f"Database permission check failed: {e}")
+                return False
+
+        return False  # No permission found
 
     def has_any_permission(self, permissions: List[str]) -> bool:
         """Check if user has any of the specified permissions"""

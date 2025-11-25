@@ -3,6 +3,7 @@ User-Role Association Model
 """
 from sqlalchemy import Column, DateTime, func, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from ..base import Base
 
 
@@ -16,6 +17,8 @@ class UserRole(Base):
     role_id = Column(UUID(as_uuid=True), ForeignKey('lic_schema.roles.role_id'), nullable=False)
     assigned_by = Column(UUID(as_uuid=True), ForeignKey('lic_schema.users.user_id'))
     assigned_at = Column(DateTime, default=func.now())
+
+    # Basic relationships for user-role assignments
 
     def __repr__(self):
         return f"<UserRole(user_id={self.user_id}, role_id={self.role_id})>"

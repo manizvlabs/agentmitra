@@ -21,5 +21,7 @@ class Permission(Base):
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now())
 
+    # No relationships needed for JSONB permissions approach
+
     def __repr__(self):
         return f"<Permission(permission_name={self.permission_name})>"

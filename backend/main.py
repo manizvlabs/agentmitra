@@ -28,7 +28,14 @@ setup_logging(
     environment=settings.environment
 )
 
-logger = get_logger(__name__)
+# Initialize logger with fallback
+try:
+    logger = get_logger(__name__)
+except Exception:
+    # Fallback logger if get_logger fails during import
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
 
 # Create FastAPI app
 app = FastAPI(
@@ -133,7 +140,7 @@ async def global_exception_handler(request, exc):
     import traceback
     logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
     logger.error(f"Traceback: {traceback.format_exc()}")
-    
+
     # Return JSON error response
     return JSONResponse(
         status_code=500,

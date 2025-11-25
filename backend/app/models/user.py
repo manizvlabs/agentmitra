@@ -108,7 +108,8 @@ class User(Base, TimestampMixin):
         """Check if user is verified (phone or email)"""
         return self.phone_verified or self.email_verified
 
-    # Relationships - RBAC relationships causing TextClause error
+    # Relationships - RBAC relationships
+    user_roles = relationship("UserRole", foreign_keys="UserRole.user_id")
 
     def __repr__(self):
         return f"<User(user_id={self.user_id}, phone_number={self.phone_number}, role={self.role})>"
