@@ -228,20 +228,15 @@ async def login(
             "campaign_builder_enabled": True,
         }
     
-    # Calculate permissions based on role
+    # Get permissions from RBAC system
     try:
-        permissions = []
-        user_level = ROLE_HIERARCHY.get(user.role, 0)
-        for permission, allowed_roles in PERMISSIONS.items():
-            if "*" in allowed_roles or user.role in allowed_roles:
-                permissions.append(permission)
-            else:
-                for role in allowed_roles:
-                    if ROLE_HIERARCHY.get(role, 0) <= user_level:
-                        permissions.append(permission)
-                        break
+        # Create UserContext to load permissions from database
+        from app.core.auth import UserContext
+        auth_user_context = UserContext(user, {"sub": str(user.user_id)}, db)
+        permissions = auth_user_context.permissions
+        logger.info(f"Loaded {len(permissions)} permissions for user {user.user_id}")
     except Exception as e:
-        logger.error(f"Error calculating permissions: {e}", exc_info=True)
+        logger.error(f"Error loading permissions from RBAC system: {e}", exc_info=True)
         permissions = []  # Fallback to empty permissions
     
     # Create token pair with feature flags, permissions, and tenant_id
@@ -611,20 +606,15 @@ async def verify_otp(
             "campaign_builder_enabled": True,
         }
     
-    # Calculate permissions based on role
+    # Get permissions from RBAC system
     try:
-        permissions = []
-        user_level = ROLE_HIERARCHY.get(user.role, 0)
-        for permission, allowed_roles in PERMISSIONS.items():
-            if "*" in allowed_roles or user.role in allowed_roles:
-                permissions.append(permission)
-            else:
-                for role in allowed_roles:
-                    if ROLE_HIERARCHY.get(role, 0) <= user_level:
-                        permissions.append(permission)
-                        break
+        # Create UserContext to load permissions from database
+        from app.core.auth import UserContext
+        auth_user_context = UserContext(user, {"sub": str(user.user_id)}, db)
+        permissions = auth_user_context.permissions
+        logger.info(f"Loaded {len(permissions)} permissions for user {user.user_id}")
     except Exception as e:
-        logger.error(f"Error calculating permissions: {e}", exc_info=True)
+        logger.error(f"Error loading permissions from RBAC system: {e}", exc_info=True)
         permissions = []  # Fallback to empty permissions
     
     # Create token pair with feature flags, permissions, and tenant_id

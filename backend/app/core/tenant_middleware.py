@@ -158,11 +158,11 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
         try:
             # Decode JWT token (without verification for tenant extraction)
-            import jwt
+            from jose import jwt
             from app.core.config.settings import settings
 
             # Decode without verification to get payload
-            payload = jwt.decode(token, settings.jwt_secret_key, algorithms=["HS256"], options={"verify_exp": False})
+            payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm], options={"verify_exp": False})
             tenant_id = payload.get('tenant_id')
 
             if tenant_id:

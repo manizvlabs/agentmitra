@@ -62,6 +62,41 @@ class UserPreferences(BaseModel):
     notification_preferences: Optional[Dict[str, Any]] = None
 
 
+@router.get("/me", response_model=UserResponse)
+async def get_current_user_profile(
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Get current user profile
+    - Returns the authenticated user's own profile information
+    """
+    user_repo = UserRepository(db)
+    user = user_repo.get_by_id(current_user.user_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    return UserResponse(
+        user_id=str(user.user_id),
+        email=user.email,
+        phone_number=user.phone_number,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        display_name=user.display_name,
+        role=user.role,
+        status=user.status or "active",
+        phone_verified=user.phone_verified,
+        email_verified=user.email_verified,
+        last_login_at=user.last_login_at,
+        created_at=user.created_at,
+        updated_at=user.updated_at
+    )
+
+
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user(
     user_id: str,

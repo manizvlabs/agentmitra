@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 from typing import Optional, List, Dict, Any
 from app.core.database import get_db
 from app.core.security import validate_jwt_token, extract_token_from_header
-from app.core.logging_config import get_logger
 from app.repositories.user_repository import UserRepository
 from app.models.user import User
 from app.models.rbac import Role, Permission, UserRole
@@ -22,14 +21,25 @@ import json
 from typing import Set, Dict, Any
 from sqlalchemy import text
 
-# Initialize logger with fallback
-try:
-    logger = get_logger(__name__)
-except Exception:
-    # Fallback logger if get_logger fails during import
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO)
+# Lazy logger initialization to avoid import issues
+_logger = None
+
+def get_auth_logger():
+    """Get logger for auth module, initialized lazily"""
+    global _logger
+    if _logger is None:
+        try:
+            from app.core.logging_config import get_logger
+            _logger = get_logger(__name__)
+        except Exception:
+            # Fallback logger if get_logger fails during import
+            import logging
+            _logger = logging.getLogger(__name__)
+            _logger.setLevel(logging.INFO)
+    return _logger
+
+# For backward compatibility
+logger = None  # Will be set by get_auth_logger()
 
 # Security scheme
 security = HTTPBearer(auto_error=False)
@@ -139,7 +149,7 @@ class AuthorizationService:
                 self._matches_wildcard(permission, user_permissions)
             )
         except Exception as e:
-            logger.error(f"Error checking permission {permission} for user {user_id}: {e}")
+            get_auth_logger().error(f"Error checking permission {permission} for user {user_id}: {e}")
             return False
 
     def _has_tenant_access(self, user_id: str, tenant_id: str, db: Session) -> bool:
@@ -166,7 +176,7 @@ class AuthorizationService:
             return False
 
         except Exception as e:
-            logger.error(f"Error checking tenant access for user {user_id}, tenant {tenant_id}: {e}")
+            get_auth_logger().error(f"Error checking tenant access for user {user_id}, tenant {tenant_id}: {e}")
             return False
 
     def has_any_permission(self, user_id: str, permissions: List[str], db: Session, tenant_id: str = None) -> bool:
@@ -191,7 +201,7 @@ class AuthorizationService:
             user_roles = self._get_user_roles(user_id, db)
             return role_name in user_roles
         except Exception as e:
-            logger.error(f"Error checking role {role_name} for user {user_id}: {e}")
+            get_auth_logger().error(f"Error checking role {role_name} for user {user_id}: {e}")
             return False
 
     def has_any_role(self, user_id: str, role_names: List[str], db: Session) -> bool:
@@ -210,7 +220,7 @@ class AuthorizationService:
                     return True
             return False
         except Exception as e:
-            logger.error(f"Error checking role level for user {user_id}: {e}")
+            get_auth_logger().error(f"Error checking role level for user {user_id}: {e}")
             return False
 
     # ==================== FEATURE FLAG CHECKING ====================
@@ -273,7 +283,7 @@ class AuthorizationService:
             return True
 
         except Exception as e:
-            logger.error(f"Error checking feature flag {flag_name}: {e}")
+            get_auth_logger().error(f"Error checking feature flag {flag_name}: {e}")
             return True  # Default to enabled on error
 
     # ==================== DATA RETRIEVAL ====================
@@ -297,7 +307,7 @@ class AuthorizationService:
                 'is_system_role': r.is_system_role
             } for r in roles]
         except Exception as e:
-            logger.error(f"Error getting all roles: {e}")
+            get_auth_logger().error(f"Error getting all roles: {e}")
             return []
 
     def get_role_permissions(self, role_name: str, db: Session) -> List[str]:
@@ -311,7 +321,7 @@ class AuthorizationService:
 
             return [p.permission_name for p in permissions]
         except Exception as e:
-            logger.error(f"Error getting permissions for role {role_name}: {e}")
+            get_auth_logger().error(f"Error getting permissions for role {role_name}: {e}")
             return []
 
     # ==================== ROLE MANAGEMENT ====================
@@ -322,7 +332,7 @@ class AuthorizationService:
             # Get role
             role = db.query(Role).filter(Role.role_name == role_name).first()
             if not role:
-                logger.error(f"Role {role_name} not found")
+                get_auth_logger().error(f"Role {role_name} not found")
                 return False
 
             # Check if assignment already exists
@@ -332,7 +342,7 @@ class AuthorizationService:
             ).first()
 
             if existing:
-                logger.warning(f"User {user_id} already has role {role_name}")
+                get_auth_logger().warning(f"User {user_id} already has role {role_name}")
                 return True
 
             # Create assignment
@@ -357,11 +367,11 @@ class AuthorizationService:
                 'details': {'assigned_role': role_name}
             })
 
-            logger.info(f"Assigned role {role_name} to user {user_id}")
+            get_auth_logger().info(f"Assigned role {role_name} to user {user_id}")
             return True
 
         except Exception as e:
-            logger.error(f"Error assigning role {role_name} to user {user_id}: {e}")
+            get_auth_logger().error(f"Error assigning role {role_name} to user {user_id}: {e}")
             db.rollback()
             return False
 
@@ -392,14 +402,14 @@ class AuthorizationService:
                     'details': {'removed_role': role_name}
                 })
 
-                logger.info(f"Removed role {role_name} from user {user_id}")
+                get_auth_logger().info(f"Removed role {role_name} from user {user_id}")
                 return True
             else:
-                logger.warning(f"Role {role_name} not found for user {user_id}")
+                get_auth_logger().warning(f"Role {role_name} not found for user {user_id}")
                 return False
 
         except Exception as e:
-            logger.error(f"Error removing role {role_name} from user {user_id}: {e}")
+            get_auth_logger().error(f"Error removing role {role_name} from user {user_id}: {e}")
             db.rollback()
             return False
 
@@ -442,7 +452,7 @@ class AuthorizationService:
             return True
 
         except Exception as e:
-            logger.error(f"Error setting feature flag {flag_name}: {e}")
+            get_auth_logger().error(f"Error setting feature flag {flag_name}: {e}")
             db.rollback()
             return False
 
@@ -490,7 +500,7 @@ class AuthorizationService:
             return permission_list
 
         except Exception as e:
-            logger.error(f"Error getting permissions for user {user_id}: {e}")
+            get_auth_logger().error(f"Error getting permissions for user {user_id}: {e}")
             return []
 
     def _expand_roles_with_inheritance(self, user_roles: List[str]) -> List[str]:
@@ -529,7 +539,7 @@ class AuthorizationService:
             return role_list
 
         except Exception as e:
-            logger.error(f"Error getting roles for user {user_id}: {e}")
+            get_auth_logger().error(f"Error getting roles for user {user_id}: {e}")
             return []
 
     def _matches_wildcard(self, permission: str, user_permissions: List[str]) -> bool:
@@ -570,7 +580,7 @@ class AuthorizationService:
             """), audit_entry)
 
         except Exception as e:
-            logger.error(f"Error creating audit log: {e}")
+            get_auth_logger().error(f"Error creating audit log: {e}")
 
     def _get_cache(self, key: str) -> Any:
         """Get value from cache (Redis or memory)"""
@@ -586,7 +596,7 @@ class AuthorizationService:
                     if time.time() - timestamp < self._cache_ttl:
                         return data
         except Exception as e:
-            logger.warning(f"Cache read error for key {key}: {e}")
+            get_auth_logger().warning(f"Cache read error for key {key}: {e}")
 
         return None
 
@@ -599,7 +609,7 @@ class AuthorizationService:
                 # Use in-memory cache
                 self._memory_cache[key] = (value, time.time())
         except Exception as e:
-            logger.warning(f"Cache write error for key {key}: {e}")
+            get_auth_logger().warning(f"Cache write error for key {key}: {e}")
 
     def _delete_cache(self, key: str):
         """Delete value from cache"""
@@ -609,7 +619,7 @@ class AuthorizationService:
             else:
                 self._memory_cache.pop(key, None)
         except Exception as e:
-            logger.warning(f"Cache delete error for key {key}: {e}")
+            get_auth_logger().warning(f"Cache delete error for key {key}: {e}")
 
     def invalidate_user_cache(self, user_id: str):
         """Invalidate cached permissions and roles for a user"""
@@ -625,7 +635,7 @@ class AuthorizationService:
                 pass
             self._memory_cache.clear()
         except Exception as e:
-            logger.error(f"Error clearing all cache: {e}")
+            get_auth_logger().error(f"Error clearing all cache: {e}")
 
 # Global authorization service instance - lazy loaded
 _auth_service = None
@@ -642,9 +652,9 @@ def get_auth_service() -> AuthorizationService:
             # Test connection
             redis_client.ping()
             _auth_service = AuthorizationService(redis_client)
-            logger.info("AuthorizationService initialized with Redis caching")
+            get_auth_logger().info("AuthorizationService initialized with Redis caching")
         except Exception as e:
-            logger.warning(f"Redis not available for authorization caching, using in-memory cache: {e}")
+            get_auth_logger().warning(f"Redis not available for authorization caching, using in-memory cache: {e}")
             _auth_service = AuthorizationService()
     return _auth_service
 
@@ -686,7 +696,7 @@ class UserContext:
                     self._agent_id = str(agent.agent_id)
                     return self._agent_id
             except Exception as e:
-                logger.warning(f"Error looking up agent_id for user {self.user_id}: {e}")
+                get_auth_logger().warning(f"Error looking up agent_id for user {self.user_id}: {e}")
                 self._agent_id = None
                 return None
         
@@ -700,11 +710,11 @@ class UserContext:
                 auth_svc = get_auth_service()
                 return auth_svc.get_user_permissions(self.user_id, self._db)
             except Exception as e:
-                logger.error(f"Failed to get permissions from database: {e}")
+                get_auth_logger().error(f"Failed to get permissions from database: {e}")
                 return []
         else:
             # Fallback to hardcoded permissions if no database connection
-            logger.warning(f"No database connection for user {self.user_id}, using fallback permissions")
+            get_auth_logger().warning(f"No database connection for user {self.user_id}, using fallback permissions")
             user_role = self.role
             permissions = []
 
@@ -735,7 +745,7 @@ class UserContext:
                 auth_svc = get_auth_service()
                 return auth_svc.has_permission(self.user_id, permission, self._db)
             except Exception as e:
-                logger.error(f"Database permission check failed: {e}")
+                get_auth_logger().error(f"Database permission check failed: {e}")
                 return False
 
         return False  # No permission found
@@ -900,7 +910,7 @@ async def log_request_middleware(request: Request, call_next):
     user_id = user_context.user_id if user_context else None
 
     # Log request
-    logger.info(
+    get_auth_logger().info(
         "API Request",
         extra={
             "method": request.method,
@@ -916,7 +926,7 @@ async def log_request_middleware(request: Request, call_next):
 
     # Log response
     process_time = time.time() - start_time
-    logger.info(
+    get_auth_logger().info(
         "API Response",
         extra={
             "method": request.method,

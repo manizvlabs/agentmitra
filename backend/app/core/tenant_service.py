@@ -34,57 +34,73 @@ class TenantService:
             if datetime.now().timestamp() - timestamp < self._cache_ttl:
                 return cached_data
 
-        # Load from database
+        # Load from database using raw SQL to handle schema mismatches
         with SessionLocal() as session:
-            tenant = session.query(Tenant).filter(
-                Tenant.tenant_id == tenant_id
-            ).first()
+            # Get basic tenant info with columns that exist in database
+            tenant_result = session.execute(text("""
+                SELECT tenant_id, tenant_code, tenant_name, tenant_type, schema_name,
+                       parent_tenant_id, status, subscription_plan, trial_end_date,
+                       max_users, storage_limit_gb, api_rate_limit, created_at, updated_at
+                FROM lic_schema.tenants
+                WHERE tenant_id = :tenant_id
+            """), {'tenant_id': tenant_id})
 
-            if not tenant:
+            tenant_row = tenant_result.fetchone()
+            if not tenant_row:
                 raise ValueError(f"Tenant {tenant_id} not found")
 
             # Get tenant configurations
-            configs = session.query(TenantConfig).filter(
-                TenantConfig.tenant_id == tenant_id
-            ).all()
+            try:
+                configs = session.query(TenantConfig).filter(
+                    TenantConfig.tenant_id == tenant_id
+                ).all()
+                config_dict = {config.config_key: config.config_value for config in configs}
+            except Exception as e:
+                logger.warning(f"Could not load tenant configs: {e}")
+                config_dict = {}
 
-            config_dict = {config.config_key: config.config_value for config in configs}
-
+            # Build context with available data and defaults for missing columns
             context = {
-                'tenant_id': str(tenant.tenant_id),
-                'tenant_name': tenant.tenant_name,
-                'tenant_type': tenant.tenant_type,
-                'tenant_code': tenant.tenant_code,
-                'status': tenant.status,
-                'subscription_plan': tenant.subscription_plan,
-                'trial_end_date': tenant.trial_end_date.isoformat() if tenant.trial_end_date else None,
-                'max_users': tenant.max_users,
-                'storage_limit_gb': tenant.storage_limit_gb,
-                'api_rate_limit': tenant.api_rate_limit,
-                'contact_email': tenant.contact_email,
-                'contact_phone': tenant.contact_phone,
-                'business_address': tenant.business_address,
-                'branding_settings': tenant.branding_settings,
-                'theme_settings': tenant.theme_settings,
-                'compliance_status': tenant.compliance_status,
-                'regulatory_approvals': tenant.regulatory_approvals,
-                'metadata': tenant.metadata,
+                'tenant_id': str(tenant_row[0]),  # tenant_id
+                'tenant_name': tenant_row[2],      # tenant_name
+                'tenant_type': tenant_row[3],      # tenant_type
+                'tenant_code': tenant_row[1],      # tenant_code
+                'status': tenant_row[6],           # status
+                'subscription_plan': tenant_row[7], # subscription_plan
+                'trial_end_date': tenant_row[8].isoformat() if tenant_row[8] else None,
+                'max_users': tenant_row[9] or 1000,  # max_users
+                'storage_limit_gb': tenant_row[10] or 10,  # storage_limit_gb
+                'api_rate_limit': tenant_row[11] or 1000,  # api_rate_limit
+
+                # Default values for columns that don't exist in current schema
+                'contact_email': None,
+                'contact_phone': None,
+                'business_address': None,
+                'branding_settings': {},
+                'theme_settings': {},
+                'compliance_status': 'pending',
+                'regulatory_approvals': {},
+                'metadata': {},
+
                 'config': config_dict,
                 'limits': {
-                    'users': tenant.max_users,
-                    'storage_gb': tenant.storage_limit_gb,
-                    'api_calls_per_hour': tenant.api_rate_limit,
+                    'users': tenant_row[9] or 1000,
+                    'storage_gb': tenant_row[10] or 10,
+                    'api_calls_per_hour': tenant_row[11] or 1000,
                 },
-                'features': self._get_tenant_features(tenant, config_dict),
+                'features': self._get_tenant_features_from_config(config_dict, tenant_row[7]),
             }
 
             # Cache for 5 minutes
             self._tenant_cache[tenant_id] = (context, datetime.now().timestamp())
-            self.redis_client.setex(
-                f"tenant:{tenant_id}",
-                self._cache_ttl,
-                json.dumps(context)
-            )
+            try:
+                self.redis_client.setex(
+                    f"tenant:{tenant_id}",
+                    self._cache_ttl,
+                    json.dumps(context)
+                )
+            except Exception as e:
+                logger.warning(f"Could not cache tenant context in Redis: {e}")
 
             return context
 
@@ -203,6 +219,29 @@ class TenantService:
         }
 
         plan = tenant.subscription_plan or 'basic'
+        features = base_features.get(plan, base_features['basic'])
+
+        # Add custom features from config
+        custom_features = config.get('enabled_features', [])
+        if isinstance(custom_features, list):
+            features.extend(custom_features)
+
+        return {
+            'enabled_features': list(set(features)),  # Remove duplicates
+            'subscription_plan': plan,
+            'custom_features': custom_features
+        }
+
+    def _get_tenant_features_from_config(self, config: Dict, subscription_plan: str = None) -> Dict:
+        """Get tenant feature flags and capabilities from config only"""
+        # Base features based on subscription plan
+        base_features = {
+            'basic': ['user_management', 'policy_management', 'basic_reporting'],
+            'professional': ['user_management', 'policy_management', 'advanced_reporting', 'campaigns', 'api_access'],
+            'enterprise': ['user_management', 'policy_management', 'advanced_reporting', 'campaigns', 'api_access', 'white_label', 'custom_integrations']
+        }
+
+        plan = subscription_plan or 'basic'
         features = base_features.get(plan, base_features['basic'])
 
         # Add custom features from config
