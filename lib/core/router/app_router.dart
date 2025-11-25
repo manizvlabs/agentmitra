@@ -23,6 +23,7 @@ import '../../features/analytics/presentation/pages/reports_page.dart';
 import '../../screens/my_policies_screen.dart';
 import '../../features/agent/presentation/pages/agent_profile_page.dart';
 import '../../features/customers/presentation/pages/customers_page.dart';
+import '../../screens/tenant_onboarding_screen.dart';
 
 /// Application Router Configuration
 /// Uses GoRouter for declarative routing with deep linking support
@@ -186,6 +187,13 @@ class AppRouter {
         builder: (context, state) => const CustomersPage(),
       ),
 
+      // Tenant Onboarding Route (Super Admin only)
+      GoRoute(
+        path: '/tenant-onboarding',
+        name: 'tenant-onboarding',
+        builder: (context, state) => const TenantOnboardingScreen(),
+      ),
+
       // Demo route (for development)
       GoRoute(
         path: '/demo',
@@ -336,6 +344,13 @@ class _DemoNavigation extends StatelessWidget {
             'Campaign Builder',
             'Marketing campaign creation tool',
             () => context.go('/campaign-builder'),
+          ),
+
+          _buildDemoButton(
+            context,
+            '🏗️ Tenant Onboarding',
+            'Super Admin tenant provisioning & management',
+            () => context.go('/tenant-onboarding'),
           ),
 
           const SizedBox(height: 32),
