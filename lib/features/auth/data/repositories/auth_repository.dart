@@ -68,10 +68,10 @@ class AuthRepository extends BaseRepository {
     if (refreshToken == null) {
       throw Exception('No refresh token available');
     }
-
+    
     final authResponse = await _remoteDataSource.refreshToken(refreshToken);
     await _localDataSource.saveAuthTokens(authResponse);
-
+    
     return authResponse;
   }
 

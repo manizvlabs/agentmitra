@@ -67,7 +67,7 @@ class AuthViewModel extends BaseViewModel {
         password: password,
         agentCode: agentCode,
       );
-
+      
       _currentUser = authResponse.user;
       _isAuthenticated = true;
 
@@ -81,7 +81,7 @@ class AuthViewModel extends BaseViewModel {
           permissions: JwtDecoder.extractPermissions(authResponse.accessToken!),
         );
       }
-
+      
       return authResponse;
     } catch (e) {
       setError('Login failed: $e');
@@ -120,7 +120,7 @@ class AuthViewModel extends BaseViewModel {
         phoneNumber: phoneNumber,
         otp: otp,
       );
-
+      
       _currentUser = authResponse.user;
       _isAuthenticated = true;
 
@@ -134,7 +134,7 @@ class AuthViewModel extends BaseViewModel {
           permissions: JwtDecoder.extractPermissions(authResponse.accessToken!),
         );
       }
-
+      
       return authResponse;
     } catch (e) {
       setError('OTP verification failed: $e');

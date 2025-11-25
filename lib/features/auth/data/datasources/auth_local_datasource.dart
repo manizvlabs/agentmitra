@@ -21,7 +21,7 @@ class AuthLocalDataSource {
 
     // Store login status in regular storage (not sensitive)
     await StorageService.setBool(_keyIsLoggedIn, true);
-
+    
     if (authResponse.user != null) {
       await saveUser(authResponse.user!);
     }
@@ -62,7 +62,7 @@ class AuthLocalDataSource {
   UserModel? getUser() {
     final userId = StorageService.getString('${_keyUser}_id');
     final phoneNumber = StorageService.getString('${_keyUser}_phone');
-
+    
     if (userId == null || phoneNumber == null) {
       return null;
     }
