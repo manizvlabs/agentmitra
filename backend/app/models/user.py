@@ -108,6 +108,9 @@ class User(Base, TimestampMixin):
         """Check if user is verified (phone or email)"""
         return self.phone_verified or self.email_verified
 
+    # Relationships - temporarily commented out RBAC relationships
+    # role_associations = relationship("UserRole", back_populates="user")
+
     def __repr__(self):
         return f"<User(user_id={self.user_id}, phone_number={self.phone_number}, role={self.role})>"
 

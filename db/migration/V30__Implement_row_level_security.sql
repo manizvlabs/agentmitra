@@ -187,7 +187,7 @@ BEGIN
             END
         ),
         TRUE,
-        NULLIF(current_setting('app.client_ip', TRUE), ''),
+        NULLIF(current_setting('app.client_ip', TRUE), '')::inet,
         NULLIF(current_setting('app.user_agent', TRUE), '')
     );
 

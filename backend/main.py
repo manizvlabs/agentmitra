@@ -104,6 +104,20 @@ if settings.environment == "production":
 # Add security middleware
 app.add_middleware(SecurityHeadersMiddleware)
 
+# Initialize tenant and audit services
+from app.core.tenant_service import TenantService
+from app.core.audit_service import AuditService
+from app.core.tenant_middleware import TenantMiddleware
+
+tenant_service = TenantService(
+    database_url=settings.database_url,
+    redis_url=settings.redis_url
+)
+audit_service = AuditService(tenant_service=tenant_service)
+
+# Add tenant middleware
+app.add_middleware(TenantMiddleware, tenant_service=tenant_service, audit_service=audit_service)
+
 # Add rate limiting middleware
 from app.core.rate_limiter import rate_limit_middleware
 app.middleware("http")(rate_limit_middleware)

@@ -5,7 +5,8 @@ from .base import Base
 from .user import User, UserSession
 from .agent import Agent
 from .presentation import Presentation, Slide, PresentationTemplate
-from .policy import Policyholder, InsurancePolicy, PremiumPayment
+# Temporarily commented out policy models to debug relationship issues
+# from .policy import Policyholder, InsurancePolicy, PremiumPayment
 from .notification import Notification, NotificationSettings, DeviceToken
 from .campaign import Campaign, CampaignTrigger, CampaignExecution, CampaignTemplate, CampaignResponse
 # Import callback models lazily to avoid SQLAlchemy FK validation issues at import time
@@ -23,6 +24,10 @@ from .shared import (
     InsuranceProvider, Country, Language, InsuranceCategory,
     WhatsappTemplate, Tenant
 )
+# Temporarily commented out RBAC models to debug startup issues
+# from .rbac import Role, Permission, UserRole
+# from .feature_flags import FeatureFlag, FeatureFlagOverride
+# from .rbac_audit import RbacAuditLog
 
 __all__ = [
     "Base",

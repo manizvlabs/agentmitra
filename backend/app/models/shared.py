@@ -1,7 +1,7 @@
 """
 Shared schema models - accessible across all tenants
 """
-from sqlalchemy import Column, String, Boolean, Integer, Text, TIMESTAMP, JSON, ARRAY, func
+from sqlalchemy import Column, String, Boolean, Integer, Text, TIMESTAMP, JSON, ARRAY, func, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from .base import Base
@@ -10,7 +10,6 @@ from .base import Base
 class InsuranceProvider(Base):
     """Insurance provider model - shared across tenants"""
     __tablename__ = "insurance_providers"
-    __table_args__ = {'schema': 'shared'}
 
     provider_id = Column(UUID(as_uuid=True), primary_key=True)
     provider_code = Column(String(20), unique=True, nullable=False, index=True)
@@ -54,7 +53,6 @@ class InsuranceProvider(Base):
 class Country(Base):
     """Country reference data"""
     __tablename__ = "countries"
-    __table_args__ = {'schema': 'shared'}
 
     country_code = Column(String(3), primary_key=True)
     country_name = Column(String(100), nullable=False)
@@ -67,7 +65,6 @@ class Country(Base):
 class Language(Base):
     """Language reference data"""
     __tablename__ = "languages"
-    __table_args__ = {'schema': 'shared'}
 
     language_code = Column(String(10), primary_key=True)
     language_name = Column(String(100), nullable=False)
@@ -79,7 +76,6 @@ class Language(Base):
 class InsuranceCategory(Base):
     """Insurance categories reference data"""
     __tablename__ = "insurance_categories"
-    __table_args__ = {'schema': 'shared'}
 
     category_code = Column(String(50), primary_key=True)
     category_name = Column(String(255), nullable=False)
@@ -91,7 +87,6 @@ class InsuranceCategory(Base):
 class WhatsappTemplate(Base):
     """WhatsApp message templates"""
     __tablename__ = "whatsapp_templates"
-    __table_args__ = {'schema': 'shared'}
 
     template_id = Column(UUID(as_uuid=True), primary_key=True)
     template_name = Column(String(100), unique=True, nullable=False)
@@ -134,7 +129,7 @@ class Tenant(Base):
     regulatory_approvals = Column(JSONB)
 
     # Metadata
-    metadata = Column(JSONB)
+    tenant_metadata = Column(JSONB)
 
     created_at = Column(TIMESTAMP, default=func.now())
     updated_at = Column(TIMESTAMP, default=func.now())
@@ -168,11 +163,6 @@ class TenantConfig(Base):
     # Relationships
     tenant = relationship("Tenant", backref="configs")
 
-    __table_args__ = (
-        {'schema': 'lic_schema'},
-        UniqueConstraint('tenant_id', 'config_key', name='unique_tenant_config')
-    )
-
     def __repr__(self):
         return f"<TenantConfig(tenant_id={self.tenant_id}, key={self.config_key})>"
 
@@ -194,11 +184,6 @@ class TenantUser(Base):
     # Relationships
     tenant = relationship("Tenant", backref="tenant_users")
     user = relationship("User", backref="tenant_memberships")
-
-    __table_args__ = (
-        {'schema': 'lic_schema'},
-        UniqueConstraint('tenant_id', 'user_id', name='unique_tenant_user')
-    )
 
     @property
     def is_active(self):

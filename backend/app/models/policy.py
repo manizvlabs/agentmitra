@@ -90,7 +90,7 @@ class InsurancePolicy(Base, TimestampMixin):
     # Relationships
     policyholder_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.policyholders.policyholder_id"), nullable=False)
     agent_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.agents.agent_id"), nullable=False)
-    provider_id = Column(UUID(as_uuid=True), ForeignKey("shared.insurance_providers.provider_id"), nullable=False)
+    provider_id = Column(UUID(as_uuid=True), ForeignKey("insurance_providers.provider_id"), nullable=False)
 
     # Policy details
     policy_type = Column(String(100), nullable=False)  # 'term_life', 'whole_life', 'ulip', etc.

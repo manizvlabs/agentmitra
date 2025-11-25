@@ -9,7 +9,8 @@ from app.core.database import get_db
 from app.core.auth import (
     get_current_user_context,
     UserContext,
-    auth_service
+    auth_service,
+    require_any_permission
 )
 from app.core.tenant_middleware import get_tenant_context, get_tenant_service, get_audit_service
 from app.core.tenant_aware_service import AgentService

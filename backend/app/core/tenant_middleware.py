@@ -93,7 +93,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
         # Check subdomain
         if not tenant_id:
-            tenant_id = self._extract_tenant_from_subdomain(request.url.host)
+            tenant_id = self._extract_tenant_from_subdomain(request.url.hostname or request.url.host)
 
         # Check JWT token (if implemented)
         if not tenant_id:
@@ -139,14 +139,30 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
     async def _extract_tenant_from_jwt(self, request: Request) -> Optional[str]:
         """Extract tenant ID from JWT token if present"""
-        # This would check for a pre-validated token
-        # Implementation depends on authentication flow
+        from app.core.auth import verify_token
+        import json
+
         auth_header = request.headers.get('Authorization', '')
         if not auth_header.startswith('Bearer '):
             return None
 
-        # TODO: Decode JWT and extract tenant_id
-        # For now, return None
+        token = auth_header[7:]  # Remove 'Bearer ' prefix
+
+        try:
+            # Decode JWT token (without verification for tenant extraction)
+            import jwt
+            from app.core.config.settings import settings
+
+            # Decode without verification to get payload
+            payload = jwt.decode(token, settings.jwt_secret_key, algorithms=["HS256"], options={"verify_exp": False})
+            tenant_id = payload.get('tenant_id')
+
+            if tenant_id:
+                return tenant_id
+
+        except Exception as e:
+            logger.warning(f"Failed to extract tenant from JWT: {e}")
+
         return None
 
     def _get_client_ip(self, request: Request) -> str:

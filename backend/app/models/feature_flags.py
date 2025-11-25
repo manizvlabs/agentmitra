@@ -4,7 +4,7 @@ Feature Flags Models - Dynamic permission control system
 from sqlalchemy import Column, String, Boolean, DateTime, Text, UUID, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from app.core.database import Base
+from .base import Base
 
 
 class FeatureFlag(Base):

@@ -9,7 +9,8 @@ from app.core.database import get_db
 from app.core.auth import (
     get_current_user_context,
     UserContext,
-    auth_service
+    auth_service,
+    require_any_permission
 )
 from app.repositories.policy_repository import PolicyRepository, PolicyholderRepository, PaymentRepository
 from app.models.policy import InsurancePolicy, Policyholder

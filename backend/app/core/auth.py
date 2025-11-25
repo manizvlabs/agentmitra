@@ -9,8 +9,10 @@ from app.core.database import get_db
 from app.core.security import validate_jwt_token, extract_token_from_header
 from app.core.logging_config import get_logger
 from app.repositories.user_repository import UserRepository
-from app.models.user import User, UserRole, Role, RolePermission, Permission
-from app.models.feature_flags import FeatureFlag, FeatureFlagOverride
+from app.models.user import User
+# Temporarily commented out RBAC models to debug startup issues
+# from app.models.rbac import Role, Permission, UserRole
+# # from app.models.feature_flags import FeatureFlag, FeatureFlagOverride
 from datetime import datetime
 import time
 import json
@@ -91,7 +93,7 @@ PERMISSIONS = {
 
 
 # Import feature flag models
-from app.models.feature_flags import FeatureFlag, FeatureFlagOverride
+# from app.models.feature_flags import FeatureFlag, FeatureFlagOverride
 
 # Database-driven Authorization Service
 class AuthorizationService:
