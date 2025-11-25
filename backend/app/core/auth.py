@@ -13,7 +13,8 @@ from app.models.user import User, UserRole, Role, RolePermission, Permission
 from app.models.feature_flags import FeatureFlag, FeatureFlagOverride
 from datetime import datetime
 import time
-from typing import Set
+import json
+from typing import Set, Dict, Any
 from sqlalchemy import text
 
 logger = get_logger(__name__)
@@ -96,11 +97,12 @@ from app.models.feature_flags import FeatureFlag, FeatureFlagOverride
 class AuthorizationService:
     """Comprehensive database-driven authorization service with RBAC"""
 
-    def __init__(self):
-        self._permission_cache: Dict[str, tuple] = {}
-        self._role_cache: Dict[str, tuple] = {}
-        self._feature_flag_cache: Dict[str, tuple] = {}
+    def __init__(self, redis_client=None):
+        # Use Redis for caching if available, otherwise fallback to in-memory
+        self._redis_client = redis_client
+        self._memory_cache: Dict[str, tuple] = {}
         self._cache_ttl = 300  # 5 minutes
+        self._use_redis = redis_client is not None
 
     # ==================== PERMISSION CHECKING ====================
 
@@ -435,10 +437,9 @@ class AuthorizationService:
         cache_key = f"user_permissions:{user_id}"
 
         # Check cache first
-        if cache_key in self._permission_cache:
-            cached_data, timestamp = self._permission_cache[cache_key]
-            if time.time() - timestamp < self._cache_ttl:
-                return cached_data
+        cached_permissions = self._get_cache(cache_key)
+        if cached_permissions is not None:
+            return cached_permissions
 
         try:
             # Get user's direct roles
@@ -461,7 +462,7 @@ class AuthorizationService:
                 permission_list = []
 
             # Cache the result
-            self._permission_cache[cache_key] = (permission_list, time.time())
+            self._set_cache(cache_key, permission_list)
 
             return permission_list
 
@@ -486,10 +487,9 @@ class AuthorizationService:
         cache_key = f"user_roles:{user_id}"
 
         # Check cache first
-        if cache_key in self._role_cache:
-            cached_data, timestamp = self._role_cache[cache_key]
-            if time.time() - timestamp < self._cache_ttl:
-                return cached_data
+        cached_roles = self._get_cache(cache_key)
+        if cached_roles is not None:
+            return cached_roles
 
         try:
             # Query user roles from database
@@ -501,7 +501,7 @@ class AuthorizationService:
             role_list = [r.role_name for r in roles]
 
             # Cache the result
-            self._role_cache[cache_key] = (role_list, time.time())
+            self._set_cache(cache_key, role_list)
 
             return role_list
 
@@ -549,22 +549,74 @@ class AuthorizationService:
         except Exception as e:
             logger.error(f"Error creating audit log: {e}")
 
+    def _get_cache(self, key: str) -> Any:
+        """Get value from cache (Redis or memory)"""
+        try:
+            if self._use_redis and self._redis_client:
+                cached_data = self._redis_client.get(key)
+                if cached_data:
+                    return json.loads(cached_data)
+            else:
+                # Use in-memory cache
+                if key in self._memory_cache:
+                    data, timestamp = self._memory_cache[key]
+                    if time.time() - timestamp < self._cache_ttl:
+                        return data
+        except Exception as e:
+            logger.warning(f"Cache read error for key {key}: {e}")
+
+        return None
+
+    def _set_cache(self, key: str, value: Any):
+        """Set value in cache (Redis or memory)"""
+        try:
+            if self._use_redis and self._redis_client:
+                self._redis_client.setex(key, self._cache_ttl, json.dumps(value))
+            else:
+                # Use in-memory cache
+                self._memory_cache[key] = (value, time.time())
+        except Exception as e:
+            logger.warning(f"Cache write error for key {key}: {e}")
+
+    def _delete_cache(self, key: str):
+        """Delete value from cache"""
+        try:
+            if self._use_redis and self._redis_client:
+                self._redis_client.delete(key)
+            else:
+                self._memory_cache.pop(key, None)
+        except Exception as e:
+            logger.warning(f"Cache delete error for key {key}: {e}")
+
     def invalidate_user_cache(self, user_id: str):
         """Invalidate cached permissions and roles for a user"""
-        self._permission_cache.pop(f"user_permissions:{user_id}", None)
-        self._role_cache.pop(f"user_roles:{user_id}", None)
+        self._delete_cache(f"user_permissions:{user_id}")
+        self._delete_cache(f"user_roles:{user_id}")
 
     def clear_all_cache(self):
         """Clear all cached authorization data"""
-        self._permission_cache.clear()
-        self._role_cache.clear()
-        self._feature_flag_cache.clear()
+        try:
+            if self._use_redis and self._redis_client:
+                # Clear Redis cache with pattern (if supported)
+                # For now, we'll just clear memory cache since Redis pattern delete is complex
+                pass
+            self._memory_cache.clear()
+        except Exception as e:
+            logger.error(f"Error clearing all cache: {e}")
 
 # Global authorization service instance
-auth_service = AuthorizationService()
-
-# Global authorization service instance
-auth_service = AuthorizationService()
+# Try to initialize with Redis if available
+try:
+    import redis
+    from app.core.config.settings import settings
+    redis_client = redis.from_url(settings.redis_url)
+    # Test connection
+    redis_client.ping()
+    auth_service = AuthorizationService(redis_client)
+    logger.info("AuthorizationService initialized with Redis caching")
+except Exception as e:
+    logger.warning(f"Redis not available for authorization caching, using in-memory cache: {e}")
+    auth_service = AuthorizationService()
 
 
 class UserContext:

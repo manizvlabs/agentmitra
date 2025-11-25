@@ -10,9 +10,7 @@ from app.core.database import get_db
 from app.core.auth import (
     get_current_user_context,
     UserContext,
-    require_permission,
-    require_any_permission,
-    require_role_level
+    auth_service
 )
 from app.repositories.user_repository import UserRepository
 from app.models.user import UserStatusEnum, UserRoleEnum
@@ -178,13 +176,20 @@ async def update_user(
 @router.delete("/{user_id}")
 async def deactivate_user(
     user_id: str,
-    current_user: UserContext = Depends(require_permission("users.delete")),
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """
     Deactivate user account (soft delete)
     - Only super admins can deactivate users
     """
+    # Check permission using database-driven authorization
+    if not current_user.has_permission("users.delete"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions to deactivate users"
+        )
+
     user_repo = UserRepository(db)
 
     user = user_repo.get_by_id(user_id)

@@ -9,9 +9,7 @@ from app.core.database import get_db
 from app.core.auth import (
     get_current_user_context,
     UserContext,
-    require_permission,
-    require_any_permission,
-    require_role_level
+    auth_service
 )
 from app.repositories.policy_repository import PolicyRepository, PolicyholderRepository, PaymentRepository
 from app.models.policy import InsurancePolicy, Policyholder
@@ -575,13 +573,20 @@ async def update_policy(
 @router.post("/{policy_id}/approve")
 async def approve_policy(
     policy_id: str,
-    current_user: UserContext = Depends(require_permission("policies.approve")),
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """
     Approve a policy application
     - Only managers and admins can approve policies
     """
+    # Check permission using database-driven authorization
+    if not current_user.has_permission("policies.approve"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions to approve policies"
+        )
+
     policy_repo = PolicyRepository(db)
 
     success = policy_repo.approve_policy(policy_id, current_user.user_id)
@@ -597,7 +602,7 @@ async def approve_policy(
 @router.post("/{policy_id}/activate")
 async def activate_policy(
     policy_id: str,
-    current_user: UserContext = Depends(require_permission("policies.approve")),
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """
@@ -619,13 +624,19 @@ async def activate_policy(
 @router.delete("/{policy_id}")
 async def delete_policy(
     policy_id: str,
-    current_user: UserContext = Depends(require_permission("policies.delete")),
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """
     Delete policy (soft delete)
     - Only super admins can delete policies
     """
+    # Check permission using database-driven authorization
+    if not current_user.has_permission("policies.delete"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions to delete policies"
+        )
     policy_repo = PolicyRepository(db)
 
     success = policy_repo.delete(policy_id)

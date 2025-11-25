@@ -9,9 +9,7 @@ from app.core.database import get_db
 from app.core.auth import (
     get_current_user_context,
     UserContext,
-    require_permission,
-    require_any_permission,
-    require_role_level
+    auth_service
 )
 from app.core.tenant_middleware import get_tenant_context, get_tenant_service, get_audit_service
 from app.core.tenant_aware_service import AgentService
@@ -358,13 +356,20 @@ async def get_agent(
 @router.post("/", response_model=AgentResponse)
 async def create_agent(
     agent_data: AgentCreateRequest,
-    current_user: UserContext = Depends(require_permission("agents.create")),
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """
     Create a new agent
     - Only admins can create agents
     """
+    # Check permission using database-driven authorization
+    if not current_user.has_permission("agents.create"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions to create agents"
+        )
+
     agent_repo = AgentRepository(db)
     user_repo = UserRepository(db)
 
@@ -447,7 +452,7 @@ async def update_agent(
     is_owner = current_user.user_id == str(agent.user_id)
     can_update = (
         is_owner or
-        current_user.has_permission("agents.update") or
+        auth_service.has_permission(current_user.user_id, "agents.update", db) or
         (current_user.has_role("regional_manager") and agent.territory == getattr(current_user, 'territory', None))
     )
 
@@ -521,13 +526,20 @@ async def update_agent(
 @router.post("/{agent_id}/approve")
 async def approve_agent(
     agent_id: str,
-    current_user: UserContext = Depends(require_permission("agents.approve")),
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """
     Approve agent verification
     - Only managers and admins can approve agents
     """
+    # Check permission using database-driven authorization
+    if not current_user.has_permission("agents.approve"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions to approve agents"
+        )
+
     agent_repo = AgentRepository(db)
 
     success = agent_repo.approve_agent(agent_id, current_user.user_id)
@@ -543,7 +555,7 @@ async def approve_agent(
 @router.post("/{agent_id}/reject")
 async def reject_agent(
     agent_id: str,
-    current_user: UserContext = Depends(require_permission("agents.approve")),
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """
@@ -565,13 +577,19 @@ async def reject_agent(
 @router.delete("/{agent_id}")
 async def delete_agent(
     agent_id: str,
-    current_user: UserContext = Depends(require_permission("agents.delete")),
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """
     Delete agent (soft delete)
     - Only super admins can delete agents
     """
+    # Check permission using database-driven authorization
+    if not current_user.has_permission("agents.delete"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions to delete agents"
+        )
     agent_repo = AgentRepository(db)
 
     success = agent_repo.delete(agent_id)
@@ -647,7 +665,7 @@ async def get_agent_by_code(
 
 @router.get("/pending/verification", response_model=List[AgentResponse])
 async def get_pending_verification_agents(
-    current_user: UserContext = Depends(require_permission("agents.approve")),
+    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """
