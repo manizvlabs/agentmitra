@@ -1,0 +1,42 @@
+{
+  "@@locale": "en",
+  "@@lastModified": "2025-01-03T10:00:00Z",
+  "@@version": "1.0.0",
+
+  "appName": "Agent Mitra",
+  "@appName": {
+    "description": "Application name",
+    "type": "text"
+  },
+
+  "tagline": "Friend of Agents",
+  "@tagline": {
+    "description": "App tagline",
+    "type": "text"
+  },
+
+  "home": "Home",
+  "@home": {
+    "description": "Home navigation label",
+    "type": "text"
+  },
+
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button text",
+    "type": "text"
+  },
+
+  "network_error": "Network Connection Error",
+  "@network_error": {
+    "description": "Network error title",
+    "type": "text"
+  },
+
+  "network_error_message": "Please check your internet connection and try again",
+  "@network_error_message": {
+    "description": "Network error message",
+    "type": "text"
+  }
+}
+

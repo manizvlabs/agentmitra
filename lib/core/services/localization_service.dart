@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'cdn_service.dart';
 import 'logger_service.dart';
 
 /// Supported Languages
@@ -35,10 +37,14 @@ class LocalizationService {
 
   static const String _languageKey = 'app_language';
   static const String _stringsKey = 'localized_strings';
+  static const String _versionKeyPrefix = 'localization_version_';
+  static const String _cacheKeyPrefix = 'l10n_cache_';
 
   AppLanguage _currentLanguage = AppLanguage.english;
   Map<String, Map<String, String>> _localizedStrings = {};
+  Map<String, String> _fallbackStrings = {};
   bool _isInitialized = false;
+  final CDNService _cdnService = CDNService();
 
   final StreamController<AppLanguage> _languageController = StreamController<AppLanguage>.broadcast();
   final StreamController<Map<String, String>> _stringsController = StreamController<Map<String, String>>.broadcast();
@@ -65,11 +71,11 @@ class LocalizationService {
         _currentLanguage = AppLanguage.fromCode(savedLanguageCode);
       }
 
-      // Load default strings
+      // Load default strings (fallback)
       await _loadDefaultStrings();
 
-      // Load cached strings if available
-      await _loadCachedStrings();
+      // Try to load from CDN, fallback to cache, then to bundled files
+      await _loadLocalizationForLanguage(_currentLanguage.code);
 
       _isInitialized = true;
       LoggerService().info('Localization service initialized with language: ${_currentLanguage.name}');
@@ -93,12 +99,21 @@ class LocalizationService {
   }
 
   /// Get localized string
-  String getString(String key, {Map<String, String>? args}) {
-    String? value = currentStrings[key];
+  String getString(String key, {Map<String, String>? args, String? locale}) {
+    final targetLocale = locale ?? _currentLanguage.code;
+    String? value = _localizedStrings[targetLocale]?[key];
 
-    if (value == null) {
+    // Try fallback strings
+    value ??= _fallbackStrings[key];
+
+    // Try English fallback
+    value ??= _localizedStrings['en']?[key];
+
+    // Final fallback to key
+    value ??= key;
+
+    if (value == key && key != '') {
       LoggerService().warning('Missing localization key: $key');
-      return key; // Fallback to key
     }
 
     // Replace arguments if provided
@@ -140,22 +155,195 @@ class LocalizationService {
   // Private methods
 
   Future<void> _loadDefaultStrings() async {
-    // Load default English strings
-    _localizedStrings['en'] = _englishStrings;
+    // Load default English strings as fallback
+    _fallbackStrings = Map<String, String>.from(_englishStrings);
+    _localizedStrings['en'] = Map<String, String>.from(_englishStrings);
 
-    // Load other language strings
-    _localizedStrings['hi'] = _hindiStrings;
-    _localizedStrings['te'] = _teluguStrings;
+    // Load other language strings as fallback
+    _localizedStrings['hi'] = Map<String, String>.from(_hindiStrings);
+    _localizedStrings['te'] = Map<String, String>.from(_teluguStrings);
 
     LoggerService().info('Default localized strings loaded');
   }
 
   Future<void> _loadStringsForLanguage(AppLanguage language) async {
-    // For now, we have static strings
-    // In a real app, you might load from network or assets
+    await _loadLocalizationForLanguage(language.code);
     final strings = _localizedStrings[language.code];
     if (strings != null) {
       _stringsController.add(strings);
+    }
+  }
+
+  /// Load localization with CDN -> Cache -> Fallback strategy
+  Future<void> _loadLocalizationForLanguage(String locale) async {
+    // Try CDN first
+    try {
+      if (await _cdnService.checkCDNAvailability()) {
+        final cdnStrings = await _loadFromCDN(locale);
+        if (cdnStrings.isNotEmpty) {
+          _localizedStrings[locale] = cdnStrings;
+          await _cacheLocalization(locale, cdnStrings);
+          LoggerService().info('Loaded localization from CDN for locale: $locale');
+          return;
+        }
+      }
+    } catch (e) {
+      LoggerService().warning('CDN load failed for $locale, trying cache: $e');
+    }
+
+    // Try cache
+    try {
+      final cachedStrings = await _loadFromCache(locale);
+      if (cachedStrings.isNotEmpty) {
+        _localizedStrings[locale] = cachedStrings;
+        LoggerService().info('Loaded localization from cache for locale: $locale');
+        return;
+      }
+    } catch (e) {
+      LoggerService().warning('Cache load failed for $locale, using fallback: $e');
+    }
+
+    // Use bundled fallback
+    try {
+      final fallbackStrings = await _loadFallbackLocalization(locale);
+      if (fallbackStrings.isNotEmpty) {
+        _localizedStrings[locale] = fallbackStrings;
+        _fallbackStrings.addAll(fallbackStrings);
+        LoggerService().info('Loaded localization from fallback for locale: $locale');
+      }
+    } catch (e) {
+      LoggerService().error('Fallback localization failed for $locale: $e');
+    }
+  }
+
+  /// Load from CDN
+  Future<Map<String, String>> _loadFromCDN(String locale) async {
+    try {
+      final arbData = await _cdnService.loadARBFile(locale);
+      final strings = <String, String>{};
+
+      arbData.forEach((key, value) {
+        if (!key.startsWith('@')) {
+          strings[key] = value.toString();
+        }
+      });
+
+      // Cache version info
+      final prefs = await SharedPreferences.getInstance();
+      final version = arbData['@@version'] as String? ?? '1.0.0';
+      await prefs.setString('$_versionKeyPrefix$locale', version);
+
+      return strings;
+    } catch (e) {
+      LoggerService().error('Failed to load from CDN: $e');
+      return {};
+    }
+  }
+
+  /// Load from cache
+  Future<Map<String, String>> _loadFromCache(String locale) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedData = prefs.getString('$_cacheKeyPrefix$locale');
+
+      if (cachedData != null) {
+        return Map<String, String>.from(json.decode(cachedData) as Map<String, dynamic>);
+      }
+    } catch (e) {
+      LoggerService().error('Failed to load from cache: $e');
+    }
+    return {};
+  }
+
+  /// Load fallback localization from assets
+  Future<Map<String, String>> _loadFallbackLocalization(String locale) async {
+    try {
+      // Try to load from assets/l10n/app_{locale}.arb
+      final jsonString = await rootBundle.loadString('assets/l10n/app_$locale.arb');
+      final arbData = json.decode(jsonString) as Map<String, dynamic>;
+      final strings = <String, String>{};
+
+      arbData.forEach((key, value) {
+        if (!key.startsWith('@')) {
+          strings[key] = value.toString();
+        }
+      });
+
+      return strings;
+    } catch (e) {
+      // If asset file doesn't exist, use hardcoded strings
+      LoggerService().warning('Asset file not found for $locale, using hardcoded strings');
+      return _getHardcodedStrings(locale);
+    }
+  }
+
+  /// Get hardcoded strings as fallback
+  Map<String, String> _getHardcodedStrings(String locale) {
+    switch (locale) {
+      case 'hi':
+        return _hindiStrings;
+      case 'te':
+        return _teluguStrings;
+      default:
+        return _englishStrings;
+    }
+  }
+
+  /// Cache localization strings
+  Future<void> _cacheLocalization(String locale, Map<String, String> strings) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('$_cacheKeyPrefix$locale', json.encode(strings));
+    } catch (e) {
+      LoggerService().error('Failed to cache localization: $e');
+    }
+  }
+
+  /// Check for updates from CDN
+  Future<bool> checkForUpdates(String locale) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final currentVersion = prefs.getString('$_versionKeyPrefix$locale') ?? '0.0.0';
+
+      final cdnVersion = await _cdnService.getVersionFromCDN(locale);
+      if (cdnVersion != null && _isNewerVersion(cdnVersion, currentVersion)) {
+        return true;
+      }
+    } catch (e) {
+      LoggerService().warning('Failed to check for updates: $e');
+    }
+    return false;
+  }
+
+  /// Check if new version is newer than current
+  bool _isNewerVersion(String newVersion, String currentVersion) {
+    try {
+      final newParts = newVersion.split('.').map(int.parse).toList();
+      final currentParts = currentVersion.split('.').map(int.parse).toList();
+
+      for (var i = 0; i < 3; i++) {
+        if (newParts.length > i && currentParts.length > i) {
+          if (newParts[i] > currentParts[i]) return true;
+          if (newParts[i] < currentParts[i]) return false;
+        }
+      }
+    } catch (e) {
+      LoggerService().error('Version comparison failed: $e');
+    }
+    return false;
+  }
+
+  /// Background sync for localization updates
+  Future<void> syncLocalizations(List<String> locales) async {
+    for (final locale in locales) {
+      try {
+        if (await checkForUpdates(locale)) {
+          await _loadLocalizationForLanguage(locale);
+          LoggerService().info('Synced localization for locale: $locale');
+        }
+      } catch (e) {
+        LoggerService().error('Failed to sync localization for $locale: $e');
+      }
     }
   }
 
@@ -168,30 +356,10 @@ class LocalizationService {
     }
   }
 
+  // Deprecated: Use _loadFromCache instead
   Future<void> _loadCachedStrings() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final cachedStringsJson = prefs.getString(_stringsKey);
-
-      if (cachedStringsJson != null) {
-        final cachedStrings = Map<String, Map<String, String>>.from(
-          json.decode(cachedStringsJson) as Map<String, dynamic>,
-        );
-
-        // Merge with default strings
-        cachedStrings.forEach((langCode, strings) {
-          if (_localizedStrings.containsKey(langCode)) {
-            _localizedStrings[langCode]!.addAll(strings);
-          } else {
-            _localizedStrings[langCode] = strings;
-          }
-        });
-
-        LoggerService().info('Cached localized strings loaded');
-      }
-    } catch (e) {
-      LoggerService().error('Failed to load cached strings: $e');
-    }
+    // This method is kept for backward compatibility
+    // New implementation uses _loadFromCache per locale
   }
 
   Future<void> _saveStringsToCache() async {

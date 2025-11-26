@@ -48,6 +48,7 @@ import 'screens/agent_chat_screen.dart';
 import 'screens/reminders_screen.dart';
 import 'screens/presentations_screen.dart';
 import 'screens/global_search_screen.dart';
+import 'screens/test_phase1_screen.dart';
 
 /// Placeholder screen for routes that are not yet implemented
 class PlaceholderScreen extends StatelessWidget {
@@ -193,7 +194,7 @@ class AgentMitraApp extends ConsumerWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: themeMode,
-        initialRoute: '/splash',
+        initialRoute: '/test-phase1', // Temporarily set for Phase 1 testing
         routes: {
         // Splash & Welcome Flow
         '/splash': (context) => const SplashScreen(),
@@ -229,6 +230,9 @@ class AgentMitraApp extends ConsumerWidget {
         '/smart-chatbot': (context) => const ChatbotPage(),
         '/notifications': (context) => const NotificationPage(),
         '/learning-center': (context) => const LearningCenterScreen(),
+
+        // Phase 1 Test Screen
+        '/test-phase1': (context) => const TestPhase1Screen(),
         '/data-pending': (context) => const DataPendingScreen(),
         '/agent-discovery': (context) => const AgentDiscoveryScreen(),
         '/agent-verification': (context) => const AgentVerificationScreen(),

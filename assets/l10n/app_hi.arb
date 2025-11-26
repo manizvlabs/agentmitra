@@ -1,0 +1,42 @@
+{
+  "@@locale": "hi",
+  "@@lastModified": "2025-01-03T10:00:00Z",
+  "@@version": "1.0.0",
+
+  "appName": "एजेंट मित्र",
+  "@appName": {
+    "description": "एप्लिकेशन का नाम",
+    "type": "text"
+  },
+
+  "tagline": "एजेंटों का दोस्त",
+  "@tagline": {
+    "description": "एप्लिकेशन का टैगलाइन",
+    "type": "text"
+  },
+
+  "home": "होम",
+  "@home": {
+    "description": "होम नेविगेशन लेबल",
+    "type": "text"
+  },
+
+  "retry": "पुनः प्रयास",
+  "@retry": {
+    "description": "पुनः प्रयास बटन पाठ",
+    "type": "text"
+  },
+
+  "network_error": "नेटवर्क कनेक्शन त्रुटि",
+  "@network_error": {
+    "description": "नेटवर्क त्रुटि शीर्षक",
+    "type": "text"
+  },
+
+  "network_error_message": "कृपया अपना इंटरनेट कनेक्शन जांचें और पुनः प्रयास करें",
+  "@network_error_message": {
+    "description": "नेटवर्क त्रुटि संदेश",
+    "type": "text"
+  }
+}
+

@@ -1,0 +1,42 @@
+{
+  "@@locale": "te",
+  "@@lastModified": "2025-01-03T10:00:00Z",
+  "@@version": "1.0.0",
+
+  "appName": "ఏజెంట్ మిత్ర",
+  "@appName": {
+    "description": "అప్లికేషన్ పేరు",
+    "type": "text"
+  },
+
+  "tagline": "ఏజెంట్ల మిత్రుడు",
+  "@tagline": {
+    "description": "అప్ ట్యాగ్‌లైన్",
+    "type": "text"
+  },
+
+  "home": "హోమ్",
+  "@home": {
+    "description": "హోమ్ నావిగేషన్ లేబుల్",
+    "type": "text"
+  },
+
+  "retry": "మళ్లీ ప్రయత్నించు",
+  "@retry": {
+    "description": "మళ్లీ ప్రయత్నించు బటన్ టెక్స్ట్",
+    "type": "text"
+  },
+
+  "network_error": "నెట్వర్క్ కనెక్షన్ లోపం",
+  "@network_error": {
+    "description": "నెట్వర్క్ లోపం శీర్షిక",
+    "type": "text"
+  },
+
+  "network_error_message": "దయచేసి మీ ఇంటర్నెట్ కనెక్షన్ తనిఖీ చేయండి మరియు మళ్లీ ప్రయత్నించండి",
+  "@network_error_message": {
+    "description": "నెట్వర్క్ లోపం సందేశం",
+    "type": "text"
+  }
+}
+

@@ -12,8 +12,25 @@ class WelcomeScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             children: [
+              // Test Phase 1 Button (temporary for testing)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Align(
+                  alignment: Alignment.topRight,
+                  child: TextButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pushNamed('/test-phase1');
+                    },
+                    icon: const Icon(Icons.bug_report, size: 18),
+                    label: const Text('Test Phase 1'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.red[700],
+                    ),
+                  ),
+                ),
+              ),
               // Top spacing
-              const SizedBox(height: 60),
+              const SizedBox(height: 20),
 
               // Main content area
               Expanded(

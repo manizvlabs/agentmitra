@@ -93,6 +93,7 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - assets/l10n/
 
 # Platform-specific dependencies
 dependency_overrides:
