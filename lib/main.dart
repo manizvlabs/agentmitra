@@ -54,6 +54,7 @@ import 'screens/test_phase1_screen.dart';
 import 'features/presentations/presentation/pages/presentation_list_page.dart';
 import 'features/presentations/presentation/pages/presentation_editor_page.dart';
 import 'features/presentations/data/models/presentation_model.dart';
+import 'features/dashboard/presentation/pages/dashboard_page.dart';
 
 /// Placeholder screen for routes that are not yet implemented
 class PlaceholderScreen extends StatelessWidget {
