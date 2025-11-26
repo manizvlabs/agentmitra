@@ -6,7 +6,12 @@ from sqlalchemy.dialects.postgresql import UUID, JSONB, INET, ARRAY
 from sqlalchemy.orm import relationship
 from sqlalchemy import Enum as SQLEnum
 import enum
+from typing import TYPE_CHECKING
 from .base import Base, TimestampMixin
+
+# Use TYPE_CHECKING to avoid circular imports
+if TYPE_CHECKING:
+    from .notification import NotificationSettings, DeviceToken
 
 
 class UserRoleEnum(str, enum.Enum):
@@ -93,8 +98,19 @@ class User(Base, TimestampMixin):
     
     # Relationships
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
-    notification_settings = relationship("NotificationSettings", back_populates="user", cascade="all, delete-orphan")
-    device_tokens = relationship("DeviceToken", back_populates="user", cascade="all, delete-orphan")
+    # Use string-based relationship to avoid circular import issues
+    notification_settings = relationship(
+        "NotificationSettings", 
+        back_populates="user", 
+        cascade="all, delete-orphan",
+        lazy="select"
+    )
+    device_tokens = relationship(
+        "DeviceToken", 
+        back_populates="user", 
+        cascade="all, delete-orphan",
+        lazy="select"
+    )
 
     @property
     def full_name(self):
