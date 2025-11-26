@@ -34,6 +34,9 @@ psutil==6.0.0
 # AI/ML
 openai==1.51.0
 
+# Object Storage
+minio==7.2.0
+
 # Feature Flag Management - FeatureHub
 # Install FeatureHub SDK: pip install featurehub-sdk
 # Using httpx for REST API integration (can switch to SDK later)

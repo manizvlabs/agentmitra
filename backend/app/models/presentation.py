@@ -1,6 +1,7 @@
 """
 Presentation models - matching lic_schema database structure
 """
+from datetime import datetime
 from sqlalchemy import Column, String, Boolean, Integer, ForeignKey, Text, DateTime, DECIMAL
 from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY
 from sqlalchemy.orm import relationship
@@ -141,3 +142,46 @@ class PresentationTemplate(Base, TimestampMixin):
 
     def __repr__(self):
         return f"<PresentationTemplate(template_id={self.template_id}, name={self.name})>"
+
+
+class PresentationMedia(Base, TimestampMixin):
+    """Presentation media model matching lic_schema.presentation_media"""
+    __tablename__ = "presentation_media"
+    __table_args__ = {'schema': 'lic_schema'}
+
+    media_id = Column(UUID(as_uuid=True), primary_key=True)
+    agent_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.agents.agent_id"), nullable=False, index=True)
+    
+    # Media details
+    media_type = Column(String(50), nullable=False)  # 'image', 'video'
+    mime_type = Column(String(100), nullable=True)
+    file_name = Column(String(255), nullable=True)
+    file_size_bytes = Column(Integer, nullable=True)
+    
+    # Storage locations
+    storage_provider = Column(String(50), default='minio', nullable=False)
+    storage_key = Column(String(500), nullable=False)
+    media_url = Column(String(500), nullable=False)
+    thumbnail_url = Column(String(500), nullable=True)
+    
+    # Media metadata
+    width = Column(Integer, nullable=True)
+    height = Column(Integer, nullable=True)
+    duration_seconds = Column(Integer, nullable=True)
+    file_hash = Column(String(64), nullable=True)
+    
+    # Usage tracking
+    usage_count = Column(Integer, default=0, nullable=False)
+    last_used_at = Column(DateTime, nullable=True)
+    
+    # Status
+    status = Column(String(50), default='active', nullable=False)
+    is_optimized = Column(Boolean, default=False, nullable=False)
+    
+    uploaded_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Relationships
+    agent = relationship("Agent", back_populates="presentation_media")
+
+    def __repr__(self):
+        return f"<PresentationMedia(media_id={self.media_id}, media_type={self.media_type}, storage_key={self.storage_key})>"

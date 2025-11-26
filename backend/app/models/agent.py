@@ -65,6 +65,7 @@ class Agent(Base, TimestampMixin):
     # Relationships
     user = relationship("User", foreign_keys=[user_id])
     presentations = relationship("Presentation", back_populates="agent")
+    presentation_media = relationship("PresentationMedia", back_populates="agent")
 
     def __repr__(self):
         return f"<Agent(agent_id={self.agent_id}, agent_code={self.agent_code}, status={self.status})>"

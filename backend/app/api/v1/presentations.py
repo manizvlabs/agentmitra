@@ -1,7 +1,7 @@
 """
 Presentation Carousel API Endpoints
 """
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, File, UploadFile
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
@@ -11,6 +11,8 @@ from app.core.database import get_db
 from app.core.auth import get_current_user_context, UserContext
 from app.repositories.presentation_repository import PresentationRepository
 from app.repositories.agent_repository import AgentRepository
+from app.services.minio_storage_service import get_minio_service
+from app.models.presentation import PresentationMedia
 
 router = APIRouter()
 
@@ -295,47 +297,69 @@ async def upload_media(
     """
     Upload media file (image/video) for presentations
     
-    NOTE: Currently returns mock response. 
-    Actual file storage (S3/CDN) integration is pending.
-    See docs/implementation/MEDIA_UPLOAD_STORAGE.md for implementation details.
-    
-    Files are NOT currently being saved to disk or cloud storage.
+    Files are stored in MinIO object storage and metadata is saved to database.
     """
-    # Read file data
-    file_data = await file.read()
-    file_size = len(file_data)
+    if not current_user.agent_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Agent ID required for media upload"
+        )
     
-    # Determine media type from content type
-    media_type = "image" if file.content_type and file.content_type.startswith("image/") else "video"
-    
-    # TODO: Implement actual file storage to S3/CDN
-    # For now, return mock response with file metadata
-    import uuid
-    media_id = str(uuid.uuid4())[:8]
-    
-    # TODO: Save to presentation_media table once storage is implemented
-    # from app.models.presentation import PresentationMedia
-    # media = PresentationMedia(
-    #     agent_id=current_user.agent_id,
-    #     media_type=media_type,
-    #     mime_type=file.content_type,
-    #     file_name=file.filename,
-    #     file_size_bytes=file_size,
-    #     storage_provider="s3",
-    #     storage_key=f"presentations/{current_user.agent_id}/{media_id}",
-    #     media_url=f"https://cdn.agentmitra.com/presentations/{media_id}",
-    #     status="active"
-    # )
-    # db.add(media)
-    # db.commit()
-    
-    return {
-        "media_id": media_id,
-        "media_url": f"https://cdn.agentmitra.com/presentations/{media_id}.{media_type}",
-        "thumbnail_url": f"https://cdn.agentmitra.com/presentations/thumb_{media_id}.{media_type}",
-        "media_type": media_type,
-        "file_name": file.filename,
-        "file_size": file_size,
-        "mime_type": file.content_type,
-        "note": "Mock response - file not actually stored. See MEDIA_UPLOAD_STORAGE.md for implementation."
-    }
+    try:
+        # Get MinIO storage service
+        storage_service = get_minio_service()
+        
+        # Determine media type from content type
+        media_type = "image" if file.content_type and file.content_type.startswith("image/") else "video"
+        
+        # Upload file to MinIO
+        storage_key, media_url, file_hash = await storage_service.upload_file(
+            file=file,
+            agent_id=str(current_user.agent_id),
+            folder="presentations"
+        )
+        
+        # Get file size
+        await file.seek(0, 2)  # Seek to end
+        file_size = await file.tell()
+        await file.seek(0)  # Reset
+        
+        # Save metadata to database
+        import uuid
+        media = PresentationMedia(
+            media_id=uuid.uuid4(),
+            agent_id=current_user.agent_id,
+            media_type=media_type,
+            mime_type=file.content_type,
+            file_name=file.filename,
+            file_size_bytes=file_size,
+            storage_provider="minio",
+            storage_key=storage_key,
+            media_url=media_url,
+            thumbnail_url=media_url if media_type == "image" else None,  # TODO: Generate thumbnail for videos
+            file_hash=file_hash,
+            status="active",
+            uploaded_at=datetime.utcnow()
+        )
+        
+        db.add(media)
+        db.commit()
+        db.refresh(media)
+        
+        return {
+            "media_id": str(media.media_id),
+            "media_url": media.media_url,
+            "thumbnail_url": media.thumbnail_url,
+            "media_type": media_type,
+            "file_name": file.filename,
+            "file_size": file_size,
+            "mime_type": file.content_type,
+            "storage_key": storage_key
+        }
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to upload media: {str(e)}"
+        )

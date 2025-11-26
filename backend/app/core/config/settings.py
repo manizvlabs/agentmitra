@@ -98,6 +98,14 @@ class Settings(BaseSettings):
     
     # FeatureHub Configuration
     featurehub_url: str = os.getenv("FEATUREHUB_URL", "http://localhost:8071")
+    
+    # MinIO Storage Configuration
+    minio_endpoint: str = os.getenv("MINIO_ENDPOINT", "localhost:9000")
+    minio_access_key: str = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
+    minio_secret_key: str = os.getenv("MINIO_SECRET_KEY", "minioadmin")
+    minio_bucket_name: str = os.getenv("MINIO_BUCKET_NAME", "agentmitra-media")
+    minio_use_ssl: bool = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
+    minio_cdn_base_url: str = os.getenv("MINIO_CDN_BASE_URL", f"http://{os.getenv('MINIO_ENDPOINT', 'localhost:9000')}/{os.getenv('MINIO_BUCKET_NAME', 'agentmitra-media')}")
     featurehub_api_key: Optional[str] = os.getenv("FEATUREHUB_API_KEY")
     featurehub_environment: str = os.getenv("FEATUREHUB_ENVIRONMENT", "development")
     featurehub_sdk_key: Optional[str] = os.getenv("FEATUREHUB_SDK_KEY")

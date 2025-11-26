@@ -137,31 +137,39 @@ class SkeletonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Calculate available height for content (subtract padding)
+    final effectivePadding = padding ?? const EdgeInsets.all(16);
+    final contentHeight = height != null 
+        ? height! - effectivePadding.vertical 
+        : null;
+    
     return SkeletonLoader(
       child: Container(
         height: height,
-        padding: padding ?? const EdgeInsets.all(16),
+        padding: effectivePadding,
         decoration: BoxDecoration(
           color: Colors.grey.shade200,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: height != null
-            ? SingleChildScrollView(
-                physics: const NeverScrollableScrollPhysics(),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: height!),
-                  child: Column(
+        child: contentHeight != null
+            ? LayoutBuilder(
+                builder: (context, constraints) {
+                  // Ensure content fits within available space
+                  final maxContentHeight = constraints.maxHeight;
+                  return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      SkeletonText(width: double.infinity, height: 12),
-                      const SizedBox(height: 4),
-                      SkeletonText(width: 160, height: 9),
-                      const SizedBox(height: 3),
-                      SkeletonText(width: 100, height: 9),
+                      SkeletonText(width: double.infinity, height: 10),
+                      SizedBox(height: maxContentHeight > 30 ? 3 : 2),
+                      SkeletonText(width: 160, height: 8),
+                      SizedBox(height: maxContentHeight > 40 ? 2 : 1),
+                      Flexible(
+                        child: SkeletonText(width: 100, height: 8),
+                      ),
                     ],
-                  ),
-                ),
+                  );
+                },
               )
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
