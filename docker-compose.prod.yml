@@ -41,7 +41,7 @@ services:
       - DATABASE_URL=postgresql://manish:agentmitra_dev@host.docker.internal:5432/agentmitra_dev?sslmode=disable
       - REDIS_URL=redis://host.docker.internal:6379
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-dev-secret-key-change-in-production}
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080,http://localhost:3000}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080,http://localhost:3000,http://localhost:8012,http://localhost:3013}
       # - FEATUREHUB_URL=http://featurehub:8080
       # - FEATUREHUB_API_KEY=${FEATUREHUB_API_KEY}
       # - FEATUREHUB_SDK_KEY=${FEATUREHUB_SDK_KEY}

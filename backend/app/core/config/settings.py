@@ -131,7 +131,7 @@ class Settings(BaseSettings):
     prometheus_enabled: bool = os.getenv("PROMETHEUS_ENABLED", "true").lower() == "true"
     
     # CORS
-    cors_origins: str = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:8080")
+    cors_origins: str = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:8080,http://localhost:8012,http://localhost:3013")
     cors_allow_credentials: bool = os.getenv("CORS_ALLOW_CREDENTIALS", "true").lower() == "true"
     cors_allow_methods: str = os.getenv("CORS_ALLOW_METHODS", "GET,POST,PUT,DELETE,OPTIONS")
     cors_allow_headers: str = os.getenv("CORS_ALLOW_HEADERS", "*")
