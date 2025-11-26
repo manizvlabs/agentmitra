@@ -40,6 +40,7 @@ echo -e "${GREEN}✓ Docker daemon is running${NC}"
 echo ""
 
 # Check for .env file
+echo -e "${BLUE}[2/5]${NC} Checking .env file..."
 if [ ! -f ".env" ]; then
     echo -e "${YELLOW}⚠ .env file not found${NC}"
     if [ -f ".env.example" ]; then
@@ -58,7 +59,7 @@ if [ ! -f ".env" ]; then
         cat > .env << EOF
 # Minimal .env file - please configure properly
 JWT_SECRET_KEY=$(openssl rand -hex 32)
-CORS_ORIGINS=http://localhost:8080,http://localhost:3000
+CORS_ORIGINS=http://localhost:8080,http://localhost:3000,http://localhost:8012,http://localhost:3013
 GRAFANA_PASSWORD=admin
 MINIO_ROOT_USER=minioadmin
 MINIO_ROOT_PASSWORD=minioadmin
@@ -66,8 +67,10 @@ MINIO_BUCKET_NAME=agentmitra-media
 EOF
         echo -e "${GREEN}✓ Created minimal .env file${NC}"
     fi
-    echo ""
+else
+    echo -e "${GREEN}✓ .env file exists${NC}"
 fi
+echo ""
 
 # Determine which services to start
 # Default: start essential services (minio + backend)
