@@ -71,7 +71,7 @@ class MinIOStorageService:
         file: UploadFile,
         agent_id: str,
         folder: str = "presentations"
-    ) -> Tuple[str, str, str]:
+    ) -> Tuple[str, str, str, int]:
         """
         Upload a file to MinIO
         
@@ -106,7 +106,7 @@ class MinIOStorageService:
             
             logger.info(f"File uploaded successfully: {storage_key}, size={file_size} bytes")
             
-            return storage_key, media_url, file_hash
+            return storage_key, media_url, file_hash, file_size
             
         except S3Error as e:
             logger.error(f"MinIO S3Error during upload: {e}")

@@ -312,23 +312,9 @@ async def upload_media(
         # Determine media type from content type
         media_type = "image" if file.content_type and file.content_type.startswith("image/") else "video"
         
-        # Read file content once to get size
-        file_content = await file.read()
-        file_size = len(file_content)
-        
-        # Create a new UploadFile from the content for the storage service
-        from io import BytesIO
-        from fastapi import UploadFile as FastAPIUploadFile
-        file_stream = BytesIO(file_content)
-        # Create new UploadFile - but we need to pass it properly
-        # Since UploadFile reads from the stream, we need to reset it
-        file_stream.seek(0)
-        file_for_upload = FastAPIUploadFile(file=file_stream, filename=file.filename)
-        file_for_upload.content_type = file.content_type
-        
-        # Upload file to MinIO
-        storage_key, media_url, file_hash = await storage_service.upload_file(
-            file=file_for_upload,
+        # Upload file to MinIO (service reads the file and returns file_size)
+        storage_key, media_url, file_hash, file_size = await storage_service.upload_file(
+            file=file,
             agent_id=str(current_user.agent_id),
             folder="presentations"
         )
