@@ -73,9 +73,7 @@ class NotificationSettings(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationships
-    # Note: Commented out to avoid SQLAlchemy mapper initialization errors
-    # Can be accessed via direct queries when needed
-    # user = relationship("User", back_populates="notification_settings")
+    user = relationship("User", back_populates="notification_settings")
 
     def __repr__(self):
         return f"<NotificationSettings(user_id='{self.user_id}', push_enabled={self.enable_push_notifications})>"
@@ -95,9 +93,7 @@ class DeviceToken(Base):
     last_used_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationships
-    # Note: Commented out to avoid SQLAlchemy mapper initialization errors
-    # Can be accessed via direct queries when needed
-    # user = relationship("User", back_populates="device_tokens")
+    user = relationship("User", back_populates="device_tokens")
 
     def __repr__(self):
         return f"<DeviceToken(user_id='{self.user_id}', device_type='{self.device_type}')>"
