@@ -118,7 +118,8 @@ void main() async {
       print('Storage service initialization failed: $e');
     }
   } else {
-    print('Using web-compatible storage (in-memory)');
+    // Web uses in-memory storage - this is expected behavior
+    // No need to log as it's not an error or warning
   }
 
   // Initialize Service Locator (dependency injection container)
