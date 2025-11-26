@@ -7,6 +7,10 @@ import '../widgets/dashboard_analytics_cards.dart';
 import '../widgets/dashboard_quick_actions.dart';
 import '../widgets/dashboard_notifications.dart';
 import '../widgets/dashboard_priority_alerts.dart';
+import '../widgets/dashboard_kpi_cards.dart';
+import '../widgets/dashboard_trend_charts.dart';
+import '../widgets/dashboard_action_items.dart';
+import '../widgets/dashboard_smart_alerts.dart';
 import '../widgets/agent_side_drawer.dart';
 import '../../../../core/widgets/offline_indicator.dart';
 import '../../../../core/widgets/permission_widgets.dart';
@@ -100,11 +104,28 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
                     const SizedBox(height: 24),
 
+                    // Enhanced KPI Cards (Phase 3)
+                    const DashboardKPICards(),
+
+                    const SizedBox(height: 24),
+
+                    // Trend Charts (Phase 3)
+                    const DashboardTrendCharts(),
+
+                    const SizedBox(height: 24),
+
+                    // Action Items (Phase 3)
+                    const DashboardActionItems(),
+
+                    const SizedBox(height: 24),
+
+                    // Smart Alerts (Phase 3)
+                    const DashboardSmartAlerts(),
+
+                    const SizedBox(height: 24),
+
                     // Priority Alerts (if any)
                     const DashboardPriorityAlerts(),
-
-                    // Analytics Cards
-                    const DashboardAnalyticsCards(),
 
                     const SizedBox(height: 24),
 
@@ -129,6 +150,66 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
           ),
         ),
       ),
+      bottomNavigationBar: _buildBottomNavigationBar(context),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).pushNamed('/customers');
+        },
+        backgroundColor: Theme.of(context).primaryColor,
+        child: const Icon(Icons.person_add),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavigationBar(BuildContext context) {
+    int currentIndex = 0; // TODO: Track current index with state
+
+    return BottomNavigationBar(
+      currentIndex: currentIndex,
+      type: BottomNavigationBarType.fixed,
+      selectedItemColor: Theme.of(context).primaryColor,
+      unselectedItemColor: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6),
+      onTap: (index) {
+        switch (index) {
+          case 0:
+            // Already on home
+            break;
+          case 1:
+            Navigator.of(context).pushReplacementNamed('/customers');
+            break;
+          case 2:
+            Navigator.of(context).pushReplacementNamed('/roi-analytics');
+            break;
+          case 3:
+            Navigator.of(context).pushReplacementNamed('/campaign-builder');
+            break;
+          case 4:
+            Navigator.of(context).pushReplacementNamed('/presentations');
+            break;
+        }
+      },
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home),
+          label: 'Home',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.people),
+          label: 'Customers',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.analytics),
+          label: 'Analytics',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.campaign),
+          label: 'Campaigns',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.slideshow),
+          label: 'Content',
+        ),
+      ],
     );
   }
 
