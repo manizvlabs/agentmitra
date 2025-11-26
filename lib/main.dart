@@ -48,9 +48,12 @@ import 'screens/language_selection_screen.dart';
 import 'screens/premium_calendar_screen.dart';
 import 'screens/agent_chat_screen.dart';
 import 'screens/reminders_screen.dart';
-import 'screens/presentations_screen.dart';
+import 'screens/callback_request_management.dart';
 import 'screens/global_search_screen.dart';
 import 'screens/test_phase1_screen.dart';
+import 'features/presentations/presentation/pages/presentation_list_page.dart';
+import 'features/presentations/presentation/pages/presentation_editor_page.dart';
+import 'features/presentations/data/models/presentation_model.dart';
 
 /// Placeholder screen for routes that are not yet implemented
 class PlaceholderScreen extends StatelessWidget {
@@ -313,7 +316,13 @@ class AgentMitraApp extends ConsumerWidget {
     '/premium-calendar': (context) => const PremiumCalendarScreen(),
     '/agent-chat': (context) => const AgentChatScreen(),
     '/reminders': (context) => const RemindersScreen(),
-    '/presentations': (context) => const PresentationsScreen(),
+    '/presentations': (context) => const PresentationListPage(),
+    '/presentation-list': (context) => const PresentationListPage(),
+    '/presentation-editor': (context) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      final presentation = args is PresentationModel ? args : null;
+      return PresentationEditorPage(presentation: presentation);
+    },
     '/campaign-performance': (context) {
       final args = ModalRoute.of(context)?.settings.arguments;
       return CampaignPerformanceScreen(campaignId: args is String ? args : null);

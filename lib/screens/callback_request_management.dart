@@ -19,7 +19,7 @@ class _CallbackRequestManagementState extends State<CallbackRequestManagement>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 7, vsync: this);
     _viewModel.initialize();
   }
 
@@ -53,11 +53,15 @@ class _CallbackRequestManagementState extends State<CallbackRequestManagement>
           labelColor: const Color(0xFF1a237e),
           unselectedLabelColor: Colors.grey,
           indicatorColor: const Color(0xFF1a237e),
+          isScrollable: true,
           tabs: const [
             Tab(text: 'All'),
             Tab(text: 'High Priority'),
+            Tab(text: 'Medium Priority'),
+            Tab(text: 'Low Priority'),
             Tab(text: 'Pending'),
             Tab(text: 'Assigned'),
+            Tab(text: 'Completed'),
           ],
         ),
         actions: [
@@ -69,15 +73,33 @@ class _CallbackRequestManagementState extends State<CallbackRequestManagement>
       ),
       body: _viewModel.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tabController,
+          : Column(
               children: [
-                _buildCallbackList(_viewModel.callbacks),
-                _buildCallbackList(_viewModel.highPriorityCallbacks),
-                _buildCallbackList(_viewModel.pendingCallbacks),
-                _buildCallbackList(_viewModel.assignedCallbacks),
+                // Statistics Cards
+                _buildStatisticsCards(),
+                // Tab Bar View
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildCallbackList(_viewModel.callbacks),
+                      _buildCallbackList(_viewModel.highPriorityCallbacks),
+                      _buildCallbackList(_viewModel.callbacks.where((c) => c.priority == 'medium').toList()),
+                      _buildCallbackList(_viewModel.callbacks.where((c) => c.priority == 'low').toList()),
+                      _buildCallbackList(_viewModel.pendingCallbacks),
+                      _buildCallbackList(_viewModel.assignedCallbacks),
+                      _buildCallbackList(_viewModel.callbacks.where((c) => c.status == 'completed').toList()),
+                    ],
+                  ),
+                ),
               ],
             ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _createNewCallback,
+        backgroundColor: const Color(0xFF1a237e),
+        icon: const Icon(Icons.add_call),
+        label: const Text('New Callback'),
+      ),
     );
   }
 
@@ -507,6 +529,79 @@ class _CallbackRequestManagementState extends State<CallbackRequestManagement>
         );
       }
     }
+  }
+
+  Widget _buildStatisticsCards() {
+    final callbacks = _viewModel.callbacks;
+    final stats = {
+      'total': callbacks.length,
+      'pending': callbacks.where((c) => c.status == 'pending').length,
+      'assigned': callbacks.where((c) => c.status == 'assigned').length,
+      'completed': callbacks.where((c) => c.status == 'completed').length,
+      'high_priority': callbacks.where((c) => c.priority == 'high').length,
+    };
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: Colors.white,
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildStatCard('Total', stats['total']!.toString(), Colors.blue),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _buildStatCard('Pending', stats['pending']!.toString(), Colors.orange),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _buildStatCard('Assigned', stats['assigned']!.toString(), Colors.blue),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _buildStatCard('Completed', stats['completed']!.toString(), Colors.green),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _createNewCallback() {
+    // TODO: Navigate to create callback page
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Create callback functionality coming soon')),
+    );
   }
 }
 
