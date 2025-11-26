@@ -8,7 +8,8 @@ from typing import Optional, List, Dict, Any
 from app.core.database import get_db
 from app.core.security import validate_jwt_token, extract_token_from_header
 from app.repositories.user_repository import UserRepository
-from app.models.user import User
+# Import User lazily to avoid mapper configuration issues
+# User will be imported when actually needed
 from app.models.rbac import Role, Permission, UserRole
 from app.models.feature_flags import FeatureFlag, FeatureFlagOverride
 

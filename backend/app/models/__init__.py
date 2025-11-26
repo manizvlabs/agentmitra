@@ -60,26 +60,6 @@ from .rbac import Role, Permission, RolePermission, UserRole
 from .feature_flags import FeatureFlag, FeatureFlagOverride
 # from .rbac_audit import RbacAuditLog  # Enable later
 
-# Configure SQLAlchemy mappers after ALL models are imported
-# This ensures all relationships can be resolved
-# We use a deferred configuration approach to avoid circular import issues
-from sqlalchemy.orm import configure_mappers
-
-def configure_all_mappers():
-    """
-    Configure all SQLAlchemy mappers after all models are loaded.
-    This function should be called from main.py after all imports are complete.
-    """
-    try:
-        # Configure all mappers - this resolves all relationships
-        configure_mappers()
-    except Exception as e:
-        # Log the error but don't fail - relationships will be configured lazily
-        import warnings
-        import traceback
-        warnings.warn(
-            f"Some SQLAlchemy mappers could not be configured: {e}\n"
-            f"Traceback: {traceback.format_exc()}\n"
-            "Relationships will be configured lazily when first accessed."
-        )
+# DO NOT configure mappers here - it will be done in main.py after all imports
+# Configuring mappers during import causes relationship resolution errors
 

@@ -7,6 +7,9 @@ from sqlalchemy import Column, DateTime, func, MetaData
 # Configure metadata to not check foreign keys at import time
 # Foreign keys are managed by Flyway migrations, not SQLAlchemy
 metadata = MetaData()
+
+# Create Base with configure=False to prevent automatic mapper configuration
+# Mappers will be configured explicitly after all models are imported
 Base = declarative_base(metadata=metadata)
 
 
