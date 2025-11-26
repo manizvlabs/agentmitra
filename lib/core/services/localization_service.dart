@@ -259,7 +259,9 @@ class LocalizationService {
   Future<Map<String, String>> _loadFallbackLocalization(String locale) async {
     try {
       // Try to load from assets/l10n/app_{locale}.arb
-      final jsonString = await rootBundle.loadString('assets/l10n/app_$locale.arb');
+      // Note: On web, the path should not have 'assets/' prefix as it's added automatically
+      final assetPath = 'assets/l10n/app_$locale.arb';
+      final jsonString = await rootBundle.loadString(assetPath);
       final arbData = json.decode(jsonString) as Map<String, dynamic>;
       final strings = <String, String>{};
 
