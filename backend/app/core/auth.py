@@ -156,7 +156,8 @@ class AuthorizationService:
     def _has_tenant_access(self, user_id: str, tenant_id: str, db: Session) -> bool:
         """Check if user has access to the specified tenant"""
         try:
-            from app.models.user import TenantUser
+            # Import TenantUser lazily
+            from app.models.shared import TenantUser
 
             # Check if user is assigned to tenant
             tenant_user = db.query(TenantUser).filter(
@@ -670,7 +671,11 @@ auth_service = None  # Will be set by get_auth_service()
 class UserContext:
     """User context for authenticated requests"""
 
-    def __init__(self, user: User, token_data: Dict[str, Any], db: Optional[Session] = None):
+    def __init__(self, user, token_data: Dict[str, Any], db: Optional[Session] = None):
+        # Import User type here to avoid early mapper configuration
+        from app.models.user import User as UserType
+        if not isinstance(user, UserType):
+            raise TypeError(f"Expected User instance, got {type(user)}")
         self.user = user
         self.user_id = str(user.user_id)
         self.phone_number = user.phone_number

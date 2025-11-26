@@ -4,6 +4,9 @@ User repository for database operations - updated for lic_schema
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 from typing import Optional, List
+# Import NotificationSettings BEFORE User to ensure it's in SQLAlchemy registry
+# when User mapper is configured
+from app.models.notification import NotificationSettings, DeviceToken
 from app.models.user import User, UserSession
 from app.models.agent import Agent
 import uuid
