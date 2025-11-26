@@ -93,10 +93,13 @@ class MinIOStorageService:
             await file.seek(0)
             
             # Upload to MinIO
+            # Create BytesIO from file data for MinIO
+            from io import BytesIO
+            file_stream = BytesIO(file_data)
             self.client.put_object(
                 bucket_name=self.bucket_name,
                 object_name=storage_key,
-                data=file,
+                data=file_stream,
                 length=file_size,
                 content_type=file.content_type or "application/octet-stream"
             )
