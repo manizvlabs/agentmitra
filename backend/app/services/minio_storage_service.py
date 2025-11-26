@@ -90,7 +90,7 @@ class MinIOStorageService:
             file_hash = self._calculate_file_hash(file_data)
             
             # Upload to MinIO
-            # Create BytesIO from file data for MinIO (no need to seek, we already read the data)
+            # Create BytesIO from file data for MinIO
             from io import BytesIO
             file_stream = BytesIO(file_data)
             self.client.put_object(
