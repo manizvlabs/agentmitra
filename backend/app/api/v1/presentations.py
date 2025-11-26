@@ -322,7 +322,7 @@ async def upload_media(
         # Get file size
         await file.seek(0, 2)  # Seek to end
         file_size = await file.tell()
-        await file.seek(0)  # Reset
+        await file.seek(0, 0)  # Reset to beginning
         
         # Save metadata to database
         import uuid
