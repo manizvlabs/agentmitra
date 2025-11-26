@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database - COMMENTED OUT - Using local MacBook service
   # postgres:
@@ -144,58 +142,58 @@ services:
     networks:
       - agentmitra_network
 
-  # FeatureHub Edge Server for Feature Flag Management
-  featurehub:
-    image: featurehub/edge:latest
-    container_name: agentmitra_featurehub
-    restart: unless-stopped
-    environment:
-      - FEATUREHUB_MODE=edge
-      - FEATUREHUB_EDGE_URL=http://featurehub:8080
-      - FEATUREHUB_REPOSITORY_URL=${FEATUREHUB_REPOSITORY_URL:-http://featurehub-admin:8085}
-    ports:
-      - "8080:8080"
-    networks:
-      - agentmitra_network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+  # FeatureHub Edge Server for Feature Flag Management - COMMENTED OUT
+  # featurehub:
+  #   image: featurehub/edge:latest
+  #   container_name: agentmitra_featurehub
+  #   restart: unless-stopped
+  #   environment:
+  #     - FEATUREHUB_MODE=edge
+  #     - FEATUREHUB_EDGE_URL=http://featurehub:8080
+  #     - FEATUREHUB_REPOSITORY_URL=${FEATUREHUB_REPOSITORY_URL:-http://featurehub-admin:8085}
+  #   ports:
+  #     - "8080:8080"
+  #   networks:
+  #     - agentmitra_network
+  #   healthcheck:
+  #     test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
 
-  # FeatureHub Admin UI (optional, for self-hosted setup)
-  featurehub-admin:
-    image: featurehub/admin:latest
-    container_name: agentmitra_featurehub_admin
-    restart: unless-stopped
-    environment:
-      - FEATUREHUB_DATABASE_URL=${FEATUREHUB_DATABASE_URL:-postgresql://featurehub:featurehub@featurehub-db:5432/featurehub}
-      - FEATUREHUB_EDGE_URL=http://featurehub:8080
-    ports:
-      - "8085:8085"
-    depends_on:
-      - featurehub-db
-    networks:
-      - agentmitra_network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8085/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+  # FeatureHub Admin UI (optional, for self-hosted setup) - COMMENTED OUT
+  # featurehub-admin:
+  #   image: featurehub/admin:latest
+  #   container_name: agentmitra_featurehub_admin
+  #   restart: unless-stopped
+  #   environment:
+  #     - FEATUREHUB_DATABASE_URL=${FEATUREHUB_DATABASE_URL:-postgresql://featurehub:featurehub@featurehub-db:5432/featurehub}
+  #     - FEATUREHUB_EDGE_URL=http://featurehub:8080
+  #   ports:
+  #     - "8085:8085"
+  #   depends_on:
+  #     - featurehub-db
+  #   networks:
+  #     - agentmitra_network
+  #   healthcheck:
+  #     test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8085/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
 
-  # FeatureHub Database (for Admin UI)
-  featurehub-db:
-    image: postgres:16-alpine
-    container_name: agentmitra_featurehub_db
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: featurehub
-      POSTGRES_USER: featurehub
-      POSTGRES_PASSWORD: featurehub
-    volumes:
-      - featurehub_db_data:/var/lib/postgresql/data
-    networks:
-      - agentmitra_network
+  # FeatureHub Database (for Admin UI) - COMMENTED OUT
+  # featurehub-db:
+  #   image: postgres:16-alpine
+  #   container_name: agentmitra_featurehub_db
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: featurehub
+  #     POSTGRES_USER: featurehub
+  #     POSTGRES_PASSWORD: featurehub
+  #   volumes:
+  #     - featurehub_db_data:/var/lib/postgresql/data
+  #   networks:
+  #     - agentmitra_network
 
   # MinIO Object Storage for media files
   minio:
@@ -224,7 +222,7 @@ volumes:
   # redis_data:     # Commented out - using local MacBook Redis
   prometheus_data:
   grafana_data:
-  featurehub_db_data:
+  # featurehub_db_data:  # Commented out - FeatureHub disabled
   minio_data:
 
 networks:
