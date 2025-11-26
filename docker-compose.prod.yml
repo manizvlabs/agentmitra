@@ -40,8 +40,8 @@ services:
       - ENVIRONMENT=production
       - DATABASE_URL=postgresql://manish:agentmitra_dev@host.docker.internal:5432/agentmitra_dev?sslmode=disable
       - REDIS_URL=redis://host.docker.internal:6379
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - CORS_ORIGINS=${CORS_ORIGINS}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-dev-secret-key-change-in-production}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080,http://localhost:3000}
       # - FEATUREHUB_URL=http://featurehub:8080
       # - FEATUREHUB_API_KEY=${FEATUREHUB_API_KEY}
       # - FEATUREHUB_SDK_KEY=${FEATUREHUB_SDK_KEY}
@@ -131,7 +131,7 @@ services:
     container_name: agentmitra_grafana
     restart: unless-stopped
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
       - GF_USERS_ALLOW_SIGN_UP=false
     ports:
       - "3012:3000"
