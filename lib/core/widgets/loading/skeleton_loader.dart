@@ -148,28 +148,31 @@ class SkeletonCard extends StatelessWidget {
         child: height != null
             ? SingleChildScrollView(
                 physics: const NeverScrollableScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SkeletonText(width: double.infinity, height: 14),
-                    const SizedBox(height: 6),
-                    SkeletonText(width: 180, height: 10),
-                    const SizedBox(height: 4),
-                    SkeletonText(width: 120, height: 10),
-                  ],
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: height!),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SkeletonText(width: double.infinity, height: 12),
+                      const SizedBox(height: 4),
+                      SkeletonText(width: 160, height: 9),
+                      const SizedBox(height: 3),
+                      SkeletonText(width: 100, height: 9),
+                    ],
+                  ),
                 ),
               )
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SkeletonText(width: double.infinity, height: 14),
-                  const SizedBox(height: 6),
-                  SkeletonText(width: 180, height: 10),
+                  SkeletonText(width: double.infinity, height: 12),
                   const SizedBox(height: 4),
+                  SkeletonText(width: 160, height: 9),
+                  const SizedBox(height: 3),
                   Flexible(
-                    child: SkeletonText(width: 120, height: 10),
+                    child: SkeletonText(width: 100, height: 9),
                   ),
                 ],
               ),

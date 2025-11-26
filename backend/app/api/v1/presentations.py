@@ -287,15 +287,55 @@ async def get_templates(
 
 
 @router.post("/media/upload")
-async def upload_media(file: bytes, type: str = "image"):
-    """Upload media file (image/video)"""
-    # TODO: Implement file upload to S3/CDN
-    # For now, return mock response
+async def upload_media(
+    file: UploadFile = File(...),
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Upload media file (image/video) for presentations
+    
+    NOTE: Currently returns mock response. 
+    Actual file storage (S3/CDN) integration is pending.
+    See docs/implementation/MEDIA_UPLOAD_STORAGE.md for implementation details.
+    
+    Files are NOT currently being saved to disk or cloud storage.
+    """
+    # Read file data
+    file_data = await file.read()
+    file_size = len(file_data)
+    
+    # Determine media type from content type
+    media_type = "image" if file.content_type and file.content_type.startswith("image/") else "video"
+    
+    # TODO: Implement actual file storage to S3/CDN
+    # For now, return mock response with file metadata
     import uuid
     media_id = str(uuid.uuid4())[:8]
     
+    # TODO: Save to presentation_media table once storage is implemented
+    # from app.models.presentation import PresentationMedia
+    # media = PresentationMedia(
+    #     agent_id=current_user.agent_id,
+    #     media_type=media_type,
+    #     mime_type=file.content_type,
+    #     file_name=file.filename,
+    #     file_size_bytes=file_size,
+    #     storage_provider="s3",
+    #     storage_key=f"presentations/{current_user.agent_id}/{media_id}",
+    #     media_url=f"https://cdn.agentmitra.com/presentations/{media_id}",
+    #     status="active"
+    # )
+    # db.add(media)
+    # db.commit()
+    
     return {
-        "media_url": f"https://cdn.agentmitra.com/presentations/{media_id}.{type}",
-        "thumbnail_url": f"https://cdn.agentmitra.com/presentations/thumb_{media_id}.{type}",
-        "media_id": media_id
+        "media_id": media_id,
+        "media_url": f"https://cdn.agentmitra.com/presentations/{media_id}.{media_type}",
+        "thumbnail_url": f"https://cdn.agentmitra.com/presentations/thumb_{media_id}.{media_type}",
+        "media_type": media_type,
+        "file_name": file.filename,
+        "file_size": file_size,
+        "mime_type": file.content_type,
+        "note": "Mock response - file not actually stored. See MEDIA_UPLOAD_STORAGE.md for implementation."
     }

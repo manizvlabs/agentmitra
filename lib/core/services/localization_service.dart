@@ -258,9 +258,45 @@ class LocalizationService {
   /// Load fallback localization from assets
   Future<Map<String, String>> _loadFallbackLocalization(String locale) async {
     try {
-      // Try to load from assets/l10n/app_{locale}.arb
-      // Note: On web, the path should not have 'assets/' prefix as it's added automatically
-      final assetPath = 'assets/l10n/app_$locale.arb';
+      // Asset path as declared in pubspec.yaml
+      // On web, rootBundle.loadString expects the exact path from AssetManifest
+      // which is 'assets/l10n/app_$locale.arb' (no double prefix)
+      String assetPath = 'assets/l10n/app_$locale.arb';
+      
+      // For web, try direct HTTP fetch if rootBundle fails
+      if (kIsWeb) {
+        try {
+          final jsonString = await rootBundle.loadString(assetPath);
+          final arbData = json.decode(jsonString) as Map<String, dynamic>;
+          final strings = <String, String>{};
+          arbData.forEach((key, value) {
+            if (!key.startsWith('@')) {
+              strings[key] = value.toString();
+            }
+          });
+          return strings;
+        } catch (e) {
+          // If rootBundle fails, try HTTP fetch as fallback
+          LoggerService().warning('rootBundle failed for $locale, trying HTTP fetch: $e');
+          try {
+            final response = await http.get(Uri.parse('/assets/l10n/app_$locale.arb'));
+            if (response.statusCode == 200) {
+              final arbData = json.decode(response.body) as Map<String, dynamic>;
+              final strings = <String, String>{};
+              arbData.forEach((key, value) {
+                if (!key.startsWith('@')) {
+                  strings[key] = value.toString();
+                }
+              });
+              return strings;
+            }
+          } catch (httpError) {
+            LoggerService().warning('HTTP fetch also failed for $locale: $httpError');
+          }
+          rethrow;
+        }
+      }
+      
       final jsonString = await rootBundle.loadString(assetPath);
       final arbData = json.decode(jsonString) as Map<String, dynamic>;
       final strings = <String, String>{};
