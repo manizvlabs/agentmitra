@@ -58,12 +58,14 @@ export const RBACProvider: React.FC<RBACProviderProps> = ({ children }) => {
 
       if (authenticated && currentUser) {
         setUser(currentUser);
+        // Only load RBAC data when user is authenticated
+        await refreshRBACData();
       } else {
         setUser(null);
+        // Clear RBAC data when not authenticated
+        setAvailableRoles([]);
+        setAvailablePermissions([]);
       }
-
-      // Load RBAC data from backend
-      await refreshRBACData();
 
       setIsLoading(false);
     };
@@ -74,6 +76,9 @@ export const RBACProvider: React.FC<RBACProviderProps> = ({ children }) => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'access_token' && !e.newValue) {
         setUser(null);
+        // Clear RBAC data when logged out
+        setAvailableRoles([]);
+        setAvailablePermissions([]);
       }
     };
 

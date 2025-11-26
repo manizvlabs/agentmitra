@@ -177,7 +177,7 @@ async def login(
         )
 
     # Feature flags and permissions will be loaded after RBAC context is built
-    
+
     # Get permissions and role from RBAC system
     try:
         # Create UserContext to load permissions from database
@@ -191,7 +191,16 @@ async def login(
         logger.error(f"Error loading permissions from RBAC system: {e}", exc_info=True)
         permissions = []  # Fallback to empty permissions
         user_role = getattr(user, 'role', 'agent')  # Fallback to user object role
-    
+
+    # Get feature flags for the user
+    try:
+        from app.services.featurehub_service import get_all_feature_flags
+        feature_flags = await get_all_feature_flags()
+        logger.debug(f"Loaded {len(feature_flags)} feature flags for user {user.user_id}")
+    except Exception as e:
+        logger.error(f"Error loading feature flags: {e}", exc_info=True)
+        feature_flags = {}  # Fallback to empty feature flags
+
     # Create token pair with feature flags, permissions, and tenant_id
     try:
         user_data = {

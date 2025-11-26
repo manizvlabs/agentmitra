@@ -76,7 +76,8 @@ services:
     container_name: agentmitra_portal
     restart: unless-stopped
     environment:
-      - REACT_APP_API_URL=http://backend:8012
+      - NODE_ENV=development
+      - REACT_APP_API_URL=https://backend:8012
       - REACT_APP_ENVIRONMENT=production
     ports:
       - "3013:80"
