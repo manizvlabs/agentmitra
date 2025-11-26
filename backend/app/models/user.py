@@ -98,12 +98,14 @@ class User(Base, TimestampMixin):
     
     # Relationships
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
-    # Use string-based relationship to avoid circular import issues
+    # Optional relationships - configured lazily to avoid circular import issues
+    # These relationships will be configured after all models are imported
     notification_settings = relationship(
         "NotificationSettings", 
         back_populates="user", 
         cascade="all, delete-orphan",
-        lazy="select"
+        lazy="select",
+        uselist=False  # One-to-one relationship
     )
     device_tokens = relationship(
         "DeviceToken", 

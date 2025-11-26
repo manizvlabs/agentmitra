@@ -60,3 +60,25 @@ from .rbac import Role, Permission, RolePermission, UserRole
 from .feature_flags import FeatureFlag, FeatureFlagOverride
 # from .rbac_audit import RbacAuditLog  # Enable later
 
+# Configure SQLAlchemy mappers after all models are imported
+# This ensures all relationships can be resolved
+from sqlalchemy.orm import configure_mappers
+try:
+    configure_mappers()
+except Exception as e:
+    # If mapper configuration fails, log but don't fail startup
+    # Some relationships may be configured lazily
+    import warnings
+    warnings.warn(f"Some SQLAlchemy mappers could not be configured: {e}. Relationships may be configured lazily.")
+
+# Configure SQLAlchemy mappers after all models are imported
+# This ensures all relationships can be resolved
+from sqlalchemy.orm import configure_mappers
+try:
+    configure_mappers()
+except Exception as e:
+    # If mapper configuration fails, log but don't fail startup
+    # Some relationships may be configured lazily
+    import warnings
+    warnings.warn(f"Some SQLAlchemy mappers could not be configured: {e}. Relationships may be configured lazily.")
+
