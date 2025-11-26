@@ -14,6 +14,7 @@ import 'screens/phone_verification_screen.dart';
 import 'screens/trial_setup_screen.dart';
 import 'screens/trial_expiration_screen.dart';
 import 'screens/policy_details_screen.dart';
+import 'screens/customer_dashboard.dart';
 import 'screens/whatsapp_integration_screen.dart';
 import 'screens/learning_center_screen.dart';
 import 'screens/agent_config_dashboard.dart';
@@ -23,12 +24,13 @@ import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/otp_verification_page.dart';
 // Temporarily disable complex screens to focus on auth
 import 'features/onboarding/presentation/pages/onboarding_page.dart';
-import 'features/dashboard/presentation/pages/dashboard_page.dart';
 import 'features/chatbot/presentation/pages/chatbot_page.dart';
 import 'features/notifications/presentation/pages/notification_page.dart';
 import 'features/agent/presentation/pages/agent_profile_page.dart';
 import 'features/payments/presentation/pages/claims_page.dart';
 import 'features/payments/presentation/pages/policies_list_page.dart';
+import 'features/payments/presentation/pages/premium_payment_page.dart';
+import 'features/payments/presentation/pages/get_quote_page.dart';
 import 'features/payments/presentation/viewmodels/policies_viewmodel.dart';
 import 'features/customers/presentation/viewmodels/customer_viewmodel.dart';
 import 'screens/daily_quotes_screen.dart';
@@ -195,101 +197,137 @@ class AgentMitraApp extends ConsumerWidget {
         darkTheme: AppTheme.darkTheme,
         themeMode: themeMode,
         initialRoute: '/test-phase1', // Temporarily set for Phase 1 testing
-        routes: {
-        // Splash & Welcome Flow
-        '/splash': (context) => const SplashScreen(),
-        '/welcome': (context) => const WelcomeScreen(),
-
-        // Authentication Flow
-        '/phone-verification': (context) => const PhoneVerificationScreen(),
-        '/otp-verification': (context) {
-          // Extract phone number from arguments if available
-          final args = ModalRoute.of(context)?.settings.arguments;
-          final phoneNumber = args is String ? args : '+91 9876543210';
-          return OtpVerificationPage(phoneNumber: phoneNumber);
+        onGenerateRoute: (settings) {
+          // Handle hash-based routing for web
+          String routeName = settings.name ?? '/';
+          if (kIsWeb && routeName.startsWith('#')) {
+            routeName = routeName.substring(1);
+          }
+          if (!routeName.startsWith('/')) {
+            routeName = '/$routeName';
+          }
+          
+          // Try to find route in routes map
+          final routeBuilder = _routes[routeName];
+          if (routeBuilder != null) {
+            return MaterialPageRoute(
+              builder: routeBuilder,
+              settings: RouteSettings(name: routeName, arguments: settings.arguments),
+            );
+          }
+          return null; // Let onUnknownRoute handle it
         },
-        '/login': (context) => const LoginPage(),
-
-        // Onboarding Flow
-        '/trial-setup': (context) => const TrialSetupScreen(),
-        '/onboarding': (context) => const OnboardingPage(),
-        '/trial-expiration': (context) => const TrialExpirationScreen(),
-
-        // Customer Portal
-        '/customer-dashboard': (context) => const DashboardPage(),
-        '/policies': (context) => const PoliciesListPage(),
-        '/claims': (context) {
-          // Extract policyId from arguments if available
-          final args = ModalRoute.of(context)?.settings.arguments;
-          return ClaimsPage(policyId: args as String?);
-        },
-        '/claims/new': (context) => const PlaceholderScreen(title: 'File New Claim'),
-        '/policy-details': (context) => const PolicyDetailsScreen(),
-        '/policy/create': (context) => const PlaceholderScreen(title: 'Create New Policy'),
-        '/whatsapp-integration': (context) => const WhatsappIntegrationScreen(),
-        '/smart-chatbot': (context) => const ChatbotPage(),
-        '/notifications': (context) => const NotificationPage(),
-        '/learning-center': (context) => const LearningCenterScreen(),
-
-        // Phase 1 Test Screen
-        '/test-phase1': (context) => const TestPhase1Screen(),
-        '/data-pending': (context) => const DataPendingScreen(),
-        '/agent-discovery': (context) => const AgentDiscoveryScreen(),
-        '/agent-verification': (context) => const AgentVerificationScreen(),
-        '/document-upload': (context) => const DocumentUploadScreen(),
-        '/emergency-contact': (context) => const EmergencyContactScreen(),
-        '/kyc-verification': (context) => const KycVerificationScreen(),
-
-        // Agent Portal
-        '/agent-profile': (context) => const AgentProfilePage(),
-        '/daily-quotes': (context) => const DailyQuotesScreen(),
-        '/my-policies': (context) => const MyPoliciesScreen(),
-        '/premium-calendar': (context) => const PremiumCalendarScreen(),
-        '/agent-chat': (context) => const AgentChatScreen(),
-        '/reminders': (context) => const RemindersScreen(),
-        '/presentations': (context) => const PresentationsScreen(),
-        '/campaign-performance': (context) {
-          final args = ModalRoute.of(context)?.settings.arguments;
-          return CampaignPerformanceScreen(campaignId: args is String ? args : null);
-        },
-        '/content-performance': (context) => const ContentPerformanceScreen(),
-        '/accessibility-settings': (context) => const AccessibilitySettingsScreen(),
-        '/language-selection': (context) => const LanguageSelectionScreen(),
-        '/payments': (context) => const PlaceholderScreen(title: 'Payments'),
-        '/reports': (context) => const PlaceholderScreen(title: 'Reports'),
-        '/customers': (context) => const PlaceholderScreen(title: 'Customers'),
-        '/settings': (context) => const PlaceholderScreen(title: 'Settings'),
-        '/global-search': (context) => const GlobalSearchScreen(),
-        '/agent-config-dashboard': (context) => const AgentConfigDashboard(),
-        '/roi-analytics': (context) => const RoiAnalyticsDashboard(),
-        '/campaign-builder': (context) => const MarketingCampaignBuilder(),
-      },
-      onUnknownRoute: (settings) {
-        return MaterialPageRoute(
-          builder: (context) => Scaffold(
-            appBar: AppBar(title: const Text('404 - Page Not Found')),
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Page not found',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  Text('Route: ${settings.name}'),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => Navigator.of(context).pushReplacementNamed('/splash'),
-                    child: const Text('Go Home'),
-                  ),
-                ],
+        routes: _routes,
+        onUnknownRoute: (settings) {
+          return MaterialPageRoute(
+            builder: (context) => Scaffold(
+              appBar: AppBar(title: const Text('404 - Page Not Found')),
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Page not found',
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                    Text('Route: ${settings.name}'),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(context).pushReplacementNamed('/splash'),
+                      child: const Text('Go Home'),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      },
-    ),
+          );
+        },
+      ),
     );
   }
+
+  // Define routes map as static
+  static final Map<String, WidgetBuilder> _routes = {
+    // Splash & Welcome Flow
+    '/splash': (context) => const SplashScreen(),
+    '/welcome': (context) => const WelcomeScreen(),
+
+    // Authentication Flow
+    '/phone-verification': (context) => const PhoneVerificationScreen(),
+    '/otp-verification': (context) {
+      // Extract phone number from arguments if available
+      final args = ModalRoute.of(context)?.settings.arguments;
+      final phoneNumber = args is String ? args : '+91 9876543210';
+      return OtpVerificationPage(phoneNumber: phoneNumber);
+    },
+    '/login': (context) => const LoginPage(),
+
+    // Onboarding Flow
+    '/trial-setup': (context) => const TrialSetupScreen(),
+    '/onboarding': (context) => const OnboardingPage(),
+    '/trial-expiration': (context) => const TrialExpirationScreen(),
+
+    // Customer Portal
+    '/customer-dashboard': (context) => const CustomerDashboard(),
+    '/policies': (context) => const PoliciesListPage(),
+    '/claims': (context) {
+      // Extract policyId from arguments if available
+      final args = ModalRoute.of(context)?.settings.arguments;
+      return ClaimsPage(policyId: args as String?);
+    },
+    '/claims/new': (context) => const PlaceholderScreen(title: 'File New Claim'),
+    '/policy-details': (context) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      final policyId = args is Map<String, dynamic> ? args['policyId'] : null;
+      return PolicyDetailsScreen(policyId: policyId);
+    },
+    '/premium-payment': (context) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      final map = args is Map<String, dynamic> ? args : {};
+      return PremiumPaymentPage(
+        policyId: map['policyId'],
+        amount: map['amount']?.toDouble(),
+      );
+    },
+    '/get-quote': (context) => const GetQuotePage(),
+    '/policy/create': (context) => const PlaceholderScreen(title: 'Create New Policy'),
+    '/whatsapp-integration': (context) => const WhatsappIntegrationScreen(),
+    '/smart-chatbot': (context) => const ChatbotPage(),
+    '/notifications': (context) => const NotificationPage(),
+    '/learning-center': (context) => const LearningCenterScreen(),
+
+    // Phase 1 Test Screen
+    '/test-phase1': (context) => const TestPhase1Screen(),
+    '/data-pending': (context) => const DataPendingScreen(),
+    '/agent-discovery': (context) => const AgentDiscoveryScreen(),
+    '/agent-verification': (context) => const AgentVerificationScreen(),
+    '/document-upload': (context) => const DocumentUploadScreen(),
+    '/emergency-contact': (context) => const EmergencyContactScreen(),
+    '/kyc-verification': (context) => const KycVerificationScreen(),
+
+    // Agent Portal
+    '/agent-profile': (context) => const AgentProfilePage(),
+    '/daily-quotes': (context) => const DailyQuotesScreen(),
+    '/my-policies': (context) => const MyPoliciesScreen(),
+    '/premium-calendar': (context) => const PremiumCalendarScreen(),
+    '/agent-chat': (context) => const AgentChatScreen(),
+    '/reminders': (context) => const RemindersScreen(),
+    '/presentations': (context) => const PresentationsScreen(),
+    '/campaign-performance': (context) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      return CampaignPerformanceScreen(campaignId: args is String ? args : null);
+    },
+    '/content-performance': (context) => const ContentPerformanceScreen(),
+    '/accessibility-settings': (context) => const AccessibilitySettingsScreen(),
+    '/language-selection': (context) => const LanguageSelectionScreen(),
+    '/payments': (context) => const PlaceholderScreen(title: 'Payments'),
+    '/reports': (context) => const PlaceholderScreen(title: 'Reports'),
+    '/customers': (context) => const PlaceholderScreen(title: 'Customers'),
+    '/settings': (context) => const PlaceholderScreen(title: 'Settings'),
+    '/global-search': (context) => const GlobalSearchScreen(),
+    '/agent-config-dashboard': (context) => const AgentConfigDashboard(),
+    '/roi-analytics': (context) => const RoiAnalyticsDashboard(),
+    '/campaign-builder': (context) => const MarketingCampaignBuilder(),
+  };
 }

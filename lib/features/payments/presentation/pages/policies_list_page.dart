@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../viewmodels/policies_viewmodel.dart';
 import '../widgets/policy_card.dart';
 import '../widgets/policy_filters.dart';
+import '../../../../core/widgets/loading/empty_state_card.dart';
 
 class PoliciesListPage extends StatefulWidget {
   const PoliciesListPage({super.key});
@@ -14,6 +16,7 @@ class PoliciesListPage extends StatefulWidget {
 class _PoliciesListPageState extends State<PoliciesListPage> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
+  String? _selectedFilter;
 
   @override
   void initState() {
@@ -40,7 +43,7 @@ class _PoliciesListPageState extends State<PoliciesListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -56,10 +59,6 @@ class _PoliciesListPageState extends State<PoliciesListPage> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Color(0xFF1a237e)),
-            onPressed: () => _showSearchDialog(context),
-          ),
           IconButton(
             icon: const Icon(Icons.filter_list, color: Color(0xFF1a237e)),
             onPressed: () => _showFiltersDialog(context),
@@ -81,50 +80,157 @@ class _PoliciesListPageState extends State<PoliciesListPage> {
             child: CustomScrollView(
               controller: _scrollController,
               slivers: [
+                // Search Bar
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: _buildSearchBar(viewModel),
+                  ),
+                ),
+
+                // Filter Chips
+                SliverToBoxAdapter(
+                  child: _buildFilterChips(viewModel),
+                ),
+
                 // Summary Cards
                 SliverToBoxAdapter(
                   child: _buildSummaryCards(viewModel),
                 ),
 
                 // Policies List
-                SliverPadding(
-                  padding: const EdgeInsets.all(16),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        if (index == viewModel.policies.length) {
-                          return viewModel.hasMorePages
-                              ? const Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.all(16),
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                )
-                              : const SizedBox.shrink();
-                        }
+                if (viewModel.policies.isEmpty)
+                  SliverFillRemaining(
+                    child: EmptyStateCard(
+                      icon: Icons.description,
+                      title: 'No Policies Found',
+                      message: _selectedFilter != null
+                          ? 'No policies match your filter criteria. Try a different filter.'
+                          : 'You don\'t have any policies yet. Get a quote to start!',
+                      actionLabel: 'Get Quote',
+                      onAction: () => context.push('/get-quote'),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.all(16),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          if (index == viewModel.policies.length) {
+                            return viewModel.hasMorePages
+                                ? const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(16),
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  )
+                                : const SizedBox.shrink();
+                          }
 
-                        final policy = viewModel.policies[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: PolicyCard(
-                            policy: policy,
-                            onTap: () => _navigateToPolicyDetail(policy.policyId),
-                          ),
-                        );
-                      },
-                      childCount: viewModel.policies.length + (viewModel.hasMorePages ? 1 : 0),
+                          final policy = viewModel.policies[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: PolicyCard(
+                              policy: policy,
+                              onTap: () => _navigateToPolicyDetail(policy.policyId),
+                            ),
+                          );
+                        },
+                        childCount: viewModel.policies.length + (viewModel.hasMorePages ? 1 : 0),
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _navigateToAddPolicy(),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push('/get-quote'),
         backgroundColor: const Color(0xFF1a237e),
-        child: const Icon(Icons.add, color: Colors.white),
+        icon: const Icon(Icons.request_quote, color: Colors.white),
+        label: const Text(
+          'Get Quote',
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchBar(PoliciesViewModel viewModel) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Search policies by number or name...',
+          prefixIcon: const Icon(Icons.search, color: Colors.grey),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear, color: Colors.grey),
+                  onPressed: () {
+                    _searchController.clear();
+                    viewModel.setSearchQuery(null);
+                  },
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+        onChanged: (value) {
+          // Debounce search
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (_searchController.text == value) {
+              viewModel.setSearchQuery(value.isEmpty ? null : value);
+            }
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _buildFilterChips(PoliciesViewModel viewModel) {
+    final filters = [
+      {'label': 'All', 'value': null},
+      {'label': 'Active', 'value': 'active'},
+      {'label': 'Maturing', 'value': 'maturing'},
+      {'label': 'Lapsed', 'value': 'lapsed'},
+    ];
+
+    return Container(
+      height: 50,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: filters.map((filter) {
+          final isSelected = _selectedFilter == filter['value'];
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: FilterChip(
+              label: Text(filter['label'] as String),
+              selected: isSelected,
+              onSelected: (selected) {
+                setState(() {
+                  _selectedFilter = selected ? filter['value'] as String? : null;
+                });
+                viewModel.setStatusFilter(_selectedFilter);
+              },
+              selectedColor: const Color(0xFF1a237e).withOpacity(0.2),
+              checkmarkColor: const Color(0xFF1a237e),
+              backgroundColor: Colors.white,
+              side: BorderSide(
+                color: isSelected
+                    ? const Color(0xFF1a237e)
+                    : Colors.grey.shade300,
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -143,9 +249,13 @@ class _PoliciesListPageState extends State<PoliciesListPage> {
             Colors.green,
           ),
           _buildSummaryCard(
-            'Pending',
-            viewModel.pendingPolicies.length.toString(),
-            Icons.pending,
+            'Maturing',
+            viewModel.policies
+                .where((p) => p.maturityDate != null &&
+                    p.maturityDate!.difference(DateTime.now()).inDays <= 90)
+                .length
+                .toString(),
+            Icons.schedule,
             Colors.orange,
           ),
           _buildSummaryCard(
@@ -234,44 +344,6 @@ class _PoliciesListPageState extends State<PoliciesListPage> {
     );
   }
 
-  void _showSearchDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Search Policies'),
-        content: TextField(
-          controller: _searchController,
-          decoration: const InputDecoration(
-            hintText: 'Enter policy number or name',
-            prefixIcon: Icon(Icons.search),
-          ),
-          onChanged: (value) {
-            // Debounced search can be implemented here
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              _searchController.clear();
-              context.read<PoliciesViewModel>().clearFilters();
-              Navigator.of(context).pop();
-            },
-            child: const Text('Clear'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              context.read<PoliciesViewModel>().setSearchQuery(
-                    _searchController.text.isEmpty ? null : _searchController.text,
-                  );
-              Navigator.of(context).pop();
-            },
-            child: const Text('Search'),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _showFiltersDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -280,20 +352,6 @@ class _PoliciesListPageState extends State<PoliciesListPage> {
   }
 
   void _navigateToPolicyDetail(String policyId) {
-    // TODO: Navigate to policy detail page
-    // Navigator.of(context).push(
-    //   MaterialPageRoute(
-    //     builder: (context) => PolicyDetailPage(policyId: policyId),
-    //   ),
-    // );
-  }
-
-  void _navigateToAddPolicy() {
-    // TODO: Navigate to add policy page
-    // Navigator.of(context).push(
-    //   MaterialPageRoute(
-    //     builder: (context) => AddPolicyPage(),
-    //   ),
-    // );
+    context.push('/policy-details', extra: {'policyId': policyId});
   }
 }

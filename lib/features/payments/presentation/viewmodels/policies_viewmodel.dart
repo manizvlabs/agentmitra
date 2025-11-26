@@ -6,9 +6,16 @@ import '../../data/models/policy_model.dart';
 
 class PoliciesViewModel extends ChangeNotifier {
   final PolicyRepository _policyRepository;
+  final PolicyLocalDataSourceImpl _localDataSource;
 
-  PoliciesViewModel([PolicyRepository? policyRepository])
-      : _policyRepository = policyRepository ?? PolicyRepository(PolicyRemoteDataSourceImpl(), PolicyLocalDataSourceImpl());
+  PoliciesViewModel([PolicyRepository? policyRepository, PolicyLocalDataSourceImpl? localDataSource])
+      : _localDataSource = localDataSource ?? PolicyLocalDataSourceImpl(),
+        _policyRepository = policyRepository ?? PolicyRepository(PolicyRemoteDataSourceImpl(), localDataSource ?? PolicyLocalDataSourceImpl()) {
+    // Initialize local datasource asynchronously (will be ensured before use)
+    _localDataSource.init().catchError((e) {
+      // Silently handle initialization errors - will use fallback storage
+    });
+  }
 
   // State
   List<Policy> _policies = [];

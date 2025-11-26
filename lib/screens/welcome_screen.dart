@@ -34,9 +34,11 @@ class WelcomeScreen extends StatelessWidget {
 
               // Main content area
               Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
                     // Welcome illustration/icon
                     Container(
                       width: 200,
@@ -130,13 +132,16 @@ class WelcomeScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
 
               // Bottom action buttons
-              Column(
-                children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: Column(
+                  children: [
                   // Get Started button
                   SizedBox(
                     width: double.infinity,
@@ -195,7 +200,8 @@ class WelcomeScreen extends StatelessWidget {
                   ),
 
                   const SizedBox(height: 40),
-                ],
+                  ],
+                ),
               ),
             ],
           ),

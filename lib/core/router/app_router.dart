@@ -6,6 +6,9 @@ import '../../screens/phone_verification_screen.dart';
 import '../../screens/trial_setup_screen.dart';
 import '../../screens/trial_expiration_screen.dart';
 import '../../screens/policy_details_screen.dart';
+import '../../screens/customer_dashboard.dart';
+import '../../features/payments/presentation/pages/premium_payment_page.dart';
+import '../../features/payments/presentation/pages/get_quote_page.dart';
 import '../../screens/whatsapp_integration_screen.dart';
 import '../../screens/learning_center_screen.dart';
 import '../../screens/agent_config_dashboard.dart';
@@ -14,7 +17,6 @@ import '../../screens/marketing_campaign_builder.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/otp_verification_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
-import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/chatbot/presentation/pages/chatbot_page.dart';
 import '../../features/notifications/presentation/pages/notification_page.dart';
 import '../../features/payments/presentation/pages/new_policy_page.dart';
@@ -92,13 +94,34 @@ class AppRouter {
       GoRoute(
         path: '/customer-dashboard',
         name: 'customer-dashboard',
-        builder: (context, state) => const DashboardPage(),
+        builder: (context, state) => const CustomerDashboard(),
       ),
 
       GoRoute(
         path: '/policy-details',
         name: 'policy-details',
-        builder: (context, state) => const PolicyDetailsScreen(),
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return PolicyDetailsScreen(policyId: extra?['policyId']);
+        },
+      ),
+
+      GoRoute(
+        path: '/premium-payment',
+        name: 'premium-payment',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return PremiumPaymentPage(
+            policyId: extra?['policyId'],
+            amount: extra?['amount']?.toDouble(),
+          );
+        },
+      ),
+
+      GoRoute(
+        path: '/get-quote',
+        name: 'get-quote',
+        builder: (context, state) => const GetQuotePage(),
       ),
 
       GoRoute(

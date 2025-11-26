@@ -1,0 +1,19 @@
+[
+  {
+    "family": "MaterialIcons",
+    "fonts": [
+      {
+        "asset": "fonts/MaterialIcons-Regular.otf"
+      }
+    ]
+  },
+  {
+    "family": "CupertinoIcons",
+    "fonts": [
+      {
+        "asset": "fonts/CupertinoIcons.ttf"
+      }
+    ]
+  }
+]
+
