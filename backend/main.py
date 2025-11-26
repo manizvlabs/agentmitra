@@ -252,10 +252,27 @@ if __name__ == "__main__":
     # Get port from environment or default to 8012
     port = int(os.getenv("API_PORT", "8012"))
     reload_mode = os.getenv("ENVIRONMENT", "development") == "development"
+    
+    # SSL configuration
+    ssl_keyfile = os.getenv("SSL_KEYFILE", "ssl/key.pem")
+    ssl_certfile = os.getenv("SSL_CERTFILE", "ssl/cert.pem")
+    use_ssl = os.getenv("USE_SSL", "true").lower() == "true"
+    
+    ssl_config = {}
+    if use_ssl and os.path.exists(ssl_keyfile) and os.path.exists(ssl_certfile):
+        ssl_config = {
+            "ssl_keyfile": ssl_keyfile,
+            "ssl_certfile": ssl_certfile
+        }
+        logger.info(f"SSL enabled with key: {ssl_keyfile}, cert: {ssl_certfile}")
+    else:
+        logger.warning("SSL certificates not found, running without SSL")
+    
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=port,
-        reload=reload_mode
+        reload=reload_mode,
+        **ssl_config
     )
 
