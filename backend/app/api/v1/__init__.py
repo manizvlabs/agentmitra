@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_current_user_context, UserContext
-from . import auth, users, providers, agents, policies, presentations, chat, analytics, feature_flags, health, notifications, campaigns, callbacks, tenants, rbac, admin
+from . import auth, users, providers, agents, policies, presentations, chat, analytics, feature_flags, health, notifications, campaigns, callbacks, tenants, rbac
 
 # Create main API router
 api_router = APIRouter(prefix="/api/v1", tags=["api"])
@@ -168,7 +168,7 @@ api_router.include_router(auth.router, prefix="/auth", tags=["authentication"])
 try:
     from . import admin
     api_router.include_router(admin.router, tags=["admin"])
-except ImportError:
+except (ImportError, NameError):
     pass
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(providers.router, prefix="/providers", tags=["providers"])
