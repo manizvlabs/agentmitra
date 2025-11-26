@@ -64,8 +64,19 @@ __all__ = [
 ]
 
 # RBAC models - gradually enabling relationships to fix TextClause errors
-from .rbac import Role, Permission, RolePermission, UserRole
-from .feature_flags import FeatureFlag, FeatureFlagOverride
+try:
+    from .rbac import Role, Permission, RolePermission, UserRole
+except ImportError:
+    Role = None
+    Permission = None
+    RolePermission = None
+    UserRole = None
+
+try:
+    from .feature_flags import FeatureFlag, FeatureFlagOverride
+except ImportError:
+    FeatureFlag = None
+    FeatureFlagOverride = None
 # from .rbac_audit import RbacAuditLog  # Enable later
 
 # DO NOT configure mappers here - it will be done in main.py after all imports
