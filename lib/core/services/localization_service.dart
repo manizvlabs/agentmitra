@@ -259,62 +259,63 @@ class LocalizationService {
 
   /// Load fallback localization from assets
   Future<Map<String, String>> _loadFallbackLocalization(String locale) async {
-    try {
-      // Asset path as declared in pubspec.yaml
-      // On web, rootBundle.loadString expects the exact path from AssetManifest
-      // which is 'assets/l10n/app_$locale.arb' (no double prefix)
-      String assetPath = 'assets/l10n/app_$locale.arb';
-      
-      // For web, try direct HTTP fetch if rootBundle fails
-      if (kIsWeb) {
-        try {
-          final jsonString = await rootBundle.loadString(assetPath);
-          final arbData = json.decode(jsonString) as Map<String, dynamic>;
+    // For web, try HTTP fetch first (more reliable than rootBundle on web)
+    if (kIsWeb) {
+      try {
+        // Try direct HTTP fetch - assets are served from /assets/ path
+        final response = await http.get(Uri.parse('/assets/l10n/app_$locale.arb'));
+        if (response.statusCode == 200) {
+          final arbData = json.decode(response.body) as Map<String, dynamic>;
           final strings = <String, String>{};
           arbData.forEach((key, value) {
             if (!key.startsWith('@')) {
               strings[key] = value.toString();
             }
           });
+          LoggerService().info('Loaded localization from HTTP for locale: $locale');
           return strings;
-        } catch (e) {
-          // If rootBundle fails, try HTTP fetch as fallback
-          LoggerService().warning('rootBundle failed for $locale, trying HTTP fetch: $e');
-          try {
-            final response = await http.get(Uri.parse('/assets/l10n/app_$locale.arb'));
-            if (response.statusCode == 200) {
-              final arbData = json.decode(response.body) as Map<String, dynamic>;
-              final strings = <String, String>{};
-              arbData.forEach((key, value) {
-                if (!key.startsWith('@')) {
-                  strings[key] = value.toString();
-                }
-              });
-              return strings;
-            }
-          } catch (httpError) {
-            LoggerService().warning('HTTP fetch also failed for $locale: $httpError');
-          }
-          rethrow;
         }
+      } catch (httpError) {
+        LoggerService().warning('HTTP fetch failed for $locale, trying rootBundle: $httpError');
       }
       
-      final jsonString = await rootBundle.loadString(assetPath);
-      final arbData = json.decode(jsonString) as Map<String, dynamic>;
-      final strings = <String, String>{};
-
-      arbData.forEach((key, value) {
-        if (!key.startsWith('@')) {
-          strings[key] = value.toString();
-        }
-      });
-
-      return strings;
-    } catch (e) {
-      // If asset file doesn't exist, use hardcoded strings
-      LoggerService().warning('Asset file not found for $locale, using hardcoded strings');
-      return _getHardcodedStrings(locale);
+      // Fallback to rootBundle on web
+      try {
+        final assetPath = 'assets/l10n/app_$locale.arb';
+        final jsonString = await rootBundle.loadString(assetPath);
+        final arbData = json.decode(jsonString) as Map<String, dynamic>;
+        final strings = <String, String>{};
+        arbData.forEach((key, value) {
+          if (!key.startsWith('@')) {
+            strings[key] = value.toString();
+          }
+        });
+        LoggerService().info('Loaded localization from rootBundle for locale: $locale');
+        return strings;
+      } catch (rootBundleError) {
+        LoggerService().warning('rootBundle failed for $locale: $rootBundleError');
+      }
+    } else {
+      // For mobile, use rootBundle
+      try {
+        final assetPath = 'assets/l10n/app_$locale.arb';
+        final jsonString = await rootBundle.loadString(assetPath);
+        final arbData = json.decode(jsonString) as Map<String, dynamic>;
+        final strings = <String, String>{};
+        arbData.forEach((key, value) {
+          if (!key.startsWith('@')) {
+            strings[key] = value.toString();
+          }
+        });
+        return strings;
+      } catch (e) {
+        LoggerService().warning('Asset file not found for $locale: $e');
+      }
     }
+    
+    // If all methods fail, use hardcoded strings
+    LoggerService().warning('All asset loading methods failed for $locale, using hardcoded strings');
+    return _getHardcodedStrings(locale);
   }
 
   /// Get hardcoded strings as fallback
