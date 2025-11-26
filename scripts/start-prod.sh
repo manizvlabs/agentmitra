@@ -62,13 +62,19 @@ EOF
 fi
 
 # Determine which services to start
-# Default: start all services
+# Default: start essential services (minio + backend)
 # Usage: ./scripts/start-prod.sh [service1] [service2] ... | all | minimal
 if [ $# -eq 0 ]; then
-    # No arguments - start all services by default
-    SERVICES="minio backend portal nginx prometheus grafana"
+    # No arguments - start essential services by default
+    SERVICES="minio backend"
+    echo -e "${YELLOW}Note: Starting essential services only (minio + backend)${NC}"
+    echo "To start all services: ./scripts/start-prod.sh all"
+    echo "To start minimal: ./scripts/start-prod.sh minimal"
+    echo ""
 elif [ "$1" = "all" ]; then
     SERVICES="minio backend portal nginx prometheus grafana"
+    echo -e "${GREEN}Starting all services including portal and nginx${NC}"
+    echo ""
 elif [ "$1" = "minimal" ]; then
     SERVICES="minio backend"
 else

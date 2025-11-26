@@ -68,46 +68,50 @@ services:
       retries: 3
 
   # React Portal (Agent Configuration Portal)
-  # NOTE: Requires config-portal directory and Dockerfile to exist
-  # Commented out by default - uncomment when portal is ready
-  # portal:
-  #   build:
-  #     context: ./config-portal
-  #     dockerfile: Dockerfile
-  #   container_name: agentmitra_portal
-  #   restart: unless-stopped
-  #   environment:
-  #     - REACT_APP_API_URL=http://backend:8012
-  #     - REACT_APP_ENVIRONMENT=production
-  #   ports:
-  #     - "3013:80"
-  #   volumes:
-  #     - ./nginx/portal:/etc/nginx/conf.d:ro
-  #   depends_on:
-  #     - backend
-  #   networks:
-  #     - agentmitra_network
+  portal:
+    build:
+      context: ./config-portal
+      dockerfile: Dockerfile
+    container_name: agentmitra_portal
+    restart: unless-stopped
+    environment:
+      - REACT_APP_API_URL=http://backend:8012
+      - REACT_APP_ENVIRONMENT=production
+    ports:
+      - "3013:80"
+    depends_on:
+      - backend
+    networks:
+      - agentmitra_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Nginx Reverse Proxy
-  # NOTE: Requires nginx config files and portal/flutter builds
-  # Commented out by default - uncomment when ready
-  # nginx:
-  #   image: nginx:alpine
-  #   container_name: agentmitra_nginx
-  #   restart: unless-stopped
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #   volumes:
-  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-  #     - ./nginx/ssl:/etc/nginx/ssl:ro
-  #     - ./config-portal/build:/var/www/portal:ro
-  #     - ./build/web:/var/www/flutter:ro
-  #   depends_on:
-  #     - backend
-  #     - portal
-  #   networks:
-  #     - agentmitra_network
+  nginx:
+    image: nginx:alpine
+    container_name: agentmitra_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./config-portal/build:/var/www/portal:ro
+      - ./build/web:/var/www/flutter:ro
+    depends_on:
+      - backend
+      - portal
+    networks:
+      - agentmitra_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Monitoring with Prometheus
   prometheus:
