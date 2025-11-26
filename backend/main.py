@@ -174,6 +174,16 @@ app.include_router(api_router)
 async def startup_event():
     """Verify database connection on startup"""
     logger.info("Starting Agent Mitra API")
+    
+    # Configure SQLAlchemy mappers after all models are imported
+    # This ensures all relationships can be resolved
+    try:
+        from app.models import configure_all_mappers
+        configure_all_mappers()
+        logger.info("SQLAlchemy mappers configured successfully")
+    except Exception as e:
+        logger.warning(f"Mapper configuration warning (non-critical): {e}")
+    
     # Verify database connection (schema managed by Flyway migrations)
     init_db()
     logger.info("Database connection verified (schema managed by Flyway)")

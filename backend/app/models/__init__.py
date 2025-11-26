@@ -64,36 +64,22 @@ from .feature_flags import FeatureFlag, FeatureFlagOverride
 # This ensures all relationships can be resolved
 # We use a deferred configuration approach to avoid circular import issues
 from sqlalchemy.orm import configure_mappers
-from sqlalchemy import event
-from sqlalchemy.orm import mapper
 
-def _configure_all_mappers():
-    """Configure all SQLAlchemy mappers after all models are loaded"""
+def configure_all_mappers():
+    """
+    Configure all SQLAlchemy mappers after all models are loaded.
+    This function should be called from main.py after all imports are complete.
+    """
     try:
-        # Clear any existing mapper configuration errors
+        # Configure all mappers - this resolves all relationships
         configure_mappers()
     except Exception as e:
         # Log the error but don't fail - relationships will be configured lazily
         import warnings
+        import traceback
         warnings.warn(
-            f"Some SQLAlchemy mappers could not be configured during import: {e}. "
+            f"Some SQLAlchemy mappers could not be configured: {e}\n"
+            f"Traceback: {traceback.format_exc()}\n"
             "Relationships will be configured lazily when first accessed."
         )
-
-# Defer mapper configuration until after all imports are complete
-# This is called explicitly in main.py after all models are imported
-def configure_all_mappers():
-    """Public function to configure all mappers - called from main.py"""
-    _configure_all_mappers()
-
-# Configure SQLAlchemy mappers after all models are imported
-# This ensures all relationships can be resolved
-from sqlalchemy.orm import configure_mappers
-try:
-    configure_mappers()
-except Exception as e:
-    # If mapper configuration fails, log but don't fail startup
-    # Some relationships may be configured lazily
-    import warnings
-    warnings.warn(f"Some SQLAlchemy mappers could not be configured: {e}. Relationships may be configured lazily.")
 
