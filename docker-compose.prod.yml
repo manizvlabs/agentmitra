@@ -42,10 +42,10 @@ services:
       - REDIS_URL=redis://host.docker.internal:6379
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - CORS_ORIGINS=${CORS_ORIGINS}
-      - FEATUREHUB_URL=http://featurehub:8080
-      - FEATUREHUB_API_KEY=${FEATUREHUB_API_KEY}
-      - FEATUREHUB_SDK_KEY=${FEATUREHUB_SDK_KEY}
-      - FEATUREHUB_ENVIRONMENT=${FEATUREHUB_ENVIRONMENT:-production}
+      # - FEATUREHUB_URL=http://featurehub:8080
+      # - FEATUREHUB_API_KEY=${FEATUREHUB_API_KEY}
+      # - FEATUREHUB_SDK_KEY=${FEATUREHUB_SDK_KEY}
+      # - FEATUREHUB_ENVIRONMENT=${FEATUREHUB_ENVIRONMENT:-production}
       - MINIO_ENDPOINT=minio:9000
       - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
       - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
@@ -53,7 +53,7 @@ services:
       - MINIO_USE_SSL=false
       - MINIO_CDN_BASE_URL=http://minio:9000/${MINIO_BUCKET_NAME:-agentmitra-media}
     depends_on:
-      - featurehub
+      # - featurehub  # Commented out - FeatureHub disabled
       - minio
     ports:
       - "8012:8012"
