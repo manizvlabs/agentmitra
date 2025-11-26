@@ -62,13 +62,26 @@ EOF
 fi
 
 # Determine which services to start
-SERVICES="${@:-minio backend}"
-
-if [ "$SERVICES" = "all" ]; then
+# Default: start all services
+# Usage: ./scripts/start-prod.sh [service1] [service2] ... | all | minimal
+if [ $# -eq 0 ]; then
+    # No arguments - start all services by default
     SERVICES="minio backend portal nginx prometheus grafana"
+elif [ "$1" = "all" ]; then
+    SERVICES="minio backend portal nginx prometheus grafana"
+elif [ "$1" = "minimal" ]; then
+    SERVICES="minio backend"
+else
+    # Specific services provided
+    SERVICES="$@"
 fi
 
 echo "Starting services: $SERVICES"
+echo ""
+echo "Note: To start specific services only, use:"
+echo "  ./scripts/start-prod.sh minio backend    # Minimal setup"
+echo "  ./scripts/start-prod.sh all               # All services"
+echo "  ./scripts/start-prod.sh minimal           # Minimal setup (minio + backend)"
 echo ""
 
 # Start services
