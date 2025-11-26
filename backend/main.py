@@ -97,16 +97,14 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         return response
 
-# Add trusted host middleware (configure for production)
-if settings.environment == "production":
-    app.add_middleware(
-        TrustedHostMiddleware,
-        allowed_hosts=["your-domain.com", "*.your-domain.com"]  # Configure for your domain
-    )
+# Add trusted host middleware - allow localhost and configured hosts
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["localhost", "127.0.0.1", "*.localhost", "backend", "*.backend", "your-domain.com", "*.your-domain.com"]
+)
 
-# Add HTTPS redirect in production (disabled for local testing)
-# if settings.environment == "production":
-#     app.add_middleware(HTTPSRedirectMiddleware)
+# Add HTTPS redirect - enabled for all environments
+app.add_middleware(HTTPSRedirectMiddleware)
 
 # Add security middleware
 app.add_middleware(SecurityHeadersMiddleware)

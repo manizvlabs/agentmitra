@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_current_user_context, UserContext
-from . import auth, users, providers, agents, policies, presentations, chat, analytics, feature_flags, health, notifications, campaigns, callbacks, tenants, rbac
+from . import auth, users, providers, agents, policies, presentations, chat, analytics, feature_flags, health, notifications, campaigns, callbacks, tenants, rbac, admin
 
 # Create main API router
 api_router = APIRouter(prefix="/api/v1", tags=["api"])
@@ -164,6 +164,12 @@ async def get_test_agent_profile(
 
 # Include all endpoint routers
 api_router.include_router(auth.router, prefix="/auth", tags=["authentication"])
+# Admin router (optional - for testing/maintenance)
+try:
+    from . import admin
+    api_router.include_router(admin.router, tags=["admin"])
+except ImportError:
+    pass
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(providers.router, prefix="/providers", tags=["providers"])
 api_router.include_router(agents.router, prefix="/agents", tags=["agents"])
