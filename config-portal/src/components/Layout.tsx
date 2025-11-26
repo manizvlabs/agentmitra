@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
-import { authApi } from '../services/authApi';
+import { useRBAC } from '../contexts/RBACContext';
 import {
   Box,
   Drawer,
@@ -28,6 +28,9 @@ import {
   Logout,
   Campaign,
   PhoneCallback,
+  People,
+  Assessment,
+  ManageAccounts,
 } from '@mui/icons-material';
 
 const drawerWidth = 280;
@@ -36,15 +39,65 @@ interface NavigationItem {
   text: string;
   icon: React.ReactNode;
   path: string;
+  requiredRoles?: string[];
+  requiredPermissions?: { resource: string; action: string }[];
 }
 
-const navigationItems: NavigationItem[] = [
-  { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
-  { text: 'Data Import', icon: <CloudUpload />, path: '/data-import' },
-  { text: 'Campaigns', icon: <Campaign />, path: '/campaigns' },
-  { text: 'Callbacks', icon: <PhoneCallback />, path: '/callbacks' },
-  { text: 'Excel Template', icon: <Description />, path: '/excel-template' },
-  { text: 'Settings', icon: <Settings />, path: '/settings' },
+const allNavigationItems: NavigationItem[] = [
+  {
+    text: 'Dashboard',
+    icon: <Dashboard />,
+    path: '/dashboard',
+    // Accessible to all authenticated users
+  },
+  {
+    text: 'Data Import',
+    icon: <CloudUpload />,
+    path: '/data-import',
+    requiredPermissions: [{ resource: 'data_import', action: 'create' }],
+  },
+  {
+    text: 'Customer Management',
+    icon: <People />,
+    path: '/customers',
+    requiredPermissions: [{ resource: 'agents', action: 'read' }],
+  },
+  {
+    text: 'Reporting',
+    icon: <Assessment />,
+    path: '/reporting',
+    requiredPermissions: [{ resource: 'reports', action: 'generate' }],
+  },
+  {
+    text: 'User Management',
+    icon: <ManageAccounts />,
+    path: '/users',
+    requiredPermissions: [{ resource: 'users', action: 'read' }],
+  },
+  {
+    text: 'Campaigns',
+    icon: <Campaign />,
+    path: '/campaigns',
+    requiredPermissions: [{ resource: 'campaigns', action: 'read' }],
+  },
+  {
+    text: 'Callbacks',
+    icon: <PhoneCallback />,
+    path: '/callbacks',
+    requiredPermissions: [{ resource: 'agents', action: 'read' }],
+  },
+  {
+    text: 'Excel Template',
+    icon: <Description />,
+    path: '/excel-template',
+    requiredPermissions: [{ resource: 'templates', action: 'read' }],
+  },
+  {
+    text: 'Settings',
+    icon: <Settings />,
+    path: '/settings',
+    // Accessible to all authenticated users
+  },
 ];
 
 const Layout: React.FC = () => {
@@ -52,9 +105,24 @@ const Layout: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, hasAnyRole, hasPermission, logout, isAuthenticated } = useRBAC();
 
-  // Debug logging
-  console.log('Layout rendering for path:', location.pathname);
+  // Filter navigation items based on user permissions
+  const navigationItems = allNavigationItems.filter(item => {
+    // If no permission requirements, item is accessible to all authenticated users
+    if (!item.requiredPermissions) {
+      return isAuthenticated;
+    }
+
+    // Check permission requirements - user needs at least one of the required permissions
+    if (item.requiredPermissions && item.requiredPermissions.length > 0) {
+      return item.requiredPermissions.some(
+        perm => hasPermission(perm.resource, perm.action)
+      );
+    }
+
+    return false;
+  });
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -68,16 +136,6 @@ const Layout: React.FC = () => {
     setAnchorEl(null);
   };
 
-  const handleLogout = async () => {
-    try {
-      await authApi.logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      handleProfileMenuClose();
-      navigate('/login');
-    }
-  };
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -178,41 +236,44 @@ const Layout: React.FC = () => {
             </Avatar>
           </IconButton>
 
-          <Menu
-            id="profile-menu"
-            anchorEl={anchorEl}
-            anchorOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-            keepMounted
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-            open={Boolean(anchorEl)}
-            onClose={handleProfileMenuClose}
-          >
-            <MenuItem onClick={handleProfileMenuClose}>
-              <ListItemIcon>
-                <AccountCircle fontSize="small" />
-              </ListItemIcon>
-              Profile
-            </MenuItem>
-            <MenuItem onClick={handleProfileMenuClose}>
-              <ListItemIcon>
-                <Settings fontSize="small" />
-              </ListItemIcon>
-              Settings
-            </MenuItem>
-            <Divider />
-            <MenuItem onClick={handleLogout}>
-              <ListItemIcon>
-                <Logout fontSize="small" />
-              </ListItemIcon>
-              Logout
-            </MenuItem>
-          </Menu>
+        <Menu
+          id="profile-menu"
+          anchorEl={anchorEl}
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          keepMounted
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          open={Boolean(anchorEl)}
+          onClose={handleProfileMenuClose}
+        >
+          <MenuItem onClick={handleProfileMenuClose}>
+            <ListItemIcon>
+              <AccountCircle fontSize="small" />
+            </ListItemIcon>
+            Profile
+          </MenuItem>
+          <MenuItem onClick={handleProfileMenuClose}>
+            <ListItemIcon>
+              <Settings fontSize="small" />
+            </ListItemIcon>
+            Settings
+          </MenuItem>
+          <Divider />
+          <MenuItem onClick={() => {
+            handleProfileMenuClose();
+            logout();
+          }}>
+            <ListItemIcon>
+              <Logout fontSize="small" />
+            </ListItemIcon>
+            Logout
+          </MenuItem>
+        </Menu>
         </Toolbar>
       </AppBar>
 

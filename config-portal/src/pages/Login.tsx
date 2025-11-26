@@ -17,13 +17,41 @@ import { authApi } from '../services/authApi';
 const Login: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [usePassword, setUsePassword] = useState(true); // Default to password login for testing
   const navigate = useNavigate();
 
-  const steps = ['Enter Phone Number', 'Verify OTP'];
+  const steps = usePassword ? ['Enter Credentials'] : ['Enter Phone Number', 'Verify OTP'];
+
+  const handlePasswordLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await authApi.login({ phone_number: phoneNumber, password });
+      if (response.success && response.data) {
+        authApi.setAuthData(response.data);
+        navigate('/dashboard');
+      } else {
+        setError(response.message || 'Login failed. Please check your credentials.');
+      }
+    } catch (err: any) {
+      // Handle different error response formats
+      const errorMessage = err.response?.data?.detail ||
+                          err.response?.data?.message ||
+                          err.message ||
+                          'Login failed. Please try again.';
+      setError(errorMessage);
+      console.error('Password login error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,9 +69,9 @@ const Login: React.FC = () => {
       }
     } catch (err: any) {
       // Handle different error response formats
-      const errorMessage = err.response?.data?.detail || 
-                          err.response?.data?.message || 
-                          err.message || 
+      const errorMessage = err.response?.data?.detail ||
+                          err.response?.data?.message ||
+                          err.message ||
                           'Failed to send OTP. Please try again.';
       setError(errorMessage);
       console.error('Send OTP error:', err);
@@ -103,13 +131,35 @@ const Login: React.FC = () => {
             Sign in to access your agent configuration dashboard
           </Typography>
 
-          <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+            <Button
+              variant={!usePassword ? 'contained' : 'outlined'}
+              onClick={() => setUsePassword(false)}
+              sx={{ mr: 1 }}
+            >
+              OTP Login
+            </Button>
+            <Button
+              variant={usePassword ? 'contained' : 'outlined'}
+              onClick={() => setUsePassword(true)}
+            >
+              Password Login
+            </Button>
+          </Box>
+
+          {usePassword ? (
+            <Typography variant="h6" align="center" sx={{ mb: 2 }}>
+              Password Authentication
+            </Typography>
+          ) : (
+            <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+              {steps.map((label) => (
+                <Step key={label}>
+                  <StepLabel>{label}</StepLabel>
+                </Step>
+              ))}
+            </Stepper>
+          )}
 
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
@@ -123,7 +173,47 @@ const Login: React.FC = () => {
             </Alert>
           )}
 
-          {activeStep === 0 ? (
+          {usePassword ? (
+            // Password Login Form
+            <Box component="form" onSubmit={handlePasswordLogin} sx={{ mt: 1 }}>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="phoneNumber"
+                label="Phone Number"
+                name="phoneNumber"
+                autoComplete="tel"
+                autoFocus
+                placeholder="+91 9876543210"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+              />
+
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="password"
+                label="Password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2, py: 1.5 }}
+                disabled={loading || !phoneNumber || !password}
+              >
+                {loading ? 'Signing In...' : 'Sign In'}
+              </Button>
+            </Box>
+          ) : activeStep === 0 ? (
             // Phone Number Step
             <Box component="form" onSubmit={handleSendOtp} sx={{ mt: 1 }}>
               <TextField

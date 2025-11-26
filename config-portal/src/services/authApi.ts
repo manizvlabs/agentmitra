@@ -1,4 +1,16 @@
 import axios from 'axios';
+// @ts-ignore
+import { jwtDecode } from 'jwt-decode';
+import { RBACUser, UserRole, Permission } from '../types/rbac';
+
+export interface JWTToken {
+  sub: string; // user_id
+  roles: UserRole[]; // Array of roles
+  permissions: Permission[]; // Array of permissions
+  tenant_id?: string;
+  exp: number;
+  iat: number;
+}
 
 export interface LoginRequest {
   phone_number?: string;
@@ -19,15 +31,8 @@ export interface AuthResponse {
   access_token: string;
   refresh_token: string;
   token_type: string;
-  user: {
-    user_id: string;
-    phone_number?: string;
-    email?: string;
-    first_name?: string;
-    last_name?: string;
-    display_name?: string;
-    role: string;
-  };
+  user: RBACUser;
+  permissions?: string[]; // From backend response
 }
 
 export interface ApiResponse<T> {
@@ -163,15 +168,91 @@ class AuthApiService {
     }
   }
 
+  // JWT Token decoding
+  private decodeJWT(token: string): JWTToken | null {
+    try {
+      // @ts-ignore
+      const decoded = jwtDecode(token) as JWTToken;
+      return decoded;
+    } catch (error) {
+      console.error('Failed to decode JWT:', error);
+      return null;
+    }
+  }
+
+  private getUserFromToken(token: string): RBACUser | null {
+    const decoded = this.decodeJWT(token);
+    if (!decoded) return null;
+
+    // Get user data from localStorage (set during login)
+    const userStr = localStorage.getItem('user');
+    const userData = userStr ? JSON.parse(userStr) : {};
+
+    // Merge JWT data with user data
+    return {
+      ...userData,
+      user_id: decoded.sub,
+      roles: decoded.roles || [], // Array of roles from JWT
+      permissions: decoded.permissions || [], // Array of permissions from JWT (string[])
+      tenant_id: decoded.tenant_id,
+    };
+  }
+
   // Utility methods
   isAuthenticated(): boolean {
     const token = localStorage.getItem('access_token');
-    return !!token;
+    if (!token) return false;
+
+    try {
+      const decoded = this.decodeJWT(token);
+      if (!decoded) return false;
+
+      // Check if token is expired
+      const currentTime = Date.now() / 1000;
+      return decoded.exp > currentTime;
+    } catch (error) {
+      return false;
+    }
   }
 
-  getCurrentUser() {
-    const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
+  getCurrentUser(): RBACUser | null {
+    const token = localStorage.getItem('access_token');
+    if (!token) return null;
+
+    return this.getUserFromToken(token);
+  }
+
+  getUserRoles(): UserRole[] {
+    const user = this.getCurrentUser();
+    return user?.roles || [];
+  }
+
+  getUserPermissions(): string[] | Permission[] {
+    const user = this.getCurrentUser();
+    return user?.permissions || [];
+  }
+
+  hasRole(role: UserRole): boolean {
+    const roles = this.getUserRoles();
+    return roles.includes(role);
+  }
+
+  hasPermission(resource: string, action: string): boolean {
+    const permissions = this.getUserPermissions();
+    const requiredPermission = `${resource}.${action}`;
+
+    return permissions.some(perm => {
+      if (typeof perm === 'string') {
+        return perm === requiredPermission || perm === '*';
+      } else {
+        return perm.resource === resource && perm.actions.includes(action);
+      }
+    });
+  }
+
+  hasAnyRole(roles: UserRole[]): boolean {
+    const userRoles = this.getUserRoles();
+    return userRoles.some(role => roles.includes(role));
   }
 
   setAuthData(authResponse: AuthResponse) {

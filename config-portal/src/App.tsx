@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { authApi } from './services/authApi';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Box, CircularProgress } from '@mui/material';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { ErrorBoundary } from 'react-error-boundary';
+import { RBACProvider } from './contexts/RBACContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import { UserRole } from './types/rbac';
 
 // Layout Components
 import Layout from './components/Layout';
@@ -21,6 +22,9 @@ import Settings from './pages/Settings';
 import Login from './pages/Login';
 import CampaignManagement from './pages/CampaignManagement';
 import CallbackManagement from './pages/CallbackManagement';
+import CustomerManagement from './pages/CustomerManagement';
+import ReportingDashboard from './pages/ReportingDashboard';
+import UserManagement from './pages/UserManagement';
 
 // Theme configuration
 const theme = createTheme({
@@ -88,42 +92,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Protected Route Component
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const checkAuth = () => {
-      const authStatus = authApi.isAuthenticated();
-      setIsAuthenticated(authStatus);
-      
-      // If not authenticated, ensure we redirect
-      if (!authStatus) {
-        // Small delay to ensure state is set before redirect
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 100);
-      }
-    };
-
-    checkAuth();
-  }, []);
-
-  if (isAuthenticated === null) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <>{children}</>;
-};
-
 // Error boundary fallback component
 const ErrorFallback = ({ error, resetErrorBoundary }: any) => (
   <div style={{ padding: '20px', textAlign: 'center' }}>
@@ -139,32 +107,111 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          <Router
-            future={{
-              v7_startTransition: true,
-              v7_relativeSplatPath: true,
-            }}
-          >
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<Navigate to="/dashboard" replace />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="data-import" element={<DataImport />} />
-                <Route path="data-import-progress" element={<DataImportProgress />} />
-                <Route path="import-errors" element={<ImportErrors />} />
-                <Route path="import-success" element={<ImportSuccess />} />
-                <Route path="excel-template" element={<ExcelTemplate />} />
-                <Route path="settings" element={<Settings />} />
-                <Route path="campaigns" element={<CampaignManagement />} />
-                <Route path="callbacks" element={<CallbackManagement />} />
-              </Route>
-            </Routes>
-          </Router>
+          <RBACProvider>
+            <Router
+              future={{
+                v7_startTransition: true,
+                v7_relativeSplatPath: true,
+              }}
+            >
+              <Routes>
+                {/* Public routes */}
+                <Route path="/login" element={<Login />} />
+
+                {/* Protected routes with RBAC */}
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <Layout />
+                  </ProtectedRoute>
+                }>
+                  <Route index element={<Navigate to="/dashboard" replace />} />
+
+                  {/* Dashboard - accessible to all authenticated users */}
+                  <Route path="dashboard" element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Data Import - requires data_import.create permission */}
+                  <Route path="data-import" element={
+                    <ProtectedRoute requiredPermissions={[{ resource: 'data_import', action: 'create' }]}>
+                      <DataImport />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="data-import-progress" element={
+                    <ProtectedRoute requiredPermissions={[{ resource: 'data_import', action: 'create' }]}>
+                      <DataImportProgress />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="import-errors" element={
+                    <ProtectedRoute requiredPermissions={[{ resource: 'data_import', action: 'create' }]}>
+                      <ImportErrors />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="import-success" element={
+                    <ProtectedRoute requiredPermissions={[{ resource: 'data_import', action: 'create' }]}>
+                      <ImportSuccess />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="excel-template" element={
+                    <ProtectedRoute requiredPermissions={[{ resource: 'templates', action: 'read' }]}>
+                      <ExcelTemplate />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Customer Management - requires agents.read permission */}
+                  <Route path="customers" element={
+                    <ProtectedRoute requiredPermissions={[{ resource: 'agents', action: 'read' }]}>
+                      <CustomerManagement />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Reporting - requires reports.generate permission */}
+                  <Route path="reporting" element={
+                    <ProtectedRoute requiredPermissions={[{ resource: 'reports', action: 'generate' }]}>
+                      <ReportingDashboard />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* User Management - requires users.read permission */}
+                  <Route path="users" element={
+                    <ProtectedRoute requiredPermissions={[{ resource: 'users', action: 'read' }]}>
+                      <UserManagement />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Settings - all authenticated users */}
+                  <Route path="settings" element={
+                    <ProtectedRoute>
+                      <Settings />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Campaigns - requires campaigns.read permission */}
+                  <Route path="campaigns" element={
+                    <ProtectedRoute requiredPermissions={[{ resource: 'campaigns', action: 'read' }]}>
+                      <CampaignManagement />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Callbacks - requires agents.read permission */}
+                  <Route path="callbacks" element={
+                    <ProtectedRoute requiredPermissions={[{ resource: 'agents', action: 'read' }]}>
+                      <CallbackManagement />
+                    </ProtectedRoute>
+                  } />
+                </Route>
+
+                {/* Catch all - redirect to dashboard for authenticated users, login for others */}
+                <Route path="*" element={
+                  <ProtectedRoute redirectTo="/login">
+                    <Navigate to="/dashboard" replace />
+                  </ProtectedRoute>
+                } />
+              </Routes>
+            </Router>
+          </RBACProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </ErrorBoundary>

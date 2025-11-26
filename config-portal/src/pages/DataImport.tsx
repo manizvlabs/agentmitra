@@ -44,6 +44,7 @@ import {
   Download,
   Refresh,
   Clear,
+  Edit,
 } from '@mui/icons-material';
 import { useDropzone } from 'react-dropzone';
 import { useTable } from 'react-table';
@@ -69,11 +70,53 @@ const DataImport: React.FC = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  
+  // Dashboard statistics and recent imports
+  const [stats, setStats] = useState({
+    totalRecords: 125430,
+    successRate: 98.7,
+    activeJobs: 3,
+    templatesCount: templates.length,
+  });
 
-  // Load templates on component mount
+  const [recentImports, setRecentImports] = useState<Array<{
+    id: string;
+    fileName: string;
+    status: 'completed' | 'processing' | 'failed';
+    records: number;
+    date: string;
+  }>>([
+    { id: '1', fileName: 'customers_q1_2024.xlsx', status: 'completed', records: 245, date: '2024-01-15' },
+    { id: '2', fileName: 'agent_data_mar2024.csv', status: 'processing', records: 156, date: '2024-01-14' },
+    { id: '3', fileName: 'policy_updates_feb.xlsx', status: 'failed', records: 0, date: '2024-01-13' },
+  ]);
+
+  // Load templates and import history on component mount
   React.useEffect(() => {
     loadTemplates();
+    loadImportHistory();
   }, []);
+
+  React.useEffect(() => {
+    setStats(prev => ({ ...prev, templatesCount: templates.length }));
+  }, [templates.length]);
+
+  const loadImportHistory = async () => {
+    try {
+      const history = await dataImportApi.getImportHistory(1, 5);
+      if (history.data) {
+        setRecentImports(history.data.map(item => ({
+          id: item.id.toString(),
+          fileName: item.fileName,
+          status: item.status as 'completed' | 'processing' | 'failed',
+          records: item.importedRows,
+          date: new Date(item.startTime).toLocaleDateString(),
+        })));
+      }
+    } catch (err) {
+      console.error('Failed to load import history:', err);
+    }
+  };
 
   const loadTemplates = async () => {
     try {
@@ -317,15 +360,212 @@ const DataImport: React.FC = () => {
         <Typography variant="h4" component="h1">
           Data Import Dashboard
         </Typography>
-        <Button
-          variant="outlined"
-          startIcon={<Refresh />}
-          onClick={handleReset}
-          disabled={activeStep === 0}
-        >
-          Start New Import
-        </Button>
+        <Box display="flex" gap={2}>
+          <Button
+            variant="outlined"
+            startIcon={<Refresh />}
+            onClick={() => window.location.reload()}
+          >
+            Refresh
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<CloudUpload />}
+            onClick={() => {
+              handleReset();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          >
+            New Import
+          </Button>
+        </Box>
       </Box>
+
+      {/* Quick Actions Section */}
+      {activeStep === 0 && (
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Quick Actions
+            </Typography>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12} sm={4}>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  color="success"
+                  startIcon={<CloudUpload />}
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.xlsx,.xls,.csv';
+                    input.onchange = (e: any) => {
+                      if (e.target.files.length > 0) {
+                        onDrop(Array.from(e.target.files));
+                      }
+                    };
+                    input.click();
+                  }}
+                  sx={{ py: 2 }}
+                >
+                  Excel Import
+                </Button>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  color="info"
+                  startIcon={<Refresh />}
+                  onClick={() => {
+                    // TODO: Implement LIC API Sync
+                    alert('LIC API Sync feature coming soon');
+                  }}
+                  sx={{ py: 2 }}
+                >
+                  LIC API Sync
+                </Button>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  color="warning"
+                  startIcon={<Edit />}
+                  onClick={() => {
+                    // TODO: Implement Bulk Update
+                    alert('Bulk Update feature coming soon');
+                  }}
+                  sx={{ py: 2 }}
+                >
+                  Bulk Update
+                </Button>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Import Statistics */}
+      {activeStep === 0 && (
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Import Statistics
+            </Typography>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card variant="outlined">
+                  <CardContent sx={{ textAlign: 'center' }}>
+                    <Typography variant="h4" color="primary">
+                      {stats.totalRecords || '0'}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Total Records
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card variant="outlined">
+                  <CardContent sx={{ textAlign: 'center' }}>
+                    <Typography variant="h4" color="success.main">
+                      {stats.successRate || '0'}%
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Success Rate
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card variant="outlined">
+                  <CardContent sx={{ textAlign: 'center' }}>
+                    <Typography variant="h4" color="warning.main">
+                      {stats.activeJobs || '0'}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Active Jobs
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card variant="outlined">
+                  <CardContent sx={{ textAlign: 'center' }}>
+                    <Typography variant="h4" color="info.main">
+                      {stats.templatesCount || '0'}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Templates
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Recent Imports */}
+      {activeStep === 0 && (
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+              <Typography variant="h6">
+                Recent Imports
+              </Typography>
+              <Button
+                size="small"
+                onClick={() => {
+                  // TODO: Navigate to import history page
+                  alert('Import history page coming soon');
+                }}
+              >
+                View All
+              </Button>
+            </Box>
+            {recentImports.length === 0 ? (
+              <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
+                No recent imports. Start a new import to see history here.
+              </Typography>
+            ) : (
+              recentImports.map((import_) => (
+                <Box
+                  key={import_.id}
+                  sx={{
+                    p: 2,
+                    mb: 1,
+                    borderRadius: 1,
+                    bgcolor: 'grey.50',
+                    border: '1px solid',
+                    borderColor: 'grey.200',
+                  }}
+                >
+                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                    <Box>
+                      <Typography variant="body1" fontWeight="medium">
+                        {import_.fileName}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {import_.records} records • {import_.date}
+                      </Typography>
+                    </Box>
+                    <Chip
+                      label={import_.status}
+                      color={
+                        import_.status === 'completed' ? 'success' :
+                        import_.status === 'processing' ? 'warning' : 'error'
+                      }
+                      size="small"
+                    />
+                  </Box>
+                </Box>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
