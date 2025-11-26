@@ -56,7 +56,7 @@ interface CallbackRequest {
 
 const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? ''
-  : (process.env.REACT_APP_API_URL || 'http://localhost:8012');
+  : (process.env.REACT_APP_API_URL || 'https://localhost:8012');
 
 const CallbackManagement: React.FC = () => {
   const [callbacks, setCallbacks] = useState<CallbackRequest[]>([]);

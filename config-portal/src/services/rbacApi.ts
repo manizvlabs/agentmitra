@@ -4,7 +4,7 @@ import { RoleDefinition, FeatureFlag } from '../types/rbac';
 // Use relative URLs for production (when served through Nginx), absolute URLs for development
 const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? '' // Use relative URLs for production (served through Nginx /api/ proxy)
-  : (process.env.REACT_APP_API_URL || 'http://localhost:8012');
+  : (process.env.REACT_APP_API_URL || 'https://localhost:8012');
 
 class RBACApiService {
   private axiosInstance = axios.create({
