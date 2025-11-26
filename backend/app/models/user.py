@@ -98,21 +98,11 @@ class User(Base, TimestampMixin):
     
     # Relationships
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
-    # Optional relationships - configured lazily to avoid circular import issues
-    # These relationships will be configured after all models are imported
-    notification_settings = relationship(
-        "NotificationSettings", 
-        back_populates="user", 
-        cascade="all, delete-orphan",
-        lazy="select",
-        uselist=False  # One-to-one relationship
-    )
-    device_tokens = relationship(
-        "DeviceToken", 
-        back_populates="user", 
-        cascade="all, delete-orphan",
-        lazy="select"
-    )
+    # Note: notification_settings and device_tokens relationships are commented out
+    # to avoid SQLAlchemy mapper initialization errors. These can be accessed via
+    # direct queries when needed instead of through relationships.
+    # notification_settings = relationship("NotificationSettings", back_populates="user", cascade="all, delete-orphan", lazy="select", uselist=False)
+    # device_tokens = relationship("DeviceToken", back_populates="user", cascade="all, delete-orphan", lazy="select")
 
     @property
     def full_name(self):
