@@ -2,11 +2,13 @@
 Database Models
 """
 from .base import Base
+# Import notification models BEFORE user to ensure NotificationSettings is available
+# when User model relationships are initialized
+from .notification import Notification, NotificationSettings, DeviceToken
 from .user import User, UserSession
 from .agent import Agent
 from .presentation import Presentation, Slide, PresentationTemplate
 from .policy import Policyholder, InsurancePolicy, PremiumPayment
-from .notification import Notification, NotificationSettings, DeviceToken
 from .campaign import Campaign, CampaignTrigger, CampaignExecution, CampaignTemplate, CampaignResponse
 # Import callback models lazily to avoid SQLAlchemy FK validation issues at import time
 # These models are only used in specific endpoints, not core functionality
