@@ -338,5 +338,10 @@ class AgentMitraApp extends ConsumerWidget {
     '/agent-config-dashboard': (context) => const AgentConfigDashboard(),
     '/roi-analytics': (context) => const RoiAnalyticsDashboard(),
     '/campaign-builder': (context) => const MarketingCampaignBuilder(),
+    
+    // Dashboard and Callback Management
+    '/agent-dashboard': (context) => const DashboardPage(),
+    '/dashboard': (context) => const DashboardPage(),
+    '/callback-management': (context) => const CallbackRequestManagement(),
   };
 }

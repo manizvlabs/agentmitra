@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
+import 'dart:typed_data';
 import '../viewmodels/presentation_viewmodel.dart';
 import '../../data/models/presentation_model.dart';
 import '../../data/models/slide_model.dart';
 import '../../data/models/presentation_models.dart';
+import '../widgets/color_picker_dialog.dart';
+import '../../../../core/services/agent_service.dart';
+import '../../../../core/services/logger_service.dart';
+
+// Conditional import for web
+import 'dart:html' as html show FileUploadInputElement, FileReader;
 
 /// Presentation Editor Page
 /// Full slide management with add, edit, delete, reorder functionality
@@ -550,10 +558,14 @@ class _PresentationEditorPageState extends State<PresentationEditorPage> {
     final color = _parseColor(colorHex);
     return InkWell(
       onTap: () async {
-        // TODO: Show color picker dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Color picker coming soon')),
+        final pickedColor = await ColorPickerDialog.show(
+          context,
+          initialColor: color,
+          title: 'Select Color',
         );
+        if (pickedColor != null) {
+          onColorChanged(_colorToHex(pickedColor));
+        }
       },
       child: Container(
         height: 50,
@@ -575,7 +587,7 @@ class _PresentationEditorPageState extends State<PresentationEditorPage> {
     );
   }
 
-  void _addNewSlide() {
+  Future<void> _addNewSlide() async {
     final newSlide = SlideModel(
       slideOrder: (_currentPresentation?.slides.length ?? 0),
       slideType: 'text',
@@ -583,22 +595,37 @@ class _PresentationEditorPageState extends State<PresentationEditorPage> {
       subtitle: 'Slide content',
     );
 
-    setState(() {
-      if (_currentPresentation == null) {
+    if (_currentPresentation == null) {
+      final agentId = await AgentService().getCurrentAgentId();
+      if (agentId == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Unable to create presentation. Please ensure you are logged in as an agent.'),
+            ),
+          );
+        }
+        return;
+      }
+      setState(() {
         _currentPresentation = PresentationModel(
-          agentId: 'agent_123', // TODO: Get from session
+          agentId: agentId,
           name: _titleController.text.isNotEmpty ? _titleController.text : 'Untitled Presentation',
           description: _descriptionController.text,
           slides: [newSlide],
         );
-      } else {
+        _selectedSlide = newSlide;
+        _hasUnsavedChanges = true;
+      });
+    } else {
+      setState(() {
         final slides = List<SlideModel>.from(_currentPresentation!.slides);
         slides.add(newSlide);
         _currentPresentation = _currentPresentation!.copyWith(slides: slides);
-      }
-      _selectedSlide = newSlide;
-      _hasUnsavedChanges = true;
-    });
+        _selectedSlide = newSlide;
+        _hasUnsavedChanges = true;
+      });
+    }
   }
 
   void _selectSlide(SlideModel slide) {
@@ -730,8 +757,21 @@ class _PresentationEditorPageState extends State<PresentationEditorPage> {
     setState(() => _isSaving = true);
     final viewModel = Provider.of<PresentationViewModel>(context, listen: false);
 
+    final agentId = await AgentService().getCurrentAgentId();
+    if (agentId == null) {
+      setState(() => _isSaving = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to create presentation. Please ensure you are logged in as an agent.'),
+          ),
+        );
+      }
+      return;
+    }
+
     final created = await viewModel.createPresentation(
-      agentId: 'agent_123', // TODO: Get from session
+      agentId: agentId,
       title: _titleController.text,
       description: _descriptionController.text,
       slides: _currentPresentation != null
@@ -759,10 +799,74 @@ class _PresentationEditorPageState extends State<PresentationEditorPage> {
   }
 
   Future<void> _uploadMedia() async {
-    // TODO: Implement media upload
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Media upload coming soon')),
-    );
+    if (kIsWeb) {
+      // Web file picker using HTML5 file input
+      final input = html.FileUploadInputElement()..accept = 'image/*,video/*';
+      input.click();
+
+      input.onChange.listen((e) async {
+        final files = input.files;
+        if (files == null || files.isEmpty) return;
+
+        final file = files[0];
+        final reader = html.FileReader();
+
+        reader.onLoadEnd.listen((e) async {
+          if (reader.result != null && reader.result is Uint8List) {
+            final bytes = reader.result as Uint8List;
+            await _handleMediaUpload(file.name, bytes);
+          }
+        });
+
+        reader.readAsArrayBuffer(file);
+      });
+    } else {
+      // Mobile file picker would use image_picker package
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Media upload on mobile coming soon')),
+      );
+    }
+  }
+
+  Future<void> _handleMediaUpload(String fileName, Uint8List fileBytes) async {
+    try {
+      setState(() => _isSaving = true);
+      final viewModel = Provider.of<PresentationViewModel>(context, listen: false);
+
+      // Upload to backend
+      final response = await viewModel.uploadMedia(fileName, fileBytes);
+      
+      if (response != null && response['media_url'] != null) {
+        final mediaUrl = response['media_url'] as String;
+        setState(() {
+          if (_selectedSlide != null) {
+            _selectedSlide = _selectedSlide!.copyWith(mediaUrl: mediaUrl);
+            _hasUnsavedChanges = true;
+          }
+        });
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Media uploaded successfully')),
+          );
+        }
+      } else {
+        throw Exception('Invalid response from server');
+      }
+    } catch (e) {
+      LoggerService().error('Failed to upload media: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to upload media: $e')),
+        );
+      }
+    } finally {
+      setState(() => _isSaving = false);
+    }
+  }
+
+  String _colorToHex(Color color) {
+    return '#${color.value.toRadixString(16).substring(2, 8).toUpperCase()}';
   }
 
   Future<bool?> _showUnsavedChangesDialog() async {

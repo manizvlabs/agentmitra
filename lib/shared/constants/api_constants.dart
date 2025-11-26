@@ -24,7 +24,8 @@ class ApiConstants {
 
   // Agent Endpoints
   static const String agents = '$apiVersion/agents';
-  static String agentProfile(String agentId) => '$agents/$agentId';
+  static const String agentProfile = '$agents/profile'; // Current agent's profile
+  static String agentProfileById(String agentId) => '$agents/$agentId';
 
   // Policy Endpoints
   static const String policies = '$apiVersion/policies';

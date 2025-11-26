@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/architecture/base/base_viewmodel.dart';
+import '../../../../core/services/agent_service.dart';
 import '../../data/repositories/dashboard_repository.dart';
 import '../../data/datasources/dashboard_remote_datasource.dart';
 import '../../data/models/dashboard_data.dart';
@@ -49,7 +50,10 @@ class DashboardViewModel extends BaseViewModel {
     await executeAsync(
       () async {
         // TODO: Get agent ID from user session/current user context
-        const agentId = 'agent_123'; // Replace with actual agent ID from session
+        final agentId = await AgentService().getCurrentAgentId();
+        if (agentId == null) {
+          throw Exception('Agent ID not available');
+        }
         _analytics = await _repository.getDashboardAnalytics(agentId: agentId);
         _notifications = await _repository.getNotifications(userId: agentId);
         return true;
@@ -77,7 +81,10 @@ class DashboardViewModel extends BaseViewModel {
   Future<void> loadAgentPerformanceData() async {
     await executeAsync(
       () async {
-        const agentId = 'agent_123'; // TODO: Get from actual user session
+        final agentId = await AgentService().getCurrentAgentId();
+        if (agentId == null) {
+          throw Exception('Agent ID not available');
+        }
         _agentPerformance = await _repository.getAgentPerformanceData(agentId);
         return true;
       },
@@ -93,7 +100,10 @@ class DashboardViewModel extends BaseViewModel {
   }) async {
     await executeAsync(
       () async {
-        const agentId = 'agent_123'; // TODO: Get from actual user session
+        final agentId = await AgentService().getCurrentAgentId();
+        if (agentId == null) {
+          throw Exception('Agent ID not available');
+        }
         _businessIntelligence = await _repository.getBusinessIntelligenceData(
           agentId: agentId,
           startDate: startDate,

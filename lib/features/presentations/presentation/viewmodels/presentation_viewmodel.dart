@@ -1,4 +1,5 @@
 /// Presentation ViewModel
+import 'dart:typed_data';
 import '../../../../core/architecture/base/base_viewmodel.dart';
 import '../../data/repositories/presentation_repository.dart';
 import '../../data/models/presentation_model.dart';
@@ -149,6 +150,22 @@ class PresentationViewModel extends BaseViewModel {
     } catch (e) {
       setError('Failed to update presentation: $e');
       return false;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /// Upload media file
+  Future<Map<String, dynamic>?> uploadMedia(String fileName, Uint8List fileBytes) async {
+    setLoading(true);
+    clearError();
+
+    try {
+      final response = await _presentationRepository.uploadMedia(fileName, fileBytes);
+      return response;
+    } catch (e) {
+      setError('Failed to upload media: $e');
+      return null;
     } finally {
       setLoading(false);
     }

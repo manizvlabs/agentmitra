@@ -1,4 +1,5 @@
 import '../../../../core/services/api_service.dart';
+import '../../../../core/services/file_upload_service.dart';
 import '../../../../shared/constants/api_constants.dart';
 import '../models/presentation_models.dart';
 
@@ -64,13 +65,13 @@ class PresentationRemoteDataSource {
   }
 
   /// Upload media file
-  Future<Map<String, dynamic>> uploadMedia(String filePath, List<int> fileBytes) async {
-    // Note: This would need to be implemented with proper multipart upload
-    // For now, returning a mock response
-    final response = await ApiService.post(ApiConstants.mediaUpload, {
-      'file_name': filePath.split('/').last,
-      'file_size': fileBytes.length,
-    });
+  Future<Map<String, dynamic>> uploadMedia(String fileName, List<int> fileBytes) async {
+    // Use FileUploadService for proper multipart upload
+    final response = await FileUploadService.uploadPresentationMedia(
+      fileName,
+      fileBytes,
+      fileName: fileName,
+    );
     return response;
   }
 }

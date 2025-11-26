@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import '../viewmodels/presentation_viewmodel.dart';
 import '../../data/models/presentation_model.dart';
 import '../../data/models/presentation_models.dart';
+import '../../../../core/services/agent_service.dart';
+import '../../../../core/services/logger_service.dart';
 
 /// Presentation List Page
 /// Shows all presentations with filters, search, and management actions
@@ -22,10 +24,21 @@ class _PresentationListPageState extends State<PresentationListPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final viewModel = Provider.of<PresentationViewModel>(context, listen: false);
-      // TODO: Get agent ID from user session
-      viewModel.loadAgentPresentations('agent_123');
+      final agentId = await AgentService().getCurrentAgentId();
+      if (agentId != null) {
+        viewModel.loadAgentPresentations(agentId);
+      } else {
+        LoggerService().error('Failed to get agent ID for loading presentations');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Unable to load presentations. Please ensure you are logged in as an agent.'),
+            ),
+          );
+        }
+      }
     });
   }
 
@@ -75,8 +88,11 @@ class _PresentationListPageState extends State<PresentationListPage> {
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () {
-                      viewModel.loadAgentPresentations('agent_123');
+                    onPressed: () async {
+                      final agentId = await AgentService().getCurrentAgentId();
+                      if (agentId != null) {
+                        viewModel.loadAgentPresentations(agentId);
+                      }
                     },
                     child: const Text('Retry'),
                   ),
@@ -98,7 +114,12 @@ class _PresentationListPageState extends State<PresentationListPage> {
               // Presentations List
               Expanded(
                 child: RefreshIndicator(
-                  onRefresh: () => viewModel.loadAgentPresentations('agent_123'),
+                  onRefresh: () async {
+                    final agentId = await AgentService().getCurrentAgentId();
+                    if (agentId != null) {
+                      await viewModel.loadAgentPresentations(agentId);
+                    }
+                  },
                   child: ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: filteredPresentations.length,

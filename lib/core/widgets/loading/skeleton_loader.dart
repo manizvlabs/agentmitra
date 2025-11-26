@@ -147,15 +147,16 @@ class SkeletonCard extends StatelessWidget {
         ),
         child: height != null
             ? SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SkeletonText(width: double.infinity, height: 16),
-                    const SizedBox(height: 8),
-                    SkeletonText(width: 200, height: 12),
+                    SkeletonText(width: double.infinity, height: 14),
                     const SizedBox(height: 6),
-                    SkeletonText(width: 150, height: 12),
+                    SkeletonText(width: 180, height: 10),
+                    const SizedBox(height: 4),
+                    SkeletonText(width: 120, height: 10),
                   ],
                 ),
               )
@@ -163,12 +164,12 @@ class SkeletonCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SkeletonText(width: double.infinity, height: 16),
-                  const SizedBox(height: 8),
-                  SkeletonText(width: 200, height: 12),
+                  SkeletonText(width: double.infinity, height: 14),
                   const SizedBox(height: 6),
+                  SkeletonText(width: 180, height: 10),
+                  const SizedBox(height: 4),
                   Flexible(
-                    child: SkeletonText(width: 150, height: 12),
+                    child: SkeletonText(width: 120, height: 10),
                   ),
                 ],
               ),

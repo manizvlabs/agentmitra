@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/services/agent_service.dart';
 import 'package:provider/provider.dart';
 import '../../../customers/presentation/viewmodels/customer_viewmodel.dart';
 import '../../../customers/data/models/customer_model.dart';
@@ -480,7 +481,10 @@ class _NewPolicyPageState extends State<NewPolicyPage> {
 
     try {
       // TODO: Get agent ID from auth context
-      const agentId = 'agent_123'; // Replace with actual agent ID from session
+      final agentId = await AgentService().getCurrentAgentId();
+      if (agentId == null) {
+        throw Exception('Agent ID not available');
+      }
 
       final policyData = {
         'policy_number': _policyNumberController.text.trim(),
