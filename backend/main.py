@@ -104,9 +104,9 @@ if settings.environment == "production":
         allowed_hosts=["your-domain.com", "*.your-domain.com"]  # Configure for your domain
     )
 
-# Add HTTPS redirect in production
-if settings.environment == "production":
-    app.add_middleware(HTTPSRedirectMiddleware)
+# Add HTTPS redirect in production (disabled for local testing)
+# if settings.environment == "production":
+#     app.add_middleware(HTTPSRedirectMiddleware)
 
 # Add security middleware
 app.add_middleware(SecurityHeadersMiddleware)
