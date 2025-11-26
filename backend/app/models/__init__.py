@@ -9,7 +9,15 @@ from .user import User, UserSession
 from .agent import Agent
 from .presentation import Presentation, Slide, PresentationTemplate
 from .policy import Policyholder, InsurancePolicy, PremiumPayment
-from .campaign import Campaign, CampaignTrigger, CampaignExecution, CampaignTemplate, CampaignResponse
+# Import campaign models lazily if they exist
+try:
+    from .campaign import Campaign, CampaignTrigger, CampaignExecution, CampaignTemplate, CampaignResponse
+except ImportError:
+    Campaign = None
+    CampaignTrigger = None
+    CampaignExecution = None
+    CampaignTemplate = None
+    CampaignResponse = None
 # Import callback models lazily to avoid SQLAlchemy FK validation issues at import time
 # These models are only used in specific endpoints, not core functionality
 try:
