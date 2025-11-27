@@ -76,37 +76,33 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
           final role = user.role?.toLowerCase() ?? 'policyholder';
           
           // Navigate based on role
-          switch (role) {
-            case 'policyholder':
-            case 'customer':
-              Navigator.of(context).pushReplacementNamed('/customer-dashboard');
-              break;
-            case 'agent':
-            case 'junior_agent':
-            case 'senior_agent':
-              Navigator.of(context).pushReplacementNamed('/agent-dashboard');
-              break;
-            case 'provider_admin':
-            case 'admin':
-              Navigator.of(context).pushReplacementNamed('/agent-config-dashboard');
-              break;
-            case 'super_admin':
-              Navigator.of(context).pushReplacementNamed('/agent-config-dashboard');
-              break;
-            default:
-              // Stay on welcome screen
-              break;
+          if (mounted) {
+            switch (role) {
+              case 'policyholder':
+              case 'customer':
+                Navigator.of(context).pushReplacementNamed('/customer-dashboard');
+                break;
+              case 'agent':
+              case 'junior_agent':
+              case 'senior_agent':
+                Navigator.of(context).pushReplacementNamed('/agent-dashboard');
+                break;
+              case 'provider_admin':
+              case 'admin':
+                Navigator.of(context).pushReplacementNamed('/agent-config-dashboard');
+                break;
+              case 'super_admin':
+                Navigator.of(context).pushReplacementNamed('/agent-config-dashboard');
+                break;
+              default:
+                // Stay on welcome screen
+                break;
+            }
           }
         }
       }
     } catch (e) {
       LoggerService().error('Error checking auth status: $e');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isCheckingAuth = false;
-        });
-      }
     }
   }
 

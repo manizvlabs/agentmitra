@@ -95,32 +95,33 @@ class DashboardRepository extends BaseRepository {
         return RevenueTrend(
           date: DateTime.parse(trend['date']),
           revenue: (trend['value'] ?? 0.0).toDouble(),
-          target: (trend['target'] ?? trend['value'] ?? 0.0).toDouble() * 1.1, // Mock target as 10% above actual
+          target: (trend['target'] ?? trend['value'] ?? 0.0).toDouble(),
           growth: trend['growth'] != null ? (trend['growth'] as num).toDouble() : 0.0,
         );
       }).toList();
 
-      // Mock customer engagement data - in real app, fetch from separate API
-      final customerEngagement = [
-        CustomerEngagement(
-          metric: 'App Sessions',
-          value: response['total_customers'] ?? 0,
-          change: 8.2,
-          period: 'vs last month',
-        ),
-        CustomerEngagement(
-          metric: 'Policy Views',
-          value: response['total_policies'] ?? 0,
-          change: 12.5,
-          period: 'vs last month',
-        ),
-        CustomerEngagement(
-          metric: 'Support Queries',
-          value: (response['active_customers'] ?? 0) ~/ 10, // Mock data
-          change: -5.1,
-          period: 'vs last month',
-        ),
-      ];
+      // Fetch customer engagement data from analytics API
+      List<CustomerEngagement> customerEngagement = [];
+      try {
+        final engagementResponse = await ApiService.get(
+          '/analytics/dashboard/customer-engagement',
+          queryParameters: agentId != null ? {'agent_id': agentId} : {},
+        );
+        
+        if (engagementResponse['data'] is List) {
+          customerEngagement = (engagementResponse['data'] as List<dynamic>).map((item) {
+            return CustomerEngagement(
+              metric: item['metric'] ?? '',
+              value: (item['value'] ?? 0) as int,
+              change: (item['change'] ?? 0.0) as double,
+              period: item['period'] ?? 'vs last month',
+            );
+          }).toList();
+        }
+      } catch (e) {
+        // If engagement API is not available, return empty list
+        customerEngagement = [];
+      }
 
       return BusinessIntelligenceData(
         revenueTrends: revenueTrends,

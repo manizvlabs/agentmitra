@@ -60,31 +60,62 @@ class _EnhancedAgentDiscoveryPageState extends State<EnhancedAgentDiscoveryPage>
     });
 
     try {
+      final queryParams = <String, String>{
+        'limit': '50',
+        'status': 'active',
+        'verification_status': 'verified',
+      };
+      
+      if (_searchController.text.isNotEmpty) {
+        queryParams['search'] = _searchController.text;
+      }
+      
+      if (_selectedRegion != null && _selectedRegion != 'All') {
+        queryParams['territory'] = _selectedRegion!;
+      }
+
       final response = await ApiService.get(
         ApiConstants.agents,
-        queryParameters: {
-          'search': _searchController.text.isEmpty ? null : _searchController.text,
-          'territory': _selectedRegion == 'All' ? null : _selectedRegion,
-          'limit': 50,
-        },
+        queryParameters: queryParams,
       );
 
-      if (response['success'] == true) {
-        setState(() {
-          _agents = List<Map<String, dynamic>>.from(response['data'] ?? []);
-          _applyFilters();
-        });
+      // Backend returns a list directly or wrapped in data
+      List<dynamic> agentsList;
+      if (response is List) {
+        agentsList = response;
+      } else if (response['data'] is List) {
+        agentsList = response['data'] as List<dynamic>;
+      } else if (response['agents'] is List) {
+        agentsList = response['agents'] as List<dynamic>;
       } else {
-        setState(() {
-          _error = response['message'] ?? 'Failed to load agents';
-        });
+        agentsList = [];
       }
+
+      setState(() {
+        _agents = agentsList.map((agent) {
+          // Map backend response to frontend format
+          final userInfo = agent['user_info'] as Map<String, dynamic>?;
+          return {
+            'agent_id': agent['agent_id']?.toString(),
+            'name': userInfo?['full_name'] ?? agent['business_name'] ?? 'Unknown',
+            'agent_code': agent['agent_code'],
+            'rating': (agent['customer_satisfaction_score'] ?? 0.0) as num,
+            'reviews_count': 0, // Not available in backend
+            'experience_years': agent['experience_years'] ?? 0,
+            'specialization': (agent['specializations'] as List<dynamic>?)?.first ?? 'General',
+            'region': agent['territory'] ?? agent['operating_regions']?.first ?? 'Unknown',
+            'verified': agent['verification_status'] == 'verified',
+            'policies_sold': agent['total_policies_sold'] ?? 0,
+            'image_url': null,
+          };
+        }).toList();
+        _applyFilters();
+      });
     } catch (e) {
       LoggerService().error('Failed to load agents: $e');
       setState(() {
         _error = 'Failed to load agents. Please try again.';
-        // Use mock data for demo
-        _agents = _getMockAgents();
+        _agents = [];
         _applyFilters();
       });
     } finally {
@@ -92,50 +123,6 @@ class _EnhancedAgentDiscoveryPageState extends State<EnhancedAgentDiscoveryPage>
         _isLoading = false;
       });
     }
-  }
-
-  List<Map<String, dynamic>> _getMockAgents() {
-    return [
-      {
-        'agent_id': '1',
-        'name': 'Rajesh Kumar',
-        'agent_code': 'AG001',
-        'rating': 4.8,
-        'reviews_count': 127,
-        'experience_years': 12,
-        'specialization': 'Life Insurance',
-        'region': 'Mumbai',
-        'verified': true,
-        'policies_sold': 450,
-        'image_url': null,
-      },
-      {
-        'agent_id': '2',
-        'name': 'Priya Sharma',
-        'agent_code': 'AG002',
-        'rating': 4.6,
-        'reviews_count': 89,
-        'experience_years': 8,
-        'specialization': 'Health Insurance',
-        'region': 'Delhi',
-        'verified': true,
-        'policies_sold': 320,
-        'image_url': null,
-      },
-      {
-        'agent_id': '3',
-        'name': 'Amit Patel',
-        'agent_code': 'AG003',
-        'rating': 4.9,
-        'reviews_count': 203,
-        'experience_years': 15,
-        'specialization': 'Term Plans',
-        'region': 'Bangalore',
-        'verified': true,
-        'policies_sold': 680,
-        'image_url': null,
-      },
-    ];
   }
 
   void _applyFilters() {

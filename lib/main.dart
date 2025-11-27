@@ -42,6 +42,7 @@ import 'screens/agent_verification_screen.dart';
 import 'screens/document_upload_screen.dart';
 import 'screens/emergency_contact_screen.dart';
 import 'screens/kyc_verification_screen.dart';
+import 'screens/onboarding_completion_page.dart';
 import 'screens/campaign_performance_screen.dart';
 import 'screens/content_performance_screen.dart';
 import 'screens/accessibility_settings_screen.dart';
@@ -341,6 +342,7 @@ class AgentMitraApp extends ConsumerWidget {
     '/document-upload': (context) => const DocumentUploadScreen(),
     '/emergency-contact': (context) => const EmergencyContactScreen(),
     '/kyc-verification': (context) => const KycVerificationScreen(),
+    '/onboarding-completion': (context) => const OnboardingCompletionPage(),
 
     // Agent Portal
     '/agent-profile': (context) => const AgentProfilePage(),

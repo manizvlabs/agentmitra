@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/architecture/base/base_viewmodel.dart';
 import '../../data/repositories/customer_dashboard_repository.dart';
 import '../../data/models/customer_dashboard_data.dart';
+import '../../../../core/services/auth_service.dart';
 
 /// Customer Dashboard ViewModel Provider
 final customerDashboardViewModelProvider = ChangeNotifierProvider.autoDispose<CustomerDashboardViewModel>(
@@ -83,8 +84,15 @@ class CustomerDashboardViewModel extends BaseViewModel {
   Future<void> loadDashboardData() async {
     await executeAsync(
       () async {
-        // TODO: Get customer ID from auth service
-        const customerId = 'customer_123'; // Replace with actual customer ID
+        // Get customer ID from auth service
+        final authService = AuthService();
+        final currentUser = await authService.getCurrentUser();
+        
+        if (currentUser == null || currentUser.userId == null) {
+          throw Exception('User not authenticated');
+        }
+
+        final customerId = currentUser.userId!;
         _dashboardData = await _repository.getCustomerDashboardData(customerId);
         return true;
       },
