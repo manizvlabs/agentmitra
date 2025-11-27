@@ -78,6 +78,8 @@ class _ProtectedRouteState extends State<ProtectedRoute> {
       // Check role requirements
       if (widget.requiredRoles != null && widget.requiredRoles!.isNotEmpty) {
         final currentRole = rbacService.getCurrentUserRole();
+        final currentUserRoles = rbacService.getCurrentUserRoles();
+        final currentPermissions = rbacService.getCurrentUserPermissions();
 
         // Super admin has access to everything
         final isSuperAdmin = currentRole?.value == 'super_admin';
@@ -91,6 +93,7 @@ class _ProtectedRouteState extends State<ProtectedRoute> {
           });
           return;
         }
+        print('✅ Access GRANTED - Role check passed');
       }
 
       // Check permission requirements

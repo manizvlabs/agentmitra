@@ -64,8 +64,9 @@ class ServiceLocator {
     AnalyticsViewModel();
 
   /// RBAC Service - Role-Based Access Control
+  static RbacService? _rbacService;
   static RbacService get rbacService =>
-    RbacService(ApiService(), LoggerService());
+    _rbacService ??= RbacService(ApiService(), LoggerService());
 
   // ===========================================================================
   // UTILITY METHODS

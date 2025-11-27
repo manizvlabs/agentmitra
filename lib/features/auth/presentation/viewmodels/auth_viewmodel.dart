@@ -3,6 +3,7 @@ import '../../../../core/architecture/base/base_viewmodel.dart';
 import '../../../../core/services/rbac_service.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/logger_service.dart';
+import '../../../../core/di/service_locator.dart';
 import '../../../../core/utils/jwt_decoder.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/models/auth_response.dart';
@@ -10,13 +11,13 @@ import '../../data/models/user_model.dart';
 
 class AuthViewModel extends BaseViewModel {
   final AuthRepository _authRepository;
-  final RbacService _rbacService;
 
   AuthViewModel({
     AuthRepository? authRepository,
-    RbacService? rbacService,
-  }) : _authRepository = authRepository ?? AuthRepository(),
-       _rbacService = rbacService ?? RbacService(ApiService(), LoggerService());
+  }) : _authRepository = authRepository ?? AuthRepository();
+
+  // Use the shared RBAC service instance from ServiceLocator
+  RbacService get _rbacService => ServiceLocator.rbacService;
 
   UserModel? _currentUser;
   bool _isAuthenticated = false;
