@@ -167,6 +167,25 @@ void main() async {
 class AgentMitraApp extends ConsumerWidget {
   const AgentMitraApp({super.key});
 
+  // Helper function to get initial route from URL hash
+  static String _getInitialRoute() {
+    if (kIsWeb) {
+      // Check if there's a hash in the URL
+      final uri = Uri.base;
+      if (uri.hasFragment && uri.fragment.isNotEmpty) {
+        String route = uri.fragment;
+        if (!route.startsWith('/')) {
+          route = '/$route';
+        }
+        // Verify route exists in routes map
+        if (_routes.containsKey(route)) {
+          return route;
+        }
+      }
+    }
+    return '/splash'; // Default to splash screen
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch theme mode from Riverpod
@@ -228,7 +247,7 @@ class AgentMitraApp extends ConsumerWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: themeMode,
-        initialRoute: AgentMitraApp._getInitialRoute(), // Get initial route from URL hash if available
+        initialRoute: _getInitialRoute(), // Get initial route from URL hash if available
         onGenerateRoute: (settings) {
           // Handle hash-based routing for web
           String routeName = settings.name ?? '/';
@@ -277,25 +296,6 @@ class AgentMitraApp extends ConsumerWidget {
         },
       ),
     );
-  }
-
-  // Helper function to get initial route from URL hash
-  static String _getInitialRoute() {
-    if (kIsWeb) {
-      // Check if there's a hash in the URL
-      final uri = Uri.base;
-      if (uri.hasFragment && uri.fragment.isNotEmpty) {
-        String route = uri.fragment;
-        if (!route.startsWith('/')) {
-          route = '/$route';
-        }
-        // Verify route exists in routes map
-        if (_routes.containsKey(route)) {
-          return route;
-        }
-      }
-    }
-    return '/splash'; // Default to splash screen
   }
 
   // Helper function to wrap protected routes
