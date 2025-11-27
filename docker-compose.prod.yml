@@ -55,6 +55,7 @@ services:
       - MINIO_CDN_BASE_URL=http://minio:9000/${MINIO_BUCKET_NAME:-agentmitra-media}
     depends_on:
       # - featurehub  # Commented out - FeatureHub disabled
+      - pioneer-compass-server
       - minio
     ports:
       - "8012:8012"
@@ -208,6 +209,88 @@ services:
   #     - featurehub_db_data:/var/lib/postgresql/data
   #   networks:
   #     - agentmitra_network
+
+  # Pioneer Feature Flag Services
+  pioneer-nats:
+    image: nats:latest
+    container_name: agentmitra_pioneer_nats
+    restart: unless-stopped
+    command: --js
+    ports:
+      - "4223:4222"  # Expose NATS port to host
+    hostname: nats
+    networks:
+      - agentmitra_network
+
+  pioneer-compass-server:
+    image: pioneerio/compass-server:latest
+    container_name: agentmitra_pioneer_compass
+    restart: unless-stopped
+    environment:
+      - POSTGRES_HOST=host.docker.internal
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=pioneer
+      - POSTGRES_PASSWORD=pioneer123
+      - POSTGRES_DB=pioneer
+      - NATS_SERVER=pioneer-nats:4222
+    ports:
+      - "4001:3001"  # Pioneer REST API
+    depends_on:
+      - pioneer-nats
+    networks:
+      agentmitra_network:
+        aliases:
+          - compass-server
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  pioneer-scout:
+    image: pioneerio/scout:latest
+    container_name: agentmitra_pioneer_scout
+    restart: unless-stopped
+    environment:
+      - POSTGRES_HOST=host.docker.internal
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=pioneer
+      - POSTGRES_PASSWORD=pioneer123
+      - POSTGRES_DB=pioneer
+      - NATS_SERVER=pioneer-nats:4222
+      - COMPASS_URL=http://pioneer-compass-server:3001
+    ports:
+      - "4002:3030"  # Pioneer SSE endpoint
+    depends_on:
+      - pioneer-compass-server
+      - pioneer-nats
+    networks:
+      - agentmitra_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3030/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 35s
+
+  pioneer-compass-client:
+    image: pioneerio/compass-client:latest
+    container_name: agentmitra_pioneer_client
+    restart: unless-stopped
+    ports:
+      - "4000:3000"  # Pioneer Admin UI
+    depends_on:
+      - pioneer-nats
+      - pioneer-compass-server
+    networks:
+      - agentmitra_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # MinIO Object Storage for media files
   minio:

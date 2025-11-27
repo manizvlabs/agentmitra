@@ -30,13 +30,14 @@ class _PioneerDemoScreenState extends State<PioneerDemoScreen> {
 
     // Test common feature flags - these should exist in your Pioneer instance
     final flags = [
-      'CONTAINER_COLOUR_FEATURE', // From the sample code
-      'customer_dashboard_enabled',
+      'presentation_carousel_enabled',
+      'presentation_editor_enabled',
+      'presentation_templates_enabled',
+      'presentation_offline_mode_enabled',
+      'presentation_analytics_enabled',
+      'presentation_branding_enabled',
       'agent_dashboard_enabled',
       'whatsapp_integration_enabled',
-      'premium_payments_enabled',
-      'policy_management_enabled',
-      'feature_flag_control_enabled',
       'chatbot_assistance_enabled',
       'roi_analytics_enabled',
     ];
@@ -172,19 +173,19 @@ class _PioneerDemoScreenState extends State<PioneerDemoScreen> {
             ),
             const SizedBox(height: 16),
 
-            if (_featureFlags.containsKey('CONTAINER_COLOUR_FEATURE'))
+            if (_featureFlags.containsKey('presentation_carousel_enabled'))
               Container(
                 width: double.infinity,
                 height: 100,
                 decoration: BoxDecoration(
-                  color: _featureFlags['CONTAINER_COLOUR_FEATURE'] == true ? Colors.red : Colors.green,
+                  color: _featureFlags['presentation_carousel_enabled'] == true ? Colors.blue : Colors.grey,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
                   child: Text(
-                    _featureFlags['CONTAINER_COLOUR_FEATURE'] == true
-                        ? 'Feature Enabled (Red)'
-                        : 'Feature Disabled (Green)',
+                    _featureFlags['presentation_carousel_enabled'] == true
+                        ? 'Presentation Carousel Enabled'
+                        : 'Presentation Carousel Disabled',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
@@ -216,7 +217,7 @@ class _PioneerDemoScreenState extends State<PioneerDemoScreen> {
             const SizedBox(height: 16),
 
             Text(
-              'This container changes color based on the "CONTAINER_COLOUR_FEATURE" flag in Pioneer.',
+              'This container shows presentation carousel status based on the "presentation_carousel_enabled" flag in Pioneer.',
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
@@ -244,9 +245,9 @@ class _PioneerDemoScreenState extends State<PioneerDemoScreen> {
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       const SizedBox(height: 8),
-                      if (PioneerService.getFeatureDetails('CONTAINER_COLOUR_FEATURE') != null)
+                      if (PioneerService.getFeatureDetails('presentation_carousel_enabled') != null)
                         Text(
-                          'CONTAINER_COLOUR_FEATURE: ${PioneerService.getFeatureDetails('CONTAINER_COLOUR_FEATURE')!['value']}',
+                          'presentation_carousel_enabled: ${PioneerService.getFeatureDetails('presentation_carousel_enabled')!['value']}',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                     ],
@@ -273,8 +274,8 @@ class _PioneerDemoScreenState extends State<PioneerDemoScreen> {
                     const SizedBox(height: 8),
                     const Text(
                       '1. Go to your Pioneer admin panel\n'
-                      '2. Toggle the "CONTAINER_COLOUR_FEATURE" flag\n'
-                      '3. The container above should change color in real-time\n'
+                      '2. Toggle the "presentation_carousel_enabled" flag\n'
+                      '3. The container above should change status in real-time\n'
                       '4. Try toggling other feature flags to see them update',
                     ),
                   ],

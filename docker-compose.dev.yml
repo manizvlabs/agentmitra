@@ -67,6 +67,81 @@ services:
       timeout: 5s
       retries: 5
 
+  # Pioneer Feature Flag Services
+  pioneer-nats:
+    image: nats:latest
+    container_name: agentmitra_pioneer_nats_dev
+    restart: unless-stopped
+    command: --js
+    ports:
+      - "4223:4222"  # Expose NATS port to host
+      - "8223:8222"
+    hostname: nats
+    networks:
+      - agentmitra_network
+
+  pioneer-compass-server:
+    image: pioneerio/compass-server:latest
+    container_name: agentmitra_pioneer_compass_dev
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://pioneer:pioneer123@host.docker.internal:5432/pioneer
+      - NATS_URL=nats://host.docker.internal:4223
+    ports:
+      - "4001:3001"  # Pioneer REST API
+    depends_on:
+      - pioneer-nats
+    networks:
+      agentmitra_network:
+        aliases:
+          - compass-server
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  pioneer-scout:
+    image: pioneerio/scout:latest
+    container_name: agentmitra_pioneer_scout_dev
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://pioneer:pioneer123@host.docker.internal:5432/pioneer
+      - NATS_URL=nats://host.docker.internal:4223
+      - COMPASS_URL=http://pioneer-compass-server:3001
+    ports:
+      - "4002:3030"  # Pioneer SSE endpoint
+    depends_on:
+      - pioneer-compass-server
+      - pioneer-nats
+    networks:
+      - agentmitra_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3030/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 35s
+
+  pioneer-compass-client:
+    image: pioneerio/compass-client:latest
+    container_name: agentmitra_pioneer_client_dev
+    restart: unless-stopped
+    ports:
+      - "4000:3000"  # Pioneer Admin UI
+    depends_on:
+      - pioneer-nats
+      - pioneer-compass-server
+    networks:
+      - agentmitra_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   # MinIO Object Storage for media files
   minio:
     image: minio/minio:latest
