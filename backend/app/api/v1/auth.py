@@ -8,6 +8,7 @@ from typing import Optional, List
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.auth import auth_service
 from app.core.security import (
     verify_password,
     get_password_hash,
@@ -186,8 +187,27 @@ async def login(
                     detail="Invalid credentials"
                 )
 
-        # Generate tokens
-        access_token = create_access_token({"sub": str(user.user_id), "phone_number": user.phone_number})
+        # Get user roles and permissions for JWT token
+        rbac_service = auth_service
+        user_roles = rbac_service.get_user_roles(str(user.user_id), db)
+        user_permissions = []
+
+        # Get permissions for all user roles
+        for role in user_roles:
+            role_permissions = rbac_service.get_role_permissions(role, db)
+            user_permissions.extend(role_permissions)
+
+        # Remove duplicates
+        user_permissions = list(set(user_permissions))
+
+        # Generate tokens with roles and permissions
+        token_data = {
+            "sub": str(user.user_id),
+            "phone_number": user.phone_number,
+            "roles": user_roles,
+            "permissions": user_permissions
+        }
+        access_token = create_access_token(token_data)
         refresh_token = create_refresh_token({"sub": str(user.user_id)})
 
         # Log successful login
