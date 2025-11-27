@@ -10,14 +10,33 @@ class TrialSetupScreen extends StatefulWidget {
 class _TrialSetupScreenState extends State<TrialSetupScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
   bool _lifeInsuranceSelected = false;
   bool _healthInsuranceSelected = false;
+  String? _selectedRole; // 'policyholder' or 'agent'
+  String? _profilePicturePath;
+  bool _termsAccepted = false;
 
   bool get _isFormValid {
-    return _nameController.text.trim().isNotEmpty &&
+    final formValid = _formKey.currentState?.validate() ?? false;
+    return formValid &&
+           _nameController.text.trim().isNotEmpty &&
            _emailController.text.trim().isNotEmpty &&
-           (_lifeInsuranceSelected || _healthInsuranceSelected);
+           _selectedRole != null &&
+           (_lifeInsuranceSelected || _healthInsuranceSelected) &&
+           _termsAccepted;
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Email is required';
+    }
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(value.trim())) {
+      return 'Please enter a valid email address';
+    }
+    return null;
   }
 
   @override
@@ -127,21 +146,71 @@ class _TrialSetupScreenState extends State<TrialSetupScreen> {
 
               const SizedBox(height: 32),
 
-              // Profile form
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.grey.shade200,
-                    width: 1,
-                  ),
+              // Role Selection Cards
+              const Text(
+                'Select Your Role',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1a237e),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Full Name field
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildRoleCard(
+                      'Policyholder',
+                      Icons.person,
+                      'policyholder',
+                      'I want to manage my policies',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildRoleCard(
+                      'Agent',
+                      Icons.business_center,
+                      'agent',
+                      'I am an insurance agent',
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 32),
+
+              // Profile Picture Upload
+              const Text(
+                'Profile Picture (Optional)',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1a237e),
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildProfilePictureUpload(),
+
+              const SizedBox(height: 32),
+
+              // Profile form
+              Form(
+                key: _formKey,
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.grey.shade200,
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Full Name field
                     const Text(
                       'Full Name',
                       style: TextStyle(
@@ -151,8 +220,14 @@ class _TrialSetupScreenState extends State<TrialSetupScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    TextField(
+                    TextFormField(
                       controller: _nameController,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Name is required';
+                        }
+                        return null;
+                      },
                       style: const TextStyle(
                         fontSize: 16,
                       ),
@@ -201,9 +276,10 @@ class _TrialSetupScreenState extends State<TrialSetupScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    TextField(
+                    TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
+                      validator: _validateEmail,
                       style: const TextStyle(
                         fontSize: 16,
                       ),
@@ -359,6 +435,7 @@ class _TrialSetupScreenState extends State<TrialSetupScreen> {
                     ),
                   ],
                 ),
+                ),
               ),
 
               const SizedBox(height: 40),
@@ -465,6 +542,150 @@ class _TrialSetupScreenState extends State<TrialSetupScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildRoleCard(String title, IconData icon, String role, String subtitle) {
+    final isSelected = _selectedRole == role;
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _selectedRole = role;
+        });
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? const Color(0xFF1a237e).withOpacity(0.1)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? const Color(0xFF1a237e)
+                : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              size: 32,
+              color: isSelected
+                  ? const Color(0xFF1a237e)
+                  : Colors.grey.shade600,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: isSelected
+                    ? const Color(0xFF1a237e)
+                    : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (isSelected) ...[
+              const SizedBox(height: 8),
+              const Icon(
+                Icons.check_circle,
+                color: Color(0xFF1a237e),
+                size: 20,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfilePictureUpload() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        children: [
+          GestureDetector(
+            onTap: () async {
+              // TODO: Implement image picker
+              // For now, just show a message
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Image picker will be implemented with image_picker package'),
+                ),
+              );
+            },
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color(0xFF1a237e),
+                  width: 2,
+                ),
+              ),
+              child: _profilePicturePath != null
+                  ? ClipOval(
+                      child: Image.network(
+                        _profilePicturePath!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(Icons.person, size: 50);
+                        },
+                      ),
+                    )
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.add_a_photo,
+                          size: 32,
+                          color: Color(0xFF1a237e),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Add Photo',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () async {
+              // TODO: Implement image picker
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Image picker will be implemented'),
+                ),
+              );
+            },
+            child: const Text('Upload Profile Picture'),
+          ),
+        ],
       ),
     );
   }

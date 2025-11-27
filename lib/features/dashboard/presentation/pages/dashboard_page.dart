@@ -15,6 +15,9 @@ import '../widgets/agent_side_drawer.dart';
 import '../../../../core/widgets/offline_indicator.dart';
 import '../../../../core/widgets/permission_widgets.dart';
 import '../../../../core/services/rbac_service.dart';
+import '../../../../core/services/agent_service.dart';
+import '../../../../core/services/api_service.dart';
+import '../../../../shared/constants/api_constants.dart';
 
 /// Enhanced Dashboard Page with real API integration and presentation carousel
 class DashboardPage extends ConsumerStatefulWidget {
@@ -402,11 +405,40 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          'Here\'s your business overview',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
-                          ),
+                        FutureBuilder<String?>(
+                          future: _getAgentCode(),
+                          builder: (context, snapshot) {
+                            final agentCode = snapshot.data;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Here\'s your business overview',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                                  ),
+                                ),
+                                if (agentCode != null) ...[
+                                  const SizedBox(height: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).primaryColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      'Agent Code: $agentCode',
+                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: Theme.of(context).primaryColor,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -519,6 +551,24 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         ],
       ),
     );
+  }
+
+  Future<String?> _getAgentCode() async {
+    try {
+      final agentId = await AgentService().getCurrentAgentId();
+      if (agentId == null) return null;
+      
+      // Try to get agent code from API
+      try {
+        final response = await ApiService.get('${ApiConstants.agentProfile}');
+        return response['agent_code']?.toString();
+      } catch (e) {
+        // If agent_code not available, return agent ID as fallback
+        return agentId;
+      }
+    } catch (e) {
+      return null;
+    }
   }
 
   Widget _buildStatItem(String label, String value, IconData icon) {

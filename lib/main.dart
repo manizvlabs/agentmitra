@@ -57,6 +57,12 @@ import 'features/presentations/presentation/pages/presentation_list_page.dart';
 import 'features/presentations/presentation/pages/presentation_editor_page.dart';
 import 'features/presentations/data/models/presentation_model.dart';
 import 'features/dashboard/presentation/pages/dashboard_page.dart';
+// Configuration Portal Pages
+import 'features/config_portal/presentation/pages/data_import_dashboard_page.dart';
+import 'features/config_portal/presentation/pages/excel_template_config_page.dart';
+import 'features/config_portal/presentation/pages/customer_data_management_page.dart';
+import 'features/config_portal/presentation/pages/reporting_dashboard_page.dart';
+import 'features/config_portal/presentation/pages/user_management_page.dart';
 
 /// Placeholder screen for routes that are not yet implemented
 class PlaceholderScreen extends StatelessWidget {
@@ -365,6 +371,13 @@ class AgentMitraApp extends ConsumerWidget {
     '/agent-config-dashboard': (context) => const AgentConfigDashboard(),
     '/roi-analytics': (context) => const RoiAnalyticsDashboard(),
     '/campaign-builder': (context) => const MarketingCampaignBuilder(),
+    
+    // Configuration Portal Routes
+    '/data-import-dashboard': (context) => const DataImportDashboardPage(),
+    '/excel-template-config': (context) => const ExcelTemplateConfigPage(),
+    '/customer-data-management': (context) => const CustomerDataManagementPage(),
+    '/reporting-dashboard': (context) => const ReportingDashboardPage(),
+    '/user-management': (context) => const UserManagementPage(),
     
     // Dashboard and Callback Management
     '/agent-dashboard': (context) => const DashboardPage(),

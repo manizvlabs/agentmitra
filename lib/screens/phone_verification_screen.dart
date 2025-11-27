@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/widgets/country_code_picker.dart';
 
 class PhoneVerificationScreen extends StatefulWidget {
   const PhoneVerificationScreen({super.key});
@@ -9,7 +10,10 @@ class PhoneVerificationScreen extends StatefulWidget {
 
 class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _agentCodeController = TextEditingController();
   bool _isPhoneValid = false;
+  bool _showAgentCode = false;
+  CountryCode _selectedCountry = CountryCodes.getDefault();
 
   @override
   void initState() {
@@ -20,6 +24,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
   @override
   void dispose() {
     _phoneController.dispose();
+    _agentCodeController.dispose();
     super.dispose();
   }
 
@@ -84,27 +89,15 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                     // Phone number input
                     Row(
                       children: [
-                        // Country code
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 16,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: Colors.grey.shade300,
-                            ),
-                          ),
-                          child: const Text(
-                            '+91',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black87,
-                            ),
-                          ),
+                        // Country code picker
+                        CountryCodePicker(
+                          initialCountry: _selectedCountry,
+                          showFlag: true,
+                          onChanged: (country) {
+                            setState(() {
+                              _selectedCountry = country;
+                            });
+                          },
                         ),
 
                         const SizedBox(width: 12),
@@ -114,7 +107,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                           child: TextField(
                             controller: _phoneController,
                             keyboardType: TextInputType.phone,
-                            maxLength: 10,
+                            maxLength: 15,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -154,6 +147,53 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                         ),
                       ],
                     ),
+
+                    const SizedBox(height: 16),
+
+                    // Agent code option toggle
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: _showAgentCode,
+                          onChanged: (value) {
+                            setState(() {
+                              _showAgentCode = value ?? false;
+                            });
+                          },
+                          activeColor: const Color(0xFF1a237e),
+                        ),
+                        const Text(
+                          'I have an Agent Code',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Agent code input (conditional)
+                    if (_showAgentCode) ...[
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _agentCodeController,
+                        decoration: InputDecoration(
+                          labelText: 'Agent Code',
+                          hintText: 'Enter your agent code',
+                          prefixIcon: const Icon(Icons.person_search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF1a237e),
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
 
                     const SizedBox(height: 12),
 

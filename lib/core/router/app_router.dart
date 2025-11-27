@@ -29,6 +29,12 @@ import '../../screens/tenant_onboarding_screen.dart';
 import '../../screens/role_assignment_screen.dart';
 import '../../screens/compliance_reporting_screen.dart';
 import '../../screens/test_phase1_screen.dart';
+// Configuration Portal Pages
+import '../../features/config_portal/presentation/pages/data_import_dashboard_page.dart';
+import '../../features/config_portal/presentation/pages/excel_template_config_page.dart';
+import '../../features/config_portal/presentation/pages/customer_data_management_page.dart';
+import '../../features/config_portal/presentation/pages/reporting_dashboard_page.dart';
+import '../../features/config_portal/presentation/pages/user_management_page.dart';
 
 /// Application Router Configuration
 /// Uses GoRouter for declarative routing with deep linking support
@@ -254,6 +260,37 @@ class AppRouter {
         path: '/test-phase1',
         name: 'test-phase1',
         builder: (context, state) => const TestPhase1Screen(),
+      ),
+
+      // Configuration Portal Routes (Admin/Agent Config)
+      GoRoute(
+        path: '/data-import-dashboard',
+        name: 'data-import-dashboard',
+        builder: (context, state) => const DataImportDashboardPage(),
+      ),
+
+      GoRoute(
+        path: '/excel-template-config',
+        name: 'excel-template-config',
+        builder: (context, state) => const ExcelTemplateConfigPage(),
+      ),
+
+      GoRoute(
+        path: '/customer-data-management',
+        name: 'customer-data-management',
+        builder: (context, state) => const CustomerDataManagementPage(),
+      ),
+
+      GoRoute(
+        path: '/reporting-dashboard',
+        name: 'reporting-dashboard',
+        builder: (context, state) => const ReportingDashboardPage(),
+      ),
+
+      GoRoute(
+        path: '/user-management',
+        name: 'user-management',
+        builder: (context, state) => const UserManagementPage(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

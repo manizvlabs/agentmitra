@@ -5,6 +5,7 @@ import '../features/customer_dashboard/presentation/viewmodels/customer_dashboar
 import '../features/customer_dashboard/data/models/customer_dashboard_data.dart';
 import '../core/widgets/loading/loading_widgets.dart';
 import '../core/widgets/loading/empty_state_card.dart';
+import '../core/providers/global_providers.dart';
 
 class CustomerDashboard extends ConsumerStatefulWidget {
   const CustomerDashboard({super.key});
@@ -56,6 +57,22 @@ class _CustomerDashboardState extends ConsumerState<CustomerDashboard> {
             ),
             onPressed: () {
               // TODO: Implement global search
+            },
+          ),
+          Consumer(
+            builder: (context, ref, child) {
+              final themeMode = ref.watch(themeModeProvider);
+              return IconButton(
+                icon: Icon(
+                  themeMode == ThemeMode.dark ? Icons.light_mode : Icons.dark_mode,
+                  color: const Color(0xFF1a237e),
+                  size: 24,
+                ),
+                onPressed: () {
+                  ref.read(themeModeProvider.notifier).toggleTheme();
+                },
+                tooltip: themeMode == ThemeMode.dark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+              );
             },
           ),
           IconButton(
