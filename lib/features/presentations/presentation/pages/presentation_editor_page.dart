@@ -424,6 +424,43 @@ class _PresentationEditorPageState extends State<PresentationEditorPage> {
           ),
           const SizedBox(height: 24),
 
+          // Overlay Opacity
+          _buildSectionTitle('Overlay Opacity'),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Slider(
+                  value: _selectedSlide!.overlayOpacity,
+                  min: 0.0,
+                  max: 1.0,
+                  divisions: 20,
+                  label: '${(_selectedSlide!.overlayOpacity * 100).toStringAsFixed(0)}%',
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedSlide = _selectedSlide!.copyWith(overlayOpacity: value);
+                      _hasUnsavedChanges = true;
+                    });
+                  },
+                ),
+              ),
+              Container(
+                width: 60,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Theme.of(context).dividerColor),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${(_selectedSlide!.overlayOpacity * 100).toStringAsFixed(0)}%',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+
           // Colors
           Row(
             children: [
