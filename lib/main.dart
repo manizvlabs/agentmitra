@@ -279,6 +279,25 @@ class AgentMitraApp extends ConsumerWidget {
     );
   }
 
+  // Helper function to get initial route from URL hash
+  static String _getInitialRoute() {
+    if (kIsWeb) {
+      // Check if there's a hash in the URL
+      final uri = Uri.base;
+      if (uri.hasFragment && uri.fragment.isNotEmpty) {
+        String route = uri.fragment;
+        if (!route.startsWith('/')) {
+          route = '/$route';
+        }
+        // Verify route exists in routes map
+        if (_routes.containsKey(route)) {
+          return route;
+        }
+      }
+    }
+    return '/splash'; // Default to splash screen
+  }
+
   // Helper function to wrap protected routes
   static WidgetBuilder _protectedRoute(
     WidgetBuilder builder, {
