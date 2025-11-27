@@ -101,8 +101,8 @@ class AuthRepository extends BaseRepository {
   }
 
   /// Check if user is logged in
-  bool isLoggedIn() {
-    return _localDataSource.isLoggedIn();
+  Future<bool> isLoggedIn() async {
+    return await _localDataSource.isLoggedIn();
   }
 
   /// Get stored access token

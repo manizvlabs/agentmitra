@@ -29,24 +29,44 @@ class AuthViewModel extends BaseViewModel {
     await super.initialize();
     setLoading(true);
     try {
-      _isAuthenticated = _authRepository.isLoggedIn();
+      _isAuthenticated = await _authRepository.isLoggedIn();
       if (_isAuthenticated) {
+        // Verify token exists and is valid
+        final storedToken = await _authRepository.getStoredToken();
+        if (storedToken == null || storedToken.isEmpty) {
+          // Token missing, user is not authenticated
+          _isAuthenticated = false;
+          _currentUser = null;
+          return;
+        }
+
+        // Check if token is expired
+        if (JwtDecoder.isTokenExpired(storedToken)) {
+          // Token expired, user is not authenticated
+          _isAuthenticated = false;
+          _currentUser = null;
+          await _authRepository.logout(); // Clear expired tokens
+          return;
+        }
+
         _currentUser = await _authRepository.getCurrentUser();
 
-        // Initialize RBAC with stored JWT token if available
-        final storedToken = await _authRepository.getStoredToken();
-        if (storedToken != null && storedToken.isNotEmpty) {
-          await _rbacService.initializeWithJwtToken(storedToken);
+        // Initialize RBAC with stored JWT token
+        await _rbacService.initializeWithJwtToken(storedToken);
 
-          // Update user model with roles and permissions from stored JWT
-          _currentUser = _currentUser?.copyWith(
-            roles: JwtDecoder.extractRoles(storedToken),
-            permissions: JwtDecoder.extractPermissions(storedToken),
-          );
-        }
+        // Update user model with roles and permissions from stored JWT
+        _currentUser = _currentUser?.copyWith(
+          roles: JwtDecoder.extractRoles(storedToken),
+          permissions: JwtDecoder.extractPermissions(storedToken),
+        );
+      } else {
+        // Not logged in, clear any stale data
+        _currentUser = null;
       }
     } catch (e) {
       setError('Failed to initialize authentication: $e');
+      _isAuthenticated = false;
+      _currentUser = null;
     } finally {
       setLoading(false);
     }

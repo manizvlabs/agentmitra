@@ -308,14 +308,20 @@ class AgentMitraApp extends ConsumerWidget {
     },
     '/login': (context) => const LoginPage(),
 
-    // Onboarding Flow
-    '/trial-setup': (context) => const TrialSetupScreen(),
-    '/onboarding': (context) => const OnboardingPage(),
-    '/trial-expiration': (context) => const TrialExpirationScreen(),
+    // Onboarding Flow (Protected - requires authentication)
+    '/trial-setup': _protectedRoute((context) => const TrialSetupScreen()),
+    '/onboarding': _protectedRoute((context) => const OnboardingPage()),
+    '/trial-expiration': _protectedRoute((context) => const TrialExpirationScreen()),
 
-    // Customer Portal
-    '/customer-dashboard': (context) => const CustomerDashboard(),
-    '/policies': (context) => const PoliciesListPage(),
+    // Customer Portal (Protected - requires authentication)
+    '/customer-dashboard': _protectedRoute(
+      (context) => const CustomerDashboard(),
+      requiredRoles: [UserRole.policyholder],
+    ),
+    '/policies': _protectedRoute(
+      (context) => const PoliciesListPage(),
+      requiredPermissions: ['policies.read'],
+    ),
     '/claims': _protectedRoute(
       (context) {
         final args = ModalRoute.of(context)?.settings.arguments;

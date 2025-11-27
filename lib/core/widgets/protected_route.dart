@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
 import '../services/rbac_service.dart';
 import '../services/auth_service.dart';
 import '../di/service_locator.dart';
@@ -146,9 +145,11 @@ class _ProtectedRouteState extends State<ProtectedRoute> {
     }
 
     if (!_isAuthenticated) {
-      // Redirect to login using GoRouter
+      // Redirect to login using Navigator (MaterialApp routing)
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.go('/login');
+        if (context.mounted) {
+          Navigator.of(context).pushReplacementNamed('/login');
+        }
       });
       return const Scaffold(
         body: Center(
