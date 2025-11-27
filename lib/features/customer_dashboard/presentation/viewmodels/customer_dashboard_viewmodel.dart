@@ -88,11 +88,11 @@ class CustomerDashboardViewModel extends BaseViewModel {
         final authService = AuthService();
         final currentUser = await authService.getCurrentUser();
         
-        if (currentUser == null || currentUser.userId == null) {
+        if (currentUser?.userId == null) {
           throw Exception('User not authenticated');
         }
 
-        final customerId = currentUser.userId!;
+        final customerId = currentUser!.userId!;
         _dashboardData = await _repository.getCustomerDashboardData(customerId);
         return true;
       },

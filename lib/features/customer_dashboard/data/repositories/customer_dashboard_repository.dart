@@ -55,7 +55,7 @@ class CustomerDashboardRepository {
         if (nextPayment != null && status == 'active') {
           try {
             final paymentDate = DateTime.parse(nextPayment);
-            if (nextPaymentDate == null || paymentDate.isBefore(nextPaymentDate!)) {
+            if (nextPaymentDate == null || paymentDate.isBefore(nextPaymentDate)) {
               nextPaymentDate = paymentDate;
               nextPaymentAmount = premiumAmount.toDouble();
             }
