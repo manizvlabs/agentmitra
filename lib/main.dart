@@ -225,7 +225,7 @@ class AgentMitraApp extends ConsumerWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: themeMode,
-        initialRoute: '/test-phase1', // Temporarily set for Phase 1 testing
+        initialRoute: '/splash', // Start with splash screen
         onGenerateRoute: (settings) {
           // Handle hash-based routing for web
           String routeName = settings.name ?? '/';

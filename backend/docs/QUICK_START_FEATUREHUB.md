@@ -1,34 +1,35 @@
-# FeatureHub Quick Start Guide
+# Pioneer Quick Start Guide
 
-## Setup FeatureHub
+## Setup Pioneer
 
 ### Option 1: Using Docker Compose (Recommended)
 
 ```bash
-# Start FeatureHub services
+# Start Pioneer services
 docker-compose -f docker-compose.dev.yml up -d
 
 # Check status
 docker-compose -f docker-compose.dev.yml ps
 
 # View logs
-docker-compose -f docker-compose.dev.yml logs -f featurehub-edge
+docker-compose -f docker-compose.dev.yml logs -f pioneer
 ```
 
-### Option 2: Using Setup Script
+### Option 2: Manual Setup
 
 ```bash
-./scripts/setup-featurehub.sh
+# Ensure Pioneer server is running on port 4002
+# Scout endpoint: http://localhost:4002
 ```
 
-## Access FeatureHub
+## Access Pioneer
 
-- **Edge Server**: http://localhost:8080
-- **Admin UI**: http://localhost:8085
+- **Scout Server (SSE)**: http://localhost:4002
+- **Admin UI**: Check Pioneer documentation for admin URL
 
 ## Initial Configuration
 
-1. **Access Admin UI**: Open http://localhost:8085
+1. **Access Pioneer Admin UI**
 2. **Create Account**: First user becomes admin
 3. **Create Application**: 
    - Name: "Agent Mitra"
@@ -36,13 +37,13 @@ docker-compose -f docker-compose.dev.yml logs -f featurehub-edge
 4. **Create Environment**:
    - Name: "development"
    - Type: "development"
-5. **Generate Keys**:
-   - API Key: Copy to `FEATUREHUB_API_KEY` in `.env.local`
-   - SDK Key: Copy to `FEATUREHUB_SDK_KEY` in `.env.local`
+5. **Generate SDK Key**:
+   - SDK Key: Copy to `PIONEER_SDK_KEY` in `.env.local`
+   - Scout URL: Set `PIONEER_SCOUT_URL=http://localhost:4002` in `.env.local`
 
 ## Create Feature Flags
 
-In FeatureHub Admin UI, create these flags:
+In Pioneer Admin UI, create these flags:
 
 ### Authentication Flags
 - `phone_auth_enabled` (Boolean, default: true)
@@ -71,32 +72,36 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 
 ## Verify Integration
 
-1. **Check Logs**: Look for "FeatureHub service initialized successfully"
+1. **Check Logs**: Look for "Pioneer initialized successfully"
 2. **Test Flags**: Call `/api/v1/feature-flags` endpoint
 3. **Check Tokens**: Login and verify JWT contains `feature_flags` field
+4. **Verify SSE**: Check that SSE connection to Scout endpoint is established
 
 ## Troubleshooting
 
-### FeatureHub Not Available
+### Pioneer Not Available
 - System falls back to default flags
 - Check logs for connection errors
-- Verify `FEATUREHUB_URL` in `.env.local`
+- Verify `PIONEER_SCOUT_URL` in `.env.local`
 
 ### Flags Not Updating
-- Check FeatureHub Admin UI for flag changes
-- Verify API key is correct
-- Check polling interval (default: 30 seconds)
+- Check Pioneer Admin UI for flag changes
+- Verify SDK key is correct
+- Check SSE connection to Scout endpoint (http://localhost:4002)
+- Verify Scout endpoint is accessible
 
-### Docker Issues
-- Ensure Docker is running: `docker ps`
-- Check container logs: `docker-compose -f docker-compose.dev.yml logs`
-- Restart services: `docker-compose -f docker-compose.dev.yml restart`
+### SSE Connection Issues
+- Ensure Pioneer Scout is running on port 4002
+- Check firewall settings
+- Verify Scout URL is correct in configuration
+- Check browser console for SSE connection errors
 
 ## Production Setup
 
-For production, use FeatureHub Cloud or self-hosted with:
+For production, use Pioneer with:
 - Proper SSL/TLS
-- Secure API keys
+- Secure SDK keys
 - Environment-specific configurations
 - Monitoring and alerts
+- SSE endpoint accessible from client applications
 

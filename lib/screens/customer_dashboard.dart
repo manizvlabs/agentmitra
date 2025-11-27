@@ -31,9 +31,14 @@ class _CustomerDashboardState extends ConsumerState<CustomerDashboard> {
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
+      drawer: _buildDrawer(context),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: Color(0xFF1a237e)),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
         title: const Text(
           'AGENT MITRA',
           style: TextStyle(
@@ -588,6 +593,147 @@ class _CustomerDashboardState extends ConsumerState<CustomerDashboard> {
           }).toList(),
         ),
       ],
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF1a237e), Color(0xFF3949ab)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                const Icon(
+                  Icons.account_circle,
+                  size: 48,
+                  color: Colors.white,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Customer Portal',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.home, color: Color(0xFF1a237e)),
+            title: const Text('Dashboard'),
+            onTap: () {
+              Navigator.pop(context);
+              // Already on dashboard
+            },
+          ),
+          const Divider(),
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              'Onboarding',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.search, color: Color(0xFF1a237e)),
+            title: const Text('Find Agent'),
+            subtitle: const Text('Discover and connect with agents'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.of(context).pushNamed('/agent-discovery');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.verified_user, color: Color(0xFF1a237e)),
+            title: const Text('Agent Verification'),
+            subtitle: const Text('Verify your agent details'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.of(context).pushNamed('/agent-verification');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.upload_file, color: Color(0xFF1a237e)),
+            title: const Text('Upload Documents'),
+            subtitle: const Text('Upload KYC documents'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.of(context).pushNamed('/document-upload');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.fingerprint, color: Color(0xFF1a237e)),
+            title: const Text('KYC Verification'),
+            subtitle: const Text('Complete KYC verification'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.of(context).pushNamed('/kyc-verification');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.emergency, color: Color(0xFF1a237e)),
+            title: const Text('Emergency Contact'),
+            subtitle: const Text('Setup emergency contacts'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.of(context).pushNamed('/emergency-contact');
+            },
+          ),
+          const Divider(),
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              'Communication',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.chat, color: Color(0xFF1a237e)),
+            title: const Text('WhatsApp Integration'),
+            subtitle: const Text('Chat with your agent'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.of(context).pushNamed('/whatsapp-integration');
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.person, color: Color(0xFF1a237e)),
+            title: const Text('Profile'),
+            onTap: () {
+              Navigator.pop(context);
+              context.push('/profile');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings, color: Color(0xFF1a237e)),
+            title: const Text('Settings'),
+            onTap: () {
+              Navigator.pop(context);
+              // TODO: Navigate to settings
+            },
+          ),
+        ],
+      ),
     );
   }
 }

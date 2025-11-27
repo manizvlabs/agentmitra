@@ -1,8 +1,8 @@
-# Configuration Externalization & FeatureHub Integration - Summary
+# Configuration Externalization & Pioneer Integration - Summary
 
 ## Overview
 
-This document summarizes the changes made to externalize all configurations to `.env` files and integrate FeatureHub for runtime feature flag management.
+This document summarizes the changes made to externalize all configurations to `.env` files and integrate Pioneer for runtime feature flag management.
 
 ## Changes Made
 
@@ -10,40 +10,40 @@ This document summarizes the changes made to externalize all configurations to `
 
 **Created**: `backend/.env.example`
 - Comprehensive template with all configuration variables
-- Organized by category (Application, Database, Security, FeatureHub, etc.)
+- Organized by category (Application, Database, Security, Pioneer, etc.)
 - Includes defaults and documentation
 
 **Updated**: `backend/app/core/config/settings.py`
 - Removed hardcoded paths
 - Proper .env file loading (`.env.local` takes precedence over `.env`)
 - All configuration values now externalized
-- Added FeatureHub configuration settings
+- Added Pioneer configuration settings
 - Added OTP configuration settings
 - Added rate limiting configuration
 - Added SMS/Email provider configuration
 - Added compliance settings
 
-### 2. FeatureHub Integration
+### 2. Pioneer Integration
 
-**Created**: `backend/app/services/featurehub_service.py`
-- Complete FeatureHub service wrapper
-- Supports REST API integration (can be upgraded to SDK)
+**Created**: `backend/app/services/pioneer_service.py`
+- Complete Pioneer service wrapper
+- Supports SSE (Server-Sent Events) integration via Scout endpoint
 - User context targeting support
-- Fallback to default flags when FeatureHub unavailable
-- Polling and streaming support
+- Fallback to default flags when Pioneer unavailable
+- Real-time flag updates via SSE
 - Async/await pattern for FastAPI compatibility
 
 **Updated**: `backend/app/api/v1/feature_flags.py`
-- Now uses FeatureHub service instead of hardcoded flags
+- Now uses Pioneer service instead of hardcoded flags
 - Returns flags with user context for targeting
-- Includes source indicator (featurehub vs fallback)
+- Includes source indicator (pioneer vs fallback)
 - Maintains backward compatibility with fallback flags
 
 **Updated**: `backend/app/api/v1/auth.py`
-- Login endpoint now fetches feature flags from FeatureHub
-- OTP verification endpoint fetches feature flags from FeatureHub
+- Login endpoint now fetches feature flags from Pioneer
+- OTP verification endpoint fetches feature flags from Pioneer
 - Includes feature flags, permissions, and tenant_id in JWT tokens
-- User context passed to FeatureHub for targeting
+- User context passed to Pioneer for targeting
 
 **Updated**: `backend/app/core/security.py`
 - `create_token_pair()` now includes feature_flags, permissions, tenant_id
@@ -79,12 +79,12 @@ All hardcoded values have been moved to `.env`:
 - Email provider configuration
 - OpenAI API key
 
-**FeatureHub**:
-- Server URL
-- API keys
+**Pioneer**:
+- Scout URL (SSE endpoint)
+- SDK key
 - Environment
 - Polling interval
-- Streaming mode
+- Streaming mode (SSE)
 
 **Compliance**:
 - IRDAI compliance toggle
@@ -97,31 +97,30 @@ All hardcoded values have been moved to `.env`:
 ### Required Variables
 - `DATABASE_URL`: PostgreSQL connection string
 - `JWT_SECRET_KEY`: Secret key for JWT signing (use strong random key in production)
-- `FEATUREHUB_URL`: FeatureHub server URL
-- `FEATUREHUB_API_KEY`: FeatureHub API key (optional, falls back to defaults)
-- `FEATUREHUB_SDK_KEY`: FeatureHub SDK key (optional, falls back to defaults)
+- `PIONEER_SCOUT_URL`: Pioneer Scout server URL (SSE endpoint, e.g., http://localhost:4002)
+- `PIONEER_SDK_KEY`: Pioneer SDK key (optional, falls back to defaults)
 
 ### Optional Variables (with defaults)
 - All other variables have sensible defaults
 - See `.env.example` for complete list
 
-## FeatureHub Setup
+## Pioneer Setup
 
-1. **Install FeatureHub** (self-hosted):
+1. **Start Pioneer Server**:
    ```bash
-   docker run -d -p 8080:8080 featurehub/edge:latest
+   # Pioneer Scout should be running on port 4002
+   # SSE endpoint: http://localhost:4002
    ```
 
 2. **Configure in .env.local**:
    ```bash
-   FEATUREHUB_URL=http://localhost:8080
-   FEATUREHUB_API_KEY=your-api-key
-   FEATUREHUB_SDK_KEY=your-sdk-key
-   FEATUREHUB_ENVIRONMENT=development
+   PIONEER_SCOUT_URL=http://localhost:4002
+   PIONEER_SDK_KEY=your-sdk-key
+   PIONEER_ENVIRONMENT=development
    ```
 
 3. **Create Feature Flags**:
-   - Access Admin UI at `http://localhost:8080`
+   - Access Pioneer Admin UI
    - Create flags for: `phone_auth_enabled`, `payments_enabled`, etc.
    - Set targeting rules and percentage rollouts
 
@@ -138,9 +137,10 @@ All hardcoded values have been moved to `.env`:
 
 3. **Restart the application** to load new configuration
 
-4. **Verify FeatureHub connection**:
-   - Check logs for "FeatureHub service initialized successfully"
+4. **Verify Pioneer connection**:
+   - Check logs for "Pioneer initialized successfully"
    - If unavailable, system will use fallback flags
+   - Verify SSE connection to Scout endpoint
 
 ### Breaking Changes
 
@@ -148,26 +148,27 @@ All hardcoded values have been moved to `.env`:
   - Clients need to handle these new fields
   - Old tokens will still work but won't have these fields
 
-- **Feature Flags**: Now fetched from FeatureHub at runtime
+- **Feature Flags**: Now fetched from Pioneer at runtime via SSE
   - Flags may change without code deployment
-  - Ensure FeatureHub is available or fallback flags are configured
+  - Ensure Pioneer Scout is available or fallback flags are configured
+  - SSE connection provides real-time updates
 
 ## Testing
 
 1. **Test Configuration Loading**:
    ```python
    from app.core.config.settings import settings
-   print(settings.featurehub_url)
+   print(settings.pioneer_scout_url)
    ```
 
-2. **Test FeatureHub Integration**:
+2. **Test Pioneer Integration**:
    ```python
-   from app.services.featurehub_service import get_feature_flag
+   from app.services.pioneer_service import get_feature_flag
    flag = await get_feature_flag("payments_enabled")
    ```
 
 3. **Test Fallback**:
-   - Stop FeatureHub server
+   - Stop Pioneer Scout server
    - Verify application still works with fallback flags
 
 ## Security Considerations
@@ -180,24 +181,26 @@ All hardcoded values have been moved to `.env`:
 ## Next Steps
 
 1. ✅ Configuration externalized to .env
-2. ✅ FeatureHub integration complete
+2. ✅ Pioneer integration complete
 3. ✅ JWT tokens include feature flags
-4. ⏳ Set up FeatureHub server (self-hosted or cloud)
-5. ⏳ Configure feature flags in FeatureHub Admin UI
+4. ⏳ Set up Pioneer server (Scout endpoint on port 4002)
+5. ⏳ Configure feature flags in Pioneer Admin UI
 6. ⏳ Test user targeting and percentage rollouts
-7. ⏳ Monitor FeatureHub connectivity and fallback usage
+7. ⏳ Monitor Pioneer connectivity and fallback usage
+8. ⏳ Verify SSE connection to Scout endpoint
 
 ## Documentation
 
-- FeatureHub Integration: `backend/docs/FEATUREHUB_INTEGRATION.md`
+- Pioneer Integration: `backend/docs/PIONEER_INTEGRATION.md`
 - Environment Configuration: `backend/.env.example` (comments)
 - API Documentation: See `/api/v1/feature-flags` endpoint
 
 ## Support
 
 For issues or questions:
-1. Check FeatureHub logs in application logs
+1. Check Pioneer logs in application logs
 2. Verify `.env.local` configuration
-3. Test FeatureHub connectivity: `curl http://localhost:8080/health`
-4. Review fallback flags in `featurehub_service.py`
+3. Test Pioneer Scout connectivity: `curl http://localhost:4002`
+4. Review fallback flags in `pioneer_service.py`
+5. Verify SSE connection is established
 
