@@ -47,8 +47,6 @@ class _ProtectedRouteState extends State<ProtectedRoute> {
       // Check authentication
       final authService = AuthService();
       _isAuthenticated = await authService.isAuthenticated(context);
-      print('🔐 ProtectedRoute Auth Check: $_isAuthenticated');
-      print('🔐 Route: ${ModalRoute.of(context)?.settings.name}');
 
       if (!_isAuthenticated) {
         setState(() {
@@ -80,24 +78,12 @@ class _ProtectedRouteState extends State<ProtectedRoute> {
       // Check role requirements
       if (widget.requiredRoles != null && widget.requiredRoles!.isNotEmpty) {
         final currentRole = rbacService.getCurrentUserRole();
-        final currentUserRoles = rbacService.getCurrentUserRoles();
-        final currentPermissions = rbacService.getCurrentUserPermissions();
-
-        print('👤 RBAC Debug:');
-        print('   Current Role: $currentRole');
-        print('   Current Roles List: $currentUserRoles');
-        print('   Current Permissions Count: ${currentPermissions?.length ?? 0}');
-        print('   Required Roles: ${widget.requiredRoles}');
 
         // Super admin has access to everything
         final isSuperAdmin = currentRole?.value == 'super_admin';
         final hasRequiredRole = currentRole != null && widget.requiredRoles!.contains(currentRole);
 
-        print('   Is Super Admin: $isSuperAdmin');
-        print('   Has Required Role: $hasRequiredRole');
-
         if (!isSuperAdmin && !hasRequiredRole) {
-          print('❌ Access DENIED');
           setState(() {
             _isLoading = false;
             _hasAccess = false;
@@ -105,7 +91,6 @@ class _ProtectedRouteState extends State<ProtectedRoute> {
           });
           return;
         }
-        print('✅ Access GRANTED');
       }
 
       // Check permission requirements

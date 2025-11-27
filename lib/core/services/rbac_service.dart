@@ -229,17 +229,9 @@ class RbacService {
       _currentUserPermissions = permissions ?? [];
       _currentUserRole = _determinePrimaryRole(_currentUserRoles);
 
-      print('🔑 RBAC JWT Init:');
-      print('   JWT Roles: $roles');
-      print('   JWT Permissions Count: ${permissions?.length ?? 0}');
-      print('   Determined Role: $_currentUserRole');
-
       // Only use static permissions if no permissions came from JWT
       if ((_currentUserPermissions?.isEmpty ?? true) && _currentUserRole != null) {
         _currentUserPermissions = RolePermissions.getPermissionsForRole(_currentUserRole!);
-        print('   Using static permissions for role: ${_currentUserRole!.displayName}');
-      } else {
-        print('   Using JWT permissions (${_currentUserPermissions?.length ?? 0} permissions)');
       }
 
       // If no roles in JWT, try to use legacy role field
