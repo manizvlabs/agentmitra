@@ -225,22 +225,33 @@ class RbacService {
       final legacyRole = JwtDecoder.extractRole(jwtToken);
 
       // Set current user data
-      _currentUserRoles = roles;
-      _currentUserPermissions = permissions;
-      _currentUserRole = _determinePrimaryRole(roles);
+      _currentUserRoles = roles ?? [];
+      _currentUserPermissions = permissions ?? [];
+      _currentUserRole = _determinePrimaryRole(_currentUserRoles);
 
-      // If no roles found, set permissions based on current role
-      if (_currentUserRole != null) {
+      print('🔑 RBAC JWT Init:');
+      print('   JWT Roles: $roles');
+      print('   JWT Permissions Count: ${permissions?.length ?? 0}');
+      print('   Determined Role: $_currentUserRole');
+
+      // Only use static permissions if no permissions came from JWT
+      if ((_currentUserPermissions?.isEmpty ?? true) && _currentUserRole != null) {
         _currentUserPermissions = RolePermissions.getPermissionsForRole(_currentUserRole!);
+        print('   Using static permissions for role: ${_currentUserRole!.displayName}');
+      } else {
+        print('   Using JWT permissions (${_currentUserPermissions?.length ?? 0} permissions)');
       }
 
       // If no roles in JWT, try to use legacy role field
-      if (_currentUserRole == UserRole.guestUser && legacyRole != null) {
+      if ((_currentUserRoles?.isEmpty ?? true) && _currentUserRole == UserRole.guestUser && legacyRole != null) {
         final parsedRole = UserRole.fromString(legacyRole);
         if (parsedRole != null) {
           _currentUserRole = parsedRole;
           _currentUserRoles = [_currentUserRole!.value];
-          _currentUserPermissions = RolePermissions.getPermissionsForRole(_currentUserRole!);
+          // Only set static permissions if we still don't have any
+          if (_currentUserPermissions?.isEmpty ?? true) {
+            _currentUserPermissions = RolePermissions.getPermissionsForRole(_currentUserRole!);
+          }
         }
       }
 
