@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../services/rbac_service.dart';
 import '../services/auth_service.dart';
+import '../di/service_locator.dart';
 import 'error_pages/unauthorized_page.dart';
 
 /// Protected Route Widget
@@ -56,19 +57,23 @@ class _ProtectedRouteState extends State<ProtectedRoute> {
         return;
       }
 
-      // Get RBAC service from provider
+      // Get RBAC service from provider or service locator
       RbacService? rbacService;
       try {
         rbacService = Provider.of<RbacService>(context, listen: false);
       } catch (e) {
-        // If RbacService is not provided, try to get it from service locator or create instance
-        // For now, we'll use AuthService to check authentication only
-        setState(() {
-          _isLoading = false;
-          _hasAccess = false;
-          _errorMessage = 'RBAC service not available. Please ensure RbacService is provided in the widget tree.';
-        });
-        return;
+        // If not in provider, get from service locator
+        try {
+          rbacService = ServiceLocator.rbacService;
+        } catch (e2) {
+          // If still not available, create a new instance (shouldn't happen)
+          setState(() {
+            _isLoading = false;
+            _hasAccess = false;
+            _errorMessage = 'RBAC service not available. Please ensure RbacService is initialized.';
+          });
+          return;
+        }
       }
 
       // Check role requirements
