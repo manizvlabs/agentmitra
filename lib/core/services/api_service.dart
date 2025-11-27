@@ -11,8 +11,8 @@ class ApiService {
   // Get full API URL - use relative URLs for web deployment
   static String get apiUrl {
     if (kIsWeb) {
-      // When running on web through Nginx, use relative API paths
-      return '/api/v1';
+      // When running on web through Nginx, use empty string since endpoints already contain full paths
+      return '';
     }
     // For mobile/native apps, use direct backend URL
     return '$baseUrl$apiVersion';

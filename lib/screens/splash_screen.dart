@@ -73,15 +73,15 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
         final authViewModel = provider.Provider.of<AuthViewModel>(context, listen: false);
         final isAuthenticated = authViewModel.isAuthenticated;
 
-        // Temporarily navigate to test screen for Phase 1 testing
-        Navigator.of(context).pushReplacementNamed('/test-phase1');
-        
-        // Original navigation (commented for testing):
-        // if (isAuthenticated) {
-        //   Navigator.of(context).pushReplacementNamed('/customer-dashboard');
-        // } else {
-        //   Navigator.of(context).pushReplacementNamed('/welcome');
-        // }
+        // Navigate based on authentication status
+        if (isAuthenticated) {
+          Navigator.of(context).pushReplacementNamed('/customer-dashboard');
+        } else {
+          Navigator.of(context).pushReplacementNamed('/welcome');
+        }
+
+        // Previous test navigation (removed):
+        // Navigator.of(context).pushReplacementNamed('/test-phase1');
       }
     });
   }
