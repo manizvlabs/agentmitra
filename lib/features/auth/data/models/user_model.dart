@@ -27,16 +27,27 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    // Handle full name construction from first_name + last_name
+    String? fullName;
+    if (json['first_name'] != null || json['last_name'] != null) {
+      final firstName = json['first_name'] ?? '';
+      final lastName = json['last_name'] ?? '';
+      fullName = '$firstName $lastName'.trim();
+      if (fullName.isEmpty) fullName = json['display_name'];
+    } else {
+      fullName = json['full_name'] ?? json['fullName'] ?? json['display_name'];
+    }
+
     return UserModel(
       userId: json['user_id'] ?? json['userId'] ?? '',
       phoneNumber: json['phone_number'] ?? json['phoneNumber'] ?? '',
       email: json['email'],
-      fullName: json['full_name'] ?? json['fullName'],
+      fullName: fullName,
       agentCode: json['agent_code'] ?? json['agentCode'],
       role: json['role'],
       roles: List<String>.from(json['roles'] ?? []),
       permissions: List<String>.from(json['permissions'] ?? []),
-      isVerified: json['is_verified'] ?? json['isVerified'] ?? false,
+      isVerified: json['phone_verified'] ?? json['is_verified'] ?? json['isVerified'] ?? false,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : null,

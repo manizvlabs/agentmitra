@@ -80,14 +80,14 @@ class AuthViewModel extends BaseViewModel {
   }) async {
     setLoading(true);
     clearError();
-    
+
     try {
       final authResponse = await _authRepository.login(
         phoneNumber: phoneNumber,
         password: password,
         agentCode: agentCode,
       );
-      
+
       _currentUser = authResponse.user;
       _isAuthenticated = true;
 
@@ -95,13 +95,23 @@ class AuthViewModel extends BaseViewModel {
       if (authResponse.accessToken != null) {
         await _rbacService.initializeWithJwtToken(authResponse.accessToken!);
 
-        // Update user model with roles and permissions from JWT
+        // Update user model with roles and permissions
+        // Priority: login response > JWT token
+        final roles = _currentUser?.roles?.isNotEmpty == true
+            ? _currentUser!.roles!
+            : JwtDecoder.extractRoles(authResponse.accessToken!);
+        final permissions = authResponse.permissions?.isNotEmpty == true
+            ? authResponse.permissions!
+            : _currentUser?.permissions?.isNotEmpty == true
+                ? _currentUser!.permissions!
+                : JwtDecoder.extractPermissions(authResponse.accessToken!);
+
         _currentUser = _currentUser?.copyWith(
-          roles: JwtDecoder.extractRoles(authResponse.accessToken!),
-          permissions: JwtDecoder.extractPermissions(authResponse.accessToken!),
+          roles: roles,
+          permissions: permissions,
         );
       }
-      
+
       return authResponse;
     } catch (e) {
       setError('Login failed: $e');

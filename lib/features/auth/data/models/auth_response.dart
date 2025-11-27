@@ -7,6 +7,7 @@ class AuthResponse {
   final String tokenType;
   final int expiresIn;
   final UserModel? user;
+  final List<String>? permissions;
 
   AuthResponse({
     required this.accessToken,
@@ -14,6 +15,7 @@ class AuthResponse {
     this.tokenType = 'bearer',
     this.expiresIn = 1800,
     this.user,
+    this.permissions,
   });
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
@@ -25,6 +27,9 @@ class AuthResponse {
       user: json['user'] != null
           ? UserModel.fromJson(json['user'])
           : null,
+      permissions: json['permissions'] != null
+          ? List<String>.from(json['permissions'])
+          : null,
     );
   }
 
@@ -35,6 +40,7 @@ class AuthResponse {
       'token_type': tokenType,
       'expires_in': expiresIn,
       if (user != null) 'user': user!.toJson(),
+      if (permissions != null) 'permissions': permissions,
     };
   }
 }
