@@ -221,9 +221,28 @@ async def login(
             method=login_method
         )
 
+        # Create user response object
+        user_response = {
+            "user_id": str(user.user_id),
+            "email": user.email,
+            "phone_number": user.phone_number,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "display_name": user.display_name,
+            "role": user.role,
+            "status": user.status or "active",
+            "phone_verified": user.phone_verified,
+            "email_verified": user.email_verified,
+            "last_login_at": user.last_login_at,
+            "created_at": user.created_at,
+            "updated_at": user.updated_at
+        }
+
         return TokenResponse(
             access_token=access_token,
-            refresh_token=refresh_token
+            refresh_token=refresh_token,
+            user=user_response,
+            permissions=user_permissions
         )
 
     except HTTPException:
