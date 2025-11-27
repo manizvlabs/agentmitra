@@ -82,7 +82,11 @@ class _ProtectedRouteState extends State<ProtectedRoute> {
         print('ProtectedRoute: Current user role: $currentRole');
         print('ProtectedRoute: Route: ${ModalRoute.of(context)?.settings.name}');
 
-        if (currentRole == null || !widget.requiredRoles!.contains(currentRole)) {
+        // Super admin has access to everything
+        final isSuperAdmin = currentRole?.value == 'super_admin';
+        final hasRequiredRole = currentRole != null && widget.requiredRoles!.contains(currentRole);
+
+        if (!isSuperAdmin && !hasRequiredRole) {
           print('ProtectedRoute: Access denied - role check failed');
           setState(() {
             _isLoading = false;
@@ -91,7 +95,7 @@ class _ProtectedRouteState extends State<ProtectedRoute> {
           });
           return;
         }
-        print('ProtectedRoute: Role check passed');
+        print('ProtectedRoute: Role check passed (super_admin: $isSuperAdmin)');
       }
 
       // Check permission requirements
