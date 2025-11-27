@@ -256,14 +256,5 @@ class OnboardingViewModel extends BaseViewModel {
     // REMOVED: Mock data initialization - no longer used
     // All data should come from backend API or user input
     // This method is kept for backward compatibility but does nothing
-      dateOfBirth: DateTime(1985, 5, 15),
-      gender: 'Male',
-      address: '123 Insurance Street',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400001',
-      occupation: 'Insurance Agent',
-      annualIncome: '500000',
-    );
   }
 }

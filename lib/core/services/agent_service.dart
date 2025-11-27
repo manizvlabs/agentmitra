@@ -46,7 +46,8 @@ class AgentService {
     try {
       // Check if user is authenticated
       final authRepo = AuthRepository();
-      if (!authRepo.isLoggedIn()) {
+      final isLoggedIn = await authRepo.isLoggedIn();
+      if (!isLoggedIn) {
         LoggerService().warning('User not authenticated, cannot get agent ID');
         return null;
       }
