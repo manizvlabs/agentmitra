@@ -10,7 +10,7 @@ from app.core.security import validate_jwt_token, extract_token_from_header
 from app.repositories.user_repository import UserRepository
 # Import User lazily to avoid mapper configuration issues
 # User will be imported when actually needed
-from app.models.rbac import Role, Permission, UserRole
+from app.models.rbac import Role, Permission, RolePermission, UserRole
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
