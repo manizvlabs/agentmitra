@@ -134,18 +134,24 @@ void main() async {
 
   // Initialize Pioneer for feature flag management
   try {
-    // Pioneer configuration - using mock mode for now since server has connectivity issues
-    // When Pioneer server is working, set useMock: false and configure scoutUrl and sdkKey
+    // Pioneer configuration - now using real Pioneer server
     await PioneerService.initialize(
-      useMock: true, // Set to false when Pioneer server is properly configured
-      // scoutUrl: 'http://localhost:4002', // Uncomment when server is working
-      // sdkKey: 'your-sdk-key', // Uncomment when server is working
+      useMock: false, // Using real Pioneer server
+      scoutUrl: 'http://localhost:4002', // Scout SSE endpoint
+      sdkKey: '4cbeeba0-37e8-45fc-b306-32c0cd497c92', // SDK key from Pioneer server
     );
-    print('Pioneer initialized successfully (mock mode)');
+    print('Pioneer initialized successfully (real mode)');
   } catch (e) {
     print('Pioneer initialization failed: $e');
-    print('App will continue with default feature flag values');
-    // Continue without Pioneer - app will use fallback behavior
+    print('Falling back to mock mode for development');
+    // Fall back to mock mode on error
+    try {
+      await PioneerService.initialize(useMock: true);
+      print('Pioneer initialized with fallback to mock mode');
+    } catch (fallbackError) {
+      print('Fallback initialization also failed: $fallbackError');
+      print('App will continue with default feature flag values');
+    }
   }
 
   runApp(

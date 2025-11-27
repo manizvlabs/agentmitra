@@ -111,9 +111,9 @@ class PioneerService {
       throw Exception('Pioneer Scout URL not configured');
     }
 
-    // Pioneer uses Scout daemon for SSE, but we can try the REST API first
-    final compassUrl = _scoutUrl!.replaceAll('/features', '').replaceAll(':3030', ':3001');
-    final uri = Uri.parse('$compassUrl/flags');
+    // Use compass-server for REST API (port 4001), scout is for SSE (port 4002)
+    final compassUrl = _scoutUrl!.replaceAll(':4002', ':4001');
+    final uri = Uri.parse('$compassUrl/api/flags');
 
     try {
       final response = await http.get(uri);
