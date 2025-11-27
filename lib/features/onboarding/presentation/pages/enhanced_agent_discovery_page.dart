@@ -80,15 +80,15 @@ class _EnhancedAgentDiscoveryPageState extends State<EnhancedAgentDiscoveryPage>
       );
 
       // Backend returns a list directly or wrapped in data
+      // ApiService.get() always returns Map<String, dynamic>
       List<dynamic> agentsList = [];
-      if (response is List) {
-        agentsList = response;
-      } else if (response is Map<String, dynamic>) {
-        if (response['data'] is List) {
-          agentsList = response['data'] as List<dynamic>;
-        } else if (response['agents'] is List) {
-          agentsList = response['agents'] as List<dynamic>;
-        }
+      if (response['data'] is List) {
+        agentsList = response['data'] as List<dynamic>;
+      } else if (response['agents'] is List) {
+        agentsList = response['agents'] as List<dynamic>;
+      } else if (response is List) {
+        // Fallback: if response is somehow a list (shouldn't happen with ApiService)
+        agentsList = response as List<dynamic>;
       }
 
       setState(() {
