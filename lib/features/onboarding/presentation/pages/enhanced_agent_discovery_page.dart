@@ -80,15 +80,15 @@ class _EnhancedAgentDiscoveryPageState extends State<EnhancedAgentDiscoveryPage>
       );
 
       // Backend returns a list directly or wrapped in data
-      List<dynamic> agentsList;
+      List<dynamic> agentsList = [];
       if (response is List) {
         agentsList = response;
-      } else if (response['data'] is List) {
-        agentsList = response['data'] as List<dynamic>;
-      } else if (response['agents'] is List) {
-        agentsList = response['agents'] as List<dynamic>;
-      } else {
-        agentsList = [];
+      } else if (response is Map<String, dynamic>) {
+        if (response['data'] is List) {
+          agentsList = response['data'] as List<dynamic>;
+        } else if (response['agents'] is List) {
+          agentsList = response['agents'] as List<dynamic>;
+        }
       }
 
       setState(() {
