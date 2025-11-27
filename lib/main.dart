@@ -327,7 +327,7 @@ class AgentMitraApp extends ConsumerWidget {
     // Customer Portal (Protected - requires authentication)
     '/customer-dashboard': _protectedRoute(
       (context) => const CustomerDashboard(),
-      requiredRoles: [UserRole.policyholder],
+      requiredRoles: [UserRole.policyholder, UserRole.superAdmin], // Temporarily allow superAdmin for debugging
     ),
     '/policies': _protectedRoute(
       (context) => const PoliciesListPage(),

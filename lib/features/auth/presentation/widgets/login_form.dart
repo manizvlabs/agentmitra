@@ -97,22 +97,31 @@ class _LoginFormState extends State<LoginForm> with TickerProviderStateMixin {
       } else {
         // Redirect based on user role
         final user = authResponse.user;
+        LoggerService().info('Login successful - redirecting user', tag: 'LoginForm');
+        LoggerService().info('User role: ${user?.role}', tag: 'LoginForm');
+        LoggerService().info('User permissions count: ${user?.permissions?.length ?? 0}', tag: 'LoginForm');
+
         if (user != null) {
           switch (user.role) {
             case 'super_admin':
+              LoggerService().info('Redirecting super_admin to /user-management', tag: 'LoginForm');
               Navigator.pushNamed(context, '/user-management');
               break;
             case 'policyholder':
+              LoggerService().info('Redirecting policyholder to /customer-dashboard', tag: 'LoginForm');
               Navigator.pushNamed(context, '/customer-dashboard');
               break;
             case 'junior_agent':
             case 'senior_agent':
+              LoggerService().info('Redirecting agent to /agent-dashboard', tag: 'LoginForm');
               Navigator.pushNamed(context, '/agent-dashboard');
               break;
             default:
+              LoggerService().info('Redirecting unknown role to /customer-dashboard', tag: 'LoginForm');
               Navigator.pushNamed(context, '/customer-dashboard');
           }
         } else {
+          LoggerService().warning('User object is null in login response', tag: 'LoginForm');
           Navigator.pushNamed(context, '/customer-dashboard');
         }
       }

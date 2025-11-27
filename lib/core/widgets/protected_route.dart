@@ -78,7 +78,12 @@ class _ProtectedRouteState extends State<ProtectedRoute> {
       // Check role requirements
       if (widget.requiredRoles != null && widget.requiredRoles!.isNotEmpty) {
         final currentRole = rbacService.getCurrentUserRole();
+        print('ProtectedRoute: Required roles: ${widget.requiredRoles}');
+        print('ProtectedRoute: Current user role: $currentRole');
+        print('ProtectedRoute: Route: ${ModalRoute.of(context)?.settings.name}');
+
         if (currentRole == null || !widget.requiredRoles!.contains(currentRole)) {
+          print('ProtectedRoute: Access denied - role check failed');
           setState(() {
             _isLoading = false;
             _hasAccess = false;
@@ -86,6 +91,7 @@ class _ProtectedRouteState extends State<ProtectedRoute> {
           });
           return;
         }
+        print('ProtectedRoute: Role check passed');
       }
 
       // Check permission requirements
