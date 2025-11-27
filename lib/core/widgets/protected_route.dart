@@ -46,7 +46,7 @@ class _ProtectedRouteState extends State<ProtectedRoute> {
     try {
       // Check authentication
       final authService = AuthService();
-      _isAuthenticated = await authService.isAuthenticated();
+      _isAuthenticated = await authService.isAuthenticated(context);
 
       if (!_isAuthenticated) {
         setState(() {

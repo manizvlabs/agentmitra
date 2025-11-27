@@ -35,10 +35,6 @@
   <!-- Preload fonts to avoid 404 warnings -->
     <!-- Font preloads removed to avoid console warnings - fonts are loaded on-demand by Flutter -->
 
-  <script>
-    // The value below is injected by flutter build, do not touch.
-    const serviceWorkerVersion = null;
-  </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
 </head>
@@ -46,15 +42,10 @@
   <script>
     window.addEventListener('load', function(ev) {
       // Download main.dart.js
-      _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: serviceWorkerVersion,
+      FlutterLoader.load({
+        serviceWorkerSettings: {
+          serviceWorkerVersion: '{{flutter_service_worker_version}}',
         },
-        onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine().then(function(appRunner) {
-            appRunner.runApp();
-          });
-        }
       });
     });
   </script>

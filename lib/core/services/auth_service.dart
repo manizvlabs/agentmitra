@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../di/service_locator.dart';
 import '../../features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../features/auth/data/models/user_model.dart';
@@ -9,31 +11,59 @@ class AuthService {
   factory AuthService() => _instance;
   AuthService._internal();
 
-  AuthViewModel get _authViewModel => ServiceLocator.authViewModel;
+  /// Get AuthViewModel from Provider context
+  AuthViewModel? _getAuthViewModel(BuildContext? context) {
+    if (context != null) {
+      try {
+        return Provider.of<AuthViewModel>(context, listen: false);
+      } catch (e) {
+        // Provider not available, fallback to service locator
+      }
+    }
+    // Fallback to service locator
+    try {
+      return ServiceLocator.authViewModel;
+    } catch (e) {
+      return null;
+    }
+  }
 
   /// Check if user is authenticated
-  Future<bool> isAuthenticated() async {
+  Future<bool> isAuthenticated([BuildContext? context]) async {
+    final authViewModel = _getAuthViewModel(context);
+    if (authViewModel == null) {
+      return false;
+    }
+
     try {
-      await _authViewModel.initialize();
-      return _authViewModel.isAuthenticated;
+      await authViewModel.initialize();
+      return authViewModel.isAuthenticated;
     } catch (e) {
       return false;
     }
   }
 
   /// Get current user
-  Future<UserModel?> getCurrentUser() async {
+  Future<UserModel?> getCurrentUser([BuildContext? context]) async {
+    final authViewModel = _getAuthViewModel(context);
+    if (authViewModel == null) {
+      return null;
+    }
+
     try {
-      await _authViewModel.initialize();
-      return _authViewModel.currentUser;
+      await authViewModel.initialize();
+      return authViewModel.currentUser;
     } catch (e) {
       return null;
     }
   }
 
   /// Logout
-  Future<void> logout() async {
-    await _authViewModel.logout();
+  Future<void> logout([BuildContext? context]) async {
+    final authViewModel = _getAuthViewModel(context);
+    if (authViewModel != null) {
+      await authViewModel.logout();
+    }
   }
 }
 

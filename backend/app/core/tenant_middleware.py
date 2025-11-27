@@ -210,6 +210,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
             "/api/v1/health",
             "/api/v1/tenants/",  # Super admins need to manage tenants
             "/api/v1/rbac/",  # RBAC system endpoints
+            "/api/v1/users/me",  # Current user profile endpoint
+            "/api/v1/users/",  # User management endpoints
             "/health",
             "/docs",
             "/redoc",
