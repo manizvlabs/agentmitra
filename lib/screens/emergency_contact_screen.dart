@@ -15,23 +15,15 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> with Ti
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  // Form controllers
-  final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _addressController = TextEditingController();
-
-  // Form state
-  String _selectedRelationship = 'Spouse';
-  bool _useSameAddress = true;
-
-  final List<String> _relationshipOptions = [
-    'Spouse',
-    'Parent',
-    'Sibling',
-    'Child',
-    'Friend',
-    'Other',
+  // Form controllers - support multiple contacts
+  List<EmergencyContact> _contacts = [
+    EmergencyContact(), // Primary contact
   ];
+  
+  int _currentContactIndex = 0;
+  
+  // Form state
+  bool _useSameAddress = true;
 
   @override
   void initState() {
@@ -64,11 +56,14 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> with Ti
   @override
   void dispose() {
     _animationController.dispose();
-    _nameController.dispose();
-    _phoneController.dispose();
-    _addressController.dispose();
+    for (var contact in _contacts) {
+      contact.nameController.dispose();
+      contact.phoneController.dispose();
+    }
     super.dispose();
   }
+  
+  EmergencyContact get _currentContact => _contacts[_currentContactIndex];
 
   @override
   Widget build(BuildContext context) {
@@ -87,6 +82,11 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> with Ti
                 children: [
                   // Main Header
                   _buildMainHeader(),
+
+                  const SizedBox(height: 24),
+
+                  // Contact List Header
+                  if (_contacts.length > 1) _buildContactListHeader(),
 
                   const SizedBox(height: 24),
 
@@ -215,6 +215,92 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> with Ti
     );
   }
 
+  Widget _buildContactListHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.shade200),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: List.generate(_contacts.length, (index) {
+                  final isSelected = index == _currentContactIndex;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _currentContactIndex = index;
+                      });
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.blue : Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected ? Colors.blue : Colors.blue.shade200,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            index == 0 ? 'Primary' : 'Contact ${index + 1}',
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.blue,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          if (!isSelected && index > 0) ...[
+                            const SizedBox(width: 4),
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _contacts[index].nameController.dispose();
+                                  _contacts[index].phoneController.dispose();
+                                  _contacts.removeAt(index);
+                                  if (_currentContactIndex >= _contacts.length) {
+                                    _currentContactIndex = _contacts.length - 1;
+                                  }
+                                });
+                              },
+                              child: Icon(
+                                Icons.close,
+                                size: 16,
+                                color: Colors.blue.shade700,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ),
+          if (_contacts.length < 3)
+            IconButton(
+              icon: const Icon(Icons.add_circle, color: Colors.blue),
+              onPressed: () {
+                setState(() {
+                  _contacts.add(EmergencyContact());
+                  _currentContactIndex = _contacts.length - 1;
+                });
+              },
+              tooltip: 'Add Contact',
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildContactForm() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -232,23 +318,31 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> with Ti
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Emergency Contact Details',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _currentContactIndex == 0
+                      ? 'Primary Emergency Contact Details'
+                      : 'Emergency Contact ${_currentContactIndex + 1} Details',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           _buildFormField(
-            controller: _nameController,
+            controller: _currentContact.nameController,
             label: 'Full Name',
             hint: 'Enter full name',
             icon: Icons.person,
           ),
           const SizedBox(height: 16),
           _buildFormField(
-            controller: _phoneController,
+            controller: _currentContact.phoneController,
             label: 'Phone Number',
             hint: 'Enter phone number',
             icon: Icons.phone,
@@ -328,10 +422,10 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> with Ti
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: _selectedRelationship,
+              value: _currentContact.relationship,
               isExpanded: true,
               icon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
-              items: _relationshipOptions.map((relationship) {
+              items: _currentContact.relationshipOptions.map((relationship) {
                 return DropdownMenuItem(
                   value: relationship,
                   child: Text(relationship),
@@ -339,7 +433,7 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> with Ti
               }).toList(),
               onChanged: (value) {
                 setState(() {
-                  _selectedRelationship = value!;
+                  _currentContact.relationship = value!;
                 });
               },
             ),
@@ -408,7 +502,7 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> with Ti
             ),
             const SizedBox(height: 8),
             TextFormField(
-              controller: _addressController,
+              controller: _currentContact.addressController,
               maxLines: 3,
               decoration: InputDecoration(
                 hintText: 'Enter complete address',
@@ -677,9 +771,23 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> with Ti
   }
 
   void _addAnotherContact() {
-    // TODO: Clear form and allow adding another contact
+    if (_contacts.length >= 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Maximum 3 emergency contacts allowed'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
+    setState(() {
+      _contacts.add(EmergencyContact());
+      _currentContactIndex = _contacts.length - 1;
+    });
+    
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Add another contact coming soon!')),
+      SnackBar(content: Text('Added contact ${_contacts.length}. Please fill in the details.')),
     );
   }
 
@@ -691,19 +799,63 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> with Ti
   }
 
   void _saveContact() {
-    if (_nameController.text.isEmpty || _phoneController.text.isEmpty) {
+    // Validate all contacts
+    bool hasInvalidContact = false;
+    for (int i = 0; i < _contacts.length; i++) {
+      final contact = _contacts[i];
+      if (contact.nameController.text.isEmpty || contact.phoneController.text.isEmpty) {
+        hasInvalidContact = true;
+        setState(() {
+          _currentContactIndex = i;
+        });
+        break;
+      }
+    }
+
+    if (hasInvalidContact) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please enter name and phone number'),
+          content: Text('Please enter name and phone number for all contacts'),
           backgroundColor: Colors.red,
         ),
       );
       return;
     }
 
-    // TODO: Save emergency contact
+    // Validate at least primary contact
+    if (_contacts[0].nameController.text.isEmpty || _contacts[0].phoneController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Primary contact is required'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // TODO: Save all emergency contacts
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Emergency contact saved successfully!')),
+      SnackBar(
+        content: Text('${_contacts.length} emergency contact(s) saved successfully!'),
+        backgroundColor: Colors.green,
+      ),
     );
   }
+}
+
+/// Emergency Contact Data Model
+class EmergencyContact {
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
+  String relationship = 'Spouse';
+  
+  final List<String> relationshipOptions = [
+    'Spouse',
+    'Parent',
+    'Sibling',
+    'Child',
+    'Friend',
+    'Other',
+  ];
 }

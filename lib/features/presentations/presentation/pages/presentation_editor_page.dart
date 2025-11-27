@@ -821,9 +821,11 @@ class _PresentationEditorPageState extends State<PresentationEditorPage> {
         reader.readAsArrayBuffer(file);
       });
     } else {
-      // Mobile file picker would use image_picker package
+      // Mobile file picker - TODO: Add image_picker package to pubspec.yaml
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Media upload on mobile coming soon')),
+        const SnackBar(
+          content: Text('Mobile media upload: Please add image_picker package to pubspec.yaml'),
+        ),
       );
     }
   }
@@ -929,6 +931,151 @@ class _PresentationEditorPageState extends State<PresentationEditorPage> {
   Color _getContrastColor(Color color) {
     final luminance = color.computeLuminance();
     return luminance > 0.5 ? Colors.black : Colors.white;
+  }
+
+  Widget _buildSlidePreview(SlideModel slide) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _parseColor(slide.backgroundColor),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (slide.mediaUrl != null && slide.mediaUrl!.isNotEmpty) ...[
+            if (slide.slideType == 'image')
+              Image.network(
+                slide.mediaUrl!,
+                height: 100,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => Icon(
+                  Icons.broken_image,
+                  size: 48,
+                  color: _parseColor(slide.textColor),
+                ),
+              )
+            else
+              Icon(
+                Icons.videocam,
+                size: 48,
+                color: _parseColor(slide.textColor),
+              ),
+            const SizedBox(height: 12),
+          ],
+          if (slide.title != null && slide.title!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                slide.title!,
+                style: TextStyle(
+                  color: _parseColor(slide.textColor),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          if (slide.subtitle != null && slide.subtitle!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                slide.subtitle!,
+                style: TextStyle(
+                  color: _parseColor(slide.textColor),
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showFullPreview() {
+    if (_currentPresentation == null || _currentPresentation!.slides.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No slides to preview')),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.8,
+          width: MediaQuery.of(context).size.width * 0.9,
+          decoration: BoxDecoration(
+            color: Colors.black87,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Presentation Preview',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              // Carousel Preview
+              Expanded(
+                child: PageView.builder(
+                  itemCount: _currentPresentation!.slides.length,
+                  itemBuilder: (context, index) {
+                    final slide = _currentPresentation!.slides[index];
+                    return Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: _buildSlidePreview(slide),
+                    );
+                  },
+                ),
+              ),
+              // Indicators
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    _currentPresentation!.slides.length,
+                    (index) => Container(
+                      width: 8,
+                      height: 8,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   List<PresentationSlide> _convertSlidesToPresentationSlides(List<SlideModel> slides) {

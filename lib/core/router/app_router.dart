@@ -29,12 +29,21 @@ import '../../screens/tenant_onboarding_screen.dart';
 import '../../screens/role_assignment_screen.dart';
 import '../../screens/compliance_reporting_screen.dart';
 import '../../screens/test_phase1_screen.dart';
+import '../../screens/onboarding_completion_page.dart';
+import '../../screens/agent_discovery_screen.dart';
+import '../../screens/document_upload_screen.dart';
+import '../../screens/kyc_verification_screen.dart';
+import '../../screens/emergency_contact_screen.dart';
+import '../../features/onboarding/presentation/pages/enhanced_agent_discovery_page.dart';
 // Configuration Portal Pages
 import '../../features/config_portal/presentation/pages/data_import_dashboard_page.dart';
 import '../../features/config_portal/presentation/pages/excel_template_config_page.dart';
 import '../../features/config_portal/presentation/pages/customer_data_management_page.dart';
 import '../../features/config_portal/presentation/pages/reporting_dashboard_page.dart';
 import '../../features/config_portal/presentation/pages/user_management_page.dart';
+// Protected Route Widget
+import '../../core/widgets/protected_route.dart';
+import '../../core/services/rbac_service.dart';
 
 /// Application Router Configuration
 /// Uses GoRouter for declarative routing with deep linking support
@@ -88,6 +97,36 @@ class AppRouter {
         path: '/onboarding',
         name: 'onboarding',
         builder: (context, state) => const OnboardingPage(),
+      ),
+
+      GoRoute(
+        path: '/onboarding-completion',
+        name: 'onboarding-completion',
+        builder: (context, state) => const OnboardingCompletionPage(),
+      ),
+
+      GoRoute(
+        path: '/agent-discovery',
+        name: 'agent-discovery',
+        builder: (context, state) => const EnhancedAgentDiscoveryPage(),
+      ),
+
+      GoRoute(
+        path: '/document-upload',
+        name: 'document-upload',
+        builder: (context, state) => const DocumentUploadScreen(),
+      ),
+
+      GoRoute(
+        path: '/kyc-verification',
+        name: 'kyc-verification',
+        builder: (context, state) => const KycVerificationScreen(),
+      ),
+
+      GoRoute(
+        path: '/emergency-contact',
+        name: 'emergency-contact',
+        builder: (context, state) => const EmergencyContactScreen(),
       ),
 
       GoRoute(
@@ -262,35 +301,54 @@ class AppRouter {
         builder: (context, state) => const TestPhase1Screen(),
       ),
 
-      // Configuration Portal Routes (Admin/Agent Config)
+      // Configuration Portal Routes (Protected with RBAC)
       GoRoute(
         path: '/data-import-dashboard',
         name: 'data-import-dashboard',
-        builder: (context, state) => const DataImportDashboardPage(),
+        builder: (context, state) => ProtectedRoute(
+          requiredPermissions: ['data_import.read'],
+          child: const DataImportDashboardPage(),
+        ),
       ),
 
       GoRoute(
         path: '/excel-template-config',
         name: 'excel-template-config',
-        builder: (context, state) => const ExcelTemplateConfigPage(),
+        builder: (context, state) => ProtectedRoute(
+          requiredPermissions: ['data_import.create'],
+          child: const ExcelTemplateConfigPage(),
+        ),
       ),
 
       GoRoute(
         path: '/customer-data-management',
         name: 'customer-data-management',
-        builder: (context, state) => const CustomerDataManagementPage(),
+        builder: (context, state) => ProtectedRoute(
+          requiredPermissions: ['customers.read'],
+          child: const CustomerDataManagementPage(),
+        ),
       ),
 
       GoRoute(
         path: '/reporting-dashboard',
         name: 'reporting-dashboard',
-        builder: (context, state) => const ReportingDashboardPage(),
+        builder: (context, state) => ProtectedRoute(
+          requiredPermissions: ['reports.read'],
+          child: const ReportingDashboardPage(),
+        ),
       ),
 
       GoRoute(
         path: '/user-management',
         name: 'user-management',
-        builder: (context, state) => const UserManagementPage(),
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [
+            UserRole.superAdmin,
+            UserRole.providerAdmin,
+          ],
+          requiredPermissions: ['users.read'],
+          child: const UserManagementPage(),
+        ),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

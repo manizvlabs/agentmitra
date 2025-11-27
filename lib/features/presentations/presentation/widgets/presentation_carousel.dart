@@ -135,9 +135,7 @@ class _PresentationCarouselState extends State<PresentationCarousel> {
 
         final presentation = viewModel.activePresentation;
         if (presentation == null || presentation.slides.isEmpty) {
-          return const Center(
-            child: Text('No active presentation found'),
-          );
+          return const SizedBox.shrink(); // Return empty widget, parent will handle empty state
         }
 
         // Start auto-play when presentation is loaded

@@ -29,6 +29,11 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> with Tick
   bool _pushNotifications = true;
   bool _emailNotifications = true;
   bool _smsNotifications = false;
+  
+  // Biometric capture state
+  bool _biometricEnabled = false;
+  String? _biometricType; // 'fingerprint' or 'face'
+  bool _isCapturingBiometric = false;
 
   @override
   void initState() {
@@ -162,6 +167,11 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> with Tick
 
                   // What Happens Next
                   _buildWhatHappensNext(),
+
+                  const SizedBox(height: 24),
+
+                  // Biometric Setup Section
+                  _buildBiometricSetup(),
 
                   const SizedBox(height: 24),
 
@@ -617,6 +627,166 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> with Tick
         ),
       ],
     );
+  }
+
+  Widget _buildBiometricSetup() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.fingerprint, color: Theme.of(context).primaryColor, size: 24),
+              const SizedBox(width: 8),
+              const Text(
+                'Biometric Authentication Setup',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Enable biometric authentication for faster and secure access to your account.',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 16),
+          SwitchListTile(
+            title: const Text('Enable Biometric Login'),
+            subtitle: Text(_biometricEnabled ? 'Biometric authentication is active' : 'Tap to enable'),
+            value: _biometricEnabled,
+            onChanged: (value) {
+              if (value) {
+                _showBiometricTypeDialog();
+              } else {
+                setState(() {
+                  _biometricEnabled = false;
+                  _biometricType = null;
+                });
+              }
+            },
+            activeColor: Theme.of(context).primaryColor,
+          ),
+          if (_biometricEnabled && _biometricType != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _biometricType == 'fingerprint' ? Icons.fingerprint : Icons.face,
+                    color: Colors.green,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _biometricType == 'fingerprint'
+                          ? 'Fingerprint authentication enabled'
+                          : 'Face ID authentication enabled',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ),
+                  if (_isCapturingBiometric)
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showBiometricTypeDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Biometric Type'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.fingerprint, color: Colors.blue),
+              title: const Text('Fingerprint'),
+              subtitle: const Text('Use your fingerprint to unlock'),
+              onTap: () {
+                Navigator.pop(context);
+                _captureBiometric('fingerprint');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.face, color: Colors.purple),
+              title: const Text('Face ID'),
+              subtitle: const Text('Use facial recognition to unlock'),
+              onTap: () {
+                Navigator.pop(context);
+                _captureBiometric('face');
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _captureBiometric(String type) {
+    setState(() {
+      _isCapturingBiometric = true;
+    });
+
+    // Simulate biometric capture
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          _biometricEnabled = true;
+          _biometricType = type;
+          _isCapturingBiometric = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${type == 'fingerprint' ? 'Fingerprint' : 'Face ID'} authentication enabled successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    });
   }
 
   Widget _buildNotificationSettings() {

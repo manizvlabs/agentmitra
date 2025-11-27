@@ -18,6 +18,8 @@ import '../../../../core/services/rbac_service.dart';
 import '../../../../core/services/agent_service.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../shared/constants/api_constants.dart';
+import '../widgets/presentation_carousel_section.dart';
+import '../../../presentations/presentation/viewmodels/presentation_viewmodel.dart';
 
 /// Enhanced Dashboard Page with real API integration and presentation carousel
 class DashboardPage extends ConsumerStatefulWidget {
@@ -32,6 +34,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  String? _currentAgentId;
 
   @override
   void initState() {
@@ -58,6 +61,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       curve: Curves.easeOutCubic,
     ));
 
+    // Load agent ID and presentation
+    _loadAgentIdAndPresentation();
+
     // Load additional analytics data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final viewModel = provider.Provider.of<DashboardViewModel>(context, listen: false);
@@ -66,6 +72,18 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     });
 
     _animationController.forward();
+  }
+
+  Future<void> _loadAgentIdAndPresentation() async {
+    final agentId = await AgentService().getCurrentAgentId();
+    if (agentId != null && mounted) {
+      setState(() {
+        _currentAgentId = agentId;
+      });
+      // Load active presentation
+      final presentationViewModel = provider.Provider.of<PresentationViewModel>(context, listen: false);
+      presentationViewModel.loadActivePresentation(agentId);
+    }
   }
 
   @override
@@ -101,9 +119,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
                     const SizedBox(height: 24),
 
-                    // Presentation Carousel - temporarily disabled for Phase 5 polish
-                    // const PresentationCarousel(agentId: 'current-agent'),
-                    _buildPresentationPlaceholder(),
+                    // Presentation Carousel Section with Edit Functionality
+                    if (_currentAgentId != null)
+                      PresentationCarouselSection(
+                        agentId: _currentAgentId!,
+                        height: 200,
+                      )
+                    else
+                      _buildPresentationPlaceholder(),
 
                     const SizedBox(height: 24),
 

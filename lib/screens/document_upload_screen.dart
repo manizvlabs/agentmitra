@@ -24,6 +24,13 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> with Ticker
 
   // OCR results
   Map<String, dynamic> _ocrResults = {};
+  
+  // Document previews (file paths or URLs)
+  Map<String, String?> _documentPreviews = {
+    'aadhar': null,
+    'selfie': null,
+    'address': null,
+  };
 
   @override
   void initState() {
@@ -454,18 +461,24 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> with Ticker
             title: 'Aadhaar Card',
             status: _uploadStatus['aadhar']!,
             onTap: () => _uploadDocument('aadhar'),
+            previewUrl: _documentPreviews['aadhar'],
+            onPreview: _documentPreviews['aadhar'] != null ? () => _showDocumentPreview('aadhar', 'Aadhaar Card') : null,
           ),
           const SizedBox(height: 12),
           _buildStatusItem(
             title: 'Selfie',
             status: _uploadStatus['selfie']!,
             onTap: () => _uploadDocument('selfie'),
+            previewUrl: _documentPreviews['selfie'],
+            onPreview: _documentPreviews['selfie'] != null ? () => _showDocumentPreview('selfie', 'Selfie') : null,
           ),
           const SizedBox(height: 12),
           _buildStatusItem(
             title: 'Address Verification',
             status: _uploadStatus['address']!,
             onTap: () => _uploadDocument('address'),
+            previewUrl: _documentPreviews['address'],
+            onPreview: _documentPreviews['address'] != null ? () => _showDocumentPreview('address', 'Address Verification') : null,
           ),
         ],
       ),
@@ -476,6 +489,8 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> with Ticker
     required String title,
     required String status,
     required VoidCallback onTap,
+    String? previewUrl,
+    VoidCallback? onPreview,
   }) {
     Color statusColor;
     IconData statusIcon;
@@ -547,6 +562,13 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> with Ticker
                 ),
               ),
             ),
+            if (onPreview != null && status != 'pending')
+              IconButton(
+                icon: const Icon(Icons.preview, size: 20),
+                onPressed: onPreview,
+                tooltip: 'Preview',
+                color: Colors.blue,
+              ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
@@ -731,6 +753,8 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> with Ticker
     // Simulate upload process
     setState(() {
       _uploadStatus[type] = 'uploaded';
+      // Simulate document preview URL (in real app, this would be from upload response)
+      _documentPreviews[type] = 'https://via.placeholder.com/400x600?text=${type.toUpperCase()}';
     });
 
     Future.delayed(const Duration(seconds: 2), () {
@@ -760,6 +784,117 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> with Ticker
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Uploading $type document...')),
+    );
+  }
+
+  void _showDocumentPreview(String type, String title) {
+    final previewUrl = _documentPreviews[type];
+    if (previewUrl == null) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.9,
+            maxWidth: MediaQuery.of(context).size.width * 0.9,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Preview: $title',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(),
+              // Preview Image
+              Flexible(
+                child: Container(
+                  margin: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      previewUrl,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        height: 400,
+                        color: Colors.grey.shade200,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.image_not_supported, size: 64, color: Colors.grey.shade400),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Preview not available',
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Actions
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _uploadDocument(type); // Re-upload
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Re-upload'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.check),
+                        label: const Text('Looks Good'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
