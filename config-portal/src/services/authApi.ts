@@ -120,7 +120,18 @@ class AuthApiService {
   // Authentication methods
   async login(credentials: LoginRequest): Promise<ApiResponse<AuthResponse>> {
     const response = await this.axiosInstance.post('/api/v1/auth/login', credentials);
-    return response.data;
+    // Backend returns AuthResponse directly, wrap it in ApiResponse format
+    const authResponse = response.data;
+    return {
+      success: true,
+      data: {
+        access_token: authResponse.access_token,
+        refresh_token: authResponse.refresh_token,
+        token_type: authResponse.token_type || 'bearer',
+        user: authResponse.user,
+        permissions: authResponse.permissions
+      }
+    };
   }
 
   async sendOtp(phoneNumber: string): Promise<ApiResponse<any>> {
@@ -192,8 +203,8 @@ class AuthApiService {
     return {
       ...userData,
       user_id: decoded.sub,
-      roles: decoded.roles || [], // Array of roles from JWT
-      permissions: decoded.permissions || [], // Array of permissions from JWT (string[])
+      roles: Array.isArray(decoded.roles) ? decoded.roles : [], // Ensure roles is always an array
+      permissions: Array.isArray(decoded.permissions) ? decoded.permissions : [], // Ensure permissions is always an array
       tenant_id: decoded.tenant_id,
     };
   }

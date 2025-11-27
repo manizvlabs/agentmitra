@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
+import 'pioneer_service.dart';
 
 /// Feature Flag Service for dynamic UI rendering based on permissions
 class FeatureFlagService {
@@ -15,7 +16,7 @@ class FeatureFlagService {
     return;
   }
 
-  /// Synchronous check for feature flag (checks cache only)
+  /// Synchronous check for feature flag (checks cache first, then Pioneer, then defaults)
   bool isFeatureEnabledSync(String flagName, {String? userId, String? tenantId}) {
     final cacheKey = _getCacheKey(flagName, userId, tenantId);
     if (_cache.containsKey(cacheKey)) {
@@ -25,8 +26,14 @@ class FeatureFlagService {
         return _cache[cacheKey]!;
       }
     }
-    // Default to true if not cached
-    return true;
+
+    // Try Pioneer if initialized
+    if (PioneerService.isInitialized) {
+      return PioneerService.isFeatureEnabledSync(flagName);
+    }
+
+    // Default to false if not cached and Pioneer not available
+    return false;
   }
 
   /// Check if a feature flag is enabled
@@ -42,13 +49,31 @@ class FeatureFlagService {
     }
 
     try {
-      // Check via API
+      // First try Pioneer if initialized
+      if (PioneerService.isInitialized) {
+        final pioneerResult = await PioneerService.isFeatureEnabled(flagName);
+        // Cache the result
+        _cache[cacheKey] = pioneerResult;
+        _cacheTimestamps[cacheKey] = DateTime.now();
+        return pioneerResult;
+      }
+
+      // Fall back to backend feature flag API
       final response = await ApiService.get(
-        '/rbac/check-permission',
-        queryParameters: {'permission': flagName, if (userId != null) 'user_id': userId},
+        '/rbac/feature-flags',
+        queryParameters: {
+          if (tenantId != null) 'tenant_id': tenantId,
+        },
       );
 
-      final isEnabled = response['has_permission'] as bool;
+      // Look for the specific flag in the response
+      final flags = response['data'] as List<dynamic>? ?? [];
+      final flag = flags.firstWhere(
+        (f) => f['flag_name'] == flagName,
+        orElse: () => null,
+      );
+
+      final isEnabled = flag != null ? (flag['is_enabled'] as bool? ?? false) : false;
 
       // Cache the result
       _cache[cacheKey] = isEnabled;
@@ -57,8 +82,8 @@ class FeatureFlagService {
       return isEnabled;
     } catch (e) {
       debugPrint('Error checking feature flag $flagName: $e');
-      // Return true by default on error (fail open)
-      return true;
+      // Return false by default on error (fail closed for feature flags)
+      return false;
     }
   }
 
@@ -67,10 +92,13 @@ class FeatureFlagService {
     try {
       final response = await ApiService.get(
         '/rbac/check-permission',
-        queryParameters: {'permission': permission, if (userId != null) 'user_id': userId},
+        queryParameters: {
+          'permission': permission,
+          if (userId != null) 'user_id': userId,
+        },
       );
 
-      return response['has_permission'] as bool;
+      return response['has_permission'] as bool? ?? false;
     } catch (e) {
       debugPrint('Error checking permission $permission: $e');
       return false;
@@ -80,9 +108,9 @@ class FeatureFlagService {
   /// Get user permissions
   Future<List<String>> getUserPermissions({String? userId}) async {
     try {
-      final response = await ApiService.get('/rbac/users/${userId ?? 'current'}/roles');
+      final response = await ApiService.get('/rbac/user-permissions');
 
-      return List<String>.from(response['permissions'] as List);
+      return List<String>.from(response['permissions'] as List? ?? []);
     } catch (e) {
       debugPrint('Error getting user permissions: $e');
       return [];
@@ -94,7 +122,7 @@ class FeatureFlagService {
     try {
       final response = await ApiService.get('/rbac/users/${userId ?? 'current'}/roles');
 
-      return List<String>.from(response['roles'] as List);
+      return List<String>.from(response['roles'] as List? ?? []);
     } catch (e) {
       debugPrint('Error getting user roles: $e');
       return [];
@@ -208,9 +236,17 @@ class _FeatureFlagBuilderState extends State<FeatureFlagBuilder> {
   }
 
   Future<bool> _checkFeatureFlag() async {
-    // Placeholder implementation - in real app, this would use the actual service
-    // For demo purposes, we'll return true for most flags
-    return widget.flagName.contains('enabled') || widget.flagName.contains('dashboard');
+    // Use the feature flag service to check the flag
+    // For now, we'll use a placeholder service instance
+    // In a real app, this would be injected via provider
+    try {
+      final service = FeatureFlagService();
+      return await service.isFeatureEnabled(widget.flagName,
+          userId: widget.userId, tenantId: widget.tenantId);
+    } catch (e) {
+      debugPrint('Error checking feature flag: $e');
+      return false;
+    }
   }
 
   @override
@@ -280,9 +316,16 @@ class _PermissionBuilderState extends State<PermissionBuilder> {
   }
 
   Future<bool> _checkPermission() async {
-    // Placeholder implementation - in real app, this would check actual permissions
-    // For demo purposes, we'll allow common permissions
-    return widget.permission.contains('read') || widget.permission.contains('dashboard');
+    // Use the feature flag service to check permissions
+    // For now, we'll use a placeholder service instance
+    // In a real app, this would be injected via provider
+    try {
+      final service = FeatureFlagService();
+      return await service.hasPermission(widget.permission, userId: widget.userId);
+    } catch (e) {
+      debugPrint('Error checking permission: $e');
+      return false;
+    }
   }
 
   @override

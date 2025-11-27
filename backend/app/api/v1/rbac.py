@@ -235,7 +235,7 @@ async def get_all_permissions(
         return [{
             "permission_id": str(p.permission_id),
             "permission_name": p.permission_name,
-            "resource_type": p.resource_type,
+            "resource_type": p.resource,
             "action": p.action,
             "description": p.permission_description
         } for p in permissions]

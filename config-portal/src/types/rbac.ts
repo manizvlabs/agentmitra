@@ -61,7 +61,7 @@ export const hasPermission = (
   if (!user) return false;
 
   // Super admin has all permissions
-  if (user.roles.includes('super_admin')) return true;
+  if (user.roles && user.roles.includes('super_admin')) return true;
 
   // Check permissions array from JWT (these are strings like "users.read", "policies.create")
   const requiredPermission = `${resource}.${action}`;
@@ -81,12 +81,12 @@ export const hasPermission = (
 };
 
 export const hasAnyRole = (user: RBACUser | null, roles: string[]): boolean => {
-  if (!user) return false;
+  if (!user || !user.roles) return false;
   return user.roles.some(role => roles.includes(role));
 };
 
 export const hasRole = (user: RBACUser | null, role: string): boolean => {
-  if (!user) return false;
+  if (!user || !user.roles) return false;
   return user.roles.includes(role);
 };
 
@@ -97,7 +97,7 @@ export const canAccessFeature = (
   if (!user) return false;
 
   // Super admin has access to everything
-  if (user.roles.includes('super_admin')) return true;
+  if (user.roles && user.roles.includes('super_admin')) return true;
 
   // Map feature paths to required permissions
   const featurePermissionMap: Record<string, string[]> = {

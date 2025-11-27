@@ -7,6 +7,7 @@ import '../widgets/document_verification_step.dart';
 import '../widgets/kyc_process_step.dart';
 import '../widgets/emergency_contacts_step.dart';
 import '../widgets/profile_setup_step.dart';
+import '../widgets/onboarding_completion_step.dart';
 import '../../data/models/onboarding_step.dart';
 
 /// Main onboarding page that manages the 5-step flow
@@ -64,6 +65,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     if (viewModel.currentStep == OnboardingStep.kycProcess) const KycProcessStep(),
                     if (viewModel.currentStep == OnboardingStep.emergencyContacts) const EmergencyContactsStep(),
                     if (viewModel.currentStep == OnboardingStep.profileSetup) const ProfileSetupStep(),
+                    if (viewModel.currentStep == OnboardingStep.completion) const OnboardingCompletionStep(),
                   ],
                   ),
                 ),

@@ -43,10 +43,11 @@ export const RBACProvider: React.FC<RBACProviderProps> = ({ children }) => {
       setAvailableRoles(rolesData.map(role => role.role_name));
       setAvailablePermissions(permissionsData);
     } catch (error) {
-      console.error('Failed to load RBAC data:', error);
-      // Set empty arrays as fallback
+      console.warn('Failed to load RBAC data from backend, using fallback:', error);
+      // Set empty arrays as fallback - don't throw error
       setAvailableRoles([]);
       setAvailablePermissions([]);
+      // Don't re-throw the error so the login can continue
     }
   };
 
@@ -58,8 +59,15 @@ export const RBACProvider: React.FC<RBACProviderProps> = ({ children }) => {
 
       if (authenticated && currentUser) {
         setUser(currentUser);
-        // Only load RBAC data when user is authenticated
-        await refreshRBACData();
+        // Only load RBAC data when user is authenticated (don't fail if it doesn't work)
+        try {
+          await refreshRBACData();
+        } catch (error) {
+          console.warn('Failed to load RBAC data, continuing with basic permissions:', error);
+          // Set empty arrays as fallback
+          setAvailableRoles([]);
+          setAvailablePermissions([]);
+        }
       } else {
         setUser(null);
         // Clear RBAC data when not authenticated

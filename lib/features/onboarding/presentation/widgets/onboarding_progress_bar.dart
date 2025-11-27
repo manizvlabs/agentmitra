@@ -184,6 +184,8 @@ class OnboardingProgressBar extends StatelessWidget {
         return 'Contacts';
       case OnboardingStep.profileSetup:
         return 'Profile';
+      case OnboardingStep.completion:
+        return 'Complete';
     }
   }
 }

@@ -13,6 +13,7 @@ import {
   StepLabel,
 } from '@mui/material';
 import { authApi } from '../services/authApi';
+import { useRBAC } from '../contexts/RBACContext';
 
 const Login: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
@@ -24,6 +25,7 @@ const Login: React.FC = () => {
   const [success, setSuccess] = useState('');
   const [usePassword, setUsePassword] = useState(true); // Default to password login for testing
   const navigate = useNavigate();
+  const { login } = useRBAC();
 
   const steps = usePassword ? ['Enter Credentials'] : ['Enter Phone Number', 'Verify OTP'];
 
@@ -36,6 +38,8 @@ const Login: React.FC = () => {
       const response = await authApi.login({ phone_number: phoneNumber, password });
       if (response.success && response.data) {
         authApi.setAuthData(response.data);
+        // Update RBAC context with user data
+        login(response.data.user);
         navigate('/dashboard');
       } else {
         setError(response.message || 'Login failed. Please check your credentials.');
@@ -89,6 +93,8 @@ const Login: React.FC = () => {
       const response = await authApi.verifyOtp(phoneNumber, otp);
       if (response.success && response.data) {
         authApi.setAuthData(response.data);
+        // Update RBAC context with user data
+        login(response.data.user);
         navigate('/dashboard');
       } else {
         setError(response.message || 'Invalid OTP. Please try again.');

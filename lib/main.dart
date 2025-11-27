@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as provider;
 import 'core/services/storage_service.dart';
+import 'core/services/pioneer_service.dart';
 import 'core/di/service_locator.dart';
 import 'core/providers/global_providers.dart';
 import 'shared/theme/app_theme.dart';
@@ -51,6 +52,7 @@ import 'screens/reminders_screen.dart';
 import 'screens/callback_request_management.dart';
 import 'screens/global_search_screen.dart';
 import 'screens/test_phase1_screen.dart';
+import 'screens/pioneer_demo_screen.dart';
 import 'features/presentations/presentation/pages/presentation_list_page.dart';
 import 'features/presentations/presentation/pages/presentation_editor_page.dart';
 import 'features/presentations/data/models/presentation_model.dart';
@@ -128,6 +130,22 @@ void main() async {
     print('Service Locator initialized successfully');
   } catch (e) {
     print('Service Locator initialization failed: $e');
+  }
+
+  // Initialize Pioneer for feature flag management
+  try {
+    // Pioneer configuration - using mock mode for now since server has connectivity issues
+    // When Pioneer server is working, set useMock: false and configure scoutUrl and sdkKey
+    await PioneerService.initialize(
+      useMock: true, // Set to false when Pioneer server is properly configured
+      // scoutUrl: 'http://localhost:4002', // Uncomment when server is working
+      // sdkKey: 'your-sdk-key', // Uncomment when server is working
+    );
+    print('Pioneer initialized successfully (mock mode)');
+  } catch (e) {
+    print('Pioneer initialization failed: $e');
+    print('App will continue with default feature flag values');
+    // Continue without Pioneer - app will use fallback behavior
   }
 
   runApp(
@@ -304,6 +322,7 @@ class AgentMitraApp extends ConsumerWidget {
 
     // Phase 1 Test Screen
     '/test-phase1': (context) => const TestPhase1Screen(),
+    '/pioneer-demo': (context) => const PioneerDemoScreen(),
     '/data-pending': (context) => const DataPendingScreen(),
     '/agent-discovery': (context) => const AgentDiscoveryScreen(),
     '/agent-verification': (context) => const AgentVerificationScreen(),

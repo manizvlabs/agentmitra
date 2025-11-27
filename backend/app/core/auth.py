@@ -672,7 +672,7 @@ def get_auth_service() -> AuthorizationService:
     return _auth_service
 
 # For backward compatibility
-auth_service = None  # Will be set by get_auth_service()
+auth_service = get_auth_service()  # Initialize the auth service
 
 
 class UserContext:

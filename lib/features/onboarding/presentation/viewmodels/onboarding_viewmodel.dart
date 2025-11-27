@@ -222,6 +222,8 @@ class OnboardingViewModel extends BaseViewModel {
         return _emergencyContactsData?.isValid ?? false;
       case OnboardingStep.profileSetup:
         return true; // Profile setup is always valid once reached
+      case OnboardingStep.completion:
+        return true; // Completion step is always valid
     }
   }
 

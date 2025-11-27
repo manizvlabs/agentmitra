@@ -4,7 +4,8 @@ enum OnboardingStep {
   documentVerification,
   kycProcess,
   emergencyContacts,
-  profileSetup;
+  profileSetup,
+  completion;
 
   String get title {
     switch (this) {
@@ -18,6 +19,8 @@ enum OnboardingStep {
         return 'Emergency Contacts';
       case OnboardingStep.profileSetup:
         return 'Profile Setup';
+      case OnboardingStep.completion:
+        return 'Welcome!';
     }
   }
 
@@ -33,6 +36,8 @@ enum OnboardingStep {
         return 'Add emergency contact information';
       case OnboardingStep.profileSetup:
         return 'Complete your profile setup';
+      case OnboardingStep.completion:
+        return 'Your account is ready!';
     }
   }
 
@@ -48,6 +53,8 @@ enum OnboardingStep {
         return 3;
       case OnboardingStep.profileSetup:
         return 4;
+      case OnboardingStep.completion:
+        return 5;
     }
   }
 

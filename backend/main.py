@@ -103,8 +103,7 @@ app.add_middleware(
     allowed_hosts=["localhost", "127.0.0.1", "*.localhost", "backend", "*.backend", "your-domain.com", "*.your-domain.com"]
 )
 
-# Add HTTPS redirect - enabled for all environments
-app.add_middleware(HTTPSRedirectMiddleware)
+# HTTPS redirect middleware is added conditionally in startup event
 
 # Add security middleware
 app.add_middleware(SecurityHeadersMiddleware)
@@ -172,7 +171,12 @@ app.include_router(api_router)
 async def startup_event():
     """Verify database connection on startup"""
     logger.info("Starting Agent Mitra API")
-    
+
+    # Add HTTPS redirect middleware conditionally
+    if os.getenv("ENVIRONMENT", "development") == "production" and os.getenv("USE_SSL", "true").lower() == "true":
+        app.add_middleware(HTTPSRedirectMiddleware)
+        logger.info("HTTPS redirect middleware enabled")
+
     # Configure SQLAlchemy mappers after all models are imported
     # This ensures all relationships can be resolved
     try:
@@ -181,7 +185,7 @@ async def startup_event():
         logger.info("SQLAlchemy mappers configured successfully")
     except Exception as e:
         logger.warning(f"Mapper configuration warning (non-critical): {e}")
-    
+
     # Verify database connection (schema managed by Flyway migrations)
     init_db()
     logger.info("Database connection verified (schema managed by Flyway)")
