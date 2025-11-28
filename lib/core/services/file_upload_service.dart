@@ -67,7 +67,17 @@ class FileUploadService {
     String? contentType,
     Map<String, String>? fields,
   }) async {
-    final uri = Uri.parse('$baseUrl$apiVersion$endpoint');
+    // Handle both full URLs and relative paths
+    final Uri uri;
+    if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+      uri = Uri.parse(endpoint);
+    } else if (endpoint.startsWith('/')) {
+      // Relative path - use baseUrl + apiVersion
+      uri = Uri.parse('$baseUrl$apiVersion$endpoint');
+    } else {
+      // Relative path without leading slash
+      uri = Uri.parse('$baseUrl$apiVersion/$endpoint');
+    }
 
     final request = http.MultipartRequest('POST', uri);
 

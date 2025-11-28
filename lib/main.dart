@@ -38,11 +38,6 @@ import 'features/customers/presentation/viewmodels/customer_viewmodel.dart';
 import 'screens/daily_quotes_screen.dart';
 import 'screens/my_policies_screen.dart';
 import 'screens/data_pending_screen.dart';
-import 'screens/agent_discovery_screen.dart';
-import 'screens/agent_verification_screen.dart';
-import 'screens/document_upload_screen.dart';
-import 'screens/emergency_contact_screen.dart';
-import 'screens/kyc_verification_screen.dart';
 import 'screens/campaign_performance_screen.dart';
 import 'screens/content_performance_screen.dart';
 import 'screens/accessibility_settings_screen.dart';
@@ -58,6 +53,14 @@ import 'features/presentations/presentation/pages/presentation_list_page.dart';
 import 'features/presentations/presentation/pages/presentation_editor_page.dart';
 import 'features/presentations/data/models/presentation_model.dart';
 import 'features/dashboard/presentation/pages/dashboard_page.dart';
+// Configuration Portal Pages
+import 'features/config_portal/presentation/pages/data_import_dashboard_page.dart';
+import 'features/config_portal/presentation/pages/excel_template_config_page.dart';
+import 'features/config_portal/presentation/pages/customer_data_management_page.dart';
+import 'features/config_portal/presentation/pages/reporting_dashboard_page.dart';
+import 'features/config_portal/presentation/pages/user_management_page.dart';
+import 'core/widgets/protected_route.dart';
+import 'core/services/rbac_service.dart';
 
 /// Placeholder screen for routes that are not yet implemented
 class PlaceholderScreen extends StatelessWidget {
@@ -161,15 +164,8 @@ void main() async {
     print('Pioneer initialized successfully (${config.pioneerEnabled ? 'real mode' : 'mock mode'})');
   } catch (e) {
     print('Pioneer initialization failed: $e');
-    print('Falling back to mock mode for development');
-    // Fall back to mock mode on error
-    try {
-      await PioneerService.initialize(useMock: true);
-      print('Pioneer initialized with fallback to mock mode');
-    } catch (fallbackError) {
-      print('Fallback initialization also failed: $fallbackError');
-      print('App will continue with default feature flag values');
-    }
+    print('App cannot start without Pioneer service. Please ensure Pioneer is running.');
+    throw e; // Re-throw to prevent app startup
   }
 
   runApp(
@@ -181,6 +177,25 @@ void main() async {
 
 class AgentMitraApp extends ConsumerWidget {
   const AgentMitraApp({super.key});
+
+  // Helper function to get initial route from URL hash
+  static String _getInitialRoute() {
+    if (kIsWeb) {
+      // Check if there's a hash in the URL
+      final uri = Uri.base;
+      if (uri.hasFragment && uri.fragment.isNotEmpty) {
+        String route = uri.fragment;
+        if (!route.startsWith('/')) {
+          route = '/$route';
+        }
+        // Verify route exists in routes map
+        if (_routes.containsKey(route)) {
+          return route;
+        }
+      }
+    }
+    return '/splash'; // Default to splash screen
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -232,6 +247,10 @@ class AgentMitraApp extends ConsumerWidget {
         provider.ChangeNotifierProvider(
           create: (_) => PoliciesViewModel(),
         ),
+        // User Management ViewModel
+        provider.ChangeNotifierProvider(
+          create: (_) => ServiceLocator.userManagementViewModel,
+        ),
         // RBAC Service Provider
         provider.Provider(
           create: (_) => ServiceLocator.rbacService,
@@ -243,7 +262,7 @@ class AgentMitraApp extends ConsumerWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: themeMode,
-        initialRoute: '/splash', // Start with splash screen
+        initialRoute: _getInitialRoute(), // Get initial route from URL hash if available
         onGenerateRoute: (settings) {
           // Handle hash-based routing for web
           String routeName = settings.name ?? '/';
@@ -294,6 +313,19 @@ class AgentMitraApp extends ConsumerWidget {
     );
   }
 
+  // Helper function to wrap protected routes
+  static WidgetBuilder _protectedRoute(
+    WidgetBuilder builder, {
+    List<UserRole>? requiredRoles,
+    List<String>? requiredPermissions,
+  }) {
+    return (context) => ProtectedRoute(
+      requiredRoles: requiredRoles,
+      requiredPermissions: requiredPermissions,
+      child: builder(context),
+    );
+  }
+
   // Define routes map as static
   static final Map<String, WidgetBuilder> _routes = {
     // Splash & Welcome Flow
@@ -310,83 +342,199 @@ class AgentMitraApp extends ConsumerWidget {
     },
     '/login': (context) => const LoginPage(),
 
-    // Onboarding Flow
-    '/trial-setup': (context) => const TrialSetupScreen(),
-    '/onboarding': (context) => const OnboardingPage(),
-    '/trial-expiration': (context) => const TrialExpirationScreen(),
+    // Onboarding Flow (Protected - requires authentication)
+    '/trial-setup': _protectedRoute((context) => const TrialSetupScreen()),
+    '/onboarding': _protectedRoute((context) => const OnboardingPage()),
+    '/trial-expiration': _protectedRoute((context) => const TrialExpirationScreen()),
 
-    // Customer Portal
-    '/customer-dashboard': (context) => const CustomerDashboard(),
-    '/policies': (context) => const PoliciesListPage(),
-    '/claims': (context) {
-      // Extract policyId from arguments if available
-      final args = ModalRoute.of(context)?.settings.arguments;
-      return ClaimsPage(policyId: args as String?);
-    },
-    '/claims/new': (context) => const PlaceholderScreen(title: 'File New Claim'),
-    '/policy-details': (context) {
-      final args = ModalRoute.of(context)?.settings.arguments;
-      final policyId = args is Map<String, dynamic> ? args['policyId'] : null;
-      return PolicyDetailsScreen(policyId: policyId);
-    },
-    '/premium-payment': (context) {
-      final args = ModalRoute.of(context)?.settings.arguments;
-      final map = args is Map<String, dynamic> ? args : {};
-      return PremiumPaymentPage(
-        policyId: map['policyId'],
-        amount: map['amount']?.toDouble(),
-      );
-    },
-    '/get-quote': (context) => const GetQuotePage(),
-    '/policy/create': (context) => const PlaceholderScreen(title: 'Create New Policy'),
-    '/whatsapp-integration': (context) => const WhatsappIntegrationScreen(),
-    '/smart-chatbot': (context) => const ChatbotPage(),
-    '/notifications': (context) => const NotificationPage(),
-    '/learning-center': (context) => const LearningCenterScreen(),
+    // Customer Portal (Protected - requires authentication)
+    '/customer-dashboard': _protectedRoute(
+      (context) => const CustomerDashboard(),
+      requiredRoles: [UserRole.policyholder],
+    ),
+    '/policies': _protectedRoute(
+      (context) => const PoliciesListPage(),
+      requiredPermissions: ['policies.read'],
+    ),
+    '/claims': _protectedRoute(
+      (context) {
+        final args = ModalRoute.of(context)?.settings.arguments;
+        return ClaimsPage(policyId: args as String?);
+      },
+      requiredPermissions: ['policies.read'],
+    ),
+    '/claims/new': _protectedRoute(
+      (context) => const PlaceholderScreen(title: 'File New Claim'),
+      requiredPermissions: ['policies.create'],
+    ),
+    '/policy-details': _protectedRoute(
+      (context) {
+        final args = ModalRoute.of(context)?.settings.arguments;
+        final policyId = args is Map<String, dynamic> ? args['policyId'] : null;
+        return PolicyDetailsScreen(policyId: policyId);
+      },
+      requiredPermissions: ['policies.read'],
+    ),
+    '/premium-payment': _protectedRoute(
+      (context) {
+        final args = ModalRoute.of(context)?.settings.arguments;
+        final map = args is Map<String, dynamic> ? args : {};
+        return PremiumPaymentPage(
+          policyId: map['policyId'],
+          amount: map['amount']?.toDouble(),
+        );
+      },
+      requiredPermissions: ['policies.update'],
+    ),
+    '/get-quote': _protectedRoute(
+      (context) => const GetQuotePage(),
+      requiredPermissions: ['policies.create'],
+    ),
+    '/policy/create': _protectedRoute(
+      (context) => const PlaceholderScreen(title: 'Create New Policy'),
+      requiredPermissions: ['policies.create'],
+    ),
+    '/whatsapp-integration': _protectedRoute(
+      (context) => const WhatsappIntegrationScreen(),
+    ),
+    '/smart-chatbot': _protectedRoute(
+      (context) => const ChatbotPage(),
+    ),
+    '/notifications': _protectedRoute(
+      (context) => const NotificationPage(),
+    ),
+    '/learning-center': _protectedRoute(
+      (context) => const LearningCenterScreen(),
+    ),
 
-    // Phase 1 Test Screen
+    // Phase 1 Test Screen (Public for testing)
     '/test-phase1': (context) => const TestPhase1Screen(),
     '/pioneer-demo': (context) => const PioneerDemoScreen(),
-    '/data-pending': (context) => const DataPendingScreen(),
-    '/agent-discovery': (context) => const AgentDiscoveryScreen(),
-    '/agent-verification': (context) => const AgentVerificationScreen(),
-    '/document-upload': (context) => const DocumentUploadScreen(),
-    '/emergency-contact': (context) => const EmergencyContactScreen(),
-    '/kyc-verification': (context) => const KycVerificationScreen(),
+    '/data-pending': _protectedRoute((context) => const DataPendingScreen()),
 
-    // Agent Portal
-    '/agent-profile': (context) => const AgentProfilePage(),
-    '/daily-quotes': (context) => const DailyQuotesScreen(),
-    '/my-policies': (context) => const MyPoliciesScreen(),
-    '/premium-calendar': (context) => const PremiumCalendarScreen(),
-    '/agent-chat': (context) => const AgentChatScreen(),
-    '/reminders': (context) => const RemindersScreen(),
-    '/presentations': (context) => const PresentationListPage(),
-    '/presentation-list': (context) => const PresentationListPage(),
-    '/presentation-editor': (context) {
-      final args = ModalRoute.of(context)?.settings.arguments;
-      final presentation = args is PresentationModel ? args : null;
-      return PresentationEditorPage(presentation: presentation);
-    },
-    '/campaign-performance': (context) {
-      final args = ModalRoute.of(context)?.settings.arguments;
-      return CampaignPerformanceScreen(campaignId: args is String ? args : null);
-    },
-    '/content-performance': (context) => const ContentPerformanceScreen(),
-    '/accessibility-settings': (context) => const AccessibilitySettingsScreen(),
-    '/language-selection': (context) => const LanguageSelectionScreen(),
-    '/payments': (context) => const PlaceholderScreen(title: 'Payments'),
-    '/reports': (context) => const PlaceholderScreen(title: 'Reports'),
-    '/customers': (context) => const PlaceholderScreen(title: 'Customers'),
-    '/settings': (context) => const PlaceholderScreen(title: 'Settings'),
-    '/global-search': (context) => const GlobalSearchScreen(),
-    '/agent-config-dashboard': (context) => const AgentConfigDashboard(),
-    '/roi-analytics': (context) => const RoiAnalyticsDashboard(),
-    '/campaign-builder': (context) => const MarketingCampaignBuilder(),
+    // Agent Portal (Protected - requires agent role)
+    '/agent-profile': _protectedRoute(
+      (context) => const AgentProfilePage(),
+      requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent],
+    ),
+    '/daily-quotes': _protectedRoute(
+      (context) => const DailyQuotesScreen(),
+      requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent],
+    ),
+    '/my-policies': _protectedRoute(
+      (context) => const MyPoliciesScreen(),
+      requiredPermissions: ['policies.read'],
+    ),
+    '/premium-calendar': _protectedRoute(
+      (context) => const PremiumCalendarScreen(),
+      requiredPermissions: ['policies.read'],
+    ),
+    '/agent-chat': _protectedRoute(
+      (context) => const AgentChatScreen(),
+      requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent],
+    ),
+    '/reminders': _protectedRoute(
+      (context) => const RemindersScreen(),
+    ),
+    '/presentations': _protectedRoute(
+      (context) => const PresentationListPage(),
+      requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent],
+    ),
+    '/presentation-list': _protectedRoute(
+      (context) => const PresentationListPage(),
+      requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent],
+    ),
+    '/presentation-editor': _protectedRoute(
+      (context) {
+        final args = ModalRoute.of(context)?.settings.arguments;
+        final presentation = args is PresentationModel ? args : null;
+        return PresentationEditorPage(presentation: presentation);
+      },
+      requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent],
+    ),
+    '/campaign-performance': _protectedRoute(
+      (context) {
+        final args = ModalRoute.of(context)?.settings.arguments;
+        return CampaignPerformanceScreen(campaignId: args is String ? args : null);
+      },
+      requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent],
+    ),
+    '/content-performance': _protectedRoute(
+      (context) => const ContentPerformanceScreen(),
+      requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent],
+    ),
+    '/accessibility-settings': _protectedRoute(
+      (context) => const AccessibilitySettingsScreen(),
+    ),
+    '/language-selection': _protectedRoute(
+      (context) => const LanguageSelectionScreen(),
+    ),
+    '/payments': _protectedRoute(
+      (context) => const PlaceholderScreen(title: 'Payments'),
+      requiredPermissions: ['policies.read'],
+    ),
+    '/reports': _protectedRoute(
+      (context) => const PlaceholderScreen(title: 'Reports'),
+      requiredPermissions: ['reports.read'],
+    ),
+    '/customers': _protectedRoute(
+      (context) => const PlaceholderScreen(title: 'Customers'),
+      requiredPermissions: ['customers.read'],
+    ),
+    '/settings': _protectedRoute(
+      (context) => const PlaceholderScreen(title: 'Settings'),
+    ),
+    '/global-search': _protectedRoute(
+      (context) => const GlobalSearchScreen(),
+    ),
+    '/agent-config-dashboard': _protectedRoute(
+      (context) => const AgentConfigDashboard(),
+      requiredRoles: [UserRole.providerAdmin, UserRole.superAdmin],
+    ),
+    '/roi-analytics': _protectedRoute(
+      (context) => const RoiAnalyticsDashboard(),
+      requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent, UserRole.regionalManager],
+    ),
+    '/campaign-builder': _protectedRoute(
+      (context) => const MarketingCampaignBuilder(),
+      requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent],
+    ),
     
-    // Dashboard and Callback Management
-    '/agent-dashboard': (context) => const DashboardPage(),
-    '/dashboard': (context) => const DashboardPage(),
-    '/callback-management': (context) => const CallbackRequestManagement(),
+    // Configuration Portal Routes (Protected with RBAC)
+    '/data-import-dashboard': _protectedRoute(
+      (context) => const DataImportDashboardPage(),
+      requiredPermissions: ['data_import.read'],
+    ),
+    '/excel-template-config': _protectedRoute(
+      (context) => const ExcelTemplateConfigPage(),
+      requiredPermissions: ['data_import.create'],
+    ),
+    '/customer-data-management': _protectedRoute(
+      (context) => const CustomerDataManagementPage(),
+      requiredPermissions: ['customers.read'],
+    ),
+    '/reporting-dashboard': _protectedRoute(
+      (context) => const ReportingDashboardPage(),
+      requiredPermissions: ['reports.read'],
+    ),
+    '/user-management': _protectedRoute(
+      (context) => const UserManagementPage(),
+      requiredRoles: [UserRole.superAdmin, UserRole.providerAdmin],
+      requiredPermissions: ['users.read'],
+    ),
+    
+    // Dashboard and Callback Management (Protected)
+    '/agent-dashboard': _protectedRoute(
+      (context) => const DashboardPage(),
+      requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent],
+    ),
+    '/dashboard': _protectedRoute(
+      (context) => const DashboardPage(),
+      requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent],
+    ),
+    '/callback-management': _protectedRoute(
+      (context) => const CallbackRequestManagement(),
+      requiredRoles: [UserRole.supportStaff, UserRole.seniorAgent],
+    ),
   };
 }

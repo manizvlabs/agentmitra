@@ -22,11 +22,14 @@ class SlideModel(BaseModel):
     slide_order: int
     slide_type: str  # 'image', 'video', 'text'
     media_url: Optional[str] = None
+    media_type: Optional[str] = None  # 'image', 'video' - explicit media type
     thumbnail_url: Optional[str] = None
     title: Optional[str] = None
     subtitle: Optional[str] = None
+    description: Optional[str] = None
     text_color: str = "#FFFFFF"
     background_color: str = "#000000"
+    overlay_opacity: float = 0.5  # 0.0 to 1.0
     layout: str = "centered"
     duration: int = 4
     cta_button: Optional[dict] = None
@@ -60,11 +63,14 @@ def _presentation_to_dict(presentation):
                 "slide_order": slide.slide_order,
                 "slide_type": slide.slide_type,
                 "media_url": slide.media_url,
+                "media_type": slide.media_type if hasattr(slide, 'media_type') else None,
                 "thumbnail_url": slide.thumbnail_url,
                 "title": slide.title,
                 "subtitle": slide.subtitle,
+                "description": slide.description if hasattr(slide, 'description') else None,
                 "text_color": slide.text_color,
                 "background_color": slide.background_color,
+                "overlay_opacity": slide.overlay_opacity if hasattr(slide, 'overlay_opacity') else 0.5,
                 "layout": slide.layout,
                 "duration": slide.duration,
                 "cta_button": slide.cta_button,
@@ -169,11 +175,14 @@ async def create_presentation(
             "slide_order": slide.slide_order,
             "slide_type": slide.slide_type,
             "media_url": slide.media_url,
+            "media_type": slide.media_type,
             "thumbnail_url": slide.thumbnail_url,
             "title": slide.title,
             "subtitle": slide.subtitle,
+            "description": slide.description,
             "text_color": slide.text_color,
             "background_color": slide.background_color,
+            "overlay_opacity": slide.overlay_opacity,
             "layout": slide.layout,
             "duration": slide.duration,
             "cta_button": slide.cta_button,
@@ -225,11 +234,14 @@ async def update_presentation(
             "slide_order": slide.slide_order,
             "slide_type": slide.slide_type,
             "media_url": slide.media_url,
+            "media_type": slide.media_type,
             "thumbnail_url": slide.thumbnail_url,
             "title": slide.title,
             "subtitle": slide.subtitle,
+            "description": slide.description,
             "text_color": slide.text_color,
             "background_color": slide.background_color,
+            "overlay_opacity": slide.overlay_opacity,
             "layout": slide.layout,
             "duration": slide.duration,
             "cta_button": slide.cta_button,

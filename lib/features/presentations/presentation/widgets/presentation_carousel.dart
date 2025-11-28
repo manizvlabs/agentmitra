@@ -9,6 +9,7 @@ import '../../data/models/slide_model.dart';
 
 class PresentationCarousel extends StatefulWidget {
   final String agentId;
+  final double height;
   final bool autoPlay;
   final Duration? autoPlayInterval;
   final bool showIndicators;
@@ -17,6 +18,7 @@ class PresentationCarousel extends StatefulWidget {
   const PresentationCarousel({
     super.key,
     required this.agentId,
+    this.height = 220,
     this.autoPlay = true,
     this.autoPlayInterval,
     this.showIndicators = true,
@@ -135,9 +137,7 @@ class _PresentationCarouselState extends State<PresentationCarousel> {
 
         final presentation = viewModel.activePresentation;
         if (presentation == null || presentation.slides.isEmpty) {
-          return const Center(
-            child: Text('No active presentation found'),
-          );
+          return _buildEmptyState();
         }
 
         // Start auto-play when presentation is loaded
@@ -149,49 +149,93 @@ class _PresentationCarouselState extends State<PresentationCarousel> {
 
         return RefreshIndicator(
           onRefresh: () async => _refreshPresentation(),
-          child: Column(
-            children: [
-              Expanded(
-                child: PageView.builder(
-                  controller: _pageController,
-                  itemCount: presentation.slides.length,
-                  onPageChanged: (index) => _onPageChanged(index, presentation),
-                  itemBuilder: (context, index) {
-                    final slide = presentation.slides[index];
-                    return GestureDetector(
-                      onTap: widget.onSlideTap != null
-                          ? () => widget.onSlideTap!(slide)
-                          : null,
-                      child: SlideView(slide: slide),
-                    );
-                  },
+          child: SizedBox(
+            height: widget.height,
+            child: Column(
+              children: [
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: presentation.slides.length,
+                    onPageChanged: (index) => _onPageChanged(index, presentation),
+                    itemBuilder: (context, index) {
+                      final slide = presentation.slides[index];
+                      return GestureDetector(
+                        onTap: widget.onSlideTap != null
+                            ? () => widget.onSlideTap!(slide)
+                            : null,
+                        child: SlideView(slide: slide),
+                      );
+                    },
+                  ),
                 ),
-              ),
-              if (widget.showIndicators && presentation.slides.length > 1)
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      presentation.slides.length,
-                      (index) => Container(
-                        width: 8,
-                        height: 8,
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _currentIndex == index
-                              ? Colors.white
-                              : Colors.white70,
+                if (widget.showIndicators && presentation.slides.length > 1)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        presentation.slides.length,
+                        (index) => Container(
+                          width: 8,
+                          height: 8,
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _currentIndex == index
+                                ? Colors.white
+                                : Colors.white70,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return SizedBox(
+      height: widget.height,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.slideshow_outlined,
+                size: 48,
+                color: Colors.grey.shade400,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No active presentation',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Create a presentation to display here',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

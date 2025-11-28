@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../features/payments/presentation/viewmodels/policy_detail_viewmodel.dart';
+import '../features/payments/data/repositories/policy_repository.dart';
+import '../features/payments/data/datasources/policy_remote_datasource.dart';
+import '../features/payments/data/datasources/policy_local_datasource.dart';
 
-class PolicyDetailsScreen extends StatelessWidget {
+class PolicyDetailsScreen extends StatefulWidget {
   final String? policyId;
 
   const PolicyDetailsScreen({
@@ -10,70 +15,240 @@ class PolicyDetailsScreen extends StatelessWidget {
   });
 
   @override
+  State<PolicyDetailsScreen> createState() => _PolicyDetailsScreenState();
+}
+
+class _PolicyDetailsScreenState extends State<PolicyDetailsScreen> {
+  late PolicyDetailViewModel _viewModel;
+
+  @override
+  void initState() {
+    super.initState();
+    final policyId = widget.policyId ?? '';
+    // Create repository instance with data sources
+    final repository = PolicyRepository(
+      PolicyRemoteDataSourceImpl(),
+      PolicyLocalDataSourceImpl(),
+    );
+    _viewModel = PolicyDetailViewModel(
+      repository,
+      policyId,
+    );
+    _viewModel.loadPolicyDetails();
+  }
+
+  @override
+  void dispose() {
+    _viewModel.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Mock data - replace with actual data from ViewModel
-    final maturityDate = DateTime(2040, 1, 1);
-    final nextPaymentDate = DateTime.now().add(const Duration(days: 3));
-    final daysUntilMaturity = maturityDate.difference(DateTime.now()).inDays;
 
-    return Scaffold(
-      backgroundColor: Colors.grey.shade50,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1a237e)),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text(
-          'Policy Details',
-          style: TextStyle(
-            color: Color(0xFF1a237e),
-            fontWeight: FontWeight.bold,
+    return ChangeNotifierProvider.value(
+      value: _viewModel,
+      child: Scaffold(
+        backgroundColor: Colors.grey.shade50,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Color(0xFF1a237e)),
+            onPressed: () => Navigator.of(context).pop(),
           ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.download, color: Color(0xFF1a237e)),
-            onPressed: () => _downloadDocuments(context),
+          title: const Text(
+            'Policy Details',
+            style: TextStyle(
+              color: Color(0xFF1a237e),
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Color(0xFF1a237e)),
-            onPressed: () => _showMoreOptions(context),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Policy Header Card
-            _buildPolicyHeaderCard(),
-            const SizedBox(height: 24),
-
-            // Premium & Payment Section
-            _buildPremiumSection(nextPaymentDate),
-            const SizedBox(height: 24),
-
-            // Payment History Timeline
-            _buildPaymentHistorySection(),
-            const SizedBox(height: 24),
-
-            // Coverage & Benefits
-            _buildCoverageSection(maturityDate, daysUntilMaturity),
-            const SizedBox(height: 24),
-
-            // Action Buttons
-            _buildActionButtons(context),
-            const SizedBox(height: 40),
+          actions: [
+            Consumer<PolicyDetailViewModel>(
+              builder: (context, viewModel, child) {
+                return IconButton(
+                  icon: const Icon(Icons.download, color: Color(0xFF1a237e)),
+                  onPressed: viewModel.policy != null
+                      ? () => _downloadDocuments(context, viewModel.policy!)
+                      : null,
+                );
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.more_vert, color: Color(0xFF1a237e)),
+              onPressed: () => _showMoreOptions(context),
+            ),
           ],
+        ),
+        body: Consumer<PolicyDetailViewModel>(
+          builder: (context, viewModel, child) {
+            if (viewModel.isLoading && viewModel.policy == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (viewModel.error != null && viewModel.policy == null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Failed to load policy details',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      viewModel.error ?? 'Unknown error',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.grey,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () => viewModel.refresh(),
+                      child: const Text('Try Again'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            final policy = viewModel.policy;
+            if (policy == null) {
+              return const Center(child: Text('Policy not found'));
+            }
+
+            final maturityDate = policy.maturityDate ?? DateTime.now().add(const Duration(days: 365 * 20));
+            final nextPaymentDate = policy.nextPaymentDate ?? DateTime.now().add(const Duration(days: 30));
+            final daysUntilMaturity = maturityDate.difference(DateTime.now()).inDays;
+
+            return RefreshIndicator(
+              onRefresh: () => viewModel.refresh(),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Policy Header Card
+                    _buildPolicyHeaderCard(policy),
+                    const SizedBox(height: 24),
+
+                    // Maturity Countdown Banner (if applicable)
+                    if (daysUntilMaturity <= 365 * 2)
+                      _buildMaturityCountdownBanner(maturityDate, daysUntilMaturity),
+
+                    // Premium & Payment Section
+                    _buildPremiumSection(policy, nextPaymentDate, viewModel),
+                    const SizedBox(height: 24),
+
+                    // Payment History Timeline
+                    _buildPaymentHistorySection(viewModel),
+                    const SizedBox(height: 24),
+
+                    // Coverage & Benefits
+                    _buildCoverageSection(policy, maturityDate, daysUntilMaturity),
+                    const SizedBox(height: 24),
+
+                    // Action Buttons
+                    _buildActionButtons(context, policy, viewModel),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildPolicyHeaderCard() {
+  Widget _buildMaturityCountdownBanner(DateTime maturityDate, int daysUntilMaturity) {
+    final years = daysUntilMaturity ~/ 365;
+    final months = (daysUntilMaturity % 365) ~/ 30;
+    final days = daysUntilMaturity % 30;
+    final isNearMaturity = daysUntilMaturity <= 365;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isNearMaturity
+              ? [Colors.orange.shade400, Colors.orange.shade600]
+              : [Colors.blue.shade400, Colors.blue.shade600],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: (isNearMaturity ? Colors.orange : Colors.blue).withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isNearMaturity ? Icons.warning : Icons.calendar_today,
+            color: Colors.white,
+            size: 32,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isNearMaturity ? 'Maturity Approaching!' : 'Maturity Countdown',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _formatDate(maturityDate),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '$years years',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                '$months months $days days',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.white.withOpacity(0.9),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPolicyHeaderCard(policy) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -97,56 +272,35 @@ class PolicyDetailsScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  '📄 Policy No: 123456789',
-                  style: TextStyle(
+                  '📄 Policy No: ${policy.policyNumber}',
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.green, width: 1),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.check_circle, color: Colors.green, size: 16),
-                    SizedBox(width: 4),
-                    Text(
-                      'Active',
-                      style: TextStyle(
-                        color: Colors.green,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _buildStatusBadge(policy.status),
             ],
           ),
           const SizedBox(height: 12),
-          const Text(
-            '📋 Plan: LIC Jeevan Anand (Plan 149)',
-            style: TextStyle(
+          Text(
+            '📋 Plan: ${policy.planName}',
+            style: const TextStyle(
               fontSize: 14,
               color: Colors.white70,
             ),
           ),
           const SizedBox(height: 8),
-          const Row(
+          Row(
             children: [
-              Icon(Icons.calendar_today, color: Colors.white70, size: 16),
-              SizedBox(width: 8),
+              const Icon(Icons.calendar_today, color: Colors.white70, size: 16),
+              const SizedBox(width: 8),
               Text(
-                'Start Date: 01/01/2020',
-                style: TextStyle(
+                'Start Date: ${_formatDate(policy.startDate)}',
+                style: const TextStyle(
                   fontSize: 14,
                   color: Colors.white70,
                 ),
@@ -158,7 +312,61 @@ class PolicyDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPremiumSection(DateTime nextPaymentDate) {
+  Widget _buildStatusBadge(String status) {
+    Color color;
+    String text;
+
+    switch (status.toLowerCase()) {
+      case 'active':
+        color = Colors.green;
+        text = 'Active';
+        break;
+      case 'pending_approval':
+        color = Colors.orange;
+        text = 'Pending';
+        break;
+      case 'lapsed':
+        color = Colors.red;
+        text = 'Lapsed';
+        break;
+      case 'matured':
+        color = Colors.blue;
+        text = 'Matured';
+        break;
+      case 'cancelled':
+        color = Colors.grey;
+        text = 'Cancelled';
+        break;
+      default:
+        color = Colors.grey;
+        text = status;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color, width: 1),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.check_circle, color: color, size: 16),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPremiumSection(policy, DateTime nextPaymentDate, PolicyDetailViewModel viewModel) {
     final isDueSoon = nextPaymentDate.difference(DateTime.now()).inDays <= 7;
 
     return Column(
@@ -182,17 +390,56 @@ class PolicyDetailsScreen extends StatelessWidget {
           ),
           child: Column(
             children: [
-              _buildInfoRow('Annual Premium', '₹25,000', null),
+              _buildInfoRow(
+                'Premium Amount',
+                '₹${policy.premiumAmount.toStringAsFixed(0)}',
+                null,
+              ),
               const Divider(height: 24),
               _buildInfoRow(
                 'Next Due Date',
-                '${nextPaymentDate.day}/${nextPaymentDate.month}/${nextPaymentDate.year}',
+                _formatDate(nextPaymentDate),
                 isDueSoon ? Colors.red : null,
               ),
+              if (isDueSoon) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning, color: Colors.red, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Payment due soon! Please pay to avoid policy lapse.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.red.shade700,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const Divider(height: 24),
-              _buildInfoRow('Payment Frequency', 'Annual', null),
+              _buildInfoRow('Payment Frequency', policy.premiumFrequency, null),
               const Divider(height: 24),
-              _buildInfoRow('Payment Method', 'Auto Debit', Colors.green),
+              _buildInfoRow('Payment Mode', policy.premiumMode ?? 'Manual', Colors.green),
+              if (policy.outstandingAmount != null && policy.outstandingAmount! > 0) ...[
+                const Divider(height: 24),
+                _buildInfoRow(
+                  'Outstanding Amount',
+                  '₹${policy.outstandingAmount!.toStringAsFixed(0)}',
+                  Colors.red,
+                ),
+              ],
             ],
           ),
         ),
@@ -200,28 +447,8 @@ class PolicyDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPaymentHistorySection() {
-    // Mock payment history
-    final payments = [
-      {
-        'date': DateTime.now().subtract(const Duration(days: 30)),
-        'amount': 25000.0,
-        'status': 'success',
-        'transactionId': 'TXN123456',
-      },
-      {
-        'date': DateTime.now().subtract(const Duration(days: 60)),
-        'amount': 25000.0,
-        'status': 'success',
-        'transactionId': 'TXN123455',
-      },
-      {
-        'date': DateTime.now().subtract(const Duration(days: 90)),
-        'amount': 25000.0,
-        'status': 'success',
-        'transactionId': 'TXN123454',
-      },
-    ];
+  Widget _buildPaymentHistorySection(PolicyDetailViewModel viewModel) {
+    final payments = viewModel.premiums.take(5).toList(); // Show last 5 payments
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,95 +480,118 @@ class PolicyDetailsScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.grey.shade200),
           ),
-          child: Column(
-            children: payments.asMap().entries.map((entry) {
-              final index = entry.key;
-              final payment = entry.value;
-              final isLast = index == payments.length - 1;
-
-              return Row(
-                children: [
-                  Column(
-                    children: [
-                      Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      if (!isLast)
-                        Container(
-                          width: 2,
-                          height: 40,
-                          color: Colors.grey.shade300,
-                        ),
-                    ],
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
+          child: payments.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Center(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '₹${payment['amount'].toString()}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Text(
-                                'Paid',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
+                        Icon(Icons.payment, size: 48, color: Colors.grey.shade400),
+                        const SizedBox(height: 8),
                         Text(
-                          _formatDate(payment['date'] as DateTime),
+                          'No payment history available',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 14,
                             color: Colors.grey.shade600,
-                          ),
-                        ),
-                        Text(
-                          'TXN: ${payment['transactionId']}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey.shade500,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ],
-              );
-            }).toList(),
-          ),
+                )
+              : Column(
+                  children: payments.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final payment = entry.value;
+                    final isLast = index == payments.length - 1;
+                    final isPaid = payment.status == 'completed' || payment.status == 'success';
+
+                    return Row(
+                      children: [
+                        Column(
+                          children: [
+                            Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: isPaid ? Colors.green : Colors.orange,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            if (!isLast)
+                              Container(
+                                width: 2,
+                                height: 40,
+                                color: Colors.grey.shade300,
+                              ),
+                          ],
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '₹${payment.amount.toStringAsFixed(0)}',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isPaid
+                                          ? Colors.green.withOpacity(0.1)
+                                          : Colors.orange.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      isPaid ? 'Paid' : payment.status,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: isPaid ? Colors.green : Colors.orange,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _formatDate(payment.paymentDate),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                              if (payment.transactionId != null)
+                                Text(
+                                  'TXN: ${payment.transactionId}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey.shade500,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ),
         ),
       ],
     );
   }
 
-  Widget _buildCoverageSection(DateTime maturityDate, int daysUntilMaturity) {
+  Widget _buildCoverageSection(policy, DateTime maturityDate, int daysUntilMaturity) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -363,9 +613,11 @@ class PolicyDetailsScreen extends StatelessWidget {
           ),
           child: Column(
             children: [
-              _buildInfoRow('Sum Assured', '₹10,00,000', Colors.green),
-              const Divider(height: 24),
-              _buildInfoRow('Bonus Accumulated', '₹1,25,000', Colors.green),
+              _buildInfoRow(
+                'Sum Assured',
+                '₹${policy.sumAssured.toStringAsFixed(0)}',
+                Colors.green,
+              ),
               const Divider(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -406,7 +658,7 @@ class PolicyDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context) {
+  Widget _buildActionButtons(BuildContext context, policy, PolicyDetailViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -428,8 +680,8 @@ class PolicyDetailsScreen extends StatelessWidget {
                 Icons.payment,
                 Colors.blue,
                 () => context.push('/premium-payment', extra: {
-                  'policyId': policyId,
-                  'amount': 25000.0,
+                  'policyId': widget.policyId,
+                  'amount': policy.premiumAmount,
                 }),
               ),
             ),
@@ -454,7 +706,9 @@ class PolicyDetailsScreen extends StatelessWidget {
                 'File Claim',
                 Icons.assignment,
                 Colors.orange,
-                () => context.push('/new-claim'),
+                () => context.push('/new-claim', extra: {
+                  'policyId': widget.policyId,
+                }),
               ),
             ),
             const SizedBox(width: 12),
@@ -464,7 +718,7 @@ class PolicyDetailsScreen extends StatelessWidget {
                 'Download Docs',
                 Icons.download,
                 Colors.purple,
-                () => _downloadDocuments(context),
+                () => _downloadDocuments(context, policy),
               ),
             ),
           ],
@@ -536,14 +790,77 @@ class PolicyDetailsScreen extends StatelessWidget {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 
-  void _downloadDocuments(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Downloading policy documents...'),
-        backgroundColor: Colors.green,
+  void _downloadDocuments(BuildContext context, policy) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Download Documents',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1a237e),
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (policy.policyDocumentUrl != null)
+              ListTile(
+                leading: const Icon(Icons.description, color: Colors.blue),
+                title: const Text('Policy Document'),
+                subtitle: const Text('PDF format'),
+                trailing: const Icon(Icons.download),
+                onTap: () {
+                  Navigator.pop(context);
+                  _downloadFile(context, policy.policyDocumentUrl!, 'Policy_Document_${policy.policyNumber}.pdf');
+                },
+              ),
+            if (policy.applicationFormUrl != null)
+              ListTile(
+                leading: const Icon(Icons.description, color: Colors.green),
+                title: const Text('Application Form'),
+                subtitle: const Text('PDF format'),
+                trailing: const Icon(Icons.download),
+                onTap: () {
+                  Navigator.pop(context);
+                  _downloadFile(context, policy.applicationFormUrl!, 'Application_Form_${policy.policyNumber}.pdf');
+                },
+              ),
+            if (policy.policyDocumentUrl == null && policy.applicationFormUrl == null)
+              const Padding(
+                padding: EdgeInsets.all(20),
+                child: Center(
+                  child: Text(
+                    'No documents available for download',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
-    // TODO: Implement document download
+  }
+
+  void _downloadFile(BuildContext context, String url, String fileName) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Downloading $fileName...'),
+        backgroundColor: Colors.green,
+        action: SnackBarAction(
+          label: 'Open',
+          textColor: Colors.white,
+          onPressed: () {
+            // TODO: Open downloaded file
+          },
+        ),
+      ),
+    );
+    // TODO: Implement actual file download using url_launcher or http package
   }
 
   void _showMoreOptions(BuildContext context) {

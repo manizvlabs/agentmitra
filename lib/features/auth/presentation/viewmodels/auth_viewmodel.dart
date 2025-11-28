@@ -3,6 +3,7 @@ import '../../../../core/architecture/base/base_viewmodel.dart';
 import '../../../../core/services/rbac_service.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/logger_service.dart';
+import '../../../../core/di/service_locator.dart';
 import '../../../../core/utils/jwt_decoder.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/models/auth_response.dart';
@@ -10,13 +11,13 @@ import '../../data/models/user_model.dart';
 
 class AuthViewModel extends BaseViewModel {
   final AuthRepository _authRepository;
-  final RbacService _rbacService;
 
   AuthViewModel({
     AuthRepository? authRepository,
-    RbacService? rbacService,
-  }) : _authRepository = authRepository ?? AuthRepository(),
-       _rbacService = rbacService ?? RbacService(ApiService(), LoggerService());
+  }) : _authRepository = authRepository ?? AuthRepository();
+
+  // Use the shared RBAC service instance from ServiceLocator
+  RbacService get _rbacService => ServiceLocator.rbacService;
 
   UserModel? _currentUser;
   bool _isAuthenticated = false;
@@ -29,24 +30,44 @@ class AuthViewModel extends BaseViewModel {
     await super.initialize();
     setLoading(true);
     try {
-      _isAuthenticated = _authRepository.isLoggedIn();
+      _isAuthenticated = await _authRepository.isLoggedIn();
       if (_isAuthenticated) {
+        // Verify token exists and is valid
+        final storedToken = await _authRepository.getStoredToken();
+        if (storedToken == null || storedToken.isEmpty) {
+          // Token missing, user is not authenticated
+          _isAuthenticated = false;
+          _currentUser = null;
+          return;
+        }
+
+        // Check if token is expired
+        if (JwtDecoder.isTokenExpired(storedToken)) {
+          // Token expired, user is not authenticated
+          _isAuthenticated = false;
+          _currentUser = null;
+          await _authRepository.logout(); // Clear expired tokens
+          return;
+        }
+
         _currentUser = await _authRepository.getCurrentUser();
 
-        // Initialize RBAC with stored JWT token if available
-        final storedToken = await _authRepository.getStoredToken();
-        if (storedToken != null && storedToken.isNotEmpty) {
-          await _rbacService.initializeWithJwtToken(storedToken);
+        // Initialize RBAC with stored JWT token
+        await _rbacService.initializeWithJwtToken(storedToken);
 
-          // Update user model with roles and permissions from stored JWT
-          _currentUser = _currentUser?.copyWith(
-            roles: JwtDecoder.extractRoles(storedToken),
-            permissions: JwtDecoder.extractPermissions(storedToken),
-          );
-        }
+        // Update user model with roles and permissions from stored JWT
+        _currentUser = _currentUser?.copyWith(
+          roles: JwtDecoder.extractRoles(storedToken),
+          permissions: JwtDecoder.extractPermissions(storedToken),
+        );
+      } else {
+        // Not logged in, clear any stale data
+        _currentUser = null;
       }
     } catch (e) {
       setError('Failed to initialize authentication: $e');
+      _isAuthenticated = false;
+      _currentUser = null;
     } finally {
       setLoading(false);
     }
@@ -60,14 +81,14 @@ class AuthViewModel extends BaseViewModel {
   }) async {
     setLoading(true);
     clearError();
-    
+
     try {
       final authResponse = await _authRepository.login(
         phoneNumber: phoneNumber,
         password: password,
         agentCode: agentCode,
       );
-      
+
       _currentUser = authResponse.user;
       _isAuthenticated = true;
 
@@ -75,13 +96,23 @@ class AuthViewModel extends BaseViewModel {
       if (authResponse.accessToken != null) {
         await _rbacService.initializeWithJwtToken(authResponse.accessToken!);
 
-        // Update user model with roles and permissions from JWT
+        // Update user model with roles and permissions
+        // Priority: login response > JWT token
+        final roles = _currentUser?.roles?.isNotEmpty == true
+            ? _currentUser!.roles!
+            : JwtDecoder.extractRoles(authResponse.accessToken!);
+        final permissions = authResponse.permissions?.isNotEmpty == true
+            ? authResponse.permissions!
+            : _currentUser?.permissions?.isNotEmpty == true
+                ? _currentUser!.permissions!
+                : JwtDecoder.extractPermissions(authResponse.accessToken!);
+
         _currentUser = _currentUser?.copyWith(
-          roles: JwtDecoder.extractRoles(authResponse.accessToken!),
-          permissions: JwtDecoder.extractPermissions(authResponse.accessToken!),
+          roles: roles,
+          permissions: permissions,
         );
       }
-      
+
       return authResponse;
     } catch (e) {
       setError('Login failed: $e');

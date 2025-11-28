@@ -122,7 +122,7 @@ class FeatureFlagService {
     _updateController.close();
   }
 
-  /// Synchronous check for feature flag (checks cache first, then Pioneer, then defaults)
+  /// Synchronous check for feature flag (checks cache first, then Pioneer)
   bool isFeatureEnabledSync(String flagName, {String? userId, String? tenantId}) {
     final cacheKey = _getCacheKey(flagName, userId, tenantId);
     if (_cache.containsKey(cacheKey)) {
@@ -133,13 +133,14 @@ class FeatureFlagService {
       }
     }
 
-    // Try Pioneer if initialized
-    if (PioneerService.isInitialized) {
-      return PioneerService.isFeatureEnabledSync(flagName);
-    }
+    // Get from Pioneer (will throw exception if not available)
+    final result = PioneerService.isFeatureEnabledSync(flagName);
 
-    // Default to false if not cached and Pioneer not available
-    return false;
+    // Cache the result
+    _cache[cacheKey] = result;
+    _cacheTimestamps[cacheKey] = DateTime.now();
+
+    return result;
   }
 
   /// Check if a feature flag is enabled
@@ -156,15 +157,8 @@ class FeatureFlagService {
       }
     }
 
-    try {
-      // First try Pioneer if initialized
-      if (PioneerService.isInitialized) {
-        final pioneerResult = await PioneerService.isFeatureEnabled(flagName);
-        // Cache the result
-        _cache[cacheKey] = pioneerResult;
-        _cacheTimestamps[cacheKey] = DateTime.now();
-        return pioneerResult;
-      }
+    // Get from Pioneer (will throw exception if not available)
+    final result = await PioneerService.isFeatureEnabled(flagName);
 
       // Try the enhanced backend feature flag API with user-specific flags
       if (effectiveUserId != null) {
@@ -199,25 +193,7 @@ class FeatureFlagService {
         },
       );
 
-      // Look for the specific flag in the response
-      final flags = response['data'] as List<dynamic>? ?? [];
-      final flag = flags.firstWhere(
-        (f) => f['flag_name'] == flagName,
-        orElse: () => null,
-      );
-
-      final isEnabled = flag != null ? (flag['is_enabled'] as bool? ?? false) : false;
-
-      // Cache the result
-      _cache[cacheKey] = isEnabled;
-      _cacheTimestamps[cacheKey] = DateTime.now();
-
-      return isEnabled;
-    } catch (e) {
-      debugPrint('Error checking feature flag $flagName: $e');
-      // Return false by default on error (fail closed for feature flags)
-      return false;
-    }
+    return result;
   }
 
   /// Check if user has a specific permission
@@ -390,16 +366,9 @@ class _FeatureFlagBuilderState extends State<FeatureFlagBuilder> {
 
   Future<bool> _checkFeatureFlag() async {
     // Use the feature flag service to check the flag
-    // For now, we'll use a placeholder service instance
-    // In a real app, this would be injected via provider
-    try {
-      final service = FeatureFlagService();
-      return await service.isFeatureEnabled(widget.flagName,
-          userId: widget.userId, tenantId: widget.tenantId);
-    } catch (e) {
-      debugPrint('Error checking feature flag: $e');
-      return false;
-    }
+    final service = FeatureFlagService();
+    return await service.isFeatureEnabled(widget.flagName,
+        userId: widget.userId, tenantId: widget.tenantId);
   }
 
   @override

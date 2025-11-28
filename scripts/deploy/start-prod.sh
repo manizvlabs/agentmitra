@@ -12,7 +12,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$PROJECT_DIR"
 
 # Colors for output
@@ -84,9 +84,9 @@ if [ $# -eq 0 ]; then
     echo "To start minimal: ./scripts/start-prod.sh minimal"
     echo ""
 elif [ "$1" = "all" ]; then
-    SERVICES="minio backend portal nginx prometheus grafana"
+    SERVICES="pioneer-nats pioneer-compass-server pioneer-scout pioneer-compass-client minio backend portal nginx prometheus grafana"
     START_ALL=true
-    echo -e "${GREEN}Starting all services including portal and nginx${NC}"
+    echo -e "${GREEN}Starting all services including Pioneer, portal and nginx${NC}"
     echo ""
 elif [ "$1" = "minimal" ]; then
     SERVICES="minio backend"
@@ -103,7 +103,7 @@ fi
 
 # Generate SSL certificates if needed
 echo -e "${BLUE}[3/5]${NC} Checking SSL certificates..."
-if [ ! -f "nginx/ssl/nginx-selfsigned.crt" ] || [ ! -f "nginx/ssl/nginx-selfsigned.key" ]; then
+if [ ! -f "$PROJECT_DIR/nginx/ssl/nginx-selfsigned.crt" ] || [ ! -f "$PROJECT_DIR/nginx/ssl/nginx-selfsigned.key" ]; then
     echo -e "${YELLOW}⚠ SSL certificates not found. Generating self-signed certificates...${NC}"
     if [ -f "$SCRIPT_DIR/generate-ssl-certs.sh" ]; then
         bash "$SCRIPT_DIR/generate-ssl-certs.sh"
@@ -120,10 +120,10 @@ echo ""
 # Build Flutter web app if nginx is needed
 if [ "$START_ALL" = true ] || echo "$SERVICES" | grep -q "nginx"; then
     echo -e "${BLUE}[4/5]${NC} Checking Flutter web build..."
-    if [ ! -d "build/web" ] || [ ! -f "build/web/index.html" ]; then
+    if [ ! -d "$PROJECT_DIR/build/web" ] || [ ! -f "$PROJECT_DIR/build/web/index.html" ]; then
         echo -e "${YELLOW}⚠ Flutter web build not found. Building Flutter web app...${NC}"
         echo "This may take a few minutes..."
-        
+
         # Check if Flutter is installed
         if ! command -v flutter &> /dev/null; then
             echo -e "${RED}✗ Flutter is not installed or not in PATH${NC}"
@@ -133,6 +133,7 @@ if [ "$START_ALL" = true ] || echo "$SERVICES" | grep -q "nginx"; then
             echo ""
             read -p "Press Enter to continue without Flutter build (nginx may not work), or Ctrl+C to exit..."
         else
+            cd "$PROJECT_DIR"
             flutter build web
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}✓ Flutter web build completed${NC}"
@@ -156,7 +157,7 @@ echo "Services to start: $SERVICES"
 echo ""
 
 # Start services
-docker-compose -f docker-compose.prod.yml up -d $SERVICES
+docker compose -f docker-compose.prod.yml up -d $SERVICES
 
 # Wait for services to be ready
 echo ""
@@ -167,7 +168,7 @@ sleep 5
 echo ""
 echo "Service Status:"
 echo "==============="
-docker-compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml ps
 
 # Setup MinIO bucket if MinIO is running
 if echo "$SERVICES" | grep -q "minio" || [ "$SERVICES" = "all" ]; then
@@ -206,6 +207,10 @@ fi
 if echo "$SERVICES" | grep -q "backend"; then
     echo "  Backend API:     http://localhost:8012"
 fi
+if echo "$SERVICES" | grep -q "pioneer-compass-server"; then
+    echo "  Pioneer API:     http://localhost:4001"
+    echo "  Pioneer Admin:   http://localhost:4000"
+fi
 if echo "$SERVICES" | grep -q "minio"; then
     echo "  MinIO Console:   http://localhost:9001 (minioadmin/minioadmin)"
     echo "  MinIO API:       http://localhost:9000"
@@ -224,10 +229,10 @@ if echo "$SERVICES" | grep -q "backend"; then
 fi
 echo "Useful Commands:"
 echo "================"
-echo "  View logs:        docker-compose -f docker-compose.prod.yml logs -f [service]"
-echo "  Stop services:    docker-compose -f docker-compose.prod.yml down"
-echo "  Restart service:  docker-compose -f docker-compose.prod.yml restart [service]"
-echo "  Service status:   docker-compose -f docker-compose.prod.yml ps"
+echo "  View logs:        docker compose -f $PROJECT_DIR/docker-compose.prod.yml logs -f [service]"
+echo "  Stop services:    docker compose -f $PROJECT_DIR/docker-compose.prod.yml down"
+echo "  Restart service:  docker compose -f $PROJECT_DIR/docker-compose.prod.yml restart [service]"
+echo "  Service status:   docker compose -f $PROJECT_DIR/docker-compose.prod.yml ps"
 echo ""
 echo -e "${GREEN}All set! Your services are running.${NC}"
 echo ""

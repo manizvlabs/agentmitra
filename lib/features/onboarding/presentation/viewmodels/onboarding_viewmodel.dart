@@ -253,53 +253,8 @@ class OnboardingViewModel extends BaseViewModel {
   }
 
   void _initializeMockData() {
-    // Mock onboarding progress for Phase 5 testing
-    _progress = OnboardingProgress(
-      currentStep: OnboardingStep.agentDiscovery,
-      completedSteps: {
-        OnboardingStep.agentDiscovery: true,
-        OnboardingStep.documentVerification: true,
-        OnboardingStep.kycProcess: false,
-        OnboardingStep.emergencyContacts: false,
-        OnboardingStep.profileSetup: false,
-      },
-      formData: {
-        'agentCode': 'AGT123456',
-        'companyName': 'ABC Insurance Brokers',
-        'licenseNumber': 'LIC123456789',
-        'panNumber': 'ABCDE1234F',
-        'aadhaarNumber': '123456789012',
-      },
-    );
-
-    // Initialize mock data for each step
-    _agentDiscoveryData = AgentDiscoveryData(
-      agentCode: 'AGT123456',
-      agentName: 'John Doe',
-      agentPhone: '+919876543210',
-      agentEmail: 'john.doe@insurance.com',
-      branchName: 'Mumbai Central',
-      branchAddress: '123 Insurance Street, Mumbai',
-    );
-
-    _documentVerificationData = DocumentVerificationData(
-      panNumber: 'ABCDE1234F',
-      aadhaarNumber: '123456789012',
-      panImage: 'pan.pdf',
-      aadhaarFrontImage: 'aadhaar_front.pdf',
-      aadhaarBackImage: 'aadhaar_back.pdf',
-    );
-
-    _kycProcessData = KycProcessData(
-      fullName: 'John Doe',
-      dateOfBirth: DateTime(1985, 5, 15),
-      gender: 'Male',
-      address: '123 Insurance Street',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400001',
-      occupation: 'Insurance Agent',
-      annualIncome: '500000',
-    );
+    // REMOVED: Mock data initialization - no longer used
+    // All data should come from backend API or user input
+    // This method is kept for backward compatibility but does nothing
   }
 }

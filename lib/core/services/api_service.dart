@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import '../config/app_config.dart';
 
@@ -26,11 +27,13 @@ class ApiService {
     const secureStorage = FlutterSecureStorage();
     final token = await secureStorage.read(key: 'access_token');
 
-    return {
+    final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
     };
+
+    return headers;
   }
 
   // GET request

@@ -21,10 +21,10 @@ class ApiConstants {
   static const String refreshToken = '$apiVersion/auth/refresh';
   static const String logout = '$apiVersion/auth/logout';
 
-  // User Endpoints
-  static const String users = '$apiVersion/users';
-  static String userProfile(String userId) => '$users/$userId';
-  static String userUpdate(String userId) => '$users/$userId';
+  // User Endpoints (legacy - for backward compatibility)
+  static const String userEndpoints = '$apiVersion/users';
+  static String userProfile(String userId) => '$userEndpoints/$userId';
+  static String userUpdate(String userId) => '$userEndpoints/$userId';
 
   // Agent Endpoints
   static const String agents = '$apiVersion/agents';
@@ -71,5 +71,36 @@ class ApiConstants {
   // Session Endpoints
   static const String authSessions = '$apiVersion/auth/sessions';
   static String authSession(String sessionId) => '$authSessions/$sessionId';
+
+  // Configuration Portal - Data Import Endpoints
+  static const String dataImports = '$apiVersion/import';
+  static String importHistory() => '$dataImports/history';
+  static String importStatistics() => '$dataImports/statistics';
+  static String importUpload() => '$dataImports/upload';
+  static String importValidate(String fileId) => '$dataImports/validate/$fileId';
+  static String importProcess(String fileId) => '$dataImports/process/$fileId';
+  static String importStatus(String fileId) => '$dataImports/status/$fileId';
+  static String importTemplates() => '$dataImports/templates';
+  static String importTemplate(String templateId) => '$dataImports/templates/$templateId';
+
+  // Configuration Portal - Customer Management Endpoints
+  static const String customers = '$apiVersion/customers';
+  static String customerById(String customerId) => '$customers/$customerId';
+
+  // Configuration Portal - Reporting Endpoints
+  static const String reports = '$apiVersion/reports';
+  static String reportGenerate() => '$reports/generate';
+  static String reportScheduled() => '$reports/scheduled';
+  static String reportHistory() => '$reports/history';
+  static String reportDownload(String reportId) => '$reports/$reportId/download';
+
+  // Configuration Portal - User Management Endpoints
+  static const String users = '$apiVersion/users';
+  static String userById(String userId) => '$users/$userId';
+  static String userPermissions(String userId) => '$users/$userId/permissions';
+  static String userActivity(String userId) => '$users/$userId/activity';
+
+  // Legacy user endpoints (use 'users' constant above)
+  static String get userProfiles => users;
 }
 

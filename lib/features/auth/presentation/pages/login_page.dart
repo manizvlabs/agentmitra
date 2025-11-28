@@ -152,11 +152,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 // Login Form
                 Consumer<AuthViewModel>(
                   builder: (context, authViewModel, child) {
-                    return LoginForm(
-                      onLoginSuccess: () {
-                        Navigator.pushNamed(context, '/customer-dashboard');
-                      },
-                    );
+                    return const LoginForm(); // Let LoginForm handle role-based navigation
                   },
                 ),
 

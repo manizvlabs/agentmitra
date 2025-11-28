@@ -80,6 +80,20 @@ class Permissions {
   static const String campaignsRead = 'campaigns.read';
   static const String campaignsUpdate = 'campaigns.update';
   static const String campaignsDelete = 'campaigns.delete';
+
+  // Data Import & Templates
+  static const String dataImportCreate = 'data_import.create';
+  static const String dataImportRead = 'data_import.read';
+  static const String dataImportUpdate = 'data_import.update';
+  static const String dataImportDelete = 'data_import.delete';
+  static const String templatesRead = 'templates.read';
+  static const String templatesCreate = 'templates.create';
+  static const String templatesUpdate = 'templates.update';
+  static const String templatesDelete = 'templates.delete';
+
+  // Reporting
+  static const String reportsGenerate = 'reports.generate';
+  static const String reportsSchedule = 'reports.schedule';
 }
 
 /// Feature flags for dynamic UI rendering
@@ -134,20 +148,25 @@ class RolePermissions {
       Permissions.campaignsCreate, Permissions.campaignsRead, Permissions.campaignsUpdate, Permissions.campaignsDelete,
     ],
     UserRole.providerAdmin: [
+      Permissions.usersRead, Permissions.usersUpdate, Permissions.usersSearch,
       Permissions.agentsCreate, Permissions.agentsRead, Permissions.agentsUpdate, Permissions.agentsApprove,
       Permissions.policiesCreate, Permissions.policiesRead, Permissions.policiesUpdate, Permissions.policiesApprove,
       Permissions.customersCreate, Permissions.customersRead, Permissions.customersUpdate,
-      Permissions.reportsRead, Permissions.analyticsRead,
+      Permissions.reportsRead, Permissions.reportsGenerate, Permissions.reportsSchedule, Permissions.analyticsRead,
       Permissions.tenantsRead, Permissions.tenantsUpdate,
       Permissions.auditRead,
       Permissions.featureFlagsRead, Permissions.featureFlagsUpdate,
       Permissions.campaignsCreate, Permissions.campaignsRead, Permissions.campaignsUpdate, Permissions.campaignsDelete,
+      Permissions.dataImportCreate, Permissions.dataImportRead, Permissions.dataImportUpdate,
+      Permissions.templatesRead, Permissions.templatesCreate, Permissions.templatesUpdate,
     ],
     UserRole.regionalManager: [
       Permissions.agentsRead, Permissions.agentsUpdate,
       Permissions.customersRead, Permissions.customersUpdate,
-      Permissions.reportsRead, Permissions.analyticsRead,
+      Permissions.reportsRead, Permissions.reportsGenerate, Permissions.analyticsRead,
       Permissions.campaignsCreate, Permissions.campaignsRead, Permissions.campaignsUpdate,
+      Permissions.dataImportRead,
+      Permissions.templatesRead,
     ],
     UserRole.seniorAgent: [
       Permissions.customersCreate, Permissions.customersRead, Permissions.customersUpdate,
@@ -206,22 +225,25 @@ class RbacService {
       final legacyRole = JwtDecoder.extractRole(jwtToken);
 
       // Set current user data
-      _currentUserRoles = roles;
-      _currentUserPermissions = permissions;
-      _currentUserRole = _determinePrimaryRole(roles);
+      _currentUserRoles = roles ?? [];
+      _currentUserPermissions = permissions ?? [];
+      _currentUserRole = _determinePrimaryRole(_currentUserRoles);
 
-      // If no roles found, set permissions based on current role
-      if (_currentUserRole != null) {
+      // Only use static permissions if no permissions came from JWT
+      if ((_currentUserPermissions?.isEmpty ?? true) && _currentUserRole != null) {
         _currentUserPermissions = RolePermissions.getPermissionsForRole(_currentUserRole!);
       }
 
       // If no roles in JWT, try to use legacy role field
-      if (_currentUserRole == UserRole.guestUser && legacyRole != null) {
+      if ((_currentUserRoles?.isEmpty ?? true) && _currentUserRole == UserRole.guestUser && legacyRole != null) {
         final parsedRole = UserRole.fromString(legacyRole);
         if (parsedRole != null) {
           _currentUserRole = parsedRole;
           _currentUserRoles = [_currentUserRole!.value];
-          _currentUserPermissions = RolePermissions.getPermissionsForRole(_currentUserRole!);
+          // Only set static permissions if we still don't have any
+          if (_currentUserPermissions?.isEmpty ?? true) {
+            _currentUserPermissions = RolePermissions.getPermissionsForRole(_currentUserRole!);
+          }
         }
       }
 

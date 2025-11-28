@@ -56,7 +56,8 @@ class JwtDecoder {
     final payload = decodePayload(token);
     if (payload == null) return [];
 
-    final permissions = payload['permissions'] ?? [];
+    // Try different possible field names for permissions
+    final permissions = payload['permissions'] ?? payload['user_permissions'] ?? [];
 
     if (permissions is List) {
       return List<String>.from(permissions);

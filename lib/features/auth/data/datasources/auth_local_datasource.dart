@@ -38,8 +38,16 @@ class AuthLocalDataSource {
   }
 
   /// Check if user is logged in
-  bool isLoggedIn() {
-    return StorageService.getBool(_keyIsLoggedIn) ?? false;
+  /// Returns true only if login flag is set AND access token exists
+  Future<bool> isLoggedIn() async {
+    final loginFlag = StorageService.getBool(_keyIsLoggedIn) ?? false;
+    if (!loginFlag) {
+      return false;
+    }
+    
+    // Also verify that access token exists
+    final token = await getAccessToken();
+    return token != null && token.isNotEmpty;
   }
 
   /// Save user data
