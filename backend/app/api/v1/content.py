@@ -18,6 +18,7 @@ import logging
 from app.core.database import get_db
 from app.core.auth import get_current_user_context
 from app.services.content_management_service import ContentManagementService
+from app.services.video_tutorial_service import VideoTutorialService
 from app.models.user import User
 
 router = APIRouter(prefix="/content", tags=["content"])
@@ -415,4 +416,303 @@ async def get_content_types():
     return {
         "success": True,
         "data": content_types
+    }
+
+
+# Video Tutorial Endpoints
+@router.post("/videos/upload")
+async def upload_video_tutorial(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    title: str = Form(..., description="Video tutorial title"),
+    description: Optional[str] = Form(None, description="Video description"),
+    category: str = Form("general", description="Video category"),
+    tags: Optional[str] = Form(None, description="JSON array of tags"),
+    target_audience: Optional[str] = Form(None, description="JSON array of target audiences"),
+    policy_types: Optional[str] = Form(None, description="JSON array of policy types"),
+    difficulty_level: str = Form("beginner", description="Difficulty level"),
+    language: str = Form("en", description="Video language"),
+    current_user: User = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Upload a video tutorial with comprehensive metadata
+
+    - **file**: Video file to upload (MP4, AVI, MOV, MKV, WebM)
+    - **title**: Video tutorial title (required)
+    - **description**: Detailed video description
+    - **category**: Content category (insurance_fundamentals, policy_management, etc.)
+    - **tags**: JSON array of searchable tags
+    - **target_audience**: JSON array of target audience types
+    - **policy_types**: JSON array of related policy types
+    - **difficulty_level**: beginner, intermediate, advanced
+    - **language**: Video language code (en, hi, te)
+    """
+    try:
+        # Parse JSON fields
+        parsed_tags = []
+        if tags:
+            try:
+                import json
+                parsed_tags = json.loads(tags)
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=400, detail="Invalid tags format")
+
+        parsed_target_audience = []
+        if target_audience:
+            try:
+                parsed_target_audience = json.loads(target_audience)
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=400, detail="Invalid target_audience format")
+
+        parsed_policy_types = []
+        if policy_types:
+            try:
+                parsed_policy_types = json.loads(policy_types)
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=400, detail="Invalid policy_types format")
+
+        # Upload video tutorial
+        video_service = VideoTutorialService(db)
+        result = await video_service.upload_video_tutorial(
+            file=file,
+            uploader=current_user,
+            title=title,
+            description=description,
+            category=category,
+            tags=parsed_tags,
+            target_audience=parsed_target_audience,
+            policy_types=parsed_policy_types,
+            difficulty_level=difficulty_level,
+            language=language
+        )
+
+        return {
+            "success": True,
+            "data": result,
+            "message": "Video tutorial uploaded successfully"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Video tutorial upload error: {e}")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+
+@router.get("/videos")
+async def list_video_tutorials(
+    category: Optional[str] = None,
+    agent_id: Optional[str] = None,
+    language: Optional[str] = None,
+    difficulty_level: Optional[str] = None,
+    target_audience: Optional[str] = None,
+    policy_types: Optional[str] = None,
+    search_query: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    List video tutorials with advanced filtering and search
+
+    - **category**: Filter by category
+    - **agent_id**: Filter by agent who uploaded
+    - **language**: Filter by language
+    - **difficulty_level**: Filter by difficulty
+    - **target_audience**: Filter by target audience (comma-separated)
+    - **policy_types**: Filter by policy types (comma-separated)
+    - **search_query**: Search in title and description
+    - **page**: Page number
+    - **limit**: Items per page
+    """
+    try:
+        # Parse comma-separated fields
+        parsed_target_audience = target_audience.split(",") if target_audience else None
+        parsed_policy_types = policy_types.split(",") if policy_types else None
+
+        video_service = VideoTutorialService(db)
+        result = await video_service.list_video_tutorials(
+            category=category,
+            agent_id=agent_id,
+            language=language,
+            difficulty_level=difficulty_level,
+            target_audience=parsed_target_audience,
+            policy_types=parsed_policy_types,
+            search_query=search_query,
+            page=page,
+            limit=limit
+        )
+
+        return {
+            "success": True,
+            "data": result
+        }
+
+    except Exception as e:
+        logger.error(f"List video tutorials error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to list videos: {str(e)}")
+
+
+@router.get("/videos/{video_id}")
+async def get_video_tutorial(
+    video_id: str,
+    current_user: User = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Get video tutorial details by ID
+
+    - **video_id**: Video tutorial identifier
+    """
+    try:
+        video_service = VideoTutorialService(db)
+        video = await video_service.get_video_tutorial(
+            video_id=video_id,
+            user_id=str(current_user.id)
+        )
+
+        return {
+            "success": True,
+            "data": video
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get video tutorial error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get video: {str(e)}")
+
+
+@router.post("/videos/{video_id}/progress")
+async def update_video_progress(
+    video_id: str,
+    watch_time_seconds: float = Form(..., ge=0),
+    completion_percentage: float = Form(..., ge=0, le=100),
+    is_completed: bool = Form(False),
+    current_user: User = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Update user progress for a video tutorial
+
+    - **video_id**: Video tutorial identifier
+    - **watch_time_seconds**: Time watched in seconds
+    - **completion_percentage**: Completion percentage (0-100)
+    - **is_completed**: Whether video is completed
+    """
+    try:
+        video_service = VideoTutorialService(db)
+        result = await video_service.update_video_progress(
+            video_id=video_id,
+            user_id=str(current_user.id),
+            watch_time_seconds=watch_time_seconds,
+            completion_percentage=completion_percentage,
+            is_completed=is_completed
+        )
+
+        return {
+            "success": True,
+            "data": result,
+            "message": "Progress updated successfully"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Update video progress error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to update progress: {str(e)}")
+
+
+@router.get("/videos/recommendations")
+async def get_video_recommendations(
+    intent_query: Optional[str] = None,
+    context: Optional[str] = None,
+    limit: int = Query(10, ge=1, le=50),
+    current_user: User = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Get personalized video recommendations
+
+    - **intent_query**: User intent or search query
+    - **context**: Additional context (JSON string)
+    - **limit**: Number of recommendations to return
+    """
+    try:
+        # Parse context if provided
+        parsed_context = None
+        if context:
+            try:
+                import json
+                parsed_context = json.loads(context)
+            except json.JSONDecodeError:
+                logger.warning(f"Invalid context format: {context}")
+
+        video_service = VideoTutorialService(db)
+        recommendations = await video_service.get_recommended_videos(
+            user_id=str(current_user.id),
+            intent_query=intent_query,
+            context=parsed_context,
+            limit=limit
+        )
+
+        return {
+            "success": True,
+            "data": recommendations,
+            "count": len(recommendations)
+        }
+
+    except Exception as e:
+        logger.error(f"Get video recommendations error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get recommendations: {str(e)}")
+
+
+@router.get("/videos/categories")
+async def get_video_categories():
+    """
+    Get available video tutorial categories
+    """
+    categories = [
+        {
+            "id": "insurance_fundamentals",
+            "name": "Insurance Fundamentals",
+            "description": "Core concepts and basics of insurance",
+            "icon": "book-open",
+            "color": "#3B82F6"
+        },
+        {
+            "id": "policy_management",
+            "name": "Policy Management",
+            "description": "Managing and maintaining insurance policies",
+            "icon": "clipboard-list",
+            "color": "#10B981"
+        },
+        {
+            "id": "financial_planning",
+            "name": "Financial Planning",
+            "description": "Investment strategies and financial planning",
+            "icon": "trending-up",
+            "color": "#F59E0B"
+        },
+        {
+            "id": "technical_support",
+            "name": "Technical Support",
+            "description": "App usage and technical assistance",
+            "icon": "support",
+            "color": "#EF4444"
+        },
+        {
+            "id": "agent_content",
+            "name": "Agent Content",
+            "description": "Custom content created by insurance agents",
+            "icon": "user-circle",
+            "color": "#8B5CF6"
+        }
+    ]
+
+    return {
+        "success": True,
+        "data": categories
     }

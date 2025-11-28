@@ -744,3 +744,168 @@ async def detect_language(
             detail=f"Language detection failed: {str(e)}"
         )
 
+
+# =====================================================
+# ACTIONABLE REPORT ENDPOINTS
+# =====================================================
+
+@router.post("/escalation/callback")
+async def create_callback_request(
+    session_id: str,
+    reason: str,
+    context: Optional[Dict[str, Any]] = None,
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Create a callback request when user needs human assistance
+
+    - **session_id**: Current chat session ID
+    - **reason**: Reason for escalation
+    - **context**: Additional context about the conversation
+    """
+    try:
+        chatbot_service = ChatbotService(db)
+
+        # Prepare user context
+        user_context = {
+            "user_id": str(current_user.id),
+            "customer_id": str(current_user.id),  # Assuming user is customer
+            "agent_id": context.get("agent_id") if context else None,
+            "name": f"{current_user.first_name} {current_user.last_name}".strip(),
+            "phone": getattr(current_user, 'phone', None),
+            "email": current_user.email
+        }
+
+        # Create escalation with actionable report
+        escalation_result = await chatbot_service.handle_escalation(
+            session_id=session_id,
+            reason=reason,
+            user_context=user_context,
+            conversation_context=context,
+            intent_analysis=context.get("intent_analysis") if context else None
+        )
+
+        return {
+            "success": True,
+            "data": escalation_result
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Callback request failed: {str(e)}"
+        )
+
+
+@router.get("/reports/callbacks")
+async def get_callback_reports(
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    limit: int = Query(50, ge=1, le=100),
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Get callback reports (agent view)
+
+    - **status**: Filter by status (pending, completed, cancelled)
+    - **priority**: Filter by priority (high, medium, low)
+    - **limit**: Maximum number of reports to return
+    """
+    try:
+        actionable_report_service = ActionableReportService(db)
+
+        reports = await actionable_report_service.get_callback_reports(
+            agent_id=str(current_user.id),
+            status=status,
+            priority=priority,
+            limit=limit
+        )
+
+        return {
+            "success": True,
+            "data": reports,
+            "count": len(reports)
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get callback reports: {str(e)}"
+        )
+
+
+@router.put("/reports/callbacks/{callback_id}/status")
+async def update_callback_status(
+    callback_id: str,
+    status: str,
+    agent_notes: Optional[str] = None,
+    resolution_details: Optional[Dict[str, Any]] = None,
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Update callback status (agent action)
+
+    - **callback_id**: Callback identifier
+    - **status**: New status (pending, in_progress, completed, cancelled)
+    - **agent_notes**: Agent's notes about the interaction
+    - **resolution_details**: Details about how the issue was resolved
+    """
+    try:
+        actionable_report_service = ActionableReportService(db)
+
+        result = await actionable_report_service.update_callback_status(
+            callback_id=callback_id,
+            status=status,
+            agent_notes=agent_notes,
+            resolution_details=resolution_details
+        )
+
+        return {
+            "success": True,
+            "data": result
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update callback status: {str(e)}"
+        )
+
+
+@router.get("/reports/analytics")
+async def get_callback_analytics(
+    period_days: int = Query(30, ge=1, le=365),
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Get callback analytics for the agent
+
+    - **period_days**: Number of days to analyze
+    """
+    try:
+        from datetime import datetime, timedelta
+
+        date_from = datetime.utcnow() - timedelta(days=period_days)
+
+        actionable_report_service = ActionableReportService(db)
+
+        analytics = await actionable_report_service.get_callback_analytics(
+            agent_id=str(current_user.id),
+            date_from=date_from
+        )
+
+        return {
+            "success": True,
+            "data": analytics
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get analytics: {str(e)}"
+        )
+

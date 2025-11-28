@@ -30,6 +30,8 @@ from app.models.analytics import (
     KnowledgeBaseArticle,
     ChatbotIntent
 )
+from app.services.video_tutorial_service import VideoTutorialService
+from app.services.actionable_report_service import ActionableReportService
 from app.core.monitoring import monitoring
 from app.core.logging_config import get_logger
 
@@ -65,6 +67,8 @@ class ChatbotService:
     def __init__(self, db: Session):
         self.db = db
         self.analytics_repo = AnalyticsRepository(db)
+        self.video_service = VideoTutorialService(db)
+        self.actionable_report_service = ActionableReportService(db)
 
         # Initialize OpenAI client
         self.openai_client = openai.OpenAI(api_key=settings.openai_api_key)
@@ -149,11 +153,20 @@ class ChatbotService:
             # Search knowledge base for relevant information
             knowledge_results = await self._search_knowledge_base(message)
 
+            # Get video recommendations based on intent
+            video_recommendations = await self.video_service.get_recommended_videos(
+                user_id=user_id,
+                intent_query=intent_analysis.get("intent", ""),
+                context=context,
+                limit=3
+            )
+
             # Generate response using OpenAI
             response_content = await self._generate_response(
                 message=message,
                 intent=intent_analysis,
                 knowledge=knowledge_results,
+                video_recommendations=video_recommendations,
                 context=context
             )
 
@@ -197,7 +210,8 @@ class ChatbotService:
                 "confidence": intent_analysis.get("confidence"),
                 "response_time_ms": int(response_time),
                 "suggested_actions": intent_analysis.get("suggested_actions", []),
-                "knowledge_used": len(knowledge_results) > 0
+                "knowledge_used": len(knowledge_results) > 0,
+                "video_recommendations": video_recommendations[:3] if video_recommendations else []
             }
 
         except Exception as e:
@@ -303,6 +317,7 @@ class ChatbotService:
         message: str,
         intent: Dict[str, Any],
         knowledge: List[Dict[str, Any]],
+        video_recommendations: List[Dict[str, Any]] = None,
         context: Optional[Dict[str, Any]] = None
     ) -> str:
         """Generate AI response using OpenAI"""
@@ -315,17 +330,29 @@ class ChatbotService:
                 for item in knowledge[:2]  # Limit to top 2 results
             ])
 
+        # Build video recommendations context
+        video_context = ""
+        if video_recommendations:
+            video_context = "\n\nRecommended videos:\n" + "\n".join([
+                f"- {video['title']} ({video['duration_seconds'] // 60}:{video['duration_seconds'] % 60:02d}min) - {video['agent_name']}"
+                for video in video_recommendations[:2]  # Limit to top 2 recommendations
+            ])
+
         # Build conversation context
         context_info = ""
         if context:
             context_info = f"\n\nUser context: {json.dumps(context)}"
 
+        # Determine if we should include video recommendations in response
+        include_videos = bool(video_recommendations and intent.get('confidence', 0) > 0.6)
+
         prompt = f"""
         User message: "{message}"
         Detected intent: {intent.get('intent', 'unknown')}
-        Confidence: {intent.get('confidence', 0)}{knowledge_context}{context_info}
+        Confidence: {intent.get('confidence', 0)}{knowledge_context}{video_context}{context_info}
 
         Generate a helpful, professional response for an insurance chatbot.
+        {'Include relevant video tutorial recommendations in your response when appropriate.' if include_videos else ''}
         Keep it concise but comprehensive.
         """
 
@@ -698,48 +725,82 @@ class ChatbotService:
         self,
         session_id: str,
         reason: str,
-        user_context: Dict[str, Any]
+        user_context: Dict[str, Any],
+        conversation_context: Optional[Dict[str, Any]] = None,
+        intent_analysis: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
-        """Handle intelligent escalation to human agents"""
+        """Handle intelligent escalation to human agents with actionable reports"""
 
         try:
-            # Create callback request for escalation
-            from app.services.callback_service import CallbackService
+            # Get customer and agent information
+            customer_id = user_context.get("customer_id", user_context.get("user_id"))
+            agent_id = user_context.get("agent_id")
 
-            callback_service = CallbackService(self.db)
+            if not customer_id or not agent_id:
+                # Fallback to basic callback creation
+                from app.services.callback_service import CallbackService
+                callback_service = CallbackService(self.db)
 
-            callback = await callback_service.create_callback(
-                customer_name=user_context.get("name", "Chatbot User"),
-                customer_phone=user_context.get("phone", ""),
-                subject=f"Chatbot Escalation: {reason}",
-                description=f"User escalated from chatbot. Reason: {reason}",
-                category="chatbot_escalation",
-                source="chatbot",
-                metadata={
-                    "session_id": session_id,
-                    "escalation_reason": reason,
-                    "chatbot_context": user_context
+                callback = await callback_service.create_callback(
+                    customer_name=user_context.get("name", "Chatbot User"),
+                    customer_phone=user_context.get("phone", ""),
+                    subject=f"Chatbot Escalation: {reason}",
+                    description=f"User escalated from chatbot. Reason: {reason}",
+                    category="chatbot_escalation",
+                    source="chatbot",
+                    metadata={
+                        "session_id": session_id,
+                        "escalation_reason": reason,
+                        "chatbot_context": user_context
+                    }
+                )
+
+                response = "Thank you for using Agent Mitra! Your request has been forwarded to your agent. They will call you back within 2 hours during business hours."
+
+                return {
+                    "escalation_created": True,
+                    "callback_id": callback.callback_id,
+                    "response": response,
+                    "priority": callback.priority.value,
+                    "expected_response_time": f"{callback.sla_target_minutes or 120} minutes"
                 }
+
+            # Create comprehensive actionable report
+            current_query = conversation_context.get("current_message", "") if conversation_context else reason
+            complexity_score = intent_analysis.get("confidence", 0.5) if intent_analysis else 0.5
+
+            # Prepare conversation context for the report
+            conversation_data = {
+                "messages": conversation_context.get("messages", []) if conversation_context else [],
+                "session_id": session_id,
+                "total_messages": conversation_context.get("total_messages", 0) if conversation_context else 0
+            }
+
+            report_result = await self.actionable_report_service.create_actionable_report(
+                customer_id=customer_id,
+                agent_id=agent_id,
+                conversation_context=conversation_data,
+                current_query=current_query,
+                intent_analysis=intent_analysis or {"intent": "escalation_request", "confidence": 0.8},
+                complexity_score=complexity_score,
+                source="chatbot"
             )
 
-            # Generate escalation response
-            escalation_response = f"""
-            I understand you'd like to speak with a human agent. I've created a support ticket for you (#{callback.callback_id}).
+            # Generate appropriate response based on priority
+            priority = report_result.get("priority", "medium")
+            sla_minutes = report_result.get("sla_target_minutes", 120)
+            next_steps = report_result.get("next_steps", "An agent will contact you shortly.")
 
-            A customer service representative will contact you shortly. In the meantime:
-            - Your reference number is: {callback.callback_id}
-            - Expected response time: Within {callback.sla_target_minutes or 60} minutes
-            - You can also call us at: [Customer Service Number]
-
-            Is there anything specific you'd like the agent to know about your situation?
-            """
+            response = f"Thank you for using Agent Mitra! {next_steps}"
 
             return {
                 "escalation_created": True,
-                "callback_id": callback.callback_id,
-                "response": escalation_response,
-                "priority": callback.priority.value,
-                "expected_response_time": f"{callback.sla_target_minutes or 60} minutes"
+                "callback_id": report_result.get("callback_id"),
+                "response": response,
+                "priority": priority,
+                "expected_response_time": report_result.get("estimated_response_time", "2 hours"),
+                "actionable_report_created": True,
+                "report_summary": report_result.get("report_summary", {})
             }
 
         except Exception as e:

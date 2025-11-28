@@ -24,6 +24,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config.settings import settings
 from app.core.monitoring import monitoring
+from app.services.chatbot_service import ChatbotService
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,7 @@ class WhatsAppService:
 
     def __init__(self, db: Optional[Session] = None):
         self.db = db
+        self.chatbot_service = ChatbotService(db) if db else None
 
         # WhatsApp configuration from environment
         self.access_token = os.getenv("WHATSAPP_ACCESS_TOKEN", settings.whatsapp_access_token)
@@ -365,16 +367,157 @@ class WhatsAppService:
         })
 
     async def _handle_text_message(self, from_number: str, text: str, message_id: str):
-        """Handle incoming text message"""
-        # This could integrate with chatbot service for automated responses
+        """Handle incoming text message with chatbot integration"""
         logger.info(f"Received text message from {from_number}: {text[:50]}...")
 
-        # Placeholder for auto-response logic
-        # In production, this could trigger chatbot responses
+        # Check if this is a chatbot conversation
+        if self.db and self.chatbot_service:
+            await self._handle_chatbot_message(from_number, text, message_id)
+        else:
+            # Fallback: simple auto-response
+            await self._send_auto_response(from_number, text)
 
     async def _handle_media_message(self, from_number: str, message: Dict[str, Any], media_type: str):
         """Handle incoming media message"""
         logger.info(f"Received {media_type} message from {from_number}")
+
+    async def _handle_chatbot_message(self, from_number: str, text: str, message_id: str):
+        """Handle chatbot conversation via WhatsApp"""
+        try:
+            # Get or create WhatsApp conversation session
+            session_id = await self._get_whatsapp_session(from_number)
+
+            # Prepare user context (simplified - in production, look up user by phone)
+            user_context = {
+                "phone": from_number,
+                "channel": "whatsapp",
+                "message_id": message_id
+            }
+
+            # Check for escalation keywords
+            if self._is_escalation_request(text):
+                await self._handle_whatsapp_escalation(from_number, text, session_id, user_context)
+                return
+
+            # Process message with chatbot
+            chatbot_response = await self.chatbot_service.process_message(
+                session_id=session_id,
+                message=text,
+                user_id=None,  # We don't have user ID from phone number
+                context=user_context
+            )
+
+            # Send chatbot response via WhatsApp
+            response_text = chatbot_response.get("response", "I apologize, but I'm having trouble processing your request.")
+
+            # Add video recommendations if available
+            video_recommendations = chatbot_response.get("video_recommendations", [])
+            if video_recommendations:
+                response_text += self._format_video_recommendations(video_recommendations)
+
+            await self.send_text_message(from_number, response_text)
+
+            # Store conversation context for handoff
+            await self._store_conversation_context(from_number, session_id, chatbot_response)
+
+        except Exception as e:
+            logger.error(f"Chatbot message handling failed: {e}")
+            # Fallback response
+            await self.send_text_message(
+                from_number,
+                "I apologize, but I'm experiencing technical difficulties. Please try again or contact our support team."
+            )
+
+    async def _handle_whatsapp_escalation(self, from_number: str, text: str, session_id: str, user_context: Dict[str, Any]):
+        """Handle escalation requests from WhatsApp"""
+        try:
+            # Get conversation context for actionable report
+            conversation_context = await self._get_conversation_context(from_number, session_id)
+
+            # Create escalation with actionable report
+            escalation_result = await self.chatbot_service.handle_escalation(
+                session_id=session_id,
+                reason="WhatsApp user requested human assistance",
+                user_context=user_context,
+                conversation_context=conversation_context,
+                intent_analysis={"intent": "escalation_request", "confidence": 0.9}
+            )
+
+            # Send escalation confirmation via WhatsApp
+            response_text = escalation_result.get("response", "Your request has been forwarded to our support team.")
+            await self.send_text_message(from_number, response_text)
+
+        except Exception as e:
+            logger.error(f"WhatsApp escalation failed: {e}")
+            await self.send_text_message(
+                from_number,
+                "I'm having trouble connecting you with our support team. Please call our customer service directly."
+            )
+
+    async def _send_auto_response(self, from_number: str, text: str):
+        """Send automatic response for basic queries"""
+        # Simple keyword-based responses
+        text_lower = text.lower()
+
+        if "hello" in text_lower or "hi" in text_lower:
+            response = "Hello! Welcome to Agent Mitra. How can I help you with your insurance queries today?"
+        elif "premium" in text_lower or "payment" in text_lower:
+            response = "For premium payment assistance, I recommend checking our app or website. You can also call your agent directly."
+        elif "policy" in text_lower:
+            response = "I'd be happy to help with your policy questions. Could you please provide more details about what you need?"
+        elif "claim" in text_lower:
+            response = "For claim assistance, please contact your insurance agent or visit our claims portal."
+        else:
+            response = "Thank you for your message. For personalized assistance, please reply with more details about your insurance query, or type 'AGENT' to speak with a human representative."
+
+        await self.send_text_message(from_number, response)
+
+    def _is_escalation_request(self, text: str) -> bool:
+        """Check if message contains escalation keywords"""
+        escalation_keywords = [
+            "speak to human", "talk to agent", "customer service",
+            "supervisor", "manager", "representative", "agent",
+            "help me directly", "human assistance", "person"
+        ]
+
+        text_lower = text.lower()
+        return any(keyword in text_lower for keyword in escalation_keywords)
+
+    def _format_video_recommendations(self, video_recommendations: List[Dict[str, Any]]) -> str:
+        """Format video recommendations for WhatsApp"""
+        if not video_recommendations:
+            return ""
+
+        formatted = "\n\n📹 Recommended Videos:\n"
+        for i, video in enumerate(video_recommendations[:2], 1):  # Limit to 2
+            duration_min = video.get("duration_seconds", 0) // 60
+            formatted += f"{i}. {video.get('title', 'Video')} ({duration_min}min)\n"
+
+        formatted += "\nWatch these videos in our app for detailed guidance!"
+        return formatted
+
+    async def _get_whatsapp_session(self, from_number: str) -> str:
+        """Get or create WhatsApp conversation session"""
+        # In a real implementation, this would store session mapping in database
+        # For now, use phone number as session identifier
+        return f"whatsapp_{from_number}"
+
+    async def _store_conversation_context(self, from_number: str, session_id: str, chatbot_response: Dict[str, Any]):
+        """Store conversation context for potential handoff"""
+        # In a real implementation, store recent conversation in Redis/database
+        # This enables seamless handoff between WhatsApp and app
+        pass
+
+    async def _get_conversation_context(self, from_number: str, session_id: str) -> Dict[str, Any]:
+        """Get conversation context for actionable reports"""
+        # Return basic context - in production, retrieve from storage
+        return {
+            "channel": "whatsapp",
+            "phone_number": from_number,
+            "session_id": session_id,
+            "messages": [],  # Would be populated from stored conversation
+            "total_messages": 0
+        }
 
     async def __aenter__(self):
         return self
