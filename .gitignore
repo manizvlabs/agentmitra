@@ -34,6 +34,11 @@ venv/
 env/
 .venv/
 
+# Test Results
+*_test_results.json
+api_test_results.json
+rbac_*_results.json
+
 # Flutter
 .dart_tool/
 .flutter-plugins
