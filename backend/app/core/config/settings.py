@@ -87,6 +87,12 @@ class Settings(BaseSettings):
     sms_api_key: Optional[str] = os.getenv("SMS_API_KEY")
     sms_api_secret: Optional[str] = os.getenv("SMS_API_SECRET")
     sms_from_number: Optional[str] = os.getenv("SMS_FROM_NUMBER")
+    sms_sender_id: Optional[str] = os.getenv("SMS_SENDER_ID", "AGMITR")
+
+    # AWS Configuration (for SNS)
+    aws_access_key_id: Optional[str] = os.getenv("AWS_ACCESS_KEY_ID")
+    aws_secret_access_key: Optional[str] = os.getenv("AWS_SECRET_ACCESS_KEY")
+    aws_region: str = os.getenv("AWS_REGION", "us-east-1")
     
     # Email Provider
     email_provider: str = os.getenv("EMAIL_PROVIDER", "smtp")
@@ -106,6 +112,22 @@ class Settings(BaseSettings):
     minio_bucket_name: str = os.getenv("MINIO_BUCKET_NAME", "agentmitra-media")
     minio_use_ssl: bool = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
     minio_cdn_base_url: str = os.getenv("MINIO_CDN_BASE_URL", f"http://{os.getenv('MINIO_ENDPOINT', 'localhost:9000')}/{os.getenv('MINIO_BUCKET_NAME', 'agentmitra-media')}")
+
+    # WhatsApp Business API Configuration
+    whatsapp_api_url: str = os.getenv("WHATSAPP_API_URL", "https://graph.facebook.com/v18.0")
+    whatsapp_access_token: str = os.getenv("WHATSAPP_ACCESS_TOKEN", "")
+    whatsapp_business_number: str = os.getenv("WHATSAPP_BUSINESS_NUMBER", "")
+    whatsapp_webhook_secret: str = os.getenv("WHATSAPP_WEBHOOK_SECRET", "")
+    whatsapp_verify_token: str = os.getenv("WHATSAPP_VERIFY_TOKEN", "")
+
+    # Payment Gateway Configuration
+    razorpay_key_id: str = os.getenv("RAZORPAY_KEY_ID", "")
+    razorpay_key_secret: str = os.getenv("RAZORPAY_KEY_SECRET", "")
+    razorpay_webhook_secret: str = os.getenv("RAZORPAY_WEBHOOK_SECRET", "")
+    stripe_secret_key: str = os.getenv("STRIPE_SECRET_KEY", "")
+    stripe_publishable_key: str = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
+    stripe_webhook_secret: str = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+
     featurehub_api_key: Optional[str] = os.getenv("FEATUREHUB_API_KEY")
     featurehub_environment: str = os.getenv("FEATUREHUB_ENVIRONMENT", "development")
     featurehub_sdk_key: Optional[str] = os.getenv("FEATUREHUB_SDK_KEY")

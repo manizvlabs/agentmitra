@@ -23,6 +23,26 @@ requests==2.32.3
 redis==5.2.0
 hiredis==2.3.2
 
+# WhatsApp Business API
+cryptography==43.0.1
+
+# Payment Processing
+razorpay==1.4.2
+stripe==10.12.0
+
+# Background Tasks
+celery==5.4.0
+
+# Monitoring
+prometheus-client==0.20.0
+
+# File Processing
+openpyxl==3.1.5
+pandas==2.2.3
+
+# WebSocket
+websockets==13.1
+
 # Environment & Configuration
 python-dotenv==1.0.1
 
