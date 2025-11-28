@@ -9,6 +9,7 @@ import time
 from app.core.database import get_db, check_db_connection, get_db_stats
 from app.core.config.settings import settings
 from app.core.logging_config import get_logger
+from app.core.monitoring import monitoring
 
 router = APIRouter()
 logger = get_logger(__name__)
@@ -149,6 +150,44 @@ async def comprehensive_health(db: Session = Depends(get_db)) -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Comprehensive health check error: {e}")
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": time.time(),
+        }
+
+
+@router.get("/metrics")
+async def get_metrics() -> str:
+    """
+    Prometheus metrics endpoint
+    Returns metrics in Prometheus format for monitoring
+    """
+    try:
+        return await monitoring.get_metrics()
+    except Exception as e:
+        logger.error(f"Metrics endpoint error: {e}")
+        return f"# Error generating metrics: {str(e)}"
+
+
+@router.get("/health/monitoring")
+async def monitoring_health() -> Dict[str, Any]:
+    """
+    Detailed monitoring health check with all component statuses
+    """
+    try:
+        health_status = await monitoring.health_check()
+
+        return {
+            "status": health_status.status,
+            "timestamp": health_status.timestamp,
+            "checks": health_status.checks,
+            "version": settings.app_version,
+            "environment": settings.environment
+        }
+
+    except Exception as e:
+        logger.error(f"Monitoring health check error: {e}")
         return {
             "status": "unhealthy",
             "error": str(e),
