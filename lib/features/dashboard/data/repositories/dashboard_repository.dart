@@ -108,6 +108,32 @@ class DashboardRepository extends BaseRepository {
     }
   }
 
+  /// Get at-risk customers data
+  Future<Map<String, dynamic>> getAtRiskCustomersData({
+    required String agentId,
+    String riskLevel = 'all',
+    String priority = 'all',
+  }) async {
+    try {
+      final queryParams = {
+        if (riskLevel != 'all') 'risk_level': riskLevel,
+        if (priority != 'all') 'priority': priority,
+      };
+      final queryString = queryParams.isEmpty ? '' : '?' + queryParams.entries.map((e) => '${e.key}=${e.value}').join('&');
+
+      final response = await ApiService.get('/analytics/customers/at-risk/agent/$agentId$queryString');
+
+      if (response.success && response.data != null) {
+        return response.data!;
+      } else {
+        throw Exception(response.message ?? 'Failed to fetch at-risk customers data');
+      }
+    } catch (e) {
+      // Return mock data for development if API fails
+      return _getMockAtRiskCustomersData(agentId, riskLevel, priority);
+    }
+  }
+
   /// Get agent performance data from analytics API
   Future<AgentPerformanceData> getAgentPerformanceData(String agentId) async {
     try {
@@ -608,6 +634,348 @@ class DashboardRepository extends BaseRepository {
         {'type': 'meeting', 'description': 'Meeting scheduled with Amit Patel', 'time': '6 hours ago'},
         {'type': 'call', 'description': 'Follow-up call with Suresh Reddy', 'time': '1 day ago'},
       ],
+    };
+  }
+
+  /// Mock at-risk customers data for development
+  Map<String, dynamic> _getMockAtRiskCustomersData(String agentId, String riskLevel, String priority) {
+    // Generate mock at-risk customers data
+    final allCustomers = [
+      {
+        'customer_name': 'Vijay Kumar',
+        'policy_number': 'POL001234',
+        'risk_level': 'high',
+        'risk_score': 85.0,
+        'premium_value': 25000,
+        'last_payment_date': '2024-11-01',
+        'engagement_score': 25,
+        'complaints_count': 3,
+        'support_queries': 8,
+        'policy_age_months': 24,
+        'missed_payments': 2,
+        'days_since_contact': 35,
+        'policy_type': 'term_life',
+        'risk_factors': ['Payment delays', 'Low engagement', 'Multiple complaints'],
+        'last_retention_action': {
+          'description': 'Retention call made - offered payment plan',
+          'date': '2024-11-20',
+        },
+        'retention_plan': {
+          'next_action': 'Schedule follow-up meeting',
+          'priority': 'high',
+        },
+      },
+      {
+        'customer_name': 'Anjali Gupta',
+        'policy_number': 'POL001235',
+        'risk_level': 'high',
+        'risk_score': 78.0,
+        'premium_value': 15000,
+        'last_payment_date': '2024-10-15',
+        'engagement_score': 15,
+        'complaints_count': 5,
+        'support_queries': 12,
+        'policy_age_months': 18,
+        'missed_payments': 3,
+        'days_since_contact': 45,
+        'policy_type': 'health',
+        'risk_factors': ['Payment delays', 'High complaints', 'Low engagement'],
+        'last_retention_action': {
+          'description': 'Email sent with discount offer',
+          'date': '2024-11-18',
+        },
+        'retention_plan': {
+          'next_action': 'Personal visit to discuss concerns',
+          'priority': 'urgent',
+        },
+      },
+      {
+        'customer_name': 'Rajesh Patel',
+        'policy_number': 'POL001236',
+        'risk_level': 'medium',
+        'risk_score': 65.0,
+        'premium_value': 50000,
+        'last_payment_date': '2024-11-10',
+        'engagement_score': 45,
+        'complaints_count': 1,
+        'support_queries': 2,
+        'policy_age_months': 36,
+        'missed_payments': 1,
+        'days_since_contact': 20,
+        'policy_type': 'ulip',
+        'risk_factors': ['Recent payment delay'],
+        'last_retention_action': {
+          'description': 'WhatsApp message sent for renewal reminder',
+          'date': '2024-11-25',
+        },
+        'retention_plan': {
+          'next_action': 'Follow-up call in 3 days',
+          'priority': 'medium',
+        },
+      },
+      {
+        'customer_name': 'Priya Singh',
+        'policy_number': 'POL001237',
+        'risk_level': 'medium',
+        'risk_score': 55.0,
+        'premium_value': 12000,
+        'last_payment_date': '2024-11-05',
+        'engagement_score': 35,
+        'complaints_count': 2,
+        'support_queries': 4,
+        'policy_age_months': 12,
+        'missed_payments': 1,
+        'days_since_contact': 25,
+        'policy_type': 'health',
+        'risk_factors': ['Low engagement', 'Recent policy'],
+        'last_retention_action': {
+          'description': 'Policy benefits email sent',
+          'date': '2024-11-22',
+        },
+        'retention_plan': {
+          'next_action': 'Educational call about benefits',
+          'priority': 'medium',
+        },
+      },
+      {
+        'customer_name': 'Amit Sharma',
+        'policy_number': 'POL001238',
+        'risk_level': 'high',
+        'risk_score': 92.0,
+        'premium_value': 35000,
+        'last_payment_date': '2024-09-01',
+        'engagement_score': 10,
+        'complaints_count': 6,
+        'support_queries': 15,
+        'policy_age_months': 48,
+        'missed_payments': 4,
+        'days_since_contact': 60,
+        'policy_type': 'comprehensive',
+        'risk_factors': ['Multiple payment delays', 'High complaints', 'Very low engagement', 'Long time no contact'],
+        'last_retention_action': {
+          'description': 'Urgent retention meeting scheduled',
+          'date': '2024-11-15',
+        },
+        'retention_plan': {
+          'next_action': 'Senior agent intervention required',
+          'priority': 'urgent',
+        },
+      },
+      {
+        'customer_name': 'Sunita Reddy',
+        'policy_number': 'POL001239',
+        'risk_level': 'low',
+        'risk_score': 35.0,
+        'premium_value': 8000,
+        'last_payment_date': '2024-11-20',
+        'engagement_score': 75,
+        'complaints_count': 0,
+        'support_queries': 1,
+        'policy_age_months': 8,
+        'missed_payments': 0,
+        'days_since_contact': 15,
+        'policy_type': 'two_wheeler',
+        'risk_factors': ['Recent policy holder'],
+        'last_retention_action': {
+          'description': 'Welcome call completed successfully',
+          'date': '2024-11-28',
+        },
+        'retention_plan': {
+          'next_action': 'Regular check-in in 30 days',
+          'priority': 'low',
+        },
+      },
+      {
+        'customer_name': 'Karan Mehta',
+        'policy_number': 'POL001240',
+        'risk_level': 'medium',
+        'risk_score': 58.0,
+        'premium_value': 30000,
+        'last_payment_date': '2024-11-08',
+        'engagement_score': 55,
+        'complaints_count': 1,
+        'support_queries': 3,
+        'policy_age_months': 30,
+        'missed_payments': 1,
+        'days_since_contact': 18,
+        'policy_type': 'term_life',
+        'risk_factors': ['Minor payment delay', 'Moderate engagement'],
+        'last_retention_action': {
+          'description': 'Payment reminder call',
+          'date': '2024-11-26',
+        },
+        'retention_plan': {
+          'next_action': 'Monitor payment status',
+          'priority': 'medium',
+        },
+      },
+      {
+        'customer_name': 'Neha Jain',
+        'policy_number': 'POL001241',
+        'risk_level': 'high',
+        'risk_score': 88.0,
+        'premium_value': 18000,
+        'last_payment_date': '2024-10-25',
+        'engagement_score': 20,
+        'complaints_count': 4,
+        'support_queries': 9,
+        'policy_age_months': 15,
+        'missed_payments': 2,
+        'days_since_contact': 28,
+        'policy_type': 'health',
+        'risk_factors': ['Payment delays', 'Multiple complaints', 'Low engagement'],
+        'last_retention_action': {
+          'description': 'Retention package offered via email',
+          'date': '2024-11-19',
+        },
+        'retention_plan': {
+          'next_action': 'Follow-up on package acceptance',
+          'priority': 'high',
+        },
+      },
+    ];
+
+    // Filter customers based on criteria
+    var filteredCustomers = allCustomers;
+
+    if (riskLevel != 'all') {
+      filteredCustomers = filteredCustomers.where((customer) => customer['risk_level'] == riskLevel).toList();
+    }
+
+    if (priority != 'all') {
+      filteredCustomers = filteredCustomers.where((customer) {
+        final retentionPriority = customer['retention_plan']?['priority'] ?? 'medium';
+        return retentionPriority == priority;
+      }).toList();
+    }
+
+    // Calculate statistics
+    final totalAtRisk = filteredCustomers.length;
+    final highRisk = filteredCustomers.where((c) => c['risk_level'] == 'high').length;
+    final mediumRisk = filteredCustomers.where((c) => c['risk_level'] == 'medium').length;
+    final lowRisk = filteredCustomers.where((c) => c['risk_level'] == 'low').length;
+
+    final totalRevenueAtRisk = filteredCustomers.isEmpty ? 0 : filteredCustomers.map((c) => c['premium_value'] as int).reduce((a, b) => a + b);
+    final avgRiskScore = filteredCustomers.isEmpty ? 0 : filteredCustomers.map((c) => c['risk_score'] as double).reduce((a, b) => a + b) / filteredCustomers.length;
+
+    final churnRiskPercentage = 24.5;
+    final retentionRate = 87.3;
+    final avgResponseDays = 2.1;
+    final revenueSaved = 125000;
+
+    // Mock retention actions
+    final retentionActions = [
+      {
+        'id': '1',
+        'customer_name': 'Vijay Kumar',
+        'action_type': 'call',
+        'description': 'Schedule retention meeting to discuss payment plan',
+        'status': 'pending',
+        'priority': 'high',
+        'due_date': '2024-12-01',
+        'progress': 0.0,
+      },
+      {
+        'id': '2',
+        'customer_name': 'Anjali Gupta',
+        'action_type': 'meeting',
+        'description': 'Personal visit to address concerns and offer solutions',
+        'status': 'in_progress',
+        'priority': 'urgent',
+        'due_date': '2024-11-30',
+        'progress': 0.6,
+      },
+      {
+        'id': '3',
+        'customer_name': 'Rajesh Patel',
+        'action_type': 'email',
+        'description': 'Send renewal reminder with discount offer',
+        'status': 'completed',
+        'priority': 'medium',
+        'outcome': {
+          'description': 'Customer agreed to renewal with 10% discount',
+          'value': 5000,
+        },
+      },
+      {
+        'id': '4',
+        'customer_name': 'Amit Sharma',
+        'action_type': 'personal_visit',
+        'description': 'Senior agent intervention for high-risk customer',
+        'status': 'pending',
+        'priority': 'urgent',
+        'due_date': '2024-11-29',
+        'progress': 0.0,
+      },
+    ];
+
+    return {
+      'statistics': {
+        'total_at_risk': totalAtRisk,
+        'churn_risk_percentage': churnRiskPercentage,
+        'retention_rate': retentionRate,
+        'revenue_at_risk': totalRevenueAtRisk,
+        'avg_risk_score': avgRiskScore,
+        'churn_trend': 'decreasing',
+        'retention_trend': 'improving',
+        'revenue_trend': 'stable',
+        'score_trend': 'stable',
+        'thirty_day_trend': 'decreasing',
+        'thirty_day_change': -3,
+        'ninety_day_trend': 'decreasing',
+        'ninety_day_change': -8,
+        'year_trend': 'decreasing',
+        'year_change': -12,
+        'prevented_churn': 12,
+        'recovered_customers': 8,
+        'active_interventions': 15,
+      },
+      'risk_distribution': {
+        'high': highRisk,
+        'medium': mediumRisk,
+        'low': lowRisk,
+      },
+      'retention_performance': {
+        'success_rate': 78.5,
+        'avg_response_days': avgResponseDays,
+        'revenue_saved': revenueSaved,
+      },
+      'common_risk_factors': [
+        {'type': 'payment', 'percentage': 65, 'description': 'Payment delays and missed payments'},
+        {'type': 'engagement', 'percentage': 45, 'description': 'Low engagement and interaction'},
+        {'type': 'support', 'percentage': 35, 'description': 'High support queries and complaints'},
+        {'type': 'policy_age', 'percentage': 25, 'description': 'Recent policy holders at higher risk'},
+      ],
+      'retention_actions_summary': {
+        'pending': 8,
+        'in_progress': 5,
+        'completed': 12,
+        'successful': 9,
+      },
+      'retention_strategies': [
+        {
+          'title': 'Personal Retention Calls',
+          'description': 'Direct phone contact with personalized retention offers',
+          'success_rate': 85,
+        },
+        {
+          'title': 'Email Retention Campaigns',
+          'description': 'Automated email sequences with special offers',
+          'success_rate': 62,
+        },
+        {
+          'title': 'Loyalty Discounts',
+          'description': 'Premium discounts for loyal customers',
+          'success_rate': 78,
+        },
+        {
+          'title': 'Policy Review Meetings',
+          'description': 'In-person meetings to review and optimize policies',
+          'success_rate': 92,
+        },
+      ],
+      'customers': filteredCustomers,
+      'retention_actions': retentionActions,
     };
   }
 }

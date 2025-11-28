@@ -22,6 +22,7 @@ class DashboardViewModel extends BaseViewModel {
   Map<String, dynamic>? _roiData;
   Map<String, dynamic>? _forecastData;
   Map<String, dynamic>? _leadsData;
+  Map<String, dynamic>? _riskCustomersData;
 
   DashboardAnalytics? get analytics => _analytics;
   List<DashboardNotification> get notifications => _notifications;
@@ -32,6 +33,7 @@ class DashboardViewModel extends BaseViewModel {
   Map<String, dynamic>? get roiData => _roiData;
   Map<String, dynamic>? get forecastData => _forecastData;
   Map<String, dynamic>? get leadsData => _leadsData;
+  Map<String, dynamic>? get riskCustomersData => _riskCustomersData;
 
   // Computed properties
   int get unreadNotificationsCount =>
@@ -156,6 +158,29 @@ class DashboardViewModel extends BaseViewModel {
         return true;
       },
       errorMessage: 'Failed to load hot leads data',
+    );
+    notifyListeners();
+  }
+
+  /// Load at-risk customers data
+  Future<void> loadAtRiskCustomersData({
+    String riskLevel = 'all',
+    String priority = 'all'
+  }) async {
+    await executeAsync(
+      () async {
+        final agentId = await AgentService().getCurrentAgentId();
+        if (agentId == null) {
+          throw Exception('Agent ID not available');
+        }
+        _riskCustomersData = await _repository.getAtRiskCustomersData(
+          agentId: agentId,
+          riskLevel: riskLevel,
+          priority: priority,
+        );
+        return true;
+      },
+      errorMessage: 'Failed to load at-risk customers data',
     );
     notifyListeners();
   }
