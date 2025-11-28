@@ -91,6 +91,29 @@ async def get_notifications(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch notifications: {str(e)}")
 
+
+@router.get("/statistics", response_model=NotificationStatistics)
+async def get_notification_statistics(
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get notification statistics for the current user"""
+    try:
+        notification_service = NotificationService(db)
+
+        stats = await notification_service.get_user_notification_statistics(
+            user_id=current_user.user_id,
+            start_date=start_date,
+            end_date=end_date
+        )
+
+        return stats
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get notification statistics: {str(e)}")
+
+
 @router.get("/{notification_id}", response_model=NotificationResponse)
 async def get_notification(
     notification_id: str,
@@ -269,27 +292,6 @@ async def create_bulk_notifications(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create notifications: {str(e)}")
-
-@router.get("/statistics", response_model=NotificationStatistics)
-async def get_notification_statistics(
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Get notification statistics for the current user"""
-    try:
-        notification_service = NotificationService(db)
-
-        stats = await notification_service.get_user_notification_statistics(
-            user_id=current_user.user_id,
-            start_date=start_date,
-            end_date=end_date
-        )
-
-        return stats
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get notification statistics: {str(e)}")
 
 @router.post("/test")
 async def send_test_notification(

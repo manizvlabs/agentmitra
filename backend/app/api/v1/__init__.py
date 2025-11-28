@@ -176,7 +176,7 @@ api_router.include_router(analytics.router, prefix="/analytics", tags=["analytic
 api_router.include_router(campaigns.router, prefix="/campaigns", tags=["campaigns"])
 # Temporarily disabled callbacks due to model conflicts
 # api_router.include_router(callbacks.router, prefix="/callbacks", tags=["callbacks"])
-api_router.include_router(feature_flags.router, tags=["feature-flags"])
+api_router.include_router(feature_flags.router, prefix="/feature-flags", tags=["feature-flags"])
 api_router.include_router(health.router, tags=["health"])
 api_router.include_router(notifications.router, tags=["notifications"])
 api_router.include_router(content.router, tags=["content"])

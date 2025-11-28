@@ -167,6 +167,48 @@ async def list_campaigns(
         )
 
 
+@router.get("/templates")
+async def get_campaign_templates(
+    category: Optional[str] = Query(None),
+    is_public: bool = Query(True),
+    limit: int = Query(50, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    """Get campaign templates"""
+    print(f"DEBUG: get_campaign_templates called with category={category}, is_public={is_public}, limit={limit}")
+    try:
+        templates = CampaignService.get_campaign_templates(
+            db=db,
+            category=category,
+            is_public=is_public,
+            limit=limit
+        )
+
+        return {
+            "success": True,
+            "data": [
+                {
+                    "template_id": str(t.template_id),
+                    "template_name": t.template_name,
+                    "description": t.description,
+                    "category": t.category,
+                    "subject_template": t.subject_template,
+                    "message_template": t.message_template,
+                    "personalization_tags": t.personalization_tags or [],
+                    "usage_count": t.usage_count or 0,
+                    "average_roi": float(t.average_roi or 0),
+                }
+                for t in templates
+            ]
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get templates: {str(e)}"
+        )
+
+
 @router.get("/{campaign_id}")
 async def get_campaign(
     campaign_id: str,
@@ -174,9 +216,10 @@ async def get_campaign(
     current_user: UserContext = Depends(get_current_user_context)
 ):
     """Get campaign details"""
+    print(f"DEBUG: get_campaign called with campaign_id={campaign_id}")
     try:
         agent_id = UUID(current_user.agent_id) if current_user.agent_id else None
-        
+
         campaign = CampaignService.get_campaign(
             db=db,
             campaign_id=UUID(campaign_id),
@@ -351,47 +394,6 @@ async def get_campaign_analytics(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get campaign analytics: {str(e)}"
-        )
-
-
-@router.get("/templates")
-async def get_campaign_templates(
-    category: Optional[str] = Query(None),
-    is_public: bool = Query(True),
-    limit: int = Query(50, ge=1, le=100),
-    db: Session = Depends(get_db)
-):
-    """Get campaign templates"""
-    try:
-        templates = CampaignService.get_campaign_templates(
-            db=db,
-            category=category,
-            is_public=is_public,
-            limit=limit
-        )
-
-        return {
-            "success": True,
-            "data": [
-                {
-                    "template_id": str(t.template_id),
-                    "template_name": t.template_name,
-                    "description": t.description,
-                    "category": t.category,
-                    "subject_template": t.subject_template,
-                    "message_template": t.message_template,
-                    "personalization_tags": t.personalization_tags or [],
-                    "usage_count": t.usage_count or 0,
-                    "average_roi": float(t.average_roi or 0),
-                }
-                for t in templates
-            ]
-        }
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get templates: {str(e)}"
         )
 
 
