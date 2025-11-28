@@ -1,0 +1,80 @@
+{
+  "timestamp": "2025-11-28T15:37:07.564755",
+  "users_tested": [
+    "provider_admin",
+    "regional_manager",
+    "senior_agent",
+    "junior_agent",
+    "policyholder",
+    "support_staff"
+  ],
+  "endpoint_tests": {
+    "provider_admin": {
+      "/users/": true,
+      "/analytics/comprehensive/dashboard": true,
+      "/external/sms/send": true,
+      "/external/whatsapp/send": true,
+      "/external/ai/chat": true,
+      "/users/me": true
+    },
+    "regional_manager": {
+      "/users/": false,
+      "/analytics/comprehensive/dashboard": true,
+      "/external/sms/send": true,
+      "/external/whatsapp/send": true,
+      "/external/ai/chat": true,
+      "/users/me": true
+    },
+    "senior_agent": {
+      "/users/": false,
+      "/analytics/comprehensive/dashboard": true,
+      "/external/sms/send": true,
+      "/external/whatsapp/send": true,
+      "/external/ai/chat": true,
+      "/users/me": true
+    },
+    "junior_agent": {
+      "/users/": false,
+      "/analytics/comprehensive/dashboard": false,
+      "/external/sms/send": true,
+      "/external/whatsapp/send": true,
+      "/external/ai/chat": true,
+      "/users/me": true
+    },
+    "policyholder": {
+      "/users/": false,
+      "/analytics/comprehensive/dashboard": false,
+      "/external/sms/send": false,
+      "/external/whatsapp/send": false,
+      "/external/ai/chat": false,
+      "/users/me": true
+    },
+    "support_staff": {
+      "/users/": false,
+      "/analytics/comprehensive/dashboard": false,
+      "/external/sms/send": true,
+      "/external/whatsapp/send": true,
+      "/external/ai/chat": true,
+      "/users/me": true
+    }
+  },
+  "summary": {
+    "authentication": {
+      "passed": 6,
+      "total": 7,
+      "success_rate": 0.8571428571428571
+    },
+    "permissions": {
+      "passed": 0,
+      "total": 6,
+      "success_rate": 0.0
+    },
+    "endpoints": {
+      "passed": 25,
+      "total": 36,
+      "success_rate": 0.6944444444444444
+    },
+    "hierarchy": false,
+    "overall_success": false
+  }
+}

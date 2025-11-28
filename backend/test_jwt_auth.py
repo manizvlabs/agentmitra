@@ -14,11 +14,47 @@ import sys
 BASE_URL = "http://127.0.0.1:8015"
 API_BASE = f"{BASE_URL}/api/v1"
 
-# Test user credentials
-TEST_USER = {
-    "phone_number": "+1234567890",
-    "password": "testpass123"
+# Test user credentials - using seeded users
+TEST_USERS = {
+    "super_admin": {
+        "phone_number": "+919876543200",
+        "password": "testpassword",
+        "expected_permissions": 59
+    },
+    "provider_admin": {
+        "phone_number": "+919876543201",
+        "password": "testpassword",
+        "expected_permissions": "Insurance provider management"
+    },
+    "regional_manager": {
+        "phone_number": "+919876543202",
+        "password": "testpassword",
+        "expected_permissions": 19
+    },
+    "senior_agent": {
+        "phone_number": "+919876543203",
+        "password": "testpassword",
+        "expected_permissions": 16
+    },
+    "junior_agent": {
+        "phone_number": "+919876543204",
+        "password": "testpassword",
+        "expected_permissions": 7
+    },
+    "policyholder": {
+        "phone_number": "+919876543205",
+        "password": "testpassword",
+        "expected_permissions": 5
+    },
+    "support_staff": {
+        "phone_number": "+919876543206",
+        "password": "testpassword",
+        "expected_permissions": 8
+    }
 }
+
+# Default test user for basic testing
+TEST_USER = TEST_USERS["junior_agent"]
 
 def test_user_login():
     """Test user login and JWT token generation"""

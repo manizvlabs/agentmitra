@@ -109,8 +109,7 @@ async def get_current_user_context(
         roles = [user_row.role] if user_row.role else ["guest"]
         permissions = set()
 
-        # For now, use basic permissions based on role
-        # TODO: Integrate with full RBAC system when database tables are ready
+        # Get permissions from RBAC service
         try:
             rbac_service = get_rbac_service(db)
             db_roles = await rbac_service.get_user_roles(str(user_row.id))
@@ -119,17 +118,13 @@ async def get_current_user_context(
             db_permissions = await rbac_service.get_user_permissions(str(user_row.id))
             if db_permissions:
                 permissions = db_permissions
+            else:
+                # Fallback: use basic permissions based on role
+                permissions = await rbac_service._get_role_permissions(user_row.role or "guest")
         except Exception as e:
-            logger.warning(f"RBAC service not available, using basic permissions: {e}")
-            # Fallback to basic permissions based on role
-            if user_row.role == "junior_agent":
-                permissions = {"customers.read", "policies.read", "communication.send"}
-            elif user_row.role == "senior_agent":
-                permissions = {"customers.*", "policies.*", "analytics.read", "communication.*"}
-            elif user_row.role == "provider_admin":
-                permissions = {"users.read", "agents.*", "customers.*", "policies.*", "analytics.read"}
-            elif user_row.role == "super_admin":
-                permissions = {"*"}  # All permissions
+            logger.warning(f"RBAC service failed, using minimal permissions: {e}")
+            # Minimal fallback permissions
+            permissions = {"users.read"}  # Only basic read access
 
         return UserContext(
             user_id=str(user_row.id),

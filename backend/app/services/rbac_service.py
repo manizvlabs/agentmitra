@@ -287,6 +287,23 @@ class RBACService:
 
         return False
 
+    async def _get_role_permissions(self, role: str) -> set:
+        """Get permissions for a specific role"""
+        role_permissions = self.ROLE_PERMISSIONS.get(role, [])
+        permissions = set()
+
+        for perm in role_permissions:
+            if perm.endswith(".*"):
+                # Expand wildcard permissions
+                prefix = perm[:-2]
+                for full_perm in self.PERMISSIONS.keys():
+                    if full_perm.startswith(prefix):
+                        permissions.add(full_perm)
+            else:
+                permissions.add(perm)
+
+        return permissions
+
     async def _user_belongs_to_tenant(self, user_id: str, tenant_id: str) -> bool:
         """Check if user belongs to a specific tenant"""
         # Implementation would check user-tenant relationship
