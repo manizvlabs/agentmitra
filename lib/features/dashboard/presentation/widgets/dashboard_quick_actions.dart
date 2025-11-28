@@ -1,149 +1,146 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../viewmodels/dashboard_viewmodel.dart';
 
-/// Quick Actions Widget for dashboard shortcuts
-class DashboardQuickActions extends StatelessWidget {
-  const DashboardQuickActions({super.key});
+/// Quick Actions Widget
+/// Shows common actions customers can take
+class QuickActionsWidget extends StatelessWidget {
+  final List<dynamic> actions;
+  final Function(String) onActionTap;
+
+  const QuickActionsWidget({
+    super.key,
+    required this.actions,
+    required this.onActionTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DashboardViewModel>(
-      builder: (context, viewModel, child) {
-        final actions = viewModel.quickActions;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Quick Actions',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Quick Actions',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
             ),
-
-            const SizedBox(height: 16),
-
-            // Quick Actions Grid
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 1.1,
-              ),
-              itemCount: actions.length,
-              itemBuilder: (context, index) {
-                final action = actions[index];
-                return _buildQuickActionCard(context, action);
-              },
-            ),
-
-            // Add bottom padding to prevent overflow
-            const SizedBox(height: 16),
-          ],
-        );
-      },
+          ),
+          const SizedBox(height: 16),
+          GridView.count(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            children: _getDefaultActions().map((action) {
+              return _buildActionCard(context, action);
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildQuickActionCard(BuildContext context, dynamic action) {
+  Widget _buildActionCard(BuildContext context, Map<String, dynamic> action) {
     return InkWell(
-      onTap: () {
-        // Navigate to the action route
-        try {
-          Navigator.pushNamed(context, action.route, arguments: action.arguments);
-        } catch (e) {
-          // Fallback for routes that don't exist yet
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${action.title} feature coming soon!'),
-              action: SnackBarAction(
-                label: 'OK',
-                onPressed: () {},
-              ),
-            ),
-          );
-        }
-      },
-      borderRadius: BorderRadius.circular(16),
+      onTap: () => onActionTap(action['id']),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(16),
+          color: action['color'].withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Theme.of(context).dividerColor,
-            width: 1,
+            color: action['color'].withOpacity(0.3),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
           children: [
-            // Icon
-            Flexible(
-              flex: 2,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  action.icon,
-                  color: Theme.of(context).primaryColor,
-                  size: 20,
-                ),
-              ),
+            Icon(
+              action['icon'],
+              color: action['color'],
+              size: 32,
             ),
-
             const SizedBox(height: 8),
-
-            // Title
-            Flexible(
-              flex: 2,
-              child: Text(
-                action.title,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 11,
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+            Text(
+              action['title'],
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: action['color'],
               ),
+              textAlign: TextAlign.center,
             ),
-
-            const SizedBox(height: 2),
-
-            // Subtitle
-            Flexible(
-              flex: 1,
-              child: Text(
-                action.subtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontSize: 9,
-                  color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6),
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+            const SizedBox(height: 4),
+            Text(
+              action['subtitle'],
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: action['color'].withOpacity(0.8),
+                fontSize: 10,
               ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
       ),
     );
+  }
+
+  List<Map<String, dynamic>> _getDefaultActions() {
+    return [
+      {
+        'id': 'pay_premium',
+        'title': 'Pay Premium',
+        'subtitle': 'Make payment',
+        'icon': Icons.payment,
+        'color': Colors.green,
+      },
+      {
+        'id': 'file_claim',
+        'title': 'File Claim',
+        'subtitle': 'Submit new claim',
+        'icon': Icons.assignment,
+        'color': Colors.orange,
+      },
+      {
+        'id': 'download_docs',
+        'title': 'Documents',
+        'subtitle': 'Policy docs',
+        'icon': Icons.download,
+        'color': Colors.blue,
+      },
+      {
+        'id': 'contact_agent',
+        'title': 'Contact Agent',
+        'subtitle': 'Get help',
+        'icon': Icons.support_agent,
+        'color': Colors.purple,
+      },
+      {
+        'id': 'update_profile',
+        'title': 'Update Profile',
+        'subtitle': 'Edit details',
+        'icon': Icons.person,
+        'color': Colors.teal,
+      },
+      {
+        'id': 'view_history',
+        'title': 'Payment History',
+        'subtitle': 'View records',
+        'icon': Icons.history,
+        'color': Colors.indigo,
+      },
+    ];
   }
 }

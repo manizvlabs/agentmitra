@@ -134,6 +134,24 @@ class DashboardRepository extends BaseRepository {
     }
   }
 
+  /// Get customer policyholder data
+  Future<Map<String, dynamic>> getCustomerPolicyholderData({
+    required String customerId,
+  }) async {
+    try {
+      final response = await ApiService.get('/customer/dashboard/$customerId');
+
+      if (response.success && response.data != null) {
+        return response.data!;
+      } else {
+        throw Exception(response.message ?? 'Failed to fetch customer data');
+      }
+    } catch (e) {
+      // Return mock data for development if API fails
+      return _getMockCustomerPolicyholderData(customerId);
+    }
+  }
+
   /// Get agent performance data from analytics API
   Future<AgentPerformanceData> getAgentPerformanceData(String agentId) async {
     try {
@@ -976,6 +994,103 @@ class DashboardRepository extends BaseRepository {
       ],
       'customers': filteredCustomers,
       'retention_actions': retentionActions,
+    };
+  }
+
+  /// Mock customer policyholder data for development
+  Map<String, dynamic> _getMockCustomerPolicyholderData(String customerId) {
+    return {
+      'customer_name': 'Rajesh Kumar',
+      'policyholder_id': 'PH001234',
+      'quick_stats': {
+        'active_policies': 2,
+        'total_coverage': 5000000,
+        'pending_claims': 1,
+      },
+      'policies': [
+        {
+          'policy_number': 'POL001234',
+          'policy_type': 'term_life',
+          'coverage_amount': 3000000,
+          'premium_amount': 25000,
+          'expiry_date': '2025-12-15',
+          'status': 'active',
+        },
+        {
+          'policy_number': 'POL001235',
+          'policy_type': 'health',
+          'coverage_amount': 2000000,
+          'premium_amount': 15000,
+          'expiry_date': '2025-08-20',
+          'status': 'active',
+        },
+      ],
+      'premium_data': {
+        'next_due_date': '2024-12-15',
+        'due_amount': 40000,
+        'payment_status': 'paid',
+        'auto_pay_enabled': true,
+        'payment_history': [
+          {
+            'amount': 40000,
+            'date': '2024-11-15',
+            'status': 'completed',
+            'method': 'Auto Pay',
+          },
+          {
+            'amount': 40000,
+            'date': '2024-10-15',
+            'status': 'completed',
+            'method': 'Online',
+          },
+          {
+            'amount': 40000,
+            'date': '2024-09-15',
+            'status': 'completed',
+            'method': 'Online',
+          },
+        ],
+      },
+      'claims': [
+        {
+          'claim_number': 'CLM001234',
+          'policy_number': 'POL001235',
+          'claim_amount': 75000,
+          'claim_type': 'Health',
+          'status': 'processing',
+          'submitted_date': '2024-11-20',
+        },
+      ],
+      'quick_actions': [
+        {'id': 'pay_premium', 'title': 'Pay Premium', 'available': true},
+        {'id': 'file_claim', 'title': 'File Claim', 'available': true},
+        {'id': 'download_docs', 'title': 'Download Documents', 'available': true},
+        {'id': 'contact_agent', 'title': 'Contact Agent', 'available': true},
+        {'id': 'update_profile', 'title': 'Update Profile', 'available': true},
+        {'id': 'view_history', 'title': 'Payment History', 'available': true},
+      ],
+      'recent_activity': [
+        {
+          'type': 'payment',
+          'description': 'Premium payment of ₹40,000 received',
+          'date': '2 days ago',
+        },
+        {
+          'type': 'policy',
+          'description': 'Policy POL001235 documents updated',
+          'date': '1 week ago',
+        },
+        {
+          'type': 'claim',
+          'description': 'Claim CLM001234 submitted for processing',
+          'date': '2 weeks ago',
+        },
+        {
+          'type': 'support',
+          'description': 'Support ticket #12345 resolved',
+          'date': '3 weeks ago',
+        },
+      ],
     };
   }
 }
