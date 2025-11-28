@@ -5,8 +5,7 @@
 -- FIX 1: Correct foreign key reference for quote_sharing_analytics
 -- =====================================================
 
--- The quote_sharing_analytics table references lic_schema.daily_quotes.quote_id
--- but daily_quotes table is in the default schema, not lic_schema
+-- Fix quote relationships - both tables are in lic_schema
 
 DO $$
 BEGIN
@@ -14,9 +13,9 @@ BEGIN
     IF EXISTS (
         SELECT 1 FROM information_schema.table_constraints
         WHERE constraint_name = 'quote_sharing_analytics_quote_id_fkey'
-        AND table_schema = 'public'
+        AND table_schema = 'lic_schema'
     ) THEN
-        ALTER TABLE public.quote_sharing_analytics
+        ALTER TABLE lic_schema.quote_sharing_analytics
         DROP CONSTRAINT quote_sharing_analytics_quote_id_fkey;
     END IF;
 
@@ -24,11 +23,11 @@ BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.table_constraints
         WHERE constraint_name = 'fk_quote_sharing_analytics_quote'
-        AND table_schema = 'public'
+        AND table_schema = 'lic_schema'
     ) THEN
-        ALTER TABLE public.quote_sharing_analytics
+        ALTER TABLE lic_schema.quote_sharing_analytics
         ADD CONSTRAINT fk_quote_sharing_analytics_quote
-        FOREIGN KEY (quote_id) REFERENCES public.daily_quotes(quote_id) ON DELETE CASCADE;
+        FOREIGN KEY (quote_id) REFERENCES lic_schema.daily_quotes(quote_id) ON DELETE CASCADE;
     END IF;
 END $$;
 
@@ -42,20 +41,20 @@ BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.table_constraints
         WHERE constraint_name = 'fk_daily_quotes_agent'
-        AND table_schema = 'public'
+        AND table_schema = 'lic_schema'
     ) THEN
         -- First drop any existing incorrect constraint
         IF EXISTS (
             SELECT 1 FROM information_schema.table_constraints
             WHERE constraint_name = 'daily_quotes_agent_id_fkey'
-            AND table_schema = 'public'
+            AND table_schema = 'lic_schema'
         ) THEN
-            ALTER TABLE public.daily_quotes
+            ALTER TABLE lic_schema.daily_quotes
             DROP CONSTRAINT daily_quotes_agent_id_fkey;
         END IF;
 
         -- Add the correct constraint
-        ALTER TABLE public.daily_quotes
+        ALTER TABLE lic_schema.daily_quotes
         ADD CONSTRAINT fk_daily_quotes_agent
         FOREIGN KEY (agent_id) REFERENCES lic_schema.users(user_id) ON DELETE CASCADE;
     END IF;
@@ -71,20 +70,20 @@ BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.table_constraints
         WHERE constraint_name = 'fk_quote_sharing_analytics_agent'
-        AND table_schema = 'public'
+        AND table_schema = 'lic_schema'
     ) THEN
         -- First drop any existing incorrect constraint
         IF EXISTS (
             SELECT 1 FROM information_schema.table_constraints
             WHERE constraint_name = 'quote_sharing_analytics_agent_id_fkey'
-            AND table_schema = 'public'
+            AND table_schema = 'lic_schema'
         ) THEN
-            ALTER TABLE public.quote_sharing_analytics
+            ALTER TABLE lic_schema.quote_sharing_analytics
             DROP CONSTRAINT quote_sharing_analytics_agent_id_fkey;
         END IF;
 
         -- Add the correct constraint
-        ALTER TABLE public.quote_sharing_analytics
+        ALTER TABLE lic_schema.quote_sharing_analytics
         ADD CONSTRAINT fk_quote_sharing_analytics_agent
         FOREIGN KEY (agent_id) REFERENCES lic_schema.users(user_id) ON DELETE CASCADE;
     END IF;
@@ -100,22 +99,22 @@ BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.table_constraints
         WHERE constraint_name = 'fk_quote_performance_quote'
-        AND table_schema = 'public'
+        AND table_schema = 'lic_schema'
     ) THEN
         -- First drop any existing incorrect constraint
         IF EXISTS (
             SELECT 1 FROM information_schema.table_constraints
             WHERE constraint_name = 'quote_performance_quote_id_fkey'
-            AND table_schema = 'public'
+            AND table_schema = 'lic_schema'
         ) THEN
-            ALTER TABLE public.quote_performance
+            ALTER TABLE lic_schema.quote_performance
             DROP CONSTRAINT quote_performance_quote_id_fkey;
         END IF;
 
         -- Add the correct constraint
-        ALTER TABLE public.quote_performance
+        ALTER TABLE lic_schema.quote_performance
         ADD CONSTRAINT fk_quote_performance_quote
-        FOREIGN KEY (quote_id) REFERENCES public.daily_quotes(quote_id) ON DELETE CASCADE;
+        FOREIGN KEY (quote_id) REFERENCES lic_schema.daily_quotes(quote_id) ON DELETE CASCADE;
     END IF;
 END $$;
 
@@ -124,10 +123,10 @@ END $$;
 -- =====================================================
 
 -- Create indexes for better query performance
-CREATE INDEX IF NOT EXISTS idx_daily_quotes_agent_id ON public.daily_quotes(agent_id);
-CREATE INDEX IF NOT EXISTS idx_quote_sharing_analytics_quote_id ON public.quote_sharing_analytics(quote_id);
-CREATE INDEX IF NOT EXISTS idx_quote_sharing_analytics_agent_id ON public.quote_sharing_analytics(agent_id);
-CREATE INDEX IF NOT EXISTS idx_quote_performance_quote_id ON public.quote_performance(quote_id);
+CREATE INDEX IF NOT EXISTS idx_daily_quotes_agent_id ON lic_schema.daily_quotes(agent_id);
+CREATE INDEX IF NOT EXISTS idx_quote_sharing_analytics_quote_id ON lic_schema.quote_sharing_analytics(quote_id);
+CREATE INDEX IF NOT EXISTS idx_quote_sharing_analytics_agent_id ON lic_schema.quote_sharing_analytics(agent_id);
+CREATE INDEX IF NOT EXISTS idx_quote_performance_quote_id ON lic_schema.quote_performance(quote_id);
 
 -- =====================================================
 -- VERIFICATION: Check for orphaned records
@@ -139,8 +138,8 @@ DECLARE
 BEGIN
     -- Check for quote_sharing_analytics with invalid quote_id
     SELECT COUNT(*) INTO orphaned_count
-    FROM public.quote_sharing_analytics qsa
-    LEFT JOIN public.daily_quotes dq ON qsa.quote_id = dq.quote_id
+    FROM lic_schema.quote_sharing_analytics qsa
+    LEFT JOIN lic_schema.daily_quotes dq ON qsa.quote_id = dq.quote_id
     WHERE dq.quote_id IS NULL;
 
     IF orphaned_count > 0 THEN
@@ -149,7 +148,7 @@ BEGIN
 
     -- Check for daily_quotes with invalid agent_id
     SELECT COUNT(*) INTO orphaned_count
-    FROM public.daily_quotes dq
+    FROM lic_schema.daily_quotes dq
     LEFT JOIN lic_schema.users u ON dq.agent_id = u.user_id
     WHERE u.user_id IS NULL;
 

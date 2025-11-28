@@ -73,7 +73,7 @@ END $$;
 
 DO $$
 BEGIN
-    -- Add foreign key constraint for daily_quote_id in quote_sharing_analytics
+    -- Add foreign key constraint for quote_id in quote_sharing_analytics
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.table_constraints
         WHERE constraint_name = 'fk_quote_sharing_analytics_quote'
@@ -81,7 +81,7 @@ BEGIN
     ) THEN
         ALTER TABLE lic_schema.quote_sharing_analytics
         ADD CONSTRAINT fk_quote_sharing_analytics_quote
-        FOREIGN KEY (daily_quote_id) REFERENCES lic_schema.daily_quotes(daily_quote_id) ON DELETE CASCADE;
+        FOREIGN KEY (quote_id) REFERENCES lic_schema.daily_quotes(quote_id) ON DELETE CASCADE;
     END IF;
 END $$;
 
@@ -89,19 +89,9 @@ END $$;
 -- FIX 5: Ensure all tables have tenant_id foreign keys where applicable
 -- =====================================================
 
-DO $$
-BEGIN
-    -- Add tenant foreign key constraints for tables that reference tenants
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.table_constraints
-        WHERE constraint_name = 'fk_users_tenant'
-        AND table_schema = 'lic_schema'
-    ) THEN
-        ALTER TABLE lic_schema.users
-        ADD CONSTRAINT fk_users_tenant
-        FOREIGN KEY (tenant_id) REFERENCES lic_schema.tenants(tenant_id) ON DELETE CASCADE;
-    END IF;
-END $$;
+-- Note: Skipping tenant foreign key constraints for now as existing data
+-- doesn't have valid tenant references. This should be handled in a separate
+-- migration after tenant data is properly seeded.
 
 -- =====================================================
 -- FIX 6: Add missing indexes for performance
@@ -112,7 +102,7 @@ CREATE INDEX IF NOT EXISTS idx_subscription_changes_user_id ON lic_schema.subscr
 CREATE INDEX IF NOT EXISTS idx_subscription_changes_subscription_id ON lic_schema.subscription_changes(subscription_id);
 CREATE INDEX IF NOT EXISTS idx_leads_converted_policy_id ON lic_schema.leads(converted_policy_id);
 CREATE INDEX IF NOT EXISTS idx_customer_retention_customer_id ON lic_schema.customer_retention_analytics(customer_id);
-CREATE INDEX IF NOT EXISTS idx_quote_sharing_analytics_quote_id ON lic_schema.quote_sharing_analytics(daily_quote_id);
+CREATE INDEX IF NOT EXISTS idx_quote_sharing_analytics_quote_id ON lic_schema.quote_sharing_analytics(quote_id);
 
 -- =====================================================
 -- VERIFICATION: Check for any remaining orphaned records

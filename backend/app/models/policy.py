@@ -150,7 +150,7 @@ class InsurancePolicy(Base, TimestampMixin):
 
 class PremiumPayment(Base, TimestampMixin):
     """Premium payment model matching lic_schema.premium_payments"""
-    __tablename__ = "premium_payments"
+    __tablename__ = "policy_premium_payments"
     __table_args__ = {'schema': 'lic_schema'}
 
     payment_id = Column(UUID(as_uuid=True), primary_key=True)
@@ -195,7 +195,7 @@ class Commission(Base, TimestampMixin):
     # Commission details
     agent_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.agents.agent_id"), nullable=False)
     policy_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.insurance_policies.policy_id"), nullable=False)
-    payment_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.premium_payments.payment_id"), nullable=False)
+    payment_id = Column(UUID(as_uuid=True), ForeignKey("policy_premium_payments.payment_id"), nullable=False)
 
     # Commission calculation
     commission_amount = Column(DECIMAL(10, 2), nullable=False)

@@ -146,7 +146,7 @@ class SubscriptionChange(Base, TimestampMixin):
 
     # Relationships
     subscription = relationship("UserSubscription", back_populates="changes")
-    user = relationship("User", back_populates="subscription_changes")
+    user = relationship("User", back_populates="subscription_changes", foreign_keys=[user_id])
     from_plan = relationship("SubscriptionPlan", foreign_keys=[from_plan_id])
     to_plan = relationship("SubscriptionPlan", foreign_keys=[to_plan_id])
     initiator = relationship("User", foreign_keys=[initiated_by])

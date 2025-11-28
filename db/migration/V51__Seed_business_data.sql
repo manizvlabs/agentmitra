@@ -433,7 +433,7 @@ ON CONFLICT (quote_id) DO NOTHING;
 -- STEP 7: Seed Daily Quotes for Testing
 -- =====================================================
 
-INSERT INTO public.daily_quotes (
+INSERT INTO lic_schema.daily_quotes (
     quote_id,
     agent_id,
     quote_text,
@@ -488,7 +488,7 @@ BEGIN
     SELECT COUNT(*) INTO lead_count FROM lic_schema.leads;
     SELECT COUNT(*) INTO retention_count FROM lic_schema.customer_retention_analytics;
     SELECT COUNT(*) INTO quote_count FROM lic_schema.quotes;
-    SELECT COUNT(*) INTO daily_quote_count FROM public.daily_quotes;
+    SELECT COUNT(*) INTO daily_quote_count FROM lic_schema.daily_quotes;
 
     RAISE NOTICE 'Seeded: % products, % policies, % payments, % leads, % retention records, % quotes, % daily quotes',
         product_count, policy_count, payment_count, lead_count, retention_count, quote_count, daily_quote_count;

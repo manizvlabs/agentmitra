@@ -318,7 +318,7 @@ class AnalyticsRepository:
                 COALESCE(SUM(CASE WHEN pm.payment_date >= CURRENT_DATE - INTERVAL '30 days' THEN pm.amount ELSE 0 END), 0) as monthly_revenue,
                 COALESCE(SUM(CASE WHEN pm.payment_date >= CURRENT_DATE - INTERVAL '90 days' THEN pm.amount ELSE 0 END), 0) as quarterly_revenue,
                 COALESCE(SUM(CASE WHEN EXTRACT(YEAR FROM pm.payment_date) = EXTRACT(YEAR FROM CURRENT_DATE) THEN pm.amount ELSE 0 END), 0) as yearly_revenue
-            FROM lic_schema.premium_payments pm
+            FROM lic_schema.policy_premium_payments pm
             JOIN lic_schema.insurance_policies p ON pm.policy_id = p.policy_id
             WHERE pm.status = 'completed'
             {agent_filter}
@@ -343,7 +343,7 @@ class AnalyticsRepository:
             SELECT
                 pr.provider_name,
                 COALESCE(SUM(pm.amount), 0) as revenue
-            FROM lic_schema.premium_payments pm
+            FROM lic_schema.policy_premium_payments pm
             JOIN lic_schema.insurance_policies p ON pm.policy_id = p.policy_id
             JOIN shared.insurance_providers pr ON p.provider_id = pr.provider_id
             WHERE pm.status = 'completed'
@@ -358,7 +358,7 @@ class AnalyticsRepository:
             SELECT
                 DATE_TRUNC('month', pm.payment_date) as month,
                 COALESCE(SUM(pm.amount), 0) as revenue
-            FROM lic_schema.premium_payments pm
+            FROM lic_schema.policy_premium_payments pm
             JOIN lic_schema.insurance_policies p ON pm.policy_id = p.policy_id
             WHERE pm.status = 'completed'
             AND pm.payment_date >= CURRENT_DATE - INTERVAL '12 months'
@@ -523,7 +523,7 @@ class AnalyticsRepository:
             SELECT
                 DATE_TRUNC('month', pm.payment_date) as month,
                 COALESCE(SUM(pm.amount), 0) as revenue
-            FROM lic_schema.premium_payments pm
+            FROM lic_schema.policy_premium_payments pm
             JOIN lic_schema.insurance_policies p ON pm.policy_id = p.policy_id
             WHERE pm.status = 'completed'
             AND pm.payment_date >= CURRENT_DATE - INTERVAL '{months} months'
