@@ -175,7 +175,7 @@ class VideoProcessingService:
                 (
                     ffmpeg
                     .input(video_path, ss=timestamp)
-                    .output(thumbnail_path, vframes=1, q=v=2)
+                    .output(thumbnail_path, vframes=1, q=2)
                     .run(cmd=self.ffmpeg_path, quiet=True)
                 )
 

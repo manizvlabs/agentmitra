@@ -14,7 +14,7 @@ from datetime import datetime
 import uuid
 import enum
 
-from app.models.base import Base, TimestampMixin
+from app.models.base import Base, TimestampMixin, AuditMixin
 
 
 class CallbackRequest(Base):
@@ -215,7 +215,7 @@ class Callback(Base, TimestampMixin, AuditMixin):
 
     # Additional metadata
     tags = Column(JSONB, nullable=True)
-    metadata = Column(JSONB, nullable=True)
+    callback_metadata = Column(JSONB, nullable=True)
 
     def __repr__(self):
         return f"<Callback(id={self.id}, callback_id={self.callback_id}, priority={self.priority.value}, status={self.status.value})>"
@@ -241,7 +241,7 @@ class CallbackHistory(Base, TimestampMixin):
     action_notes = Column(Text, nullable=True)
 
     # Metadata
-    metadata = Column(JSONB, nullable=True)
+    callback_metadata = Column(JSONB, nullable=True)
 
     def __repr__(self):
         return f"<CallbackHistory(id={self.id}, callback_id={self.callback_id}, action={self.action})>"

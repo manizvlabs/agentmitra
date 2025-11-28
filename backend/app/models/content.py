@@ -37,7 +37,7 @@ class Content(Base, TimestampMixin, AuditMixin):
 
     # Metadata
     tags = Column(JSON, nullable=True)  # List of tags
-    metadata = Column(JSON, nullable=True)  # Additional metadata
+    content_metadata = Column(JSON, nullable=True)  # Additional metadata
     description = Column(Text, nullable=True)
 
     # Processing information

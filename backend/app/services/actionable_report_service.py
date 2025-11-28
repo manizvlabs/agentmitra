@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from app.core.config.settings import settings
 from app.core.monitoring import monitoring
 from app.core.logging_config import get_logger
-from app.models.callback import Callback, CallbackStatus, CallbackPriority
+from app.models.callback import Callback, CallbackStatus, PriorityLevel
 from app.models.user import User
 
 logger = get_logger(__name__)
