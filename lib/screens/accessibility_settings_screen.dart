@@ -128,8 +128,8 @@ class _AccessibilitySettingsScreenState extends State<AccessibilitySettingsScree
                     children: [
                       Slider(
                         value: _fontSize,
-                        min: AccessibilityService._minFontSize,
-                        max: AccessibilityService._maxFontSize,
+                        min: 14.0,
+                        max: 24.0,
                         divisions: 8,
                         label: '${_fontSize.toInt()}px',
                         onChanged: (value) {
@@ -311,7 +311,7 @@ class _AccessibilitySettingsScreenState extends State<AccessibilitySettingsScree
                   child: TextButton(
                     onPressed: () {
                       setState(() {
-                        _fontSize = AccessibilityService._defaultFontSize;
+                        _fontSize = 16.0;
                         _highContrast = false;
                         _reduceMotion = false;
                         _screenReaderEnabled = false;

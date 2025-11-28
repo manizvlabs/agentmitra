@@ -118,9 +118,9 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       });
 
       // Wait a bit for smooth UX, then navigate
-      Timer(const Duration(milliseconds: 1500), () {
+      Timer(const Duration(milliseconds: 1500), () async {
         if (mounted) {
-          _navigateBasedOnState();
+          await _navigateBasedOnState();
         }
       });
 
@@ -132,16 +132,16 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
         _validationStatus = 'Proceeding with limited features...';
       });
 
-      Timer(const Duration(milliseconds: 1000), () {
+      Timer(const Duration(milliseconds: 1000), () async {
         if (mounted) {
-          _navigateBasedOnState();
+          await _navigateBasedOnState();
         }
       });
     }
   }
 
   /// Navigate based on authentication and feature flag validation
-  void _navigateBasedOnState() {
+  Future<void> _navigateBasedOnState() async {
     if (!mounted) return;
 
     final authViewModel = provider.Provider.of<AuthViewModel>(context, listen: false);
@@ -159,7 +159,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     // Navigate based on authentication status
     if (isAuthenticated) {
       // Check user role for appropriate dashboard
-      final currentUser = AuthService().currentUser;
+      final currentUser = await AuthService().getCurrentUser(context);
       if (currentUser?.role == 'agent' || currentUser?.role?.contains('agent') == true) {
         Navigator.of(context).pushReplacementNamed('/agent-dashboard');
       } else {

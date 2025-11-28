@@ -7,13 +7,14 @@ import 'core/services/storage_service.dart';
 import 'core/services/pioneer_service.dart';
 import 'core/di/service_locator.dart';
 import 'core/providers/global_providers.dart';
+import 'core/config/app_config.dart';
 import 'shared/theme/app_theme.dart';
 import 'features/presentations/presentation/viewmodels/presentation_viewmodel.dart';
 // Import all screens for web-compatible routing (no GoRouter)
 import 'screens/splash_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'screens/phone_verification_screen.dart';
-import 'screens/trial_setup_screen.dart';
+// import 'screens/trial_setup_screen.dart'; // Temporarily disabled
 import 'screens/trial_expiration_screen.dart';
 import 'screens/policy_details_screen.dart';
 import 'screens/customer_dashboard.dart';
@@ -47,7 +48,7 @@ import 'screens/agent_chat_screen.dart';
 import 'screens/reminders_screen.dart';
 import 'screens/callback_request_management.dart';
 import 'screens/global_search_screen.dart';
-import 'screens/test_phase1_screen.dart';
+// import 'screens/test_phase1_screen.dart'; // Temporarily disabled
 import 'screens/pioneer_demo_screen.dart';
 import 'features/presentations/presentation/pages/presentation_list_page.dart';
 import 'features/presentations/presentation/pages/presentation_editor_page.dart';
@@ -125,7 +126,7 @@ void main() async {
 
   // Initialize app configuration
   try {
-    await AppConfig().initialize();
+    await AppConfig.initialize();
     print('App configuration initialized successfully');
   } catch (e) {
     print('App configuration initialization failed: $e');
@@ -156,11 +157,15 @@ void main() async {
   try {
     // Pioneer configuration from environment variables
     final config = AppConfig();
-    await PioneerService.initialize(
-      useMock: !config.pioneerEnabled, // Use real Pioneer if enabled in config
-      scoutUrl: config.pioneerScoutUrl,
-      sdkKey: config.pioneerApiKey,
-    );
+    if (config.pioneerEnabled) {
+      await PioneerService.initialize(
+        scoutUrl: config.pioneerScoutUrl,
+        sdkKey: config.pioneerApiKey,
+      );
+      print('Pioneer initialized with real service');
+    } else {
+      print('Pioneer mock mode - not initializing real service');
+    }
     print('Pioneer initialized successfully (${config.pioneerEnabled ? 'real mode' : 'mock mode'})');
   } catch (e) {
     print('Pioneer initialization failed: $e');
@@ -343,7 +348,7 @@ class AgentMitraApp extends ConsumerWidget {
     '/login': (context) => const LoginPage(),
 
     // Onboarding Flow (Protected - requires authentication)
-    '/trial-setup': _protectedRoute((context) => const TrialSetupScreen()),
+    // '/trial-setup': _protectedRoute((context) => const TrialSetupScreen()), // Temporarily disabled
     '/onboarding': _protectedRoute((context) => const OnboardingPage()),
     '/trial-expiration': _protectedRoute((context) => const TrialExpirationScreen()),
 
@@ -408,7 +413,7 @@ class AgentMitraApp extends ConsumerWidget {
     ),
 
     // Phase 1 Test Screen (Public for testing)
-    '/test-phase1': (context) => const TestPhase1Screen(),
+    // '/test-phase1': (context) => const TestPhase1Screen(), // Temporarily disabled
     '/pioneer-demo': (context) => const PioneerDemoScreen(),
     '/data-pending': _protectedRoute((context) => const DataPendingScreen()),
 

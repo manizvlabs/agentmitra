@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/services/api_service.dart';
 import '../core/services/auth_service.dart';
-import '../shared/widgets/loading_overlay.dart';
+import '../core/widgets/loading/loading_overlay.dart';
 
 class CustomersScreen extends StatefulWidget {
   const CustomersScreen({super.key});
@@ -37,7 +37,8 @@ class _CustomersScreenState extends State<CustomersScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final response = await ApiService.get('/api/v1/customers/agent/${AuthService().currentUser?.id}');
+      final currentUser = await AuthService().getCurrentUser(context);
+      final response = await ApiService.get('/api/v1/customers/agent/${currentUser?.id}');
       setState(() {
         _customers = List<Map<String, dynamic>>.from(response['data'] ?? []);
         _applyFilters();

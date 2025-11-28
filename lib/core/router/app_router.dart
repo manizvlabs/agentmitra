@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../screens/splash_screen.dart';
 import '../../screens/welcome_screen.dart';
 import '../../screens/phone_verification_screen.dart';
-import '../../screens/trial_setup_screen.dart';
+// import '../../screens/trial_setup_screen.dart'; // Temporarily disabled
 import '../../screens/trial_expiration_screen.dart';
 import '../../screens/policy_details_screen.dart';
 import '../../screens/customer_dashboard.dart';
@@ -87,11 +87,11 @@ class AppRouter {
       ),
 
       // Onboarding Flow
-      GoRoute(
-        path: '/trial-setup',
-        name: 'trial-setup',
-        builder: (context, state) => const TrialSetupScreen(),
-      ),
+      // GoRoute( // Temporarily disabled - TrialSetupScreen has syntax issues
+      //   path: '/trial-setup',
+      //   name: 'trial-setup',
+      //   builder: (context, state) => const TrialSetupScreen(),
+      // ),
 
       GoRoute(
         path: '/onboarding',

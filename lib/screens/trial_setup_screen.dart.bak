@@ -128,7 +128,7 @@ class _TrialSetupScreenState extends State<TrialSetupScreen> with TickerProvider
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-              const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
               // Trial activated banner
               Container(
@@ -594,7 +594,7 @@ class _TrialSetupScreenState extends State<TrialSetupScreen> with TickerProvider
                   const SizedBox(height: 40),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -741,13 +741,6 @@ class _TrialSetupScreenState extends State<TrialSetupScreen> with TickerProvider
             child: const Text('Upload Profile Picture'),
           ),
         ],
-      ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+      );
   }
 }

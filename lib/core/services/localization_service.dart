@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'dart:ui';
+import 'package:intl/intl.dart';
 
 /// Localization service for multi-language support
 class LocalizationService {

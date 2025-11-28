@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/services/api_service.dart';
 import '../core/services/auth_service.dart';
-import '../shared/widgets/loading_overlay.dart';
+import '../core/widgets/loading/loading_overlay.dart';
 
 class CreateNewPolicyScreen extends StatefulWidget {
   const CreateNewPolicyScreen({super.key});
@@ -425,8 +425,8 @@ class _CreateNewPolicyScreenState extends State<CreateNewPolicyScreen> {
         'term_years': _termYears,
         'payment_frequency': _paymentFrequency,
         'estimated_annual_premium': _calculateEstimatedPremium(),
-        'user_id': AuthService().currentUser?.id,
-        'agent_id': AuthService().currentUser?.agentId, // Assuming user has agent relationship
+        'user_id': (await AuthService().getCurrentUser(context))?.id,
+        'agent_id': (await AuthService().getCurrentUser(context))?.agentId, // Assuming user has agent relationship
       };
 
       // Create policy
