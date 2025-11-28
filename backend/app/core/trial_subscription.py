@@ -338,13 +338,23 @@ class TrialSubscriptionService:
                 "converted_trials": converted_trials,
                 "conversion_rate": round(conversion_rate, 2),
                 "average_trial_duration": round(avg_duration or 0, 1),
-                "trials_by_plan_type": {plan.plan_type: plan.count for plan in plan_types},
+                "trials_by_plan_type": {plan.plan_type: plan.count for plan in plan_types} if plan_types else {},
                 "trials_expiring_soon": expiring_soon or 0
             }
 
         except Exception as e:
             logger.error(f"Error getting trial analytics: {e}")
-            return {}
+            # Return default values instead of empty dict
+            return {
+                "total_trial_users": 0,
+                "active_trials": 0,
+                "expired_trials": 0,
+                "converted_trials": 0,
+                "conversion_rate": 0.0,
+                "average_trial_duration": 0.0,
+                "trials_by_plan_type": {},
+                "trials_expiring_soon": 0
+            }
 
     def get_expiring_trials(self, days: int = 7) -> List[Dict[str, Any]]:
         """Get trials expiring within specified days"""
