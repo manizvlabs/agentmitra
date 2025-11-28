@@ -464,11 +464,65 @@ class ChatbotService:
         return None
 
     async def search_knowledge_base(self, query: str, limit: int = 5) -> List[KnowledgeBaseArticle]:
-        """Search knowledge base articles"""
+        """Search knowledge base articles using full-text search"""
 
-        # In a real implementation, perform semantic search on vectorized content
-        # For now, return mock results
-        return []
+        try:
+            # Perform full-text search on title and content
+            search_query = f"%{query.lower()}%"
+            result = self.db.execute("""
+                SELECT id, article_id, title, content, category, tags, language, difficulty_level,
+                       target_audience, view_count, helpful_votes, created_at
+                FROM knowledge_base_articles
+                WHERE is_published = true
+                  AND (LOWER(title) LIKE :query
+                       OR LOWER(content) LIKE :query
+                       OR LOWER(category) LIKE :query
+                       OR EXISTS (SELECT 1 FROM jsonb_array_elements_text(tags) AS tag
+                                WHERE LOWER(tag) LIKE :query))
+                ORDER BY
+                  CASE
+                    WHEN LOWER(title) LIKE :query THEN 1
+                    WHEN LOWER(content) LIKE :query THEN 2
+                    WHEN LOWER(category) LIKE :query THEN 3
+                    ELSE 4
+                  END,
+                  helpful_votes DESC,
+                  view_count DESC
+                LIMIT :limit
+            """, {"query": search_query, "limit": limit})
+
+            articles = []
+            for row in result:
+                article = KnowledgeBaseArticle(
+                    article_id=row.article_id,
+                    title=row.title,
+                    content=row.content,
+                    category=row.category,
+                    tags=row.tags,
+                    language=row.language,
+                    difficulty_level=row.difficulty_level,
+                    target_audience=row.target_audience,
+                    view_count=row.view_count,
+                    helpful_votes=row.helpful_votes,
+                    created_at=row.created_at
+                )
+                articles.append(article)
+
+            # Update view counts
+            if articles:
+                article_ids = [a.article_id for a in articles]
+                self.db.execute("""
+                    UPDATE knowledge_base_articles
+                    SET view_count = view_count + 1
+                    WHERE article_id = ANY(:article_ids)
+                """, {"article_ids": article_ids})
+                self.db.commit()
+
+            return articles
+
+        except Exception as e:
+            logger.error(f"Knowledge base search failed: {e}")
+            return []
 
     # Intent Management Methods
 

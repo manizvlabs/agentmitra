@@ -10,6 +10,8 @@ import os
 import uuid
 import json
 import logging
+import tempfile
+import shutil
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Any, Tuple
 from pathlib import Path
@@ -25,6 +27,7 @@ from app.core.monitoring import monitoring
 from app.core.logging_config import get_logger
 from app.services.content_management_service import ContentManagementService
 from app.services.minio_storage_service import get_minio_service, MinIOStorageService
+from app.services.video_processing_service import VideoProcessingService
 from app.models.content import (
     Content,
     VideoTutorial,
@@ -45,6 +48,7 @@ class VideoTutorialService:
         self.db = db
         self.content_service = ContentManagementService(db)
         self.minio_service = get_minio_service()
+        self.video_processor = VideoProcessingService()
 
         # YouTube API configuration
         self.youtube_api_key = os.getenv("YOUTUBE_API_KEY")
@@ -531,26 +535,26 @@ class VideoTutorialService:
             raise HTTPException(status_code=400, detail=f"Unsupported video format. Allowed: {', '.join(allowed_types)}")
 
     async def _start_video_processing(self, video_tutorial: VideoTutorial, content_result: Dict[str, Any]):
-        """Start background video processing pipeline"""
-        # This would typically be handled by a background task queue (Celery, etc.)
-        # For now, we'll simulate the processing
+        """Start background video processing pipeline using real FFmpeg and AI services"""
+        # Note: In production, this should be moved to a background task queue (Celery, etc.)
+        # for better performance and reliability
 
         try:
             # Update processing status
             video_tutorial.processing_status = "processing"
             self.db.commit()
 
-            # Simulate processing steps:
-            # 1. Generate thumbnail
-            # 2. Extract metadata
-            # 3. Upload to YouTube
-            # 4. Generate transcription
-            # 5. Create search tags
-
-            # In a real implementation, these would be async background tasks
+            # Execute real processing pipeline:
+            # 1. Extract video metadata using FFmpeg
             await self._process_video_metadata(video_tutorial, content_result)
+
+            # 2. Upload to YouTube using YouTube Data API v3
             await self._upload_to_youtube(video_tutorial, content_result)
+
+            # 3. Generate transcription using OpenAI Whisper
             await self._generate_transcription(video_tutorial)
+
+            # 4. Generate search tags using AI analysis
             await self._generate_search_tags(video_tutorial)
 
             # Mark as completed
@@ -564,40 +568,231 @@ class VideoTutorialService:
             self.db.commit()
 
     async def _process_video_metadata(self, video_tutorial: VideoTutorial, content_result: Dict[str, Any]):
-        """Extract video metadata"""
-        # In a real implementation, this would use ffmpeg or similar to extract metadata
-        # For now, we'll set some default values
-        video_tutorial.duration_seconds = 300  # 5 minutes default
-        video_tutorial.video_resolution = "1920x1080"
-        video_tutorial.video_codec = "H.264"
+        """Extract video metadata using real video processing"""
+        try:
+            # Get video file from MinIO temporarily for processing
+            temp_video_path = f"/tmp/{video_tutorial.video_id}_{content_result['filename']}"
+
+            # Download video for processing
+            await self.minio_service.download_file(content_result['storage_key'], temp_video_path)
+
+            # Extract metadata
+            metadata = await self.video_processor.extract_video_metadata(temp_video_path)
+
+            # Update video tutorial with real metadata
+            video_tutorial.duration_seconds = metadata['duration_seconds']
+            video_tutorial.video_resolution = metadata['video_resolution']
+            video_tutorial.video_codec = metadata['video_codec']
+            video_tutorial.video_bitrate = metadata['video_bitrate']
+
+            # Clean up temp file
+            os.remove(temp_video_path)
+
+            logger.info(f"Processed metadata for video {video_tutorial.video_id}: {metadata}")
+
+        except Exception as e:
+            logger.error(f"Failed to process video metadata: {e}")
+            # Set fallback values
+            video_tutorial.duration_seconds = 300
+            video_tutorial.video_resolution = "1920x1080"
+            video_tutorial.video_codec = "H.264"
 
     async def _upload_to_youtube(self, video_tutorial: VideoTutorial, content_result: Dict[str, Any]):
-        """Upload video to YouTube channel"""
-        if not self.youtube_api_key:
-            logger.warning("YouTube API key not configured, skipping YouTube upload")
+        """Upload video to YouTube channel using YouTube Data API v3"""
+        if not settings.youtube_api_key or not settings.youtube_upload_enabled:
+            logger.info("YouTube upload disabled or not configured")
             return
 
-        # This would implement YouTube Data API v3 upload
-        # For now, we'll simulate a successful upload
-        video_tutorial.youtube_video_id = f"yt_{uuid.uuid4().hex[:11]}"
-        video_tutorial.youtube_url = f"https://www.youtube.com/watch?v={video_tutorial.youtube_video_id}"
-        video_tutorial.youtube_upload_status = "uploaded"
+        try:
+            import googleapiclient.discovery
+            import googleapiclient.errors
+            from google.oauth2.credentials import Credentials
+
+            # Initialize YouTube API client
+            youtube = googleapiclient.discovery.build(
+                "youtube", "v3",
+                developerKey=settings.youtube_api_key
+            )
+
+            # Download video file for upload
+            temp_video_path = f"/tmp/{video_tutorial.video_id}_youtube_{content_result['filename']}"
+            await self.minio_service.download_file(content_result['storage_key'], temp_video_path)
+
+            # Prepare video metadata for YouTube
+            video_metadata = {
+                'snippet': {
+                    'title': video_tutorial.title,
+                    'description': self._generate_youtube_description(video_tutorial),
+                    'tags': self._generate_youtube_tags(video_tutorial),
+                    'categoryId': '27'  # Education category
+                },
+                'status': {
+                    'privacyStatus': settings.youtube_default_privacy,
+                    'embeddable': True,
+                    'license': 'youtube'
+                }
+            }
+
+            # Upload video to YouTube
+            media_body = googleapiclient.http.MediaFileUpload(
+                temp_video_path,
+                chunksize=-1,
+                resumable=True
+            )
+
+            request = youtube.videos().insert(
+                part=",".join(video_metadata.keys()),
+                body=video_metadata,
+                media_body=media_body
+            )
+
+            response = request.execute()
+
+            # Update video tutorial with YouTube info
+            video_tutorial.youtube_video_id = response['id']
+            video_tutorial.youtube_url = f"https://www.youtube.com/watch?v={response['id']}"
+            video_tutorial.youtube_upload_status = "uploaded"
+
+            # Clean up temp file
+            os.remove(temp_video_path)
+
+            logger.info(f"Successfully uploaded video {video_tutorial.video_id} to YouTube: {video_tutorial.youtube_url}")
+
+        except Exception as e:
+            logger.error(f"YouTube upload failed for video {video_tutorial.video_id}: {e}")
+            video_tutorial.youtube_upload_status = "failed"
 
     async def _generate_transcription(self, video_tutorial: VideoTutorial):
         """Generate video transcription using AI services"""
-        # This would use OpenAI Whisper or similar service
-        video_tutorial.transcription_status = "completed"
+        try:
+            # Get video file path
+            content = self.db.query(Content).filter(Content.id == video_tutorial.content_id).first()
+            if not content:
+                raise ValueError(f"Content not found for video {video_tutorial.video_id}")
+
+            # Download video and extract audio
+            temp_dir = f"/tmp/transcription_{video_tutorial.video_id}"
+            os.makedirs(temp_dir, exist_ok=True)
+
+            temp_video_path = os.path.join(temp_dir, content.filename)
+            temp_audio_path = os.path.join(temp_dir, f"{video_tutorial.video_id}.mp3")
+
+            # Download video
+            await self.minio_service.download_file(content.storage_key, temp_video_path)
+
+            # Extract audio
+            await self.video_processor.extract_audio_for_transcription(temp_video_path, temp_audio_path)
+
+            # Transcribe audio
+            transcription_result = await self.video_processor.transcribe_audio(temp_audio_path)
+
+            # Store transcription in video metadata or separate table
+            # For now, we'll store in metadata as JSON
+            transcription_data = {
+                'text': transcription_result['text'],
+                'language': transcription_result['language'],
+                'duration': transcription_result['duration'],
+                'segments': transcription_result['segments'],
+                'generated_at': datetime.utcnow().isoformat()
+            }
+
+            # Update video metadata
+            if video_tutorial.metadata:
+                video_tutorial.metadata.update({'transcription': transcription_data})
+            else:
+                video_tutorial.metadata = {'transcription': transcription_data}
+
+            video_tutorial.transcription_status = "completed"
+
+            # Cleanup
+            shutil.rmtree(temp_dir, ignore_errors=True)
+
+            logger.info(f"Generated transcription for video {video_tutorial.video_id}: {len(transcription_result['text'])} characters")
+
+        except Exception as e:
+            logger.error(f"Transcription failed for video {video_tutorial.video_id}: {e}")
+            video_tutorial.transcription_status = "failed"
 
     async def _generate_search_tags(self, video_tutorial: VideoTutorial):
-        """Generate search tags and keywords using AI"""
-        # This would analyze video content and metadata to generate relevant tags
-        base_tags = [video_tutorial.category, video_tutorial.difficulty_level, video_tutorial.language]
-        if video_tutorial.policy_types:
-            base_tags.extend(video_tutorial.policy_types)
-        if video_tutorial.target_audience:
-            base_tags.extend(video_tutorial.target_audience)
+        """Generate search tags and keywords using AI analysis"""
+        try:
+            import openai
 
-        video_tutorial.search_tags = base_tags
+            # Initialize OpenAI client
+            client = openai.OpenAI(api_key=settings.openai_api_key)
+
+            # Prepare content for analysis
+            content_to_analyze = f"""
+            Title: {video_tutorial.title}
+            Description: {video_tutorial.description or ''}
+            Category: {video_tutorial.category}
+            Difficulty: {video_tutorial.difficulty_level}
+            Target Audience: {', '.join(video_tutorial.target_audience or [])}
+            Policy Types: {', '.join(video_tutorial.policy_types or [])}
+            Language: {video_tutorial.language}
+            """
+
+            # Add transcription if available
+            if video_tutorial.metadata and 'transcription' in video_tutorial.metadata:
+                transcription = video_tutorial.metadata['transcription']
+                content_to_analyze += f"\nTranscription: {transcription['text'][:1000]}"  # First 1000 chars
+
+            # Generate tags using AI
+            prompt = f"""
+            Analyze the following video tutorial content and generate relevant search tags and keywords.
+
+            Content:
+            {content_to_analyze}
+
+            Generate:
+            1. 5-10 primary keywords that users might search for
+            2. Related terms and synonyms
+            3. Category-specific tags
+            4. Difficulty-appropriate terms
+
+            Return as a JSON array of strings, focusing on terms that insurance customers would actually search for.
+            """
+
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=200,
+                temperature=0.3
+            )
+
+            # Parse AI response
+            ai_response = response.choices[0].message.content.strip()
+            try:
+                # Try to parse as JSON first
+                tags = json.loads(ai_response)
+            except:
+                # Fallback: extract tags from text
+                tags = [tag.strip() for tag in ai_response.replace('[', '').replace(']', '').replace('"', '').split(',') if tag.strip()]
+
+            # Add base tags
+            base_tags = [video_tutorial.category, video_tutorial.difficulty_level, video_tutorial.language]
+            if video_tutorial.policy_types:
+                base_tags.extend(video_tutorial.policy_types)
+            if video_tutorial.target_audience:
+                base_tags.extend(video_tutorial.target_audience)
+
+            # Combine and deduplicate
+            all_tags = list(set(base_tags + tags))
+            video_tutorial.search_tags = all_tags[:50]  # Limit to 50 tags
+
+            # Generate keywords from transcription if available
+            keywords = self._extract_keywords_from_transcription(video_tutorial)
+            video_tutorial.keywords = keywords
+
+            logger.info(f"Generated {len(video_tutorial.search_tags)} search tags for video {video_tutorial.video_id}")
+
+        except Exception as e:
+            logger.error(f"Tag generation failed for video {video_tutorial.video_id}: {e}")
+            # Fallback to basic tags
+            base_tags = [video_tutorial.category, video_tutorial.difficulty_level, video_tutorial.language]
+            if video_tutorial.policy_types:
+                base_tags.extend(video_tutorial.policy_types)
+            video_tutorial.search_tags = base_tags
 
     async def _calculate_recommendation_score(
         self,
@@ -625,9 +820,9 @@ class VideoTutorialService:
             context_score = self._calculate_policy_context_score(video, context["policy_types"])
             score += context_score * 0.20
 
-        # Agent expertise score (15% weight)
-        # This would consider agent performance metrics
-        score += 0.15  # Placeholder
+        # Agent expertise score (15% weight) - based on agent's video performance
+        agent_score = await self._calculate_agent_expertise_score(video.agent_id)
+        score += agent_score * 0.15
 
         # Content freshness score (5% weight)
         freshness_score = self._calculate_freshness_score(video)
@@ -742,6 +937,117 @@ class VideoTutorialService:
 
     async def __aenter__(self):
         return self
+
+    def _generate_youtube_description(self, video_tutorial: VideoTutorial) -> str:
+        """Generate YouTube description for video"""
+        description = f"{video_tutorial.description or ''}\n\n"
+
+        # Add agent information
+        description += f"Created by: {video_tutorial.agent_name}\n"
+
+        # Add policy information if available
+        if video_tutorial.policy_types:
+            description += f"Related Policies: {', '.join(video_tutorial.policy_types)}\n"
+
+        # Add category and tags
+        description += f"Category: {video_tutorial.category}\n"
+        if video_tutorial.search_tags:
+            description += f"Tags: {', '.join(video_tutorial.search_tags[:10])}\n"
+
+        # Add call-to-action
+        description += "\nDownload the Agent Mitra app for more insurance tutorials and personalized assistance.\n"
+        description += "#Insurance #Tutorial #AgentMitra"
+
+        return description[:5000]  # YouTube description limit
+
+    def _generate_youtube_tags(self, video_tutorial: VideoTutorial) -> List[str]:
+        """Generate YouTube tags for video"""
+        tags = []
+
+        # Add base tags
+        tags.extend(["AgentMitra", "Insurance", "Tutorial", "InsuranceTutorial"])
+
+        # Add category-specific tags
+        if video_tutorial.category:
+            tags.append(video_tutorial.category.replace("_", ""))
+
+        # Add difficulty level
+        if video_tutorial.difficulty_level:
+            tags.append(video_tutorial.difficulty_level)
+
+        # Add policy types
+        if video_tutorial.policy_types:
+            tags.extend(video_tutorial.policy_types[:5])  # Limit to 5 policy tags
+
+        # Add search tags
+        if video_tutorial.search_tags:
+            tags.extend(video_tutorial.search_tags[:10])  # Limit to 10 tags
+
+        # Clean and limit tags (YouTube allows max 500 chars total)
+        tags = [tag.replace(" ", "").replace("-", "") for tag in tags if tag]
+        tags = tags[:15]  # Limit to 15 tags
+
+        return tags
+
+    async def _calculate_agent_expertise_score(self, agent_id: str) -> float:
+        """Calculate agent expertise score based on their video performance"""
+        try:
+            # Get agent's video statistics
+            agent_videos = self.db.query(VideoTutorial).filter(VideoTutorial.agent_id == agent_id).all()
+
+            if not agent_videos:
+                return 0.5  # Default score for new agents
+
+            total_views = sum(video.view_count for video in agent_videos)
+            total_ratings = sum(video.rating_count for video in agent_videos)
+            avg_rating = sum(video.rating or 0 for video in agent_videos) / len(agent_videos) if agent_videos else 0
+            total_completion_rate = sum(video.completion_rate for video in agent_videos) / len(agent_videos) if agent_videos else 0
+
+            # Calculate expertise score (0-1 scale)
+            # Weight: views (30%), ratings (30%), avg_rating (20%), completion_rate (20%)
+            views_score = min(total_views / 10000, 1)  # Cap at 10k views = 1.0
+            ratings_score = min(total_ratings / 100, 1)  # Cap at 100 ratings = 1.0
+            rating_score = (avg_rating / 5.0) if avg_rating > 0 else 0.5  # 5-star scale
+            completion_score = total_completion_rate / 100.0  # Percentage to decimal
+
+            expertise_score = (
+                views_score * 0.3 +
+                ratings_score * 0.3 +
+                rating_score * 0.2 +
+                completion_score * 0.2
+            )
+
+            return min(expertise_score, 1.0)
+
+        except Exception as e:
+            logger.warning(f"Failed to calculate agent expertise score for {agent_id}: {e}")
+            return 0.5
+
+    def _extract_keywords_from_transcription(self, video_tutorial: VideoTutorial) -> List[str]:
+        """Extract important keywords from transcription"""
+        keywords = []
+
+        if video_tutorial.metadata and 'transcription' in video_tutorial.metadata:
+            transcription = video_tutorial.metadata['transcription']
+            text = transcription.get('text', '')
+
+            # Simple keyword extraction (in production, use NLP libraries)
+            # Look for important insurance terms
+            insurance_terms = [
+                'premium', 'policy', 'claim', 'payment', 'coverage', 'insurance',
+                'agent', 'customer', 'document', 'form', 'application', 'renewal',
+                'benefit', 'term', 'life insurance', 'health insurance', 'ulip',
+                'investment', 'saving', 'tax', 'nominee', 'maturity'
+            ]
+
+            for term in insurance_terms:
+                if term.lower() in text.lower():
+                    keywords.append(term)
+
+            # Limit to top 10 keywords
+            keywords = keywords[:10]
+
+        return keywords
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.http_client.aclose()
