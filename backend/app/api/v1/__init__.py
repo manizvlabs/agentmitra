@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_current_user_context, UserContext
-from . import auth, users, providers, agents, policies, presentations, chat, analytics, feature_flags, health, notifications, campaigns, tenants, rbac, content, external_services
+from . import auth, users, providers, agents, policies, presentations, chat, analytics, health, notifications, campaigns, tenants, rbac, content, external_services, feature_flags
 # Temporarily disable callbacks due to model conflicts
 # from . import callbacks
 

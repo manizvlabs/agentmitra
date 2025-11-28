@@ -50,6 +50,7 @@ class Settings(BaseSettings):
         "DATABASE_URL",
         "postgresql://agentmitra:agentmitra_dev@localhost:5432/agentmitra_dev"
     )
+    db_schema: str = os.getenv("DB_SCHEMA", "lic_schema")
     db_pool_size: int = int(os.getenv("DB_POOL_SIZE", "10"))
     db_max_overflow: int = int(os.getenv("DB_MAX_OVERFLOW", "20"))
     db_pool_timeout: int = int(os.getenv("DB_POOL_TIMEOUT", "30"))
@@ -120,7 +121,11 @@ class Settings(BaseSettings):
     email_password: Optional[str] = os.getenv("EMAIL_PASSWORD")  # Gmail App Password
     email_from: Optional[str] = os.getenv("EMAIL_FROM", os.getenv("EMAIL_USER"))
     
-    # FeatureHub Configuration
+    # Feature Flag Configuration (Pioneer)
+    pioneer_url: str = os.getenv("PIONEER_URL", "http://localhost:8080")
+    pioneer_api_key: str = os.getenv("PIONEER_API_KEY", "")
+
+    # FeatureHub Configuration (legacy - deprecated)
     featurehub_url: str = os.getenv("FEATUREHUB_URL", "http://localhost:8071")
     
     # MinIO Storage Configuration

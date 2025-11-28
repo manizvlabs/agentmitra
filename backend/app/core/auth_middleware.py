@@ -85,10 +85,10 @@ async def get_current_user_context(
             )
 
         # Get user from database
-        result = db.execute(text("""
-            SELECT id, username, email, first_name, last_name, role, status
-            FROM users
-            WHERE id = :user_id
+        result = db.execute(text(f"""
+            SELECT user_id, username, email, first_name, last_name, role, status
+            FROM {settings.db_schema}.users
+            WHERE user_id = :user_id
         """), {"user_id": user_id})
 
         user_row = result.first()
@@ -112,10 +112,10 @@ async def get_current_user_context(
         # Get permissions from RBAC service
         try:
             rbac_service = get_rbac_service(db)
-            db_roles = await rbac_service.get_user_roles(str(user_row.id))
+            db_roles = await rbac_service.get_user_roles(str(user_row.user_id))
             if db_roles:
                 roles = db_roles
-            db_permissions = await rbac_service.get_user_permissions(str(user_row.id))
+            db_permissions = await rbac_service.get_user_permissions(str(user_row.user_id))
             if db_permissions:
                 permissions = db_permissions
             else:
@@ -127,7 +127,7 @@ async def get_current_user_context(
             permissions = {"users.read"}  # Only basic read access
 
         return UserContext(
-            user_id=str(user_row.id),
+            user_id=str(user_row.user_id),
             username=user_row.username,
             email=user_row.email,
             roles=roles,

@@ -225,6 +225,41 @@ class RBACService:
             logger.error(f"Failed to get user permissions for {user_id}: {e}")
             return set()
 
+    async def get_feature_flags(self, user_id: str, tenant_id: str) -> Dict[str, bool]:
+        """Get feature flags for a user, considering tenant and user overrides"""
+        try:
+            from app.services.feature_flag_service import get_feature_flag_service
+            feature_flag_service = get_feature_flag_service(self.db)
+
+            # Get user-specific feature flags (includes tenant overrides)
+            flags = await feature_flag_service.get_user_feature_flags(user_id, tenant_id)
+
+            # Convert any non-boolean values to boolean
+            result = {}
+            for key, value in flags.items():
+                if isinstance(value, str):
+                    # Handle string values like "true"/"false"
+                    result[key] = value.lower() in ('true', '1', 'yes', 'on')
+                else:
+                    result[key] = bool(value)
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Error getting feature flags for user {user_id}: {e}")
+            # Return minimal safe defaults on error
+            return {
+                "phone_auth_enabled": True,
+                "email_auth_enabled": True,
+                "otp_verification_enabled": True,
+                "dashboard_enabled": True,
+                "policies_enabled": True,
+                "chat_enabled": True,
+                "notifications_enabled": True,
+                "analytics_enabled": True,
+                "portal_enabled": True,
+            }
+
     async def can_access_tenant(self, user_id: str, tenant_id: str) -> bool:
         """Check if user can access a specific tenant"""
         try:
