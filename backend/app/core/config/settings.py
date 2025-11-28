@@ -175,6 +175,11 @@ class Settings(BaseSettings):
     content_allowed_doc_types: str = os.getenv("CONTENT_ALLOWED_DOC_TYPES", "application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document")
     content_cdn_enabled: bool = os.getenv("CONTENT_CDN_ENABLED", "true").lower() == "true"
     content_compression_enabled: bool = os.getenv("CONTENT_COMPRESSION_ENABLED", "true").lower() == "true"
+
+    # Analytics Configuration
+    analytics_retention_days: int = int(os.getenv("ANALYTICS_RETENTION_DAYS", "90"))
+    analytics_cache_ttl: int = int(os.getenv("ANALYTICS_CACHE_TTL", "3600"))
+    analytics_reporting_enabled: bool = os.getenv("ANALYTICS_REPORTING_ENABLED", "true").lower() == "true"
     
     class Config:
         env_file = str(env_local if env_local.exists() else env_file)
