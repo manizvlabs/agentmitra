@@ -168,6 +168,13 @@ class Settings(BaseSettings):
     dpdp_compliance_enabled: bool = os.getenv("DPDP_COMPLIANCE_ENABLED", "true").lower() == "true"
     audit_logging_enabled: bool = os.getenv("AUDIT_LOGGING_ENABLED", "true").lower() == "true"
     data_encryption_enabled: bool = os.getenv("DATA_ENCRYPTION_ENABLED", "true").lower() == "true"
+
+    # Content Management
+    content_max_file_size_mb: int = int(os.getenv("CONTENT_MAX_FILE_SIZE_MB", "100"))
+    content_allowed_video_types: str = os.getenv("CONTENT_ALLOWED_VIDEO_TYPES", "video/mp4,video/avi,video/mov,video/mkv,video/webm")
+    content_allowed_doc_types: str = os.getenv("CONTENT_ALLOWED_DOC_TYPES", "application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    content_cdn_enabled: bool = os.getenv("CONTENT_CDN_ENABLED", "true").lower() == "true"
+    content_compression_enabled: bool = os.getenv("CONTENT_COMPRESSION_ENABLED", "true").lower() == "true"
     
     class Config:
         env_file = str(env_local if env_local.exists() else env_file)
