@@ -104,7 +104,7 @@ class FeatureFlagService:
             logger.warning("Pioneer not configured, using fallback flags")
             return self.fallback_flags
 
-        try {
+        try:
             # Pioneer API uses GET /api/flags to get all flags (matching Flutter expectation)
             response = await self.http_client.get(
                 f"{self.pioneer_url}/api/flags"
