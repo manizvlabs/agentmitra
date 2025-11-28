@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/status.dart' as status;
+import 'dart:convert';
+import 'dart:async';
 import 'api_service.dart';
 import 'pioneer_service.dart';
+import 'auth_service.dart';
+import '../config/app_config.dart';
 
 /// Feature Flag Service for dynamic UI rendering based on permissions
 class FeatureFlagService {
@@ -8,12 +14,112 @@ class FeatureFlagService {
   final Map<String, DateTime> _cacheTimestamps = {};
   final Duration _cacheDuration = const Duration(minutes: 5);
 
-  FeatureFlagService();
+  WebSocketChannel? _webSocketChannel;
+  final StreamController<Map<String, dynamic>> _updateController =
+      StreamController.broadcast();
+  bool _isWebSocketConnected = false;
+  Timer? _reconnectTimer;
+
+  FeatureFlagService() {
+    _initializeWebSocket();
+  }
+
+  /// Stream of real-time feature flag updates
+  Stream<Map<String, dynamic>> get flagUpdates => _updateController.stream;
+
+  /// Check if WebSocket is connected
+  bool get isWebSocketConnected => _isWebSocketConnected;
 
   /// Initialize the service (async for future use)
   Future<void> initialize() async {
-    // Placeholder for future initialization logic
-    return;
+    await _initializeWebSocket();
+  }
+
+  /// Initialize WebSocket connection for real-time updates
+  Future<void> _initializeWebSocket() async {
+    try {
+      final currentUser = AuthService().currentUser;
+      if (currentUser?.id == null) {
+        debugPrint('Cannot initialize WebSocket: No authenticated user');
+        return;
+      }
+
+      final wsUrl = '${AppConfig().wsBaseUrl}/api/v1/feature-flags/ws/${currentUser!.id}';
+      debugPrint('Connecting to WebSocket: $wsUrl');
+
+      _webSocketChannel = WebSocketChannel.connect(Uri.parse(wsUrl));
+      _isWebSocketConnected = true;
+
+      _webSocketChannel!.stream.listen(
+        (message) {
+          try {
+            final data = jsonDecode(message) as Map<String, dynamic>;
+            if (data['type'] == 'feature_flag_update') {
+              // Update cache with new value
+              final flagName = data['feature_key'] as String;
+              final newValue = data['new_value'] as bool;
+
+              _cache[_getCacheKey(flagName, currentUser.id, null)] = newValue;
+              _cacheTimestamps[_getCacheKey(flagName, currentUser.id, null)] = DateTime.now();
+
+              // Broadcast update to listeners
+              _updateController.add(data);
+              debugPrint('Feature flag updated via WebSocket: $flagName = $newValue');
+            }
+          } catch (e) {
+            debugPrint('Error processing WebSocket message: $e');
+          }
+        },
+        onError: (error) {
+          debugPrint('WebSocket error: $error');
+          _isWebSocketConnected = false;
+          _scheduleReconnect();
+        },
+        onDone: () {
+          debugPrint('WebSocket connection closed');
+          _isWebSocketConnected = false;
+          _scheduleReconnect();
+        },
+      );
+
+      // Send periodic ping to keep connection alive
+      Timer.periodic(const Duration(minutes: 5), (timer) {
+        if (_isWebSocketConnected && _webSocketChannel != null) {
+          try {
+            _webSocketChannel!.sink.add(jsonEncode({'type': 'ping'}));
+          } catch (e) {
+            debugPrint('Error sending ping: $e');
+          }
+        }
+      });
+
+    } catch (e) {
+      debugPrint('Failed to initialize WebSocket: $e');
+      _scheduleReconnect();
+    }
+  }
+
+  /// Schedule WebSocket reconnection
+  void _scheduleReconnect() {
+    _reconnectTimer?.cancel();
+    _reconnectTimer = Timer(const Duration(seconds: 30), () {
+      debugPrint('Attempting WebSocket reconnection...');
+      _initializeWebSocket();
+    });
+  }
+
+  /// Disconnect WebSocket
+  void disconnectWebSocket() {
+    _reconnectTimer?.cancel();
+    _webSocketChannel?.sink.close(status.goingAway);
+    _webSocketChannel = null;
+    _isWebSocketConnected = false;
+  }
+
+  /// Dispose of resources
+  void dispose() {
+    disconnectWebSocket();
+    _updateController.close();
   }
 
   /// Synchronous check for feature flag (checks cache first, then Pioneer, then defaults)
@@ -38,8 +144,10 @@ class FeatureFlagService {
 
   /// Check if a feature flag is enabled
   Future<bool> isFeatureEnabled(String flagName, {String? userId, String? tenantId}) async {
+    final effectiveUserId = userId ?? AuthService().currentUser?.id;
+
     // Check cache first
-    final cacheKey = _getCacheKey(flagName, userId, tenantId);
+    final cacheKey = _getCacheKey(flagName, effectiveUserId, tenantId);
     if (_cache.containsKey(cacheKey)) {
       final cachedTime = _cacheTimestamps[cacheKey];
       if (cachedTime != null &&
@@ -58,7 +166,32 @@ class FeatureFlagService {
         return pioneerResult;
       }
 
-      // Fall back to backend feature flag API
+      // Try the enhanced backend feature flag API with user-specific flags
+      if (effectiveUserId != null) {
+        try {
+          final response = await ApiService.get(
+            '/api/v1/feature-flags/user/$effectiveUserId',
+            queryParameters: {
+              if (tenantId != null) 'tenant_id': tenantId,
+            },
+          );
+
+          // The response should be a map of flag names to boolean values
+          final flags = response as Map<String, dynamic>;
+          final isEnabled = flags[flagName] as bool? ?? false;
+
+          // Cache the result
+          _cache[cacheKey] = isEnabled;
+          _cacheTimestamps[cacheKey] = DateTime.now();
+
+          return isEnabled;
+        } catch (e) {
+          debugPrint('Error with user-specific feature flags API: $e');
+          // Fall through to legacy API
+        }
+      }
+
+      // Fall back to legacy backend feature flag API
       final response = await ApiService.get(
         '/rbac/feature-flags',
         queryParameters: {
@@ -208,13 +341,33 @@ class FeatureFlagBuilder extends StatefulWidget {
 class _FeatureFlagBuilderState extends State<FeatureFlagBuilder> {
   bool? _isEnabled;
   bool _isLoading = true;
+  StreamSubscription<Map<String, dynamic>>? _flagUpdateSubscription;
+  FeatureFlagService? _service;
 
   @override
   void initState() {
     super.initState();
-    // Get the service from provider or locator
-    // For now, we'll assume it's available via context or a global instance
+    _service = FeatureFlagService();
     _loadFeatureFlag();
+    _subscribeToUpdates();
+  }
+
+  @override
+  void dispose() {
+    _flagUpdateSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _subscribeToUpdates() {
+    _flagUpdateSubscription = _service?.flagUpdates.listen((update) {
+      if (update['feature_key'] == widget.flagName) {
+        if (mounted) {
+          setState(() {
+            _isEnabled = update['new_value'] as bool;
+          });
+        }
+      }
+    });
   }
 
 

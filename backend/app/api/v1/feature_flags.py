@@ -4,13 +4,14 @@ Provides endpoints for managing feature flags (Pioneer-compatible API)
 """
 
 from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, WebSocket
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.services.feature_flag_service import get_feature_flag_service
 from app.core.auth_middleware import require_permission
 from app.core.logging_config import get_logger
+from app.core.websocket_manager import websocket_manager
 
 logger = get_logger(__name__)
 
@@ -93,6 +94,9 @@ async def update_user_feature_flag(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Failed to update feature flag {flag_name}"
             )
+
+        # Broadcast real-time update to the affected user
+        await websocket_manager.broadcast_feature_update(user_id, flag_name, value)
 
         return {"success": True, "message": f"Feature flag {flag_name} updated to {value}"}
     except HTTPException:
@@ -198,6 +202,92 @@ async def delete_user_flag_override(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete feature flag override"
+        )
+
+
+# WebSocket endpoint for real-time feature flag updates
+@router.websocket("/ws/{user_id}")
+async def feature_flag_websocket(websocket: WebSocket, user_id: str):
+    """WebSocket endpoint for real-time feature flag updates"""
+    await websocket_manager.connect(websocket, user_id)
+    try:
+        while True:
+            # Keep connection alive and handle client messages/acknowledgments
+            data = await websocket.receive_json()
+            logger.debug(f"Received WebSocket message from user {user_id}: {data}")
+
+            # Handle client acknowledgments or ping responses
+            if data.get("type") == "ack":
+                logger.debug(f"Received acknowledgment from user {user_id}")
+            elif data.get("type") == "ping":
+                # Respond to ping
+                await websocket.send_json({"type": "pong", "timestamp": "now"})
+
+    except Exception as e:
+        logger.warning(f"WebSocket error for user {user_id}: {e}")
+    finally:
+        await websocket_manager.disconnect(websocket, user_id)
+
+
+# Enhanced feature flag update endpoint with real-time broadcasting
+@router.put("/update/{flag_name}")
+async def update_feature_flag(
+    flag_name: str,
+    update_request: Dict[str, Any],
+    db: Session = Depends(get_db),
+    current_user = Depends(require_permission("feature_flags.update"))
+):
+    """Update a feature flag with real-time broadcasting to affected users"""
+    try:
+        new_value = update_request.get("new_value")
+        target_users = update_request.get("target_users", [])
+        tenant_id = update_request.get("tenant_id")
+
+        if new_value is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="new_value is required"
+            )
+
+        feature_flag_service = get_feature_flag_service(db)
+
+        # Update feature flag in database
+        if target_users:
+            # Update for specific users
+            success_count = 0
+            for user_id in target_users:
+                success = await feature_flag_service.update_feature_flag(flag_name, new_value, user_id, tenant_id)
+                if success:
+                    success_count += 1
+                    # Broadcast real-time update to each affected user
+                    await websocket_manager.broadcast_feature_update(user_id, flag_name, new_value)
+        else:
+            # Update globally or for tenant
+            success = await feature_flag_service.update_feature_flag(flag_name, new_value, None, tenant_id)
+            success_count = 1 if success else 0
+
+            if success and not tenant_id:
+                # Broadcast to all connected users for global updates
+                await websocket_manager.broadcast_to_all_users(flag_name, new_value)
+
+        if success_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to update feature flag {flag_name}"
+            )
+
+        return {
+            "success": True,
+            "message": f"Feature flag {flag_name} updated to {new_value}",
+            "affected_users": len(target_users) if target_users else "all"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating feature flag {flag_name}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update feature flag"
         )
 
 
