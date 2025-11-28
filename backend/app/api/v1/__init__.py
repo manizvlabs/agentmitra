@@ -7,7 +7,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_current_user_context, UserContext
-from . import auth, users, providers, agents, policies, presentations, chat, analytics, feature_flags, health, notifications, campaigns, callbacks, tenants, rbac, content, external_services
+from . import auth, users, providers, agents, policies, presentations, chat, analytics, feature_flags, health, notifications, campaigns, tenants, rbac, content, external_services
+# Temporarily disable callbacks due to model conflicts
+# from . import callbacks
 
 # Create main API router
 api_router = APIRouter(prefix="/api/v1", tags=["api"])
@@ -172,7 +174,8 @@ api_router.include_router(presentations.router, prefix="/presentations", tags=["
 api_router.include_router(chat.router, prefix="/chat", tags=["chat"])
 api_router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
 api_router.include_router(campaigns.router, prefix="/campaigns", tags=["campaigns"])
-api_router.include_router(callbacks.router, prefix="/callbacks", tags=["callbacks"])
+# Temporarily disabled callbacks due to model conflicts
+# api_router.include_router(callbacks.router, prefix="/callbacks", tags=["callbacks"])
 api_router.include_router(feature_flags.router, tags=["feature-flags"])
 api_router.include_router(health.router, tags=["health"])
 api_router.include_router(notifications.router, tags=["notifications"])

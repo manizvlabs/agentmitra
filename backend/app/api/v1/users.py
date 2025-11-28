@@ -7,10 +7,13 @@ from pydantic import BaseModel, validator
 from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.core.auth import (
+from app.core.auth_middleware import (
     get_current_user_context,
     UserContext,
-    auth_service
+    require_permission,
+    require_any_permission,
+    require_role,
+    require_any_role
 )
 from app.repositories.user_repository import UserRepository
 from app.models.user import UserStatusEnum, UserRoleEnum
@@ -147,7 +150,7 @@ async def get_user(
 async def update_user(
     user_id: str,
     user_data: UserUpdateRequest,
-    current_user: UserContext = Depends(get_current_user_context),
+    current_user: UserContext = Depends(require_any_permission(["users.update", "users.*"])),
     db: Session = Depends(get_db)
 ):
     """
@@ -263,7 +266,7 @@ async def search_users(
     status: Optional[str] = Query(None, description="Filter by status"),
     limit: int = Query(20, ge=1, le=100, description="Number of results to return"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
-    current_user: UserContext = Depends(get_current_user_context),
+    current_user: UserContext = Depends(require_any_role(["super_admin", "provider_admin", "regional_manager"])),
     db: Session = Depends(get_db)
 ):
     """

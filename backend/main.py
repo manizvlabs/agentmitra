@@ -119,12 +119,16 @@ tenant_service = TenantService(
 )
 audit_service = AuditService(tenant_service=tenant_service)
 
-# Add tenant middleware
-app.add_middleware(TenantMiddleware, tenant_service=tenant_service, audit_service=audit_service)
-
 # Add rate limiting middleware
 from app.core.rate_limiter import rate_limit_middleware
 app.middleware("http")(rate_limit_middleware)
+
+# Add authentication middleware (must be before tenant middleware)
+from app.core.auth_middleware import auth_middleware
+app.middleware("http")(auth_middleware)
+
+# Add tenant middleware (after authentication)
+app.add_middleware(TenantMiddleware, tenant_service=tenant_service, audit_service=audit_service)
 
 # Global exception handler for better error reporting
 from fastapi.responses import JSONResponse
@@ -162,6 +166,8 @@ async def validation_exception_handler(request, exc):
         status_code=422,
         content={"detail": exc.errors(), "body": exc.body}
     )
+
+# Authentication middleware moved earlier in the file
 
 # Include API routers
 app.include_router(api_router)

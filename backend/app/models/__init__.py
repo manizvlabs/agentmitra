@@ -20,15 +20,18 @@ except ImportError:
     CampaignResponse = None
 # Import callback models lazily to avoid SQLAlchemy FK validation issues at import time
 # These models are only used in specific endpoints, not core functionality
-try:
-    from .callback import CallbackRequest, CallbackActivity
-except Exception as e:
-    # If callback models fail to import (e.g., FK validation), log but don't fail
-    # They can be imported later when actually needed
-    import warnings
-    warnings.warn(f"Callback models could not be imported: {e}. They will be imported lazily when needed.")
-    CallbackRequest = None
-    CallbackActivity = None
+# Temporarily disabled to avoid table conflicts
+# try:
+#     from .callback import CallbackRequest, CallbackActivity
+# except Exception as e:
+#     # If callback models fail to import (e.g., FK validation), log but don't fail
+#     # They can be imported later when actually needed
+#     import warnings
+#     warnings.warn(f"Callback models could not be imported: {e}. They will be imported lazily when needed.")
+#     CallbackRequest = None
+#     CallbackActivity = None
+CallbackRequest = None
+CallbackActivity = None
 from .shared import (
     InsuranceProvider, Country, Language, InsuranceCategory,
     WhatsappTemplate, Tenant

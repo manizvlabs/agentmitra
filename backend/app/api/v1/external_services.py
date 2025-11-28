@@ -14,7 +14,12 @@ from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.auth import get_current_user_context, UserContext
+from app.core.auth_middleware import (
+    get_current_user_context,
+    UserContext,
+    require_any_role,
+    require_permission
+)
 from app.services.sms_service import SMSService
 from app.services.whatsapp_service import WhatsAppService
 from app.services.ai_service import AIService
@@ -44,7 +49,7 @@ class OTPRequest(BaseModel):
 @router.post("/sms/send")
 async def send_sms(
     request: SMSRequest,
-    current_user: UserContext = Depends(get_current_user_context),
+    current_user: UserContext = Depends(require_permission("communication.send")),
     db: Session = Depends(get_db)
 ):
     """Send SMS via configured provider"""
@@ -137,7 +142,7 @@ class WhatsAppTemplateRequest(BaseModel):
 @router.post("/whatsapp/send")
 async def send_whatsapp_message(
     request: WhatsAppMessageRequest,
-    current_user: UserContext = Depends(get_current_user_context),
+    current_user: UserContext = Depends(require_permission("communication.send")),
     db: Session = Depends(get_db)
 ):
     """Send WhatsApp message"""
@@ -290,7 +295,7 @@ class TranslationRequest(BaseModel):
 @router.post("/ai/chat")
 async def chat_completion(
     request: ChatCompletionRequest,
-    current_user: UserContext = Depends(get_current_user_context),
+    current_user: UserContext = Depends(require_any_role(["super_admin", "provider_admin", "regional_manager", "senior_agent", "junior_agent"])),
     db: Session = Depends(get_db)
 ):
     """Generate AI chat completion"""

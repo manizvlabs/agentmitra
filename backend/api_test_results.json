@@ -1,0 +1,18 @@
+{
+  "timestamp": "2025-11-28T14:52:00.224822",
+  "tests": {
+    "health_endpoint": true,
+    "unauthenticated_access": false,
+    "user_authentication": false,
+    "role_based_access": false,
+    "external_services": false,
+    "user_management": false,
+    "analytics_access": false
+  },
+  "summary": {
+    "total_tests": 7,
+    "passed": 1,
+    "failed": 6,
+    "success_rate": 0.14285714285714285
+  }
+}

@@ -14,7 +14,7 @@ from datetime import datetime
 import uuid
 import enum
 
-from app.db.base import Base, TimestampMixin, AuditMixin
+from app.models.base import Base, TimestampMixin
 
 
 class CallbackRequest(Base):

@@ -8,6 +8,12 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from app.core.database import get_db
+from app.core.auth_middleware import (
+    get_current_user_context,
+    UserContext,
+    require_any_role,
+    require_permission
+)
 from app.services.analytics_service import AnalyticsService
 from app.repositories.analytics_repository import AnalyticsRepository
 from app.models.analytics import (
@@ -31,6 +37,7 @@ router = APIRouter()
 
 @router.get("/comprehensive/dashboard")
 async def get_comprehensive_dashboard(
+    current_user: UserContext = Depends(require_any_role(["super_admin", "provider_admin", "regional_manager", "senior_agent"])),
     db: Session = Depends(get_db)
 ):
     """Get comprehensive dashboard analytics with KPIs and trends"""
@@ -54,6 +61,7 @@ async def get_agent_performance_analytics(
     period: str = Query("30d", regex="^(7d|30d|90d|1y)$"),
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
+    current_user: UserContext = Depends(require_any_role(["super_admin", "provider_admin", "regional_manager"])),
     db: Session = Depends(get_db)
 ):
     """Get detailed performance analytics for a specific agent"""
