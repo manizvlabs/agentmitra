@@ -11,7 +11,7 @@ from sqlalchemy.sql import label
 
 from app.models.agent import Agent
 from app.models.policy import InsurancePolicy
-from app.models.payment import PremiumPayment
+from app.models.payment import PaymentTransaction
 from app.models.user import User
 from app.models.lead import Lead
 from app.models.campaign import Campaign, CampaignExecution
@@ -144,16 +144,16 @@ class ROICalculationService:
             except (ImportError, AttributeError):
                 # Fallback to direct calculation from policies and payments
                 from app.models.policy import InsurancePolicy
-                from app.models.payment import PremiumPayment
+                from app.models.payment import PaymentTransaction
 
                 revenue_result = session.query(
-                    func.sum(PremiumPayment.amount).label('total_revenue'),
-                    func.count(PremiumPayment.payment_id).label('total_payments')
+                    func.sum(PaymentTransaction.amount).label('total_revenue'),
+                    func.count(PaymentTransaction.payment_id).label('total_payments')
                 ).join(InsurancePolicy).filter(
                     InsurancePolicy.agent_id == agent_id,
-                    PremiumPayment.payment_date >= start_date,
-                    PremiumPayment.payment_date <= end_date,
-                    PremiumPayment.status == 'completed'
+                    PaymentTransaction.payment_date >= start_date,
+                    PaymentTransaction.payment_date <= end_date,
+                    PaymentTransaction.status == 'completed'
                 ).first()
 
                 total_revenue = float(revenue_result.total_revenue or 0)

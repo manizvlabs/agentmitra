@@ -22,7 +22,7 @@ import stripe
 from sqlalchemy.orm import Session
 
 from app.core.config.settings import settings
-from app.models.payment import PremiumPayment
+from app.models.payment import PaymentTransaction
 from app.models.policy import InsurancePolicy
 from app.services.notification_service import NotificationService
 
@@ -216,7 +216,7 @@ class PaymentService:
 
     async def _process_razorpay_refund(
         self,
-        payment: PremiumPayment,
+        payment: PaymentTransaction,
         refund_amount: Decimal,
         reason: str
     ) -> Dict:
@@ -349,10 +349,10 @@ class PaymentService:
             InsurancePolicy.id == policy_id
         ).first()
 
-    async def _get_payment(self, payment_id: str) -> Optional[PremiumPayment]:
+    async def _get_payment(self, payment_id: str) -> Optional[PaymentTransaction]:
         """Get payment by ID"""
-        return self.db.query(PremiumPayment).filter(
-            PremiumPayment.id == payment_id
+        return self.db.query(PaymentTransaction).filter(
+            PaymentTransaction.id == payment_id
         ).first()
 
     async def _store_payment_order(self, order_data: Dict):
@@ -375,7 +375,7 @@ class PaymentService:
         # Implementation for getting payments in date range
         pass
 
-    async def _get_gateway_payment_status(self, payment: PremiumPayment) -> Dict:
+    async def _get_gateway_payment_status(self, payment: PaymentTransaction) -> Dict:
         """Get payment status from gateway"""
         # Implementation for checking gateway status
         pass

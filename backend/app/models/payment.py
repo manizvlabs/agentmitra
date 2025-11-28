@@ -12,7 +12,7 @@ from sqlalchemy.sql import func
 from app.models.base import Base, TimestampMixin, AuditMixin
 
 
-class PremiumPayment(Base, TimestampMixin, AuditMixin):
+class PaymentTransaction(Base, TimestampMixin, AuditMixin):
     """Premium payment model"""
 
     __tablename__ = "premium_payments"
@@ -32,7 +32,7 @@ class PremiumPayment(Base, TimestampMixin, AuditMixin):
     refund_processed_at = Column(DateTime(timezone=True), nullable=True)
 
     def __repr__(self):
-        return f"<PremiumPayment(id={self.id}, policy_id={self.policy_id}, amount={self.amount}, status={self.status})>"
+        return f"<PaymentTransaction(id={self.id}, policy_id={self.policy_id}, amount={self.amount}, status={self.status})>"
 
 
 class PaymentRefund(Base, TimestampMixin, AuditMixin):

@@ -72,4 +72,4 @@ class Lead(Base):
     agent = relationship("Agent", back_populates="leads")
     created_by_user = relationship("User", foreign_keys=[created_by])
     updated_by_user = relationship("User", foreign_keys=[updated_by])
-    converted_policy = relationship("Policy", foreign_keys=[converted_policy_id])
+    converted_policy = relationship("InsurancePolicy", foreign_keys=[converted_policy_id])

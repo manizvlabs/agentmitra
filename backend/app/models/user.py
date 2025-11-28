@@ -141,7 +141,7 @@ class User(Base, TimestampMixin):
     # Relationships - Subscriptions
     subscriptions = relationship("UserSubscription", back_populates="user", cascade="all, delete-orphan")
     billing_history = relationship("SubscriptionBillingHistory", back_populates="user", cascade="all, delete-orphan")
-    subscription_changes = relationship("SubscriptionChange", back_populates="user", cascade="all, delete-orphan")
+    subscription_changes = relationship("SubscriptionChange", back_populates="user", cascade="all, delete-orphan", foreign_keys="SubscriptionChange.user_id")
 
     def __repr__(self):
         return f"<User(user_id={self.user_id}, phone_number={self.phone_number}, role={self.role})>"

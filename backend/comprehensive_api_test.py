@@ -38,37 +38,42 @@ import traceback
 BASE_URL = "http://127.0.0.1:8015"
 API_BASE = f"{BASE_URL}/api/v1"
 
-# Test users with different roles (these should exist in your database)
+# Test users with different roles (seeded in database)
 TEST_USERS = {
     "super_admin": {
-        "username": "superadmin@test.com",
-        "password": "testpass123",
+        "phone_number": "+919876543200",
+        "password": "testpassword",
         "expected_roles": ["super_admin"]
     },
     "provider_admin": {
-        "username": "provider@test.com",
-        "password": "testpass123",
+        "phone_number": "+919876543201",
+        "password": "testpassword",
         "expected_roles": ["provider_admin"]
     },
     "regional_manager": {
-        "username": "regional@test.com",
-        "password": "testpass123",
+        "phone_number": "+919876543202",
+        "password": "testpassword",
         "expected_roles": ["regional_manager"]
     },
     "senior_agent": {
-        "username": "senior@test.com",
-        "password": "testpass123",
+        "phone_number": "+919876543203",
+        "password": "testpassword",
         "expected_roles": ["senior_agent"]
     },
     "junior_agent": {
-        "username": "junior@test.com",
-        "password": "testpass123",
+        "phone_number": "+919876543204",
+        "password": "testpassword",
         "expected_roles": ["junior_agent"]
     },
     "policyholder": {
-        "username": "customer@test.com",
-        "password": "testpass123",
+        "phone_number": "+919876543205",
+        "password": "testpassword",
         "expected_roles": ["policyholder"]
+    },
+    "support_staff": {
+        "phone_number": "+919876543206",
+        "password": "testpassword",
+        "expected_roles": ["support_staff"]
     }
 }
 
@@ -108,25 +113,25 @@ class ComprehensiveAPITester:
         self.test_results = []
         self.endpoint_coverage = {}
 
-    def login_user(self, username: str, password: str) -> Optional[str]:
+    def login_user(self, phone_number: str, password: str) -> Optional[str]:
         """Login user and return JWT token"""
         try:
             response = self.session.post(f"{API_BASE}/auth/login", json={
-                "username": username,
+                "phone_number": phone_number,
                 "password": password
             })
 
             if response.status_code == 200:
                 data = response.json()
                 token = data.get("access_token")
-                print(f"✅ Login successful for {username}")
+                print(f"✅ Login successful for {phone_number}")
                 return token
             else:
-                print(f"❌ Login failed for {username}: {response.status_code} - {response.text}")
+                print(f"❌ Login failed for {phone_number}: {response.status_code} - {response.text}")
                 return None
 
         except Exception as e:
-            print(f"❌ Login error for {username}: {e}")
+            print(f"❌ Login error for {phone_number}: {e}")
             return None
 
     def make_authenticated_request(self, method: str, endpoint: str, token: str,
@@ -376,7 +381,7 @@ class ComprehensiveAPITester:
         success_count = 0
 
         for role, user_data in TEST_USERS.items():
-            token = self.login_user(user_data["username"], user_data["password"])
+            token = self.login_user(user_data["phone_number"], user_data["password"])
             if token:
                 self.tokens[role] = token
                 success_count += 1

@@ -61,5 +61,5 @@ class CustomerRetentionAnalytics(Base):
     updated_at = Column(DateTime, default=func.now())
 
     # Relationships
-    customer = relationship("Customer")
+    customer = relationship("Policyholder")
     assigned_agent = relationship("Agent")
