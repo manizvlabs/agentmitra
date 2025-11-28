@@ -180,6 +180,15 @@ class Settings(BaseSettings):
     analytics_retention_days: int = int(os.getenv("ANALYTICS_RETENTION_DAYS", "90"))
     analytics_cache_ttl: int = int(os.getenv("ANALYTICS_CACHE_TTL", "3600"))
     analytics_reporting_enabled: bool = os.getenv("ANALYTICS_REPORTING_ENABLED", "true").lower() == "true"
+
+    # Chatbot Configuration
+    chatbot_enabled: bool = os.getenv("CHATBOT_ENABLED", "true").lower() == "true"
+    chatbot_model: str = os.getenv("CHATBOT_MODEL", "gpt-3.5-turbo")
+    chatbot_temperature: float = float(os.getenv("CHATBOT_TEMPERATURE", "0.7"))
+    chatbot_max_tokens: int = int(os.getenv("CHATBOT_MAX_TOKENS", "300"))
+    chatbot_language: str = os.getenv("CHATBOT_LANGUAGE", "en")
+    chatbot_auto_escalation_enabled: bool = os.getenv("CHATBOT_AUTO_ESCALATION_ENABLED", "true").lower() == "true"
+    chatbot_proactive_suggestions_enabled: bool = os.getenv("CHATBOT_PROACTIVE_SUGGESTIONS_ENABLED", "true").lower() == "true"
     
     class Config:
         env_file = str(env_local if env_local.exists() else env_file)
