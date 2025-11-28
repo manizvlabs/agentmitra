@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'logger_service.dart';
+import '../config/app_config.dart';
 
 /// CDN Service for loading localization files and other assets from CDN
 class CDNService {
@@ -8,9 +9,11 @@ class CDNService {
   factory CDNService() => _instance;
   CDNService._internal();
 
-  static const String cdnBaseUrl = 'https://cdn.agentmitra.com';
-  static const String l10nBaseUrl = '$cdnBaseUrl/l10n/v1';
-  static const Duration requestTimeout = Duration(seconds: 10);
+  static AppConfig get _config => AppConfig();
+
+  static String get cdnBaseUrl => _config.cdnBaseUrl;
+  static String get l10nBaseUrl => '$cdnBaseUrl/l10n/v1';
+  static Duration get requestTimeout => Duration(seconds: _config.apiTimeoutSeconds);
 
   /// Load ARB file from CDN
   Future<Map<String, dynamic>> loadARBFile(String locale) async {

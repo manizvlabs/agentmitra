@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as provider;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/services/storage_service.dart';
 import 'core/services/pioneer_service.dart';
 import 'core/di/service_locator.dart';
@@ -111,6 +112,22 @@ class PlaceholderScreen extends StatelessWidget {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize configuration from environment variables
+  try {
+    await dotenv.load(fileName: '.env');
+    print('Environment configuration loaded successfully');
+  } catch (e) {
+    print('Warning: Could not load .env file, using fallback values: $e');
+  }
+
+  // Initialize app configuration
+  try {
+    await AppConfig().initialize();
+    print('App configuration initialized successfully');
+  } catch (e) {
+    print('App configuration initialization failed: $e');
+  }
+
   // Initialize storage service (web-compatible)
   if (!kIsWeb) {
     try {
@@ -134,13 +151,14 @@ void main() async {
 
   // Initialize Pioneer for feature flag management
   try {
-    // Pioneer configuration - now using real Pioneer server
+    // Pioneer configuration from environment variables
+    final config = AppConfig();
     await PioneerService.initialize(
-      useMock: false, // Using real Pioneer server
-      scoutUrl: 'http://localhost:4002', // Scout SSE endpoint
-      sdkKey: '4cbeeba0-37e8-45fc-b306-32c0cd497c92', // SDK key from Pioneer server
+      useMock: !config.pioneerEnabled, // Use real Pioneer if enabled in config
+      scoutUrl: config.pioneerScoutUrl,
+      sdkKey: config.pioneerApiKey,
     );
-    print('Pioneer initialized successfully (real mode)');
+    print('Pioneer initialized successfully (${config.pioneerEnabled ? 'real mode' : 'mock mode'})');
   } catch (e) {
     print('Pioneer initialization failed: $e');
     print('Falling back to mock mode for development');

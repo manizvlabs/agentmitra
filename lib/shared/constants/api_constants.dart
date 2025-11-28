@@ -1,9 +1,13 @@
 /// API Constants and Endpoints
+import '../../core/config/app_config.dart';
+
 class ApiConstants {
   // Base URLs
-  static const String baseUrl = 'http://localhost:8012';
-  static const String apiVersion = '/api/v1';
-  static String get apiBaseUrl => '$baseUrl$apiVersion';
+  static AppConfig get _config => AppConfig();
+
+  static String get baseUrl => _config.apiBaseUrl;
+  static String get apiVersion => _config.apiVersion;
+  static String get apiBaseUrl => _config.fullApiUrl;
 
   // Health Check
   static const String health = '/health';

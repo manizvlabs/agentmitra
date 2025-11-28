@@ -3,15 +3,18 @@ import 'dart:io';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'logger_service.dart';
+import '../config/app_config.dart';
 
 /// WhatsApp Business API Integration Service
 /// Handles WhatsApp Business messaging with pre-filled context sharing
 class WhatsAppBusinessService {
+  static AppConfig get _config => AppConfig();
+
   static const String _whatsappUrlScheme = 'whatsapp://send';
-  static const String _whatsappWebUrl = 'https://wa.me/';
+  static String get _whatsappWebUrl => _config.whatsappWebUrl;
 
   // Business phone numbers (configurable)
-  static const String _defaultBusinessNumber = '+919876543210';
+  static String get _defaultBusinessNumber => _config.whatsappBusinessNumber;
 
   /// Send WhatsApp message with pre-filled content
   static Future<bool> sendMessage({

@@ -213,7 +213,36 @@ class Settings(BaseSettings):
     chatbot_language: str = os.getenv("CHATBOT_LANGUAGE", "en")
     chatbot_auto_escalation_enabled: bool = os.getenv("CHATBOT_AUTO_ESCALATION_ENABLED", "true").lower() == "true"
     chatbot_proactive_suggestions_enabled: bool = os.getenv("CHATBOT_PROACTIVE_SUGGESTIONS_ENABLED", "true").lower() == "true"
-    
+
+    # WhatsApp Configuration
+    whatsapp_api_url: str = os.getenv("WHATSAPP_API_URL", "https://graph.facebook.com/v18.0")
+    whatsapp_access_token: str = os.getenv("WHATSAPP_ACCESS_TOKEN", "")
+    whatsapp_business_account_id: str = os.getenv("WHATSAPP_BUSINESS_ACCOUNT_ID", "")
+    whatsapp_business_number: str = os.getenv("WHATSAPP_BUSINESS_NUMBER", "")
+    whatsapp_webhook_secret: str = os.getenv("WHATSAPP_WEBHOOK_SECRET", "")
+    whatsapp_verify_token: str = os.getenv("WHATSAPP_VERIFY_TOKEN", "")
+    whatsapp_webhook_url: str = os.getenv("WHATSAPP_WEBHOOK_URL", "")
+
+    # YouTube Configuration
+    youtube_api_key: str = os.getenv("YOUTUBE_API_KEY", "")
+    youtube_channel_id: str = os.getenv("YOUTUBE_CHANNEL_ID", "")
+    youtube_client_id: str = os.getenv("YOUTUBE_CLIENT_ID", "")
+    youtube_client_secret: str = os.getenv("YOUTUBE_CLIENT_SECRET", "")
+    youtube_upload_enabled: bool = os.getenv("YOUTUBE_UPLOAD_ENABLED", "true").lower() == "true"
+    youtube_default_privacy: str = os.getenv("YOUTUBE_DEFAULT_PRIVACY", "unlisted")
+
+    # Video Tutorial Configuration
+    video_max_file_size_mb: int = int(os.getenv("VIDEO_MAX_FILE_SIZE_MB", "100"))
+    video_allowed_formats: str = os.getenv("VIDEO_ALLOWED_FORMATS", "mp4,mov,avi,mkv,webm")
+    video_max_duration_seconds: int = int(os.getenv("VIDEO_MAX_DURATION_SECONDS", "900"))
+    video_min_duration_seconds: int = int(os.getenv("VIDEO_MIN_DURATION_SECONDS", "30"))
+    video_thumbnail_generation: bool = os.getenv("VIDEO_THUMBNAIL_GENERATION", "true").lower() == "true"
+    video_transcription_auto: bool = os.getenv("VIDEO_TRANSCRIPTION_AUTO", "true").lower() == "true"
+    video_processing_queue: str = os.getenv("VIDEO_PROCESSING_QUEUE", "redis_queue")
+    video_recommendation_enabled: bool = os.getenv("VIDEO_RECOMMENDATION_ENABLED", "true").lower() == "true"
+    video_analytics_enabled: bool = os.getenv("VIDEO_ANALYTICS_ENABLED", "true").lower() == "true"
+    video_auto_tagging_enabled: bool = os.getenv("VIDEO_AUTO_TAGGING_ENABLED", "true").lower() == "true"
+
     class Config:
         env_file = str(env_local if env_local.exists() else env_file)
         case_sensitive = False

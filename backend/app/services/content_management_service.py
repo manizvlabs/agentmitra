@@ -166,9 +166,59 @@ class ContentManagementService:
         limit: int = 20
     ) -> Dict[str, Any]:
         """List content with filtering and pagination"""
-        # Implementation for listing content with filters
-        # This would query the database for content records
-        pass
+        query = self.db.query(Content)
+
+        # Apply filters
+        if content_type:
+            query = query.filter(Content.content_type == content_type)
+        if category:
+            query = query.filter(Content.category == category)
+        if uploader_id:
+            query = query.filter(Content.uploader_id == uploader_id)
+        if tags:
+            # Filter content that has any of the specified tags
+            from sqlalchemy import or_
+            tag_filters = [Content.tags.contains([tag]) for tag in tags]
+            if tag_filters:
+                query = query.filter(or_(*tag_filters))
+
+        # Apply status filter (only active content)
+        query = query.filter(Content.status == "active")
+
+        # Sorting by creation date (newest first)
+        query = query.order_by(desc(Content.created_at))
+
+        # Pagination
+        total_count = query.count()
+        content_items = query.offset((page - 1) * limit).limit(limit).all()
+
+        # Convert to dict format
+        content_list = []
+        for content in content_items:
+            content_data = {
+                "content_id": content.content_id,
+                "filename": content.filename,
+                "content_type": content.content_type,
+                "category": content.category,
+                "file_size": content.file_size,
+                "mime_type": content.mime_type,
+                "tags": content.tags,
+                "uploader_id": content.uploader_id,
+                "view_count": content.view_count,
+                "download_count": content.download_count,
+                "processing_status": content.processing_status,
+                "created_at": content.created_at.isoformat() if content.created_at else None,
+                "updated_at": content.updated_at.isoformat() if content.updated_at else None
+            }
+            content_list.append(content_data)
+
+        return {
+            "content": content_list,
+            "total_count": total_count,
+            "page": page,
+            "limit": limit,
+            "total_pages": (total_count + limit - 1) // limit
+        }
 
     async def delete_content(self, content_id: str, user_id: str) -> bool:
         """Delete content"""
@@ -205,8 +255,74 @@ class ContentManagementService:
 
     async def get_content_analytics(self, content_id: Optional[str] = None) -> Dict[str, Any]:
         """Get content analytics and statistics"""
-        # Implementation for content analytics
-        pass
+        if content_id:
+            # Get analytics for specific content
+            content = self.db.query(Content).filter(Content.content_id == content_id).first()
+            if not content:
+                raise HTTPException(status_code=404, detail="Content not found")
+
+            # Get access logs for this content
+            access_logs = self.db.query(ContentAccess).filter(ContentAccess.content_id == content.id).all()
+
+            # Calculate analytics
+            total_views = len([log for log in access_logs if log.access_type == "view"])
+            total_downloads = len([log for log in access_logs if log.access_type == "download"])
+
+            # Update content counters
+            content.view_count = max(content.view_count, total_views)
+            content.download_count = max(content.download_count, total_downloads)
+            self.db.commit()
+
+            return {
+                "content_id": content_id,
+                "total_views": total_views,
+                "total_downloads": total_downloads,
+                "unique_viewers": len(set(log.user_id for log in access_logs if log.user_id)),
+                "file_size": content.file_size,
+                "content_type": content.content_type,
+                "category": content.category,
+                "upload_date": content.created_at.isoformat() if content.created_at else None,
+                "last_accessed": content.last_accessed_at.isoformat() if content.last_accessed_at else None
+            }
+
+        else:
+            # Get overall analytics
+            total_content = self.db.query(Content).count()
+            total_size = self.db.query(Content).with_entities(func.sum(Content.file_size)).scalar() or 0
+            total_views = self.db.query(Content).with_entities(func.sum(Content.view_count)).scalar() or 0
+            total_downloads = self.db.query(Content).with_entities(func.sum(Content.download_count)).scalar() or 0
+
+            # Content by type
+            content_by_type = self.db.query(
+                Content.content_type,
+                func.count(Content.id).label('count'),
+                func.sum(Content.file_size).label('size')
+            ).group_by(Content.content_type).all()
+
+            content_type_stats = {}
+            for content_type, count, size in content_by_type:
+                content_type_stats[content_type] = {
+                    "count": count,
+                    "total_size_mb": round((size or 0) / (1024 * 1024), 2)
+                }
+
+            # Content by category
+            content_by_category = self.db.query(
+                Content.category,
+                func.count(Content.id).label('count')
+            ).group_by(Content.category).all()
+
+            category_stats = {category: count for category, count in content_by_category}
+
+            return {
+                "total_content": total_content,
+                "total_size_gb": round(total_size / (1024 * 1024 * 1024), 2),
+                "total_views": total_views,
+                "total_downloads": total_downloads,
+                "content_by_type": content_type_stats,
+                "content_by_category": category_stats,
+                "storage_utilization": round((total_size / (100 * 1024 * 1024 * 1024)) * 100, 2)  # Assuming 100GB limit
+            }
 
     async def _validate_file(self, file: UploadFile) -> None:
         """Validate uploaded file"""
@@ -328,45 +444,97 @@ class ContentManagementService:
 
     async def _create_content_record(self, **kwargs) -> Dict[str, Any]:
         """Create content record in database"""
-        # Implementation for database record creation
-        # This would create a record in a content/media table
-        content_record = {
-            "content_id": kwargs["content_id"],
-            "filename": kwargs["filename"],
-            "storage_key": kwargs["storage_key"],
-            "media_url": kwargs["media_url"],
-            "file_hash": kwargs["file_hash"],
-            "file_size": kwargs["file_size"],
-            "content_type": kwargs["content_type"],
-            "category": kwargs["category"],
-            "uploader_id": kwargs["uploader_id"],
-            "tags": kwargs["tags"],
-            "metadata": kwargs["metadata"],
-            "created_at": datetime.utcnow().isoformat(),
-            "updated_at": datetime.utcnow().isoformat(),
-            "status": "active",
-            "processing_status": "pending"
+        content_record = Content(
+            content_id=kwargs["content_id"],
+            filename=kwargs["filename"],
+            original_filename=kwargs["filename"],
+            storage_key=kwargs["storage_key"],
+            media_url=kwargs["media_url"],
+            file_hash=kwargs["file_hash"],
+            file_size=kwargs["file_size"],
+            mime_type=kwargs.get("mime_type", "application/octet-stream"),
+            content_type=kwargs["content_type"],
+            category=kwargs["category"],
+            uploader_id=kwargs["uploader_id"],
+            owner_id=kwargs["uploader_id"],
+            tags=kwargs.get("tags", []),
+            metadata=kwargs.get("metadata", {}),
+            status="active",
+            processing_status="pending"
+        )
+
+        self.db.add(content_record)
+        self.db.commit()
+        self.db.refresh(content_record)
+
+        return {
+            "id": content_record.id,
+            "content_id": content_record.content_id,
+            "filename": content_record.filename,
+            "storage_key": content_record.storage_key,
+            "media_url": content_record.media_url,
+            "file_hash": content_record.file_hash,
+            "file_size": content_record.file_size,
+            "content_type": content_record.content_type,
+            "category": content_record.category,
+            "uploader_id": content_record.uploader_id,
+            "tags": content_record.tags,
+            "metadata": content_record.metadata,
+            "created_at": content_record.created_at.isoformat() if content_record.created_at else None,
+            "updated_at": content_record.updated_at.isoformat() if content_record.updated_at else None,
+            "status": content_record.status,
+            "processing_status": content_record.processing_status
         }
-
-        # Database insertion would go here
-        # await self.db.execute(...)
-
-        return content_record
 
     async def _update_content_record(self, content_record: Dict[str, Any]) -> None:
         """Update content record in database"""
-        # Implementation for database update
-        pass
+        # Get the content record from database
+        db_content = self.db.query(Content).filter(Content.id == content_record["id"]).first()
+        if db_content:
+            # Update fields
+            for key, value in content_record.items():
+                if hasattr(db_content, key) and key not in ['id', 'created_at']:
+                    setattr(db_content, key, value)
+
+            db_content.updated_at = datetime.utcnow()
+            self.db.commit()
 
     async def _get_content_record(self, content_id: str) -> Optional[Dict[str, Any]]:
         """Get content record from database"""
-        # Implementation for database query
-        return None
+        content = self.db.query(Content).filter(Content.content_id == content_id).first()
+
+        if not content:
+            return None
+
+        return {
+            "id": content.id,
+            "content_id": content.content_id,
+            "filename": content.filename,
+            "storage_key": content.storage_key,
+            "media_url": content.media_url,
+            "file_hash": content.file_hash,
+            "file_size": content.file_size,
+            "mime_type": content.mime_type,
+            "content_type": content.content_type,
+            "category": content.category,
+            "uploader_id": content.uploader_id,
+            "owner_id": content.owner_id,
+            "tags": content.tags,
+            "metadata": content.metadata,
+            "processing_status": content.processing_status,
+            "view_count": content.view_count,
+            "download_count": content.download_count,
+            "status": content.status,
+            "created_at": content.created_at.isoformat() if content.created_at else None,
+            "updated_at": content.updated_at.isoformat() if content.updated_at else None
+        }
 
     async def _delete_content_record(self, content_id: str) -> None:
         """Delete content record from database"""
-        # Implementation for database deletion
-        pass
+        content = self.db.query(Content).filter(Content.content_id == content_id).first()
+        if content:
+            self.db.delete(content)
+            self.db.commit()
 
     async def _check_access_permission(self, content_record: Dict[str, Any], user_id: str) -> bool:
         """Check if user has access to content"""

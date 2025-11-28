@@ -3,9 +3,13 @@ import 'package:path/path.dart' as path;
 import 'dart:convert';
 import 'api_service.dart';
 
+import '../config/app_config.dart';
+
 class FileUploadService {
-  static const String baseUrl = 'http://localhost:8012';
-  static const String apiVersion = '/api/v1';
+  static AppConfig get _config => AppConfig();
+
+  static String get baseUrl => _config.apiBaseUrl;
+  static String get apiVersion => _config.apiVersion;
 
   /// Upload file to presentations media endpoint
   static Future<Map<String, dynamic>> uploadPresentationMedia(
