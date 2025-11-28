@@ -133,11 +133,38 @@ class SMSService:
         return await self.send_sms(to_phone, message, message_type="otp", priority="high")
 
     async def verify_otp(self, phone: str, otp_code: str) -> bool:
-        """Verify OTP (placeholder - implement with database storage)"""
-        # This should be implemented with proper OTP storage and verification
-        # For now, return True for testing
-        logger.warning("OTP verification not fully implemented - using mock verification")
-        return True
+        """Verify OTP with database lookup"""
+        try:
+            # Query OTP records from database
+            # This assumes an otp_verifications table exists
+            result = self.db.execute("""
+                SELECT id FROM otp_verifications
+                WHERE phone = :phone
+                AND otp_code = :otp_code
+                AND expires_at > NOW()
+                AND used_at IS NULL
+                AND created_at > NOW() - INTERVAL '5 minutes'
+                ORDER BY created_at DESC
+                LIMIT 1
+            """, {"phone": phone, "otp_code": otp_code})
+
+            otp_record = result.first()
+
+            if otp_record:
+                # Mark OTP as used
+                self.db.execute("""
+                    UPDATE otp_verifications
+                    SET used_at = NOW()
+                    WHERE id = :id
+                """, {"id": otp_record.id})
+                self.db.commit()
+                return True
+
+            return False
+
+        except Exception as e:
+            logger.error(f"OTP verification failed: {e}")
+            return False
 
     async def send_notification(
         self,
@@ -170,8 +197,7 @@ class SMSService:
 
         # Check if Twilio is properly configured
         if not self.twilio_account_sid or not self.twilio_auth_token or not self.twilio_phone_number:
-            # Return mock response for development/testing
-            return self._mock_twilio_response(to_phone, message)
+            raise Exception("Twilio credentials not configured. Please set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER environment variables.")
 
         try:
             # Twilio API endpoint
@@ -237,21 +263,6 @@ class SMSService:
             logger.error(f"Twilio SMS error: {e}")
             raise
 
-    def _mock_twilio_response(self, to_phone: str, message: str) -> Dict[str, Any]:
-        """Return mock response when Twilio is not configured"""
-        import uuid
-
-        return {
-            "provider": "twilio",
-            "message_id": f"SM{message[:8]}{str(uuid.uuid4())[:8].upper()}",
-            "status": "queued",  # Twilio uses 'queued' initially
-            "to": to_phone,
-            "from": self.twilio_phone_number or "+1234567890",
-            "segments": 1,
-            "mock": True,
-            "note": "Twilio not configured - using mock response",
-            "sent_at": datetime.utcnow().isoformat()
-        }
 
     async def _send_aws_sns_sms(self, to_phone: str, message: str) -> Dict[str, Any]:
         """Send SMS via AWS SNS"""
@@ -369,10 +380,24 @@ class SMSService:
 
     async def get_delivery_status(self, message_id: str, provider: str = "twilio") -> Dict[str, Any]:
         """Get delivery status of a message"""
-        if provider == "twilio":
-            return await self._get_twilio_delivery_status(message_id)
-        else:
-            return {"status": "unknown", "message_id": message_id}
+        try:
+            if provider == "twilio":
+                return await self._get_twilio_delivery_status(message_id)
+            else:
+                # For other providers, return basic status
+                return {
+                    "message_id": message_id,
+                    "status": "unknown",
+                    "provider": provider,
+                    "error": "Status tracking not implemented for this provider"
+                }
+        except Exception as e:
+            logger.error(f"Failed to get delivery status: {e}")
+            return {
+                "message_id": message_id,
+                "status": "error",
+                "error": str(e)
+            }
 
     async def _get_twilio_delivery_status(self, message_id: str) -> Dict[str, Any]:
         """Get message delivery status from Twilio"""

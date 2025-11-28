@@ -76,7 +76,7 @@ class AIService:
         """
 
         if not self._is_configured():
-            return self._mock_chat_completion(messages)
+            raise Exception("OpenAI credentials not configured. Please set OPENAI_API_KEY environment variable.")
 
         try:
             url = f"{self.api_url}/chat/completions"
@@ -135,7 +135,7 @@ class AIService:
         """Analyze intent from text using AI"""
 
         if not self._is_configured():
-            return self._mock_intent_analysis(text)
+            raise Exception("OpenAI credentials not configured. Please set OPENAI_API_KEY environment variable.")
 
         try:
             system_prompt = """
@@ -198,7 +198,7 @@ class AIService:
         """Summarize text using AI"""
 
         if not self._is_configured():
-            return self._mock_text_summary(text, max_length)
+            raise Exception("OpenAI credentials not configured. Please set OPENAI_API_KEY environment variable.")
 
         try:
             system_prompt = f"You are a text summarizer. Create a {style} summary of the given text in {max_length} words or less."
@@ -233,7 +233,7 @@ class AIService:
         """Analyze sentiment of text"""
 
         if not self._is_configured():
-            return self._mock_sentiment_analysis(text)
+            raise Exception("OpenAI credentials not configured. Please set OPENAI_API_KEY environment variable.")
 
         try:
             system_prompt = """
@@ -286,7 +286,7 @@ class AIService:
         """Generate content using AI"""
 
         if not self._is_configured():
-            return self._mock_content_generation(prompt, content_type)
+            raise Exception("OpenAI credentials not configured. Please set OPENAI_API_KEY environment variable.")
 
         try:
             system_prompt = f"""
@@ -330,7 +330,7 @@ class AIService:
         """Translate text to target language"""
 
         if not self._is_configured():
-            return self._mock_translation(text, target_language)
+            raise Exception("OpenAI credentials not configured. Please set OPENAI_API_KEY environment variable.")
 
         try:
             system_prompt = f"Translate the following text to {target_language}. Maintain the original meaning and tone."
@@ -366,7 +366,13 @@ class AIService:
         """Check text for moderation violations"""
 
         if not self._is_configured():
-            return {"moderation_passed": True, "mock": True}
+            return {
+                "moderation_passed": True,
+                "warning": "OpenAI not configured - content moderation skipped",
+                "flagged": False,
+                "categories": {},
+                "category_scores": {}
+            }
 
         try:
             url = f"{self.api_url}/moderations"
@@ -399,77 +405,40 @@ class AIService:
         """Check if OpenAI is properly configured"""
         return bool(self.api_key and self.api_key != "your-openai-api-key")
 
-    def _mock_chat_completion(self, messages: List[Dict[str, str]]) -> Dict[str, Any]:
-        """Return mock chat completion when OpenAI is not configured"""
-        last_message = messages[-1]["content"] if messages else ""
-
-        return {
-            "content": f"I understand you said: '{last_message[:50]}...'. This is a mock response because OpenAI is not configured.",
-            "role": "assistant",
-            "finish_reason": "stop",
-            "usage": {"total_tokens": 50, "prompt_tokens": 25, "completion_tokens": 25},
-            "model": "mock-gpt",
-            "mock": True,
-            "timestamp": datetime.utcnow().isoformat()
-        }
-
-    def _mock_intent_analysis(self, text: str) -> Dict[str, Any]:
-        """Mock intent analysis response"""
-        return {
-            "intent": "general_inquiry",
-            "confidence": 0.7,
-            "entities": [],
-            "sentiment": "neutral",
-            "mock": True,
-            "analyzed_at": datetime.utcnow().isoformat()
-        }
-
-    def _mock_text_summary(self, text: str, max_length: int) -> Dict[str, Any]:
-        """Mock text summary response"""
-        summary = text[:max_length] + "..." if len(text) > max_length else text
-        return {
-            "summary": summary,
-            "original_length": len(text),
-            "summary_length": len(summary),
-            "mock": True
-        }
-
-    def _mock_sentiment_analysis(self, text: str) -> Dict[str, Any]:
-        """Mock sentiment analysis response"""
-        return {
-            "sentiment": "neutral",
-            "confidence": 0.6,
-            "emotions": ["calm"],
-            "mock": True
-        }
-
-    def _mock_content_generation(self, prompt: str, content_type: str) -> Dict[str, Any]:
-        """Mock content generation response"""
-        return {
-            "content": f"Generated {content_type} content for prompt: {prompt[:50]}...",
-            "content_type": content_type,
-            "mock": True
-        }
-
-    def _mock_translation(self, text: str, target_language: str) -> Dict[str, Any]:
-        """Mock translation response"""
-        return {
-            "original_text": text,
-            "translated_text": f"[Mock translation to {target_language}]: {text}",
-            "mock": True
-        }
 
     async def get_usage_stats(self) -> Dict[str, Any]:
         """Get AI service usage statistics"""
-        # This would integrate with OpenAI usage API in production
-        return {
-            "total_requests": 0,
-            "total_tokens": 0,
-            "costs": {"total": 0.0, "currency": "USD"},
-            "models_used": [],
-            "period": "lifetime",
-            "mock": True
-        }
+        if not self._is_configured():
+            return {
+                "total_requests": 0,
+                "total_tokens": 0,
+                "costs": {"total": 0.0, "currency": "USD"},
+                "models_used": [],
+                "period": "lifetime",
+                "warning": "OpenAI not configured - no usage data available"
+            }
+
+        try:
+            # This would integrate with OpenAI usage API in production
+            # For now, return empty stats
+            return {
+                "total_requests": 0,
+                "total_tokens": 0,
+                "costs": {"total": 0.0, "currency": "USD"},
+                "models_used": [],
+                "period": "lifetime",
+                "note": "Usage tracking not yet implemented"
+            }
+        except Exception as e:
+            logger.error(f"Failed to get usage stats: {e}")
+            return {
+                "total_requests": 0,
+                "total_tokens": 0,
+                "costs": {"total": 0.0, "currency": "USD"},
+                "models_used": [],
+                "period": "lifetime",
+                "error": str(e)
+            }
 
     async def __aenter__(self):
         return self

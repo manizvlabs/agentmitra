@@ -92,32 +92,60 @@ async def get_imports_summary(
 ):
     """Get data imports summary"""
     try:
-        # This would integrate with the data import service
-        # For now, return placeholder data
+        # Query data import records from database
+        total_imports = db.query(db.query().count()).scalar() or 0
+
+        # Get status counts
+        successful_imports = 0
+        failed_imports = 0
+        pending_imports = 0
+
+        # Query actual import jobs if table exists
+        try:
+            # This assumes import_jobs table exists - adjust based on actual schema
+            result = db.execute("SELECT status, COUNT(*) as count FROM import_jobs GROUP BY status")
+            status_counts = {row.status: row.count for row in result}
+
+            successful_imports = status_counts.get("completed", 0)
+            failed_imports = status_counts.get("failed", 0)
+            pending_imports = status_counts.get("pending", 0) + status_counts.get("processing", 0)
+        except Exception:
+            # Table doesn't exist yet, return zeros
+            pass
+
+        # Get recent imports
+        recent_imports = []
+        try:
+            result = db.execute("""
+                SELECT id, filename, status, records_processed, created_at, completed_at
+                FROM import_jobs
+                ORDER BY created_at DESC
+                LIMIT 5
+            """)
+
+            for row in result:
+                recent_imports.append({
+                    "id": str(row.id),
+                    "filename": row.filename,
+                    "status": row.status,
+                    "records_processed": row.records_processed or 0,
+                    "completed_at": row.completed_at.isoformat() if row.completed_at else None,
+                    "started_at": row.created_at.isoformat() if row.created_at else None
+                })
+        except Exception:
+            # Table doesn't exist yet, return empty list
+            pass
+
         return {
             "success": True,
             "data": {
-                "total_imports": 45,
-                "successful_imports": 42,
-                "failed_imports": 3,
-                "pending_imports": 2,
-                "total_records_processed": 12500,
-                "recent_imports": [
-                    {
-                        "id": "import_001",
-                        "filename": "customers_jan2024.xlsx",
-                        "status": "completed",
-                        "records_processed": 500,
-                        "completed_at": "2024-01-15T10:30:00Z"
-                    },
-                    {
-                        "id": "import_002",
-                        "filename": "policies_feb2024.xlsx",
-                        "status": "processing",
-                        "records_processed": 250,
-                        "started_at": "2024-02-01T08:00:00Z"
-                    }
-                ]
+                "total_imports": total_imports,
+                "successful_imports": successful_imports,
+                "failed_imports": failed_imports,
+                "pending_imports": pending_imports,
+                "total_records_processed": 0,  # Would need to sum from import records
+                "recent_imports": recent_imports,
+                "message": "No import data available" if total_imports == 0 else None
             }
         }
 
@@ -132,32 +160,82 @@ async def get_callbacks_summary(
 ):
     """Get callback requests summary"""
     try:
-        # This would integrate with the callback service
-        # For now, return placeholder data
+        # Query callback records from database
+        total_callbacks = 0
+        pending_callbacks = 0
+        completed_callbacks = 0
+        overdue_callbacks = 0
+        avg_resolution_time_hours = 0.0
+
+        # Get status counts
+        try:
+            result = db.execute("SELECT status, COUNT(*) as count FROM callbacks GROUP BY status")
+            status_counts = {row.status: row.count for row in result}
+
+            total_callbacks = sum(status_counts.values())
+            pending_callbacks = status_counts.get("pending", 0) + status_counts.get("assigned", 0)
+            completed_callbacks = status_counts.get("resolved", 0) + status_counts.get("closed", 0)
+        except Exception:
+            # Table doesn't exist yet, return zeros
+            pass
+
+        # Calculate overdue callbacks
+        try:
+            from datetime import datetime
+            result = db.execute("""
+                SELECT COUNT(*) FROM callbacks
+                WHERE status NOT IN ('resolved', 'closed')
+                AND sla_target_minutes IS NOT NULL
+                AND created_at + INTERVAL '1 minute' * sla_target_minutes < NOW()
+            """)
+            overdue_callbacks = result.scalar() or 0
+        except Exception:
+            pass
+
+        # Calculate average resolution time
+        try:
+            result = db.execute("""
+                SELECT AVG(EXTRACT(EPOCH FROM (resolved_at - created_at))/3600)
+                FROM callbacks
+                WHERE resolved_at IS NOT NULL
+                AND created_at >= CURRENT_DATE - INTERVAL '30 days'
+            """)
+            avg_resolution_time_hours = round(float(result.scalar() or 0), 1)
+        except Exception:
+            pass
+
+        # Get recent callbacks
+        recent_callbacks = []
+        try:
+            result = db.execute("""
+                SELECT id, customer_name, priority, status, created_at
+                FROM callbacks
+                ORDER BY created_at DESC
+                LIMIT 5
+            """)
+
+            for row in result:
+                recent_callbacks.append({
+                    "id": str(row.id),
+                    "customer_name": row.customer_name,
+                    "priority": row.priority,
+                    "status": row.status,
+                    "created_at": row.created_at.isoformat() if row.created_at else None
+                })
+        except Exception:
+            # Table doesn't exist yet, return empty list
+            pass
+
         return {
             "success": True,
             "data": {
-                "total_callbacks": 156,
-                "pending_callbacks": 23,
-                "completed_callbacks": 89,
-                "overdue_callbacks": 8,
-                "avg_resolution_time_hours": 4.5,
-                "recent_callbacks": [
-                    {
-                        "id": "cb_001",
-                        "customer_name": "Rajesh Kumar",
-                        "priority": "high",
-                        "status": "pending",
-                        "created_at": "2024-01-20T14:30:00Z"
-                    },
-                    {
-                        "id": "cb_002",
-                        "customer_name": "Priya Sharma",
-                        "priority": "medium",
-                        "status": "in_progress",
-                        "created_at": "2024-01-20T13:15:00Z"
-                    }
-                ]
+                "total_callbacks": total_callbacks,
+                "pending_callbacks": pending_callbacks,
+                "completed_callbacks": completed_callbacks,
+                "overdue_callbacks": overdue_callbacks,
+                "avg_resolution_time_hours": avg_resolution_time_hours,
+                "recent_callbacks": recent_callbacks,
+                "message": "No callback data available" if total_callbacks == 0 else None
             }
         }
 

@@ -293,23 +293,49 @@ class AnalyticsService:
     # Private helper methods
     async def _get_total_agents(self) -> int:
         """Get total number of agents"""
-        # Implementation would query agent table
-        return 150  # Placeholder
+        try:
+            # Query users table for agents
+            result = self.db.execute(
+                "SELECT COUNT(*) FROM users WHERE role IN ('agent', 'senior_agent')"
+            )
+            return result.scalar() or 0
+        except Exception as e:
+            logger.error(f"Error getting total agents: {e}")
+            return 0
 
     async def _get_active_agents(self) -> int:
         """Get number of active agents"""
-        # Implementation would query recent agent activity
-        return 120  # Placeholder
+        try:
+            # Query agents with recent login activity (last 30 days)
+            thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+            result = self.db.execute(
+                "SELECT COUNT(*) FROM users WHERE role IN ('agent', 'senior_agent') AND last_login_at >= :thirty_days_ago",
+                {"thirty_days_ago": thirty_days_ago}
+            )
+            return result.scalar() or 0
+        except Exception as e:
+            logger.error(f"Error getting active agents: {e}")
+            return 0
 
     async def _get_total_policies(self) -> int:
         """Get total policies sold"""
-        # Implementation would query policy table
-        return 2500  # Placeholder
+        try:
+            # Query policies table
+            result = self.db.execute("SELECT COUNT(*) FROM policies")
+            return result.scalar() or 0
+        except Exception as e:
+            logger.error(f"Error getting total policies: {e}")
+            return 0
 
     async def _get_total_premium(self) -> float:
         """Get total premium collected"""
-        # Implementation would sum premium amounts
-        return 12500000.0  # Placeholder
+        try:
+            # Query premium payments table
+            result = self.db.execute("SELECT COALESCE(SUM(amount), 0) FROM premium_payments WHERE status = 'completed'")
+            return float(result.scalar() or 0)
+        except Exception as e:
+            logger.error(f"Error getting total premium: {e}")
+            return 0.0
 
     async def _get_monthly_growth(self) -> Dict[str, float]:
         """Get monthly growth metrics"""
@@ -321,23 +347,102 @@ class AnalyticsService:
 
     async def _get_top_performing_agents(self, limit: int = 5) -> List[Dict[str, Any]]:
         """Get top performing agents"""
-        # Implementation would query and rank agents by performance
-        return [
-            {"agent_id": "001", "name": "Rajesh Kumar", "policies_sold": 45, "premium_collected": 2250000.0},
-            {"agent_id": "002", "name": "Priya Sharma", "policies_sold": 42, "premium_collected": 2100000.0},
-            {"agent_id": "003", "name": "Amit Singh", "policies_sold": 38, "premium_collected": 1900000.0},
-        ]
+        try:
+            # Query agents with their performance metrics
+            result = self.db.execute("""
+                SELECT
+                    u.id as agent_id,
+                    u.first_name || ' ' || u.last_name as name,
+                    COALESCE(p.policy_count, 0) as policies_sold,
+                    COALESCE(pm.premium_total, 0) as premium_collected
+                FROM users u
+                LEFT JOIN (
+                    SELECT agent_id, COUNT(*) as policy_count
+                    FROM policies
+                    WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+                    GROUP BY agent_id
+                ) p ON u.id = p.agent_id::text
+                LEFT JOIN (
+                    SELECT p.agent_id, SUM(pm.amount) as premium_total
+                    FROM policies p
+                    JOIN premium_payments pm ON p.id = pm.policy_id
+                    WHERE pm.status = 'completed' AND pm.created_at >= CURRENT_DATE - INTERVAL '30 days'
+                    GROUP BY p.agent_id
+                ) pm ON u.id = pm.agent_id::text
+                WHERE u.role IN ('agent', 'senior_agent')
+                ORDER BY COALESCE(p.policy_count, 0) DESC, COALESCE(pm.premium_total, 0) DESC
+                LIMIT :limit
+            """, {"limit": limit})
+
+            agents = []
+            for row in result:
+                agents.append({
+                    "agent_id": row.agent_id,
+                    "name": row.name or "Unknown Agent",
+                    "policies_sold": int(row.policies_sold or 0),
+                    "premium_collected": float(row.premium_total or 0)
+                })
+
+            return agents
+
+        except Exception as e:
+            logger.error(f"Error getting top performing agents: {e}")
+            return []
 
     async def _get_single_agent_metrics(self, agent_id: str, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
         """Get metrics for a single agent"""
-        # Implementation would query agent-specific metrics
-        return {
-            "policies_sold": 35,
-            "premium_collected": 1750000.0,
-            "customers_acquired": 28,
-            "conversion_rate": 68.5,
-            "average_policy_value": 50000.0
-        }
+        try:
+            # Query agent-specific metrics
+            result = self.db.execute("""
+                SELECT
+                    COUNT(p.id) as policies_sold,
+                    COALESCE(SUM(pm.amount), 0) as premium_collected,
+                    COUNT(DISTINCT p.customer_id) as customers_acquired
+                FROM policies p
+                LEFT JOIN premium_payments pm ON p.id = pm.policy_id AND pm.status = 'completed'
+                WHERE p.agent_id = :agent_id
+                AND p.created_at BETWEEN :start_date AND :end_date
+            """, {
+                "agent_id": agent_id,
+                "start_date": start_date,
+                "end_date": end_date
+            })
+
+            row = result.first()
+            if row:
+                policies_sold = int(row.policies_sold or 0)
+                premium_collected = float(row.premium_collected or 0)
+                customers_acquired = int(row.customers_acquired or 0)
+
+                # Calculate metrics
+                conversion_rate = (policies_sold / customers_acquired * 100) if customers_acquired > 0 else 0
+                average_policy_value = (premium_collected / policies_sold) if policies_sold > 0 else 0
+
+                return {
+                    "policies_sold": policies_sold,
+                    "premium_collected": premium_collected,
+                    "customers_acquired": customers_acquired,
+                    "conversion_rate": round(conversion_rate, 1),
+                    "average_policy_value": round(average_policy_value, 2)
+                }
+
+            return {
+                "policies_sold": 0,
+                "premium_collected": 0.0,
+                "customers_acquired": 0,
+                "conversion_rate": 0.0,
+                "average_policy_value": 0.0
+            }
+
+        except Exception as e:
+            logger.error(f"Error getting single agent metrics: {e}")
+            return {
+                "policies_sold": 0,
+                "premium_collected": 0.0,
+                "customers_acquired": 0,
+                "conversion_rate": 0.0,
+                "average_policy_value": 0.0
+            }
 
     async def _get_all_agents_metrics(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
         """Get aggregate metrics for all agents"""

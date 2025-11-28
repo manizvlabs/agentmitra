@@ -69,7 +69,7 @@ class WhatsAppService:
         """
 
         if not self._is_configured():
-            return self._mock_whatsapp_response(to_phone, message_type, content)
+            raise Exception("WhatsApp credentials not configured. Please set WHATSAPP_ACCESS_TOKEN, WHATSAPP_API_URL, and WHATSAPP_BUSINESS_NUMBER environment variables.")
 
         try:
             url = f"{self.api_url}/{self.business_number}/messages"
@@ -181,20 +181,41 @@ class WhatsAppService:
     async def get_message_status(self, message_id: str) -> Dict[str, Any]:
         """Get message delivery status"""
         if not self._is_configured():
-            return {"status": "unknown", "mock": True}
+            return {
+                "message_id": message_id,
+                "status": "unknown",
+                "error": "WhatsApp not configured. Please set WHATSAPP_ACCESS_TOKEN, WHATSAPP_API_URL, and WHATSAPP_BUSINESS_NUMBER environment variables."
+            }
 
         try:
             url = f"{self.api_url}/{message_id}"
             response = await self.http_client.get(url)
 
             if response.status_code == 200:
-                return response.json()
+                result = response.json()
+                return {
+                    "message_id": message_id,
+                    "status": result.get("status", "unknown"),
+                    "timestamp": result.get("timestamp"),
+                    "recipient_id": result.get("recipient_id"),
+                    "api_response": result
+                }
             else:
-                return {"status": "error", "error": response.text}
+                error_data = response.json()
+                return {
+                    "message_id": message_id,
+                    "status": "error",
+                    "error": error_data.get("error", {}).get("message", "Unknown error"),
+                    "error_code": response.status_code
+                }
 
         except Exception as e:
             logger.error(f"Failed to get message status: {e}")
-            return {"status": "error", "error": str(e)}
+            return {
+                "message_id": message_id,
+                "status": "error",
+                "error": str(e)
+            }
 
     async def create_template(
         self,
@@ -206,7 +227,7 @@ class WhatsAppService:
     ) -> Dict[str, Any]:
         """Create message template"""
         if not self._is_configured():
-            return self._mock_template_creation(name, category)
+            raise Exception("WhatsApp credentials not configured. Please set WHATSAPP_ACCESS_TOKEN, WHATSAPP_API_URL, and WHATSAPP_BUSINESS_NUMBER environment variables.")
 
         try:
             url = f"{self.api_url}/{self.business_account_id}/message_templates"
@@ -237,7 +258,7 @@ class WhatsAppService:
     async def get_templates(self) -> List[Dict[str, Any]]:
         """Get available message templates"""
         if not self._is_configured():
-            return self._mock_templates()
+            raise Exception("WhatsApp credentials not configured. Please set WHATSAPP_ACCESS_TOKEN, WHATSAPP_API_URL, and WHATSAPP_BUSINESS_NUMBER environment variables.")
 
         try:
             url = f"{self.api_url}/{self.business_account_id}/message_templates"
@@ -308,54 +329,6 @@ class WhatsAppService:
             self.business_number
         )
 
-    def _mock_whatsapp_response(self, to_phone: str, message_type: str, content: Dict[str, Any]) -> Dict[str, Any]:
-        """Return mock response when WhatsApp is not configured"""
-        import uuid
-
-        return {
-            "provider": "whatsapp",
-            "message_id": f"wamid.{str(uuid.uuid4())[:16]}",
-            "status": "sent",
-            "to": to_phone,
-            "message_type": message_type,
-            "mock": True,
-            "note": "WhatsApp not configured - using mock response",
-            "timestamp": datetime.utcnow().isoformat()
-        }
-
-    def _mock_template_creation(self, name: str, category: str) -> Dict[str, Any]:
-        """Mock template creation response"""
-        import uuid
-
-        return {
-            "id": str(uuid.uuid4()),
-            "name": name,
-            "category": category,
-            "status": "APPROVED",
-            "mock": True,
-            "note": "WhatsApp not configured - using mock template creation"
-        }
-
-    def _mock_templates(self) -> List[Dict[str, Any]]:
-        """Mock templates response"""
-        return [
-            {
-                "id": "template_1",
-                "name": "welcome_message",
-                "category": "UTILITY",
-                "status": "APPROVED",
-                "language": "en",
-                "mock": True
-            },
-            {
-                "id": "template_2",
-                "name": "otp_verification",
-                "category": "AUTHENTICATION",
-                "status": "APPROVED",
-                "language": "en",
-                "mock": True
-            }
-        ]
 
     async def _process_incoming_message(self, message: Dict[str, Any]):
         """Process incoming message from webhook"""

@@ -261,16 +261,42 @@ class ChatbotService:
     async def _search_knowledge_base(self, query: str) -> List[Dict[str, Any]]:
         """Search knowledge base for relevant articles"""
 
-        # In a real implementation, this would query a vector database or full-text search
-        # For now, return mock results
-        return [
-            {
-                "article_id": "kb_001",
-                "title": "Life Insurance Policy Basics",
-                "content": "Life insurance provides financial protection...",
-                "relevance_score": 0.85
-            }
-        ]
+        try:
+            # Query knowledge base articles from database
+            # This assumes knowledge_base_articles table exists
+            result = self.db.execute("""
+                SELECT id, title, content, category
+                FROM knowledge_base_articles
+                WHERE
+                    title ILIKE :query OR
+                    content ILIKE :query OR
+                    category ILIKE :query
+                ORDER BY
+                    CASE
+                        WHEN title ILIKE :query THEN 1
+                        WHEN content ILIKE :query THEN 2
+                        ELSE 3
+                    END,
+                    LENGTH(content) DESC
+                LIMIT 5
+            """, {"query": f"%{query}%"})
+
+            articles = []
+            for row in result:
+                articles.append({
+                    "article_id": str(row.id),
+                    "title": row.title,
+                    "content": row.content[:200] + "..." if len(row.content) > 200 else row.content,
+                    "category": row.category,
+                    "relevance_score": 0.8  # Simplified scoring
+                })
+
+            return articles
+
+        except Exception as e:
+            # If knowledge base table doesn't exist yet, return empty results
+            logger.warning(f"Knowledge base search failed: {e}")
+            return []
 
     async def _generate_response(
         self,

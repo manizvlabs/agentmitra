@@ -318,34 +318,71 @@ async def get_chatbot_analytics(
         from app.repositories.analytics_repository import AnalyticsRepository
         analytics_repo = AnalyticsRepository(db)
 
-        # For now, return basic analytics structure - in a full implementation,
-        # this would query actual chatbot session and message tables
-        # TODO: Implement real chatbot analytics when tables are created
+        # Query real chatbot analytics from database
+        try:
+            # Query chatbot sessions
+            total_sessions_result = db.execute("SELECT COUNT(*) FROM chatbot_sessions")
+            total_sessions = total_sessions_result.scalar() or 0
 
-        # Mock analytics for now, but structure is ready for real data
+            # Query chatbot messages
+            total_messages_result = db.execute("SELECT COUNT(*) FROM chatbot_messages")
+            total_messages = total_messages_result.scalar() or 0
+
+            # Calculate average session duration
+            avg_duration_result = db.execute("""
+                SELECT AVG(EXTRACT(EPOCH FROM (ended_at - started_at)))
+                FROM chatbot_sessions
+                WHERE ended_at IS NOT NULL
+            """)
+            average_session_duration = float(avg_duration_result.scalar() or 0)
+
+            # Calculate average response time (placeholder - would need message timing data)
+            average_response_time = 0.0
+
+            # Calculate resolution rate (placeholder - would need resolution tracking)
+            resolution_rate = 0.0
+
+            # Calculate escalation rate (placeholder - would need escalation tracking)
+            escalation_rate = 0.0
+
+            # User satisfaction score (placeholder - would need feedback data)
+            user_satisfaction_score = 0.0
+
+            # Get top intents (placeholder - would need intent classification data)
+            top_intents = []
+
+            # Get session trends (placeholder - would need time-series data)
+            session_trends = []
+
+            # Get peak hours (placeholder - would need time analysis)
+            peak_hours = []
+
+        except Exception as e:
+            # If tables don't exist yet, return empty analytics
+            logger.warning(f"Chatbot analytics tables not available: {e}")
+            total_sessions = 0
+            total_messages = 0
+            average_session_duration = 0.0
+            average_response_time = 0.0
+            resolution_rate = 0.0
+            escalation_rate = 0.0
+            user_satisfaction_score = 0.0
+            top_intents = []
+            session_trends = []
+            peak_hours = []
+
         analytics = ChatbotAnalytics(
-            total_sessions=1250,
-            total_messages=8900,
-            average_session_duration=420.5,  # seconds
-            average_response_time=1250.0,  # milliseconds
-            resolution_rate=0.78,
-            escalation_rate=0.12,
-            user_satisfaction_score=4.2,
-            top_intents=[
-                {"intent": "policy_inquiry", "count": 450, "percentage": 36.0},
-                {"intent": "claim_help", "count": 280, "percentage": 22.4},
-                {"intent": "premium_payment", "count": 195, "percentage": 15.6}
-            ],
-            session_trends=[
-                {"date": "2024-11-01", "sessions": 45},
-                {"date": "2024-11-02", "sessions": 52},
-                {"date": "2024-11-03", "sessions": 38}
-            ],
-            peak_hours=[
-                {"hour": "10", "message_count": 234},
-                {"hour": "14", "message_count": 289},
-                {"hour": "16", "message_count": 198}
-            ]
+            total_sessions=total_sessions,
+            total_messages=total_messages,
+            average_session_duration=average_session_duration,
+            average_response_time=average_response_time,
+            resolution_rate=resolution_rate,
+            escalation_rate=escalation_rate,
+            user_satisfaction_score=user_satisfaction_score,
+            top_intents=top_intents,
+            session_trends=session_trends,
+            peak_hours=peak_hours,
+            intent_distribution=[]  # Empty for now
         )
 
         return analytics
