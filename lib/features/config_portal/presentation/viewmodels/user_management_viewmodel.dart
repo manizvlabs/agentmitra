@@ -26,17 +26,14 @@ class UserManagementViewModel extends BaseViewModel {
 
   @override
   Future<void> initialize() async {
-    print('🔍 UserManagementViewModel: initialize called');
     await super.initialize();
     await loadUsers();
   }
 
   /// Load users with pagination
   Future<void> loadUsers({bool append = false}) async {
-    print('🔍 UserManagementViewModel: loadUsers called, append=$append, current users count: ${_users.length}');
     await executeAsync(
       () async {
-        print('🔍 UserManagementViewModel: executing loadUsers API call');
         final offset = append ? _users.length : 0;
         if (!append) {
           _currentPage = 0;
@@ -49,6 +46,9 @@ class UserManagementViewModel extends BaseViewModel {
           offset: offset,
         );
 
+        print('🔍 UserManagementViewModel: Repository response type: ${response.runtimeType}');
+        print('🔍 UserManagementViewModel: Repository response keys: ${response.keys.toList()}');
+        print('🔍 UserManagementViewModel: Repository response items length: ${(response['items'] as List?)?.length ?? 'null'}');
         print('🔍 UserManagementViewModel: Repository response: $response');
 
         if (append) {

@@ -206,12 +206,12 @@ class TenantMiddleware(BaseHTTPMiddleware):
         """Check if tenant validation should be skipped for this request"""
         # Skip tenant validation for auth endpoints and health checks
         skip_paths = [
-            "/api/v1/auth/",
+            "/api/v1/auth",
             "/api/v1/health",
-            "/api/v1/tenants/",  # Super admins need to manage tenants
-            "/api/v1/rbac/",  # RBAC system endpoints
+            "/api/v1/tenants",  # Super admins need to manage tenants
+            "/api/v1/rbac",  # RBAC system endpoints
             "/api/v1/users/me",  # Current user profile endpoint
-            "/api/v1/users/",  # User management endpoints
+            "/api/v1/users",  # User management endpoints
             "/health",
             "/docs",
             "/redoc",

@@ -30,7 +30,6 @@ class ApiService {
       if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
     };
 
-    print('🔍 ApiService: Headers being sent: $headers');
     return headers;
   }
 
@@ -45,12 +44,10 @@ class ApiService {
         url += '?$queryString';
       }
 
-      print('🔍 ApiService: Making GET request to: $url');
       final response = await http.get(
         Uri.parse(url),
         headers: await getHeaders(),
       );
-      print('🔍 ApiService: Response status: ${response.statusCode}');
 
       return handleResponse(response);
     } catch (e) {

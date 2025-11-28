@@ -454,29 +454,26 @@ class ConfigPortalRepository {
         queryParameters: queryParams,
       );
 
-      // Return paginated response
-      // Handle both direct list and wrapped response
+      // Handle response - backend returns List<UserResponse> directly
       List<Map<String, dynamic>> usersList;
       if (response is List) {
         usersList = List<Map<String, dynamic>>.from(response as List);
-      } else if (response is Map<String, dynamic>) {
-        // If it's a map, try to extract users from various possible keys
-        final data = response['data'] ?? response['users'] ?? response['items'];
-        if (data is List) {
-          usersList = List<Map<String, dynamic>>.from(data);
-        } else {
-          usersList = [];
-        }
       } else {
         usersList = [];
       }
 
+      // Since backend doesn't provide total count, estimate it
+      // If we got a full page, assume there might be more
+      // If we got less than requested, this is the last page
+      final requestedLimit = limit ?? 20;
+      final hasMore = usersList.length >= requestedLimit;
+
       return {
         'items': usersList,
-        'total': usersList.length, // Backend doesn't provide total count
+        'total': hasMore ? (offset ?? 0) + usersList.length + requestedLimit : (offset ?? 0) + usersList.length,
         'limit': limit,
         'offset': offset,
-        'hasMore': usersList.length >= (limit ?? 20), // Simple pagination logic
+        'hasMore': hasMore,
       };
     } catch (e) {
       _logger.error('Failed to fetch users: $e');
