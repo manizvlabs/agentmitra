@@ -19,6 +19,8 @@ class DashboardViewModel extends BaseViewModel {
 
   AgentPerformanceData? _agentPerformance;
   BusinessIntelligenceData? _businessIntelligence;
+  Map<String, dynamic>? _roiData;
+  Map<String, dynamic>? _forecastData;
 
   DashboardAnalytics? get analytics => _analytics;
   List<DashboardNotification> get notifications => _notifications;
@@ -26,6 +28,8 @@ class DashboardViewModel extends BaseViewModel {
 
   AgentPerformanceData? get agentPerformance => _agentPerformance;
   BusinessIntelligenceData? get businessIntelligence => _businessIntelligence;
+  Map<String, dynamic>? get roiData => _roiData;
+  Map<String, dynamic>? get forecastData => _forecastData;
 
   // Computed properties
   int get unreadNotificationsCount =>
@@ -89,6 +93,44 @@ class DashboardViewModel extends BaseViewModel {
         return true;
       },
       errorMessage: 'Failed to load agent performance data',
+    );
+    notifyListeners();
+  }
+
+  /// Load ROI dashboard data
+  Future<void> loadROIDashboardData(String timeframe) async {
+    await executeAsync(
+      () async {
+        final agentId = await AgentService().getCurrentAgentId();
+        if (agentId == null) {
+          throw Exception('Agent ID not available');
+        }
+        _roiData = await _repository.getROIDashboardData(
+          agentId: agentId,
+          timeframe: timeframe,
+        );
+        return true;
+      },
+      errorMessage: 'Failed to load ROI dashboard data',
+    );
+    notifyListeners();
+  }
+
+  /// Load revenue forecast data
+  Future<void> loadRevenueForecastData(String period) async {
+    await executeAsync(
+      () async {
+        final agentId = await AgentService().getCurrentAgentId();
+        if (agentId == null) {
+          throw Exception('Agent ID not available');
+        }
+        _forecastData = await _repository.getRevenueForecastData(
+          agentId: agentId,
+          period: period,
+        );
+        return true;
+      },
+      errorMessage: 'Failed to load revenue forecast data',
     );
     notifyListeners();
   }

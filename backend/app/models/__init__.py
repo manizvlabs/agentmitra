@@ -37,6 +37,16 @@ from .shared import (
     WhatsappTemplate, Tenant
 )
 
+# Import new analytics models
+try:
+    from .lead import Lead
+    from .customer_retention import CustomerRetentionAnalytics
+    from .revenue_forecast import RevenueForecastScenario
+except ImportError:
+    Lead = None
+    CustomerRetentionAnalytics = None
+    RevenueForecastScenario = None
+
 __all__ = [
     "Base",
     "User",

@@ -314,3 +314,173 @@ class GeographicData {
     required this.marketShare,
   });
 }
+
+// ROI Analytics Models
+
+class ROIData {
+  final String agentName;
+  final String agentCode;
+  final String timeframe;
+  final double overallRoi;
+  final String roiGrade;
+  final String roiTrend;
+  final double roiChange;
+  final double totalRevenue;
+  final int totalPayments;
+  final int newPolicies;
+  final double revenueGrowth;
+  final double averagePremium;
+  final double collectionRate;
+  final double totalCollected;
+  final double totalPremiumDue;
+  final int totalLeads;
+  final int contactedLeads;
+  final int totalQuotes;
+  final int totalPolicies;
+  final double contactRate;
+  final double quoteRate;
+  final double conversionRate;
+  final double collectionEfficiency;
+  final double retentionRate;
+  final double avgResponseTime;
+  final List<ActionItem> actionItems;
+  final List<PredictiveInsight> predictiveInsights;
+
+  const ROIData({
+    required this.agentName,
+    required this.agentCode,
+    required this.timeframe,
+    required this.overallRoi,
+    required this.roiGrade,
+    required this.roiTrend,
+    required this.roiChange,
+    required this.totalRevenue,
+    required this.totalPayments,
+    required this.newPolicies,
+    required this.revenueGrowth,
+    required this.averagePremium,
+    required this.collectionRate,
+    required this.totalCollected,
+    required this.totalPremiumDue,
+    required this.totalLeads,
+    required this.contactedLeads,
+    required this.totalQuotes,
+    required this.totalPolicies,
+    required this.contactRate,
+    required this.quoteRate,
+    required this.conversionRate,
+    required this.collectionEfficiency,
+    required this.retentionRate,
+    required this.avgResponseTime,
+    required this.actionItems,
+    required this.predictiveInsights,
+  });
+
+  factory ROIData.fromJson(Map<String, dynamic> json) {
+    return ROIData(
+      agentName: json['agent_name'] ?? '',
+      agentCode: json['agent_code'] ?? '',
+      timeframe: json['timeframe'] ?? '30d',
+      overallRoi: (json['overall_roi'] ?? 0).toDouble(),
+      roiGrade: json['roi_grade'] ?? 'C',
+      roiTrend: json['roi_trend'] ?? 'stable',
+      roiChange: (json['roi_change'] ?? 0).toDouble(),
+      totalRevenue: (json['total_revenue'] ?? 0).toDouble(),
+      totalPayments: json['total_payments'] ?? 0,
+      newPolicies: json['new_policies'] ?? 0,
+      revenueGrowth: (json['revenue_growth'] ?? 0).toDouble(),
+      averagePremium: (json['average_premium'] ?? 0).toDouble(),
+      collectionRate: (json['collection_rate'] ?? 0).toDouble(),
+      totalCollected: (json['total_collected'] ?? 0).toDouble(),
+      totalPremiumDue: (json['total_premium_due'] ?? 0).toDouble(),
+      totalLeads: json['total_leads'] ?? 0,
+      contactedLeads: json['contacted_leads'] ?? 0,
+      totalQuotes: json['total_quotes'] ?? 0,
+      totalPolicies: json['total_policies'] ?? 0,
+      contactRate: (json['contact_rate'] ?? 0).toDouble(),
+      quoteRate: (json['quote_rate'] ?? 0).toDouble(),
+      conversionRate: (json['conversion_rate'] ?? 0).toDouble(),
+      collectionEfficiency: (json['collection_rate'] ?? 0).toDouble(),
+      retentionRate: (json['retention_rate'] ?? 0).toDouble(),
+      avgResponseTime: (json['avg_response_time'] ?? 0).toDouble(),
+      actionItems: (json['action_items'] as List<dynamic>? ?? [])
+          .map((item) => ActionItem.fromJson(item))
+          .toList(),
+      predictiveInsights: (json['predictive_insights'] as List<dynamic>? ?? [])
+          .map((insight) => PredictiveInsight.fromJson(insight))
+          .toList(),
+    );
+  }
+}
+
+class ActionItem {
+  final String id;
+  final String type;
+  final String title;
+  final String description;
+  final String priority;
+  final int potentialRevenue;
+  final String deadline;
+
+  const ActionItem({
+    required this.id,
+    required this.type,
+    required this.title,
+    required this.description,
+    required this.priority,
+    required this.potentialRevenue,
+    required this.deadline,
+  });
+
+  factory ActionItem.fromJson(Map<String, dynamic> json) {
+    return ActionItem(
+      id: json['id'] ?? '',
+      type: json['type'] ?? 'general',
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      priority: json['priority'] ?? 'medium',
+      potentialRevenue: json['potential_revenue'] ?? 0,
+      deadline: json['deadline'] ?? '',
+    );
+  }
+}
+
+class PredictiveInsight {
+  final String id;
+  final String type;
+  final String title;
+  final String description;
+  final int confidence;
+  final String impact;
+  final int? potentialValue;
+  final List<String>? recommendedActions;
+  final String? deadline;
+
+  const PredictiveInsight({
+    required this.id,
+    required this.type,
+    required this.title,
+    required this.description,
+    required this.confidence,
+    required this.impact,
+    this.potentialValue,
+    this.recommendedActions,
+    this.deadline,
+  });
+
+  factory PredictiveInsight.fromJson(Map<String, dynamic> json) {
+    return PredictiveInsight(
+      id: json['id'] ?? '',
+      type: json['type'] ?? 'general',
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      confidence: json['confidence'] ?? 0,
+      impact: json['impact'] ?? 'medium',
+      potentialValue: json['potential_value'],
+      recommendedActions: json['recommended_actions'] != null
+          ? List<String>.from(json['recommended_actions'])
+          : null,
+      deadline: json['deadline'],
+    );
+  }
+}

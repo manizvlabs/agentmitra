@@ -67,6 +67,10 @@ class Agent(Base, TimestampMixin):
     presentations = relationship("Presentation", back_populates="agent")
     presentation_media = relationship("PresentationMedia", back_populates="agent")
 
+    # Analytics relationships
+    leads = relationship("Lead", back_populates="agent")
+    revenue_forecast_scenarios = relationship("RevenueForecastScenario", back_populates="agent")
+
     def __repr__(self):
         return f"<Agent(agent_id={self.agent_id}, agent_code={self.agent_code}, status={self.status})>"
 

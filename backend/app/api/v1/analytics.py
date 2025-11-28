@@ -15,6 +15,10 @@ from app.core.auth_middleware import (
     require_permission
 )
 from app.services.analytics_service import AnalyticsService
+from app.services.roi_calculation_service import ROICalculationService
+from app.services.revenue_forecasting_service import RevenueForecastingService
+from app.services.hot_leads_service import HotLeadsService
+from app.services.at_risk_customers_service import AtRiskCustomersService
 from app.repositories.analytics_repository import AnalyticsRepository
 from app.models.analytics import (
     DashboardKPIs,
@@ -29,6 +33,330 @@ from app.models.analytics import (
 )
 
 router = APIRouter()
+
+
+# =====================================================
+# ROI CALCULATION ENDPOINTS
+# =====================================================
+
+@router.get("/roi/agent/{agent_id}")
+async def get_agent_roi_analytics(
+    agent_id: str,
+    period: str = Query("30d", regex="^(7d|30d|90d|1y)$"),
+    current_user: UserContext = Depends(require_any_role(["super_admin", "provider_admin", "regional_manager", "senior_agent"])),
+    db: Session = Depends(get_db)
+):
+    """Get comprehensive ROI analytics for a specific agent"""
+    try:
+        roi_data = ROICalculationService.calculate_agent_roi(agent_id=agent_id, timeframe=period)
+
+        return {
+            "success": True,
+            "data": roi_data,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to calculate agent ROI: {str(e)}")
+
+
+@router.get("/roi/dashboard/{agent_id}")
+async def get_roi_dashboard_data(
+    agent_id: str,
+    period: str = Query("30d", regex="^(7d|30d|90d|1y)$"),
+    current_user: UserContext = Depends(require_any_role(["super_admin", "provider_admin", "regional_manager", "senior_agent"])),
+    db: Session = Depends(get_db)
+):
+    """Get ROI dashboard data formatted for frontend consumption"""
+    try:
+        roi_data = ROICalculationService.calculate_agent_roi(agent_id=agent_id, timeframe=period)
+
+        # Format data for dashboard widgets
+        dashboard_data = {
+            'overall_roi_score': {
+                'score': roi_data['overall_roi'],
+                'grade': roi_data['roi_grade'],
+                'trend': roi_data['roi_trend'],
+                'change': roi_data['roi_change']
+            },
+            'revenue_performance': {
+                'total_revenue': roi_data['total_revenue'],
+                'new_policies': roi_data['new_policies'],
+                'revenue_growth': roi_data['revenue_growth'],
+                'average_premium': roi_data['average_premium'],
+                'collection_rate': roi_data['collection_rate']
+            },
+            'conversion_funnel': {
+                'total_leads': roi_data['total_leads'],
+                'contacted_leads': roi_data['contacted_leads'],
+                'total_quotes': roi_data['total_quotes'],
+                'total_policies': roi_data['total_policies'],
+                'contact_rate': roi_data['contact_rate'],
+                'quote_rate': roi_data['quote_rate'],
+                'conversion_rate': roi_data['conversion_rate']
+            },
+            'action_items': roi_data['action_items'],
+            'predictive_insights': roi_data['predictive_insights'],
+            'efficiency_metrics': {
+                'collection_rate': roi_data['collection_rate'],
+                'retention_rate': roi_data['retention_rate'],
+                'avg_response_time': roi_data['avg_response_time']
+            }
+        }
+
+        return {
+            "success": True,
+            "data": dashboard_data,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get ROI dashboard data: {str(e)}")
+
+
+# =====================================================
+# REVENUE FORECASTING ENDPOINTS
+# =====================================================
+
+@router.get("/forecast/revenue/{agent_id}")
+async def get_revenue_forecast(
+    agent_id: str,
+    forecast_period: str = Query("3m", regex="^(1m|3m|6m|1y)$"),
+    current_user: UserContext = Depends(require_any_role(["super_admin", "provider_admin", "regional_manager", "senior_agent"])),
+    db: Session = Depends(get_db)
+):
+    """Get comprehensive revenue forecast with scenario analysis"""
+    try:
+        forecast_data = RevenueForecastingService.generate_revenue_forecast(
+            agent_id=agent_id,
+            forecast_period=forecast_period
+        )
+
+        return {
+            "success": True,
+            "data": forecast_data,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate revenue forecast: {str(e)}")
+
+
+@router.get("/forecast/dashboard/{agent_id}")
+async def get_forecast_dashboard_data(
+    agent_id: str,
+    forecast_period: str = Query("3m", regex="^(1m|3m|6m|1y)$"),
+    current_user: UserContext = Depends(require_any_role(["super_admin", "provider_admin", "regional_manager", "senior_agent"])),
+    db: Session = Depends(get_db)
+):
+    """Get forecast dashboard data formatted for frontend consumption"""
+    try:
+        forecast_data = RevenueForecastingService.generate_revenue_forecast(
+            agent_id=agent_id,
+            forecast_period=forecast_period
+        )
+
+        # Format data for dashboard widgets
+        dashboard_data = {
+            'forecast_summary': {
+                'projected_revenue': forecast_data['projected_revenue'],
+                'revenue_growth': forecast_data['revenue_growth'],
+                'confidence_level': forecast_data['confidence_level'],
+                'forecast_period': forecast_data['forecast_period']
+            },
+            'scenario_analysis': {
+                'best_case': forecast_data['best_case'],
+                'base_case': forecast_data['base_case'],
+                'worst_case': forecast_data['worst_case']
+            },
+            'forecast_chart': forecast_data['forecast_chart_data'],
+            'risk_factors': forecast_data['risk_factors']
+        }
+
+        return {
+            "success": True,
+            "data": dashboard_data,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get forecast dashboard data: {str(e)}")
+
+
+# =====================================================
+# HOT LEADS ENDPOINTS
+# =====================================================
+
+@router.get("/leads/hot/{agent_id}")
+async def get_hot_leads(
+    agent_id: str,
+    priority: str = Query("all", regex="^(all|high|medium|low)$"),
+    current_user: UserContext = Depends(require_any_role(["super_admin", "provider_admin", "regional_manager", "senior_agent"])),
+    db: Session = Depends(get_db)
+):
+    """Get hot leads and opportunities for an agent"""
+    try:
+        leads_data = HotLeadsService.get_hot_leads(agent_id=agent_id, priority_filter=priority)
+
+        return {
+            "success": True,
+            "data": leads_data,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get hot leads: {str(e)}")
+
+
+@router.get("/leads/dashboard/{agent_id}")
+async def get_leads_dashboard_data(
+    agent_id: str,
+    priority: str = Query("all", regex="^(all|high|medium|low)$"),
+    current_user: UserContext = Depends(require_any_role(["super_admin", "provider_admin", "regional_manager", "senior_agent"])),
+    db: Session = Depends(get_db)
+):
+    """Get leads dashboard data formatted for frontend consumption"""
+    try:
+        leads_data = HotLeadsService.get_hot_leads(agent_id=agent_id, priority_filter=priority)
+
+        # Format data for dashboard widgets
+        dashboard_data = {
+            'leads_summary': {
+                'hot_leads_count': leads_data['hot_leads_count'],
+                'total_potential_value': leads_data['total_potential_value'],
+                'conversion_rate': leads_data['conversion_rate'],
+                'total_leads_count': leads_data['total_leads_count']
+            },
+            'leads_list': leads_data['leads'],
+            'priority_breakdown': leads_data['summary']['priority_breakdown']
+        }
+
+        return {
+            "success": True,
+            "data": dashboard_data,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get leads dashboard data: {str(e)}")
+
+
+@router.get("/leads/{lead_id}/details")
+async def get_lead_details(
+    lead_id: str,
+    current_user: UserContext = Depends(require_any_role(["super_admin", "provider_admin", "regional_manager", "senior_agent"])),
+    db: Session = Depends(get_db)
+):
+    """Get detailed information about a specific lead"""
+    try:
+        lead_details = HotLeadsService.get_lead_details(lead_id=lead_id)
+
+        if not lead_details:
+            raise HTTPException(status_code=404, detail="Lead not found")
+
+        return {
+            "success": True,
+            "data": lead_details,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get lead details: {str(e)}")
+
+
+# =====================================================
+# AT-RISK CUSTOMERS ENDPOINTS
+# =====================================================
+
+@router.get("/customers/at-risk/{agent_id}")
+async def get_at_risk_customers(
+    agent_id: str,
+    risk_level: str = Query("all", regex="^(all|high|medium|low)$"),
+    current_user: UserContext = Depends(require_any_role(["super_admin", "provider_admin", "regional_manager", "senior_agent"])),
+    db: Session = Depends(get_db)
+):
+    """Get at-risk customers for an agent with retention recommendations"""
+    try:
+        customers_data = AtRiskCustomersService.get_at_risk_customers(
+            agent_id=agent_id,
+            risk_level_filter=risk_level
+        )
+
+        return {
+            "success": True,
+            "data": customers_data,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get at-risk customers: {str(e)}")
+
+
+@router.get("/customers/retention/dashboard/{agent_id}")
+async def get_retention_dashboard_data(
+    agent_id: str,
+    risk_level: str = Query("all", regex="^(all|high|medium|low)$"),
+    current_user: UserContext = Depends(require_any_role(["super_admin", "provider_admin", "regional_manager", "senior_agent"])),
+    db: Session = Depends(get_db)
+):
+    """Get retention dashboard data formatted for frontend consumption"""
+    try:
+        customers_data = AtRiskCustomersService.get_at_risk_customers(
+            agent_id=agent_id,
+            risk_level_filter=risk_level
+        )
+
+        # Format data for dashboard widgets
+        dashboard_data = {
+            'retention_summary': {
+                'at_risk_count': customers_data['at_risk_count'],
+                'total_retention_value': customers_data['total_retention_value'],
+                'retention_success_rate': customers_data['retention_success_rate'],
+                'retention_opportunities': customers_data['summary']['retention_opportunities']
+            },
+            'risk_breakdown': {
+                'high_risk': customers_data['summary']['high_risk_count'],
+                'medium_risk': customers_data['summary']['medium_risk_count'],
+                'low_risk': customers_data['summary']['low_risk_count']
+            },
+            'customers_list': customers_data['customers']
+        }
+
+        return {
+            "success": True,
+            "data": dashboard_data,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get retention dashboard data: {str(e)}")
+
+
+@router.get("/customers/{customer_id}/retention-plan")
+async def get_customer_retention_plan(
+    customer_id: str,
+    current_user: UserContext = Depends(require_any_role(["super_admin", "provider_admin", "regional_manager", "senior_agent"])),
+    db: Session = Depends(get_db)
+):
+    """Get detailed retention plan for a specific customer"""
+    try:
+        retention_plan = AtRiskCustomersService.get_customer_retention_plan(customer_id=customer_id)
+
+        if not retention_plan:
+            raise HTTPException(status_code=404, detail="Customer retention plan not found")
+
+        return {
+            "success": True,
+            "data": retention_plan,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get customer retention plan: {str(e)}")
 
 
 # =====================================================

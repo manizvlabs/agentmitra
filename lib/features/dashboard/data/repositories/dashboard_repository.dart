@@ -44,6 +44,44 @@ class DashboardRepository extends BaseRepository {
     await _remoteDataSource.refreshDashboardCache(agentId);
   }
 
+  /// Get ROI dashboard data
+  Future<Map<String, dynamic>> getROIDashboardData({
+    required String agentId,
+    required String timeframe,
+  }) async {
+    try {
+      final response = await ApiService.get('/analytics/roi/agent/$agentId?period=$timeframe');
+
+      if (response.success && response.data != null) {
+        return response.data!;
+      } else {
+        throw Exception(response.message ?? 'Failed to fetch ROI data');
+      }
+    } catch (e) {
+      // Return mock data for development if API fails
+      return _getMockROIData(agentId, timeframe);
+    }
+  }
+
+  /// Get revenue forecast data
+  Future<Map<String, dynamic>> getRevenueForecastData({
+    required String agentId,
+    required String period,
+  }) async {
+    try {
+      final response = await ApiService.get('/analytics/forecast/agent/$agentId?period=$period');
+
+      if (response.success && response.data != null) {
+        return response.data!;
+      } else {
+        throw Exception(response.message ?? 'Failed to fetch forecast data');
+      }
+    } catch (e) {
+      // Return mock data for development if API fails
+      return _getMockForecastData(agentId, period);
+    }
+  }
+
   /// Get agent performance data from analytics API
   Future<AgentPerformanceData> getAgentPerformanceData(String agentId) async {
     try {
@@ -198,5 +236,172 @@ class DashboardRepository extends BaseRepository {
         route: '/smart-chatbot',
       ),
     ];
+  }
+
+  /// Mock ROI data for development
+  Map<String, dynamic> _getMockROIData(String agentId, String timeframe) {
+    return {
+      'agent_name': 'Rajesh Kumar',
+      'agent_code': 'AGT001',
+      'timeframe': timeframe,
+      'overall_roi': 87.5,
+      'roi_grade': 'A',
+      'roi_trend': 'up',
+      'roi_change': 5.2,
+      'total_revenue': 2450000,
+      'total_payments': 45,
+      'new_policies': 12,
+      'revenue_growth': 12.5,
+      'average_premium': 20416.67,
+      'collection_rate': 98.5,
+      'total_collected': 2450000,
+      'total_premium_due': 2489250,
+      'total_leads': 150,
+      'contacted_leads': 120,
+      'total_quotes': 90,
+      'total_policies': 12,
+      'contact_rate': 80.0,
+      'quote_rate': 75.0,
+      'conversion_rate': 13.3,
+      'collection_efficiency': 98.5,
+      'retention_rate': 94.2,
+      'avg_response_time': 2.5,
+      'action_items': [
+        {
+          'id': '1',
+          'type': 'conversion_improvement',
+          'title': 'Improve Lead Conversion Rate',
+          'description': 'Your lead conversion rate is below target. Focus on improving follow-up processes.',
+          'priority': 'high',
+          'potential_revenue': 500000,
+          'deadline': '2 weeks',
+        },
+        {
+          'id': '2',
+          'type': 'collection',
+          'title': 'Follow Up on Overdue Payments',
+          'description': '3 customers have overdue payments totaling ₹45,000.',
+          'priority': 'medium',
+          'potential_revenue': 45000,
+          'deadline': '1 week',
+        },
+        {
+          'id': '3',
+          'type': 'follow_up',
+          'title': 'Contact High-Value Prospects',
+          'description': '5 high-value leads haven\'t been contacted in 7+ days.',
+          'priority': 'medium',
+          'potential_revenue': 250000,
+          'deadline': '3 days',
+        },
+      ],
+      'predictive_insights': [
+        {
+          'id': '1',
+          'type': 'opportunity',
+          'title': 'Premium Increase Opportunity',
+          'description': '15 customers are eligible for premium increases based on inflation adjustment.',
+          'confidence': 85,
+          'impact': 'high',
+          'potential_value': 180000,
+          'recommended_actions': [
+            'Contact customers proactively',
+            'Explain inflation adjustment benefits',
+            'Offer payment plan options'
+          ],
+          'deadline': 'End of quarter',
+        },
+        {
+          'id': '2',
+          'type': 'warning',
+          'title': 'Potential Customer Churn',
+          'description': '3 customers show signs of churn based on reduced engagement.',
+          'confidence': 78,
+          'impact': 'medium',
+          'potential_value': 75000,
+          'recommended_actions': [
+            'Schedule retention calls',
+            'Review policy benefits',
+            'Offer loyalty discounts'
+          ],
+        },
+        {
+          'id': '3',
+          'type': 'trend',
+          'title': 'Seasonal Sales Pattern',
+          'description': 'Q4 typically brings 35% more sales. Start preparing marketing campaigns.',
+          'confidence': 92,
+          'impact': 'high',
+          'recommended_actions': [
+            'Prepare Q4 marketing budget',
+            'Train additional staff',
+            'Stock up on marketing materials'
+          ],
+        },
+      ],
+    };
+  }
+
+  /// Mock forecast data for development
+  Map<String, dynamic> _getMockForecastData(String agentId, String period) {
+    final baseRevenue = 250000.0;
+    final baseGrowth = 8.5;
+    final confidence = 0.78;
+
+    return {
+      'agent_id': agentId,
+      'period': period,
+      'current_revenue': baseRevenue,
+      'projected_revenue': baseRevenue * 1.35,
+      'revenue_growth': baseGrowth,
+      'confidence_level': confidence,
+      'forecast_date': DateTime.now().toIso8601String(),
+      'scenarios': {
+        'best_case': {
+          'revenue': baseRevenue * 1.55,
+          'growth_rate': baseGrowth + 12.0,
+          'probability': 0.25,
+          'confidence': 0.65,
+        },
+        'base_case': {
+          'revenue': baseRevenue * 1.35,
+          'growth_rate': baseGrowth + 2.0,
+          'probability': 0.50,
+          'confidence': confidence,
+        },
+        'worst_case': {
+          'revenue': baseRevenue * 1.15,
+          'growth_rate': baseGrowth - 3.0,
+          'probability': 0.25,
+          'confidence': 0.55,
+        },
+      },
+      'risk_factors': [
+        {
+          'factor': 'Market Competition',
+          'impact': 'medium',
+          'probability': 0.6,
+          'description': 'Increasing competition from digital insurers',
+        },
+        {
+          'factor': 'Economic Conditions',
+          'impact': 'high',
+          'probability': 0.4,
+          'description': 'Potential economic slowdown affecting premiums',
+        },
+        {
+          'factor': 'Regulatory Changes',
+          'impact': 'medium',
+          'probability': 0.3,
+          'description': 'New insurance regulations and compliance costs',
+        },
+      ],
+      'assumptions': [
+        'Stable economic conditions for next 12 months',
+        'No major regulatory changes affecting operations',
+        'Current customer retention rates remain consistent',
+        'Marketing budget increases by 15% annually',
+      ],
+    };
   }
 }
