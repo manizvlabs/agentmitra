@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS video_categories (
 CREATE TABLE IF NOT EXISTS video_tutorials (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     video_id VARCHAR(255) UNIQUE NOT NULL,
-    content_id UUID NOT NULL REFERENCES content(id) ON DELETE CASCADE,
+    content_id UUID NOT NULL REFERENCES lic_schema.video_content(video_id) ON DELETE CASCADE,
     youtube_video_id VARCHAR(50),
     youtube_url VARCHAR(500),
     title VARCHAR(500) NOT NULL,
@@ -200,8 +200,8 @@ ALTER TABLE video_recommendations ADD CONSTRAINT fk_video_recommendations_video_
     FOREIGN KEY (video_id) REFERENCES video_tutorials(id) ON DELETE CASCADE;
 
 ALTER TABLE video_tutorials DROP CONSTRAINT IF EXISTS fk_video_tutorials_content_id;
-ALTER TABLE video_tutorials ADD CONSTRAINT fk_video_tutorials_content_id 
-    FOREIGN KEY (content_id) REFERENCES content(id) ON DELETE CASCADE;
+ALTER TABLE video_tutorials ADD CONSTRAINT fk_video_tutorials_content_id
+    FOREIGN KEY (content_id) REFERENCES lic_schema.video_content(video_id) ON DELETE CASCADE;
 
 -- ========================================
 -- Triggers for Updated At

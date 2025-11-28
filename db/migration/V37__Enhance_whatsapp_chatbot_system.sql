@@ -7,30 +7,42 @@
 -- ========================================
 -- Enhanced WhatsApp Message Table
 -- ========================================
-CREATE TABLE IF NOT EXISTS whatsapp_messages (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    message_id VARCHAR(255) UNIQUE NOT NULL,
-    whatsapp_message_id VARCHAR(255),
-    from_number VARCHAR(20) NOT NULL,
-    to_number VARCHAR(20) NOT NULL,
-    message_type VARCHAR(50) NOT NULL, -- text, image, document, audio, video, location, contacts
-    content TEXT,
-    media_url VARCHAR(1000),
-    media_caption TEXT,
-    media_mime_type VARCHAR(100),
-    media_file_size INTEGER,
-    timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
-    status VARCHAR(50) DEFAULT 'received', -- sent, delivered, read, failed
-    direction VARCHAR(10) NOT NULL, -- inbound, outbound
-    conversation_id VARCHAR(255),
-    session_id VARCHAR(255),
-    agent_id UUID,
-    customer_id UUID,
-    context_data JSONB,
-    metadata JSONB,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
+-- Add missing columns to existing whatsapp_messages table
+ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS id UUID DEFAULT gen_random_uuid();
+ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS whatsapp_message_id VARCHAR(255);
+ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS from_number VARCHAR(20);
+ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS to_number VARCHAR(20);
+ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS message_type VARCHAR(50) DEFAULT 'text';
+ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS media_caption TEXT;
+ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS media_mime_type VARCHAR(100);
+ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS media_file_size INTEGER;
+ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'received';
+ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS direction VARCHAR(10) DEFAULT 'inbound';
+ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS conversation_id VARCHAR(255);
+ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS session_id VARCHAR(255);
+ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS customer_id UUID;
+ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS context_data JSONB;
+ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS metadata JSONB;
+ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+
+-- Update existing records to populate new columns where possible
+UPDATE whatsapp_messages SET
+    from_number = 'unknown',
+    to_number = 'unknown',
+    timestamp = created_at,
+    direction = CASE WHEN sender_id IS NOT NULL THEN 'outbound' ELSE 'inbound' END
+WHERE from_number IS NULL;
+
+-- Make required columns NOT NULL after populating data
+ALTER TABLE whatsapp_messages ALTER COLUMN from_number SET NOT NULL;
+ALTER TABLE whatsapp_messages ALTER COLUMN to_number SET NOT NULL;
+ALTER TABLE whatsapp_messages ALTER COLUMN message_type SET NOT NULL;
+ALTER TABLE whatsapp_messages ALTER COLUMN timestamp SET NOT NULL;
+ALTER TABLE whatsapp_messages ALTER COLUMN direction SET NOT NULL;
+
+-- Add primary key constraint if it doesn't exist (use message_id as primary key for existing table)
+-- Note: Existing table uses message_id as primary key, so we'll work with that
 
 -- ========================================
 -- WhatsApp Conversation Sessions Table
@@ -117,52 +129,30 @@ CREATE TABLE IF NOT EXISTS chatbot_analytics (
 );
 
 -- ========================================
--- Knowledge Base Articles Table
+-- Knowledge Base Articles Table Enhancement
 -- ========================================
-CREATE TABLE IF NOT EXISTS knowledge_base_articles (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    article_id VARCHAR(255) UNIQUE NOT NULL,
-    title VARCHAR(500) NOT NULL,
-    content TEXT NOT NULL,
-    category VARCHAR(100) NOT NULL,
-    tags JSONB,
-    language VARCHAR(10) DEFAULT 'en',
-    difficulty_level VARCHAR(20) DEFAULT 'beginner',
-    target_audience JSONB,
-    is_published BOOLEAN DEFAULT true,
-    view_count INTEGER DEFAULT 0,
-    helpful_votes INTEGER DEFAULT 0,
-    not_helpful_votes INTEGER DEFAULT 0,
-    author_id UUID,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    last_reviewed_at TIMESTAMP WITH TIME ZONE,
-    expires_at TIMESTAMP WITH TIME ZONE
-);
+-- Add missing columns to existing knowledge_base_articles table
+ALTER TABLE knowledge_base_articles ADD COLUMN IF NOT EXISTS target_audience JSONB;
+ALTER TABLE knowledge_base_articles ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEFAULT true;
+ALTER TABLE knowledge_base_articles ADD COLUMN IF NOT EXISTS helpful_votes INTEGER DEFAULT 0;
+ALTER TABLE knowledge_base_articles ADD COLUMN IF NOT EXISTS not_helpful_votes INTEGER DEFAULT 0;
+ALTER TABLE knowledge_base_articles ADD COLUMN IF NOT EXISTS last_reviewed_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE knowledge_base_articles ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP WITH TIME ZONE;
 
 -- ========================================
--- Chatbot Intent Patterns Table
+-- Chatbot Intent Patterns Table Enhancement
 -- ========================================
-CREATE TABLE IF NOT EXISTS chatbot_intents (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    intent_name VARCHAR(100) UNIQUE NOT NULL,
-    display_name VARCHAR(200) NOT NULL,
-    description TEXT,
-    category VARCHAR(50) NOT NULL,
-    training_examples JSONB,
-    response_templates JSONB,
-    keywords JSONB,
-    confidence_threshold DECIMAL(3,2) DEFAULT 0.7,
-    escalation_trigger BOOLEAN DEFAULT false,
-    priority_boost INTEGER DEFAULT 0,
-    is_active BOOLEAN DEFAULT true,
-    usage_count INTEGER DEFAULT 0,
-    success_rate DECIMAL(5,2) DEFAULT 0.00,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    created_by UUID,
-    updated_by UUID
-);
+-- Add missing columns to existing chatbot_intents table
+ALTER TABLE chatbot_intents ADD COLUMN IF NOT EXISTS training_examples JSONB;
+ALTER TABLE chatbot_intents ADD COLUMN IF NOT EXISTS response_templates JSONB;
+ALTER TABLE chatbot_intents ADD COLUMN IF NOT EXISTS keywords JSONB;
+ALTER TABLE chatbot_intents ADD COLUMN IF NOT EXISTS confidence_threshold DECIMAL(3,2) DEFAULT 0.7;
+ALTER TABLE chatbot_intents ADD COLUMN IF NOT EXISTS escalation_trigger BOOLEAN DEFAULT false;
+ALTER TABLE chatbot_intents ADD COLUMN IF NOT EXISTS priority_boost INTEGER DEFAULT 0;
+ALTER TABLE chatbot_intents ADD COLUMN IF NOT EXISTS usage_count INTEGER DEFAULT 0;
+ALTER TABLE chatbot_intents ADD COLUMN IF NOT EXISTS success_rate DECIMAL(5,2) DEFAULT 0.00;
+ALTER TABLE chatbot_intents ADD COLUMN IF NOT EXISTS created_by UUID;
+ALTER TABLE chatbot_intents ADD COLUMN IF NOT EXISTS updated_by UUID;
 
 -- ========================================
 -- Conversation Context Storage Table
@@ -235,6 +225,8 @@ CREATE INDEX IF NOT EXISTS idx_knowledge_base_language ON knowledge_base_article
 CREATE INDEX IF NOT EXISTS idx_knowledge_base_published ON knowledge_base_articles(is_published) WHERE is_published = true;
 CREATE INDEX IF NOT EXISTS idx_knowledge_base_search_title ON knowledge_base_articles USING gin(to_tsvector('english', title));
 CREATE INDEX IF NOT EXISTS idx_knowledge_base_search_content ON knowledge_base_articles USING gin(to_tsvector('english', content));
+CREATE INDEX IF NOT EXISTS idx_knowledge_base_author ON knowledge_base_articles(author_id);
+CREATE INDEX IF NOT EXISTS idx_knowledge_base_difficulty ON knowledge_base_articles(difficulty_level);
 
 -- Intent Patterns Indexes
 CREATE INDEX IF NOT EXISTS idx_chatbot_intents_name ON chatbot_intents(intent_name);
@@ -268,22 +260,36 @@ CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_search_content ON whatsapp_mess
 -- ========================================
 -- WhatsApp Messages
 ALTER TABLE whatsapp_messages DROP CONSTRAINT IF EXISTS fk_whatsapp_messages_agent;
-ALTER TABLE whatsapp_messages ADD CONSTRAINT fk_whatsapp_messages_agent 
-    FOREIGN KEY (agent_id) REFERENCES agent(id) ON DELETE SET NULL;
+ALTER TABLE whatsapp_messages ADD CONSTRAINT fk_whatsapp_messages_agent
+    FOREIGN KEY (agent_id) REFERENCES lic_schema.agents(agent_id) ON DELETE SET NULL;
 
 -- WhatsApp Conversations
 ALTER TABLE whatsapp_conversations DROP CONSTRAINT IF EXISTS fk_whatsapp_conversations_agent;
-ALTER TABLE whatsapp_conversations ADD CONSTRAINT fk_whatsapp_conversations_agent 
-    FOREIGN KEY (agent_id) REFERENCES agent(id) ON DELETE SET NULL;
+ALTER TABLE whatsapp_conversations ADD CONSTRAINT fk_whatsapp_conversations_agent
+    FOREIGN KEY (agent_id) REFERENCES lic_schema.agents(agent_id) ON DELETE SET NULL;
 
 -- Actionable Reports
 ALTER TABLE actionable_reports DROP CONSTRAINT IF EXISTS fk_actionable_reports_customer;
-ALTER TABLE actionable_reports ADD CONSTRAINT fk_actionable_reports_customer 
-    FOREIGN KEY (customer_id) REFERENCES "user"(id) ON DELETE CASCADE;
+ALTER TABLE actionable_reports ADD CONSTRAINT fk_actionable_reports_customer
+    FOREIGN KEY (customer_id) REFERENCES lic_schema.users(user_id) ON DELETE CASCADE;
 
 ALTER TABLE actionable_reports DROP CONSTRAINT IF EXISTS fk_actionable_reports_agent;
-ALTER TABLE actionable_reports ADD CONSTRAINT fk_actionable_reports_agent 
-    FOREIGN KEY (agent_id) REFERENCES agent(id) ON DELETE SET NULL;
+ALTER TABLE actionable_reports ADD CONSTRAINT fk_actionable_reports_agent
+    FOREIGN KEY (agent_id) REFERENCES lic_schema.agents(agent_id) ON DELETE SET NULL;
+
+-- Knowledge Base Articles
+ALTER TABLE knowledge_base_articles DROP CONSTRAINT IF EXISTS fk_knowledge_base_author;
+ALTER TABLE knowledge_base_articles ADD CONSTRAINT fk_knowledge_base_author
+    FOREIGN KEY (author_id) REFERENCES lic_schema.users(user_id) ON DELETE SET NULL;
+
+-- Chatbot Intents
+ALTER TABLE chatbot_intents DROP CONSTRAINT IF EXISTS fk_chatbot_intents_created_by;
+ALTER TABLE chatbot_intents ADD CONSTRAINT fk_chatbot_intents_created_by
+    FOREIGN KEY (created_by) REFERENCES lic_schema.users(user_id) ON DELETE SET NULL;
+
+ALTER TABLE chatbot_intents DROP CONSTRAINT IF EXISTS fk_chatbot_intents_updated_by;
+ALTER TABLE chatbot_intents ADD CONSTRAINT fk_chatbot_intents_updated_by
+    FOREIGN KEY (updated_by) REFERENCES lic_schema.users(user_id) ON DELETE SET NULL;
 
 -- ========================================
 -- Triggers for Updated At
