@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
-from app.db.base import Base, TimestampMixin, AuditMixin
+from app.models.base import Base, TimestampMixin, AuditMixin
 
 
 class DataImport(Base, TimestampMixin, AuditMixin):

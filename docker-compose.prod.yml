@@ -57,9 +57,9 @@ services:
       - MINIO_CDN_BASE_URL=http://minio:9000/${MINIO_BUCKET_NAME:-agentmitra-media}
     depends_on:
       # - featurehub  # Commented out - FeatureHub disabled
-      - pioneer-compass-server
+      # - pioneer-compass-server  # Commented out for minimal setup
       - minio
-      - pioneer
+      # - pioneer  # Commented out - using separate pioneer services
     ports:
       - "8012:8012"
     volumes:
@@ -317,24 +317,24 @@ services:
       timeout: 10s
       retries: 3
 
-  # Pioneer Feature Flag Service
-  pioneer:
-    image: docker.io/pioneer/pioneer:latest
-    container_name: agentmitra_pioneer
-    restart: unless-stopped
-    environment:
-      - PIONEER_ENV=production
-      - PIONEER_API_KEY=${PIONEER_API_KEY}
-    ports:
-      - "4001:4001"  # Pioneer compass-server (REST API)
-      - "4002:4002"  # Pioneer scout (SSE)
-    networks:
-      - agentmitra_network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+  # Pioneer Feature Flag Service - COMMENTED OUT - Using separate pioneer services above
+  # pioneer:
+  #   image: docker.io/pioneer/pioneer:latest
+  #   container_name: agentmitra_pioneer
+  #   restart: unless-stopped
+  #   environment:
+  #     - PIONEER_ENV=production
+  #     - PIONEER_API_KEY=${PIONEER_API_KEY}
+  #   ports:
+  #     - "4001:4001"  # Pioneer compass-server (REST API)
+  #     - "4002:4002"  # Pioneer scout (SSE)
+  #   networks:
+  #     - agentmitra_network
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:4001/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
 
 volumes:
   # postgres_data:  # Commented out - using local MacBook PostgreSQL

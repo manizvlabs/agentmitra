@@ -9,7 +9,7 @@ from sqlalchemy import Column, String, Integer, DateTime, Text, ForeignKey, DECI
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
-from app.db.base import Base, TimestampMixin, AuditMixin
+from app.models.base import Base, TimestampMixin, AuditMixin
 
 
 class PremiumPayment(Base, TimestampMixin, AuditMixin):

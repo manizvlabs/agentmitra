@@ -10,9 +10,9 @@ from sqlalchemy import and_, func, or_, desc, case, cast, Float
 from sqlalchemy.sql import label
 
 from app.models.agent import Agent
-from app.models.policy import Policy
-from app.models.payment import Payment
-from app.models.customer import Customer
+from app.models.policy import InsurancePolicy
+from app.models.payment import PremiumPayment
+from app.models.user import User
 from app.models.lead import Lead
 from app.models.campaign import Campaign, CampaignExecution
 from app.core.logging_config import get_logger
@@ -101,8 +101,7 @@ class ROICalculationService:
         from app.models.agent import Agent
         from app.models.user import User
 
-        session = next(get_db_session())
-        try:
+        with get_db_session() as session:
             # Get agent with user details
             agent = session.query(Agent).join(User).filter(Agent.agent_id == agent_id).first()
             if agent:
@@ -112,8 +111,6 @@ class ROICalculationService:
                     'agent_code': agent.agent_code,
                     'email': agent.user.email
                 }
-        finally:
-            session.close()
         return None
 
     @staticmethod
@@ -122,8 +119,7 @@ class ROICalculationService:
         from sqlalchemy.orm import Session
         from app.core.database import get_db_session
 
-        session = next(get_db_session())
-        try:
+        with get_db_session() as session:
             end_date = datetime.utcnow()
 
             # Try to use agent_daily_metrics table if it exists, otherwise fallback to direct calculation
@@ -194,27 +190,24 @@ class ROICalculationService:
                 'total_collected': total_revenue,
                 'total_premium_due': total_revenue * 1.05,
             }
-        finally:
-            session.close()
 
     @staticmethod
     def _calculate_conversion_metrics(agent_id: str, start_date: datetime) -> Dict[str, Any]:
         """Calculate conversion funnel metrics"""
         from sqlalchemy.orm import Session
         from app.core.database import get_db_session
-        from app.models.policy import Policy
+        from app.models.policy import InsurancePolicy
         from sqlalchemy import func, and_, or_
 
-        session = next(get_db_session())
-        try:
+        with get_db_session() as session:
             end_date = datetime.utcnow()
 
             # Get leads data from new leads table
-            total_leads = session.query(func.count()).filter(
+            total_leads = session.query(func.count(InsurancePolicy.policy_id)).filter(
                 and_(
-                    Policy.agent_id == agent_id,
-                    Policy.created_at >= start_date,
-                    Policy.created_at <= end_date
+                    InsurancePolicy.agent_id == agent_id,
+                    InsurancePolicy.created_at >= start_date,
+                    InsurancePolicy.created_at <= end_date
                 )
             ).scalar() or 0
 
@@ -224,12 +217,12 @@ class ROICalculationService:
             quoted_leads = int(contacted_leads * 0.6)  # Assume 60% quote rate
 
             # Get policies created in period
-            total_policies = session.query(func.count(Policy.policy_id)).filter(
+            total_policies = session.query(func.count(InsurancePolicy.policy_id)).filter(
                 and_(
-                    Policy.agent_id == agent_id,
-                    Policy.created_at >= start_date,
-                    Policy.created_at <= end_date,
-                    Policy.status.in_(['active', 'approved'])
+                    InsurancePolicy.agent_id == agent_id,
+                    InsurancePolicy.created_at >= start_date,
+                    InsurancePolicy.created_at <= end_date,
+                    InsurancePolicy.status.in_(['active', 'approved'])
                 )
             ).scalar() or 0
 
@@ -247,8 +240,6 @@ class ROICalculationService:
                 'quote_rate': round(quote_rate, 2),
                 'conversion_rate': round(conversion_rate, 2),
             }
-        finally:
-            session.close()
 
     @staticmethod
     def _calculate_efficiency_metrics(agent_id: str, start_date: datetime) -> Dict[str, Any]:
@@ -278,28 +269,27 @@ class ROICalculationService:
         """Calculate customer retention rate"""
         from sqlalchemy.orm import Session
         from app.core.database import get_db_session
-        from app.models.policy import Policy
+        from app.models.policy import InsurancePolicy
         from sqlalchemy import func, and_, or_
 
-        session = next(get_db_session())
-        try:
+        with get_db_session() as session:
             end_date = datetime.utcnow()
 
             # Total active policies
-            total_active = session.query(func.count(Policy.policy_id)).filter(
+            total_active = session.query(func.count(InsurancePolicy.policy_id)).filter(
                 and_(
-                    Policy.agent_id == agent_id,
-                    Policy.status == 'active'
+                    InsurancePolicy.agent_id == agent_id,
+                    InsurancePolicy.status == 'active'
                 )
             ).scalar() or 0
 
             # Lapsed policies in period
-            lapsed_policies = session.query(func.count(Policy.policy_id)).filter(
+            lapsed_policies = session.query(func.count(InsurancePolicy.policy_id)).filter(
                 and_(
-                    Policy.agent_id == agent_id,
-                    Policy.status == 'lapsed',
-                    Policy.updated_at >= start_date,
-                    Policy.updated_at <= end_date
+                    InsurancePolicy.agent_id == agent_id,
+                    InsurancePolicy.status == 'lapsed',
+                    InsurancePolicy.updated_at >= start_date,
+                    InsurancePolicy.updated_at <= end_date
                 )
             ).scalar() or 0
 
@@ -309,8 +299,6 @@ class ROICalculationService:
                 return round(retention_rate, 2)
 
             return 95.0  # Default retention rate
-        finally:
-            session.close()
 
     @staticmethod
     def _calculate_avg_response_time(agent_id: str, start_date: datetime) -> float:

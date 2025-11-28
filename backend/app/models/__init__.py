@@ -42,10 +42,21 @@ try:
     from .lead import Lead
     from .customer_retention import CustomerRetentionAnalytics
     from .revenue_forecast import RevenueForecastScenario
+    from .quotes import DailyQuote, QuoteSharingAnalytics, QuotePerformance
+    from .subscription import UserSubscription, SubscriptionBillingHistory, SubscriptionChange
+    from .trial import TrialSubscription, TrialEngagement
 except ImportError:
     Lead = None
     CustomerRetentionAnalytics = None
     RevenueForecastScenario = None
+    DailyQuote = None
+    QuoteSharingAnalytics = None
+    QuotePerformance = None
+    TrialSubscription = None
+    TrialEngagement = None
+    UserSubscription = None
+    SubscriptionBillingHistory = None
+    SubscriptionChange = None
 
 __all__ = [
     "Base",

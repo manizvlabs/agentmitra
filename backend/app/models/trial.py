@@ -39,7 +39,7 @@ class TrialEngagement(Base, TimestampMixin):
     trial_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.trial_subscriptions.trial_id", ondelete="CASCADE"), nullable=False)
     feature_used = Column(String(100))
     engagement_type = Column(String(50))  # 'view', 'interaction', 'completion'
-    metadata = Column(JSON)
+    engagement_metadata = Column(JSON)
     engaged_at = Column(TIMESTAMP, server_default=func.now())
 
     # Relationships

@@ -115,7 +115,7 @@ class SubscriptionBillingHistory(Base, TimestampMixin):
     invoice_url = Column(String(500))
     receipt_url = Column(String(500))
     failure_reason = Column(Text)
-    metadata = Column(JSON)
+    subscription_metadata = Column(JSON)
 
     # Relationships
     subscription = relationship("UserSubscription", back_populates="billing_history")
@@ -142,7 +142,7 @@ class SubscriptionChange(Base, TimestampMixin):
     billing_cycle_change = Column(Boolean, default=False)
     initiated_by = Column(UUID(as_uuid=True), ForeignKey("lic_schema.users.user_id"))
     reason = Column(Text)
-    metadata = Column(JSON)
+    subscription_metadata = Column(JSON)
 
     # Relationships
     subscription = relationship("UserSubscription", back_populates="changes")

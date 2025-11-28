@@ -18,3 +18,9 @@ class TimestampMixin:
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
 
+
+class AuditMixin:
+    """Mixin for audit fields like created_by, updated_by"""
+    created_by = Column(DateTime, default=func.now(), nullable=True)
+    updated_by = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=True)
+

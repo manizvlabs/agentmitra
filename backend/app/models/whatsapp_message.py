@@ -9,7 +9,7 @@ from sqlalchemy import Column, String, Integer, DateTime, Text, ForeignKey, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
-from app.db.base import Base, TimestampMixin
+from app.models.base import Base, TimestampMixin
 
 
 class WhatsAppMessage(Base, TimestampMixin):
