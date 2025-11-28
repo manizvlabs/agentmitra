@@ -21,6 +21,7 @@ class DashboardViewModel extends BaseViewModel {
   BusinessIntelligenceData? _businessIntelligence;
   Map<String, dynamic>? _roiData;
   Map<String, dynamic>? _forecastData;
+  Map<String, dynamic>? _leadsData;
 
   DashboardAnalytics? get analytics => _analytics;
   List<DashboardNotification> get notifications => _notifications;
@@ -30,6 +31,7 @@ class DashboardViewModel extends BaseViewModel {
   BusinessIntelligenceData? get businessIntelligence => _businessIntelligence;
   Map<String, dynamic>? get roiData => _roiData;
   Map<String, dynamic>? get forecastData => _forecastData;
+  Map<String, dynamic>? get leadsData => _leadsData;
 
   // Computed properties
   int get unreadNotificationsCount =>
@@ -131,6 +133,29 @@ class DashboardViewModel extends BaseViewModel {
         return true;
       },
       errorMessage: 'Failed to load revenue forecast data',
+    );
+    notifyListeners();
+  }
+
+  /// Load hot leads data
+  Future<void> loadHotLeadsData({
+    String priority = 'all',
+    String source = 'all'
+  }) async {
+    await executeAsync(
+      () async {
+        final agentId = await AgentService().getCurrentAgentId();
+        if (agentId == null) {
+          throw Exception('Agent ID not available');
+        }
+        _leadsData = await _repository.getHotLeadsData(
+          agentId: agentId,
+          priority: priority,
+          source: source,
+        );
+        return true;
+      },
+      errorMessage: 'Failed to load hot leads data',
     );
     notifyListeners();
   }

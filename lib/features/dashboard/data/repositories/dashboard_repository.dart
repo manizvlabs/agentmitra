@@ -82,6 +82,32 @@ class DashboardRepository extends BaseRepository {
     }
   }
 
+  /// Get hot leads data
+  Future<Map<String, dynamic>> getHotLeadsData({
+    required String agentId,
+    String priority = 'all',
+    String source = 'all',
+  }) async {
+    try {
+      final queryParams = {
+        if (priority != 'all') 'priority': priority,
+        if (source != 'all') 'source': source,
+      };
+      final queryString = queryParams.isEmpty ? '' : '?' + queryParams.entries.map((e) => '${e.key}=${e.value}').join('&');
+
+      final response = await ApiService.get('/analytics/leads/hot/agent/$agentId$queryString');
+
+      if (response.success && response.data != null) {
+        return response.data!;
+      } else {
+        throw Exception(response.message ?? 'Failed to fetch hot leads data');
+      }
+    } catch (e) {
+      // Return mock data for development if API fails
+      return _getMockHotLeadsData(agentId, priority, source);
+    }
+  }
+
   /// Get agent performance data from analytics API
   Future<AgentPerformanceData> getAgentPerformanceData(String agentId) async {
     try {
@@ -401,6 +427,186 @@ class DashboardRepository extends BaseRepository {
         'No major regulatory changes affecting operations',
         'Current customer retention rates remain consistent',
         'Marketing budget increases by 15% annually',
+      ],
+    };
+  }
+
+  /// Mock hot leads data for development
+  Map<String, dynamic> _getMockHotLeadsData(String agentId, String priority, String source) {
+    // Generate mock leads data
+    final allLeads = [
+      {
+        'customer_name': 'Rajesh Kumar',
+        'contact_number': '+91-9876543210',
+        'lead_source': 'whatsapp_campaign',
+        'lead_age_days': 2,
+        'engagement_score': 85.0,
+        'budget_range': 'high',
+        'insurance_type': 'term_life',
+        'urgency_level': 'high',
+        'previous_interactions': 3,
+        'response_time_hours': 1.5,
+        'potential_premium': 50000.0,
+        'next_followup_at': '2024-01-15 14:00',
+      },
+      {
+        'customer_name': 'Priya Sharma',
+        'contact_number': '+91-9876543211',
+        'lead_source': 'website',
+        'lead_age_days': 5,
+        'engagement_score': 72.0,
+        'budget_range': 'medium',
+        'insurance_type': 'health',
+        'urgency_level': 'medium',
+        'previous_interactions': 1,
+        'response_time_hours': 4.2,
+        'potential_premium': 25000.0,
+      },
+      {
+        'customer_name': 'Amit Patel',
+        'contact_number': '+91-9876543212',
+        'lead_source': 'referral',
+        'lead_age_days': 1,
+        'engagement_score': 90.0,
+        'budget_range': 'high',
+        'insurance_type': 'ulip',
+        'urgency_level': 'high',
+        'previous_interactions': 5,
+        'response_time_hours': 0.8,
+        'potential_premium': 100000.0,
+        'next_followup_at': '2024-01-16 10:00',
+      },
+      {
+        'customer_name': 'Sunita Gupta',
+        'contact_number': '+91-9876543213',
+        'lead_source': 'email_campaign',
+        'lead_age_days': 12,
+        'engagement_score': 68.0,
+        'budget_range': 'medium',
+        'insurance_type': 'term_life',
+        'urgency_level': 'medium',
+        'previous_interactions': 2,
+        'response_time_hours': 8.5,
+        'potential_premium': 35000.0,
+      },
+      {
+        'customer_name': 'Vikram Singh',
+        'contact_number': '+91-9876543214',
+        'lead_source': 'social_media',
+        'lead_age_days': 3,
+        'engagement_score': 78.0,
+        'budget_range': 'low',
+        'insurance_type': 'health',
+        'urgency_level': 'low',
+        'previous_interactions': 1,
+        'response_time_hours': 2.1,
+        'potential_premium': 15000.0,
+      },
+      {
+        'customer_name': 'Meera Joshi',
+        'contact_number': '+91-9876543215',
+        'lead_source': 'cold_call',
+        'lead_age_days': 18,
+        'engagement_score': 45.0,
+        'budget_range': 'medium',
+        'insurance_type': 'ulip',
+        'urgency_level': 'low',
+        'previous_interactions': 0,
+        'response_time_hours': 24.0,
+        'potential_premium': 20000.0,
+      },
+      {
+        'customer_name': 'Suresh Reddy',
+        'contact_number': '+91-9876543216',
+        'lead_source': 'partner',
+        'lead_age_days': 4,
+        'engagement_score': 82.0,
+        'budget_range': 'high',
+        'insurance_type': 'comprehensive',
+        'urgency_level': 'high',
+        'previous_interactions': 4,
+        'response_time_hours': 1.2,
+        'potential_premium': 75000.0,
+        'next_followup_at': '2024-01-14 16:00',
+      },
+      {
+        'customer_name': 'Kavita Desai',
+        'contact_number': '+91-9876543217',
+        'lead_source': 'event',
+        'lead_age_days': 7,
+        'engagement_score': 75.0,
+        'budget_range': 'medium',
+        'insurance_type': 'term_life',
+        'urgency_level': 'medium',
+        'previous_interactions': 2,
+        'response_time_hours': 3.8,
+        'potential_premium': 40000.0,
+      },
+    ];
+
+    // Filter leads based on criteria
+    var filteredLeads = allLeads;
+
+    if (priority != 'all') {
+      filteredLeads = filteredLeads.where((lead) => lead['urgency_level'] == priority).toList();
+    }
+
+    if (source != 'all') {
+      filteredLeads = filteredLeads.where((lead) => lead['lead_source'] == source).toList();
+    }
+
+    // Calculate statistics
+    final totalLeads = filteredLeads.length;
+    final highPriorityLeads = filteredLeads.where((lead) => lead['urgency_level'] == 'high').length;
+    final convertedLeads = (totalLeads * 0.15).round(); // Assume 15% conversion rate
+    final avgResponseTime = filteredLeads.isEmpty ? 0 : filteredLeads.map((l) => l['response_time_hours'] as double).reduce((a, b) => a + b) / filteredLeads.length;
+    final conversionRate = totalLeads > 0 ? (convertedLeads / totalLeads) * 100 : 0;
+    final avgQualityScore = filteredLeads.isEmpty ? 0 : filteredLeads.map((l) => l['engagement_score'] as double).reduce((a, b) => a + b) / filteredLeads.length;
+    final totalPotentialRevenue = filteredLeads.isEmpty ? 0 : filteredLeads.map((l) => l['potential_premium'] as double).reduce((a, b) => a + b);
+
+    return {
+      'statistics': {
+        'total_leads': totalLeads,
+        'conversion_rate': conversionRate,
+        'avg_response_time': avgResponseTime,
+        'avg_quality_score': avgQualityScore,
+        'total_potential_revenue': totalPotentialRevenue,
+        'conversion_trend': 'up',
+        'response_trend': 'improving',
+        'quality_trend': 'stable',
+        'revenue_trend': 'up',
+        'lead_generation_performance': 75,
+        'followup_efficiency': 82,
+        'conversion_quality': 68,
+        'new_leads_count': (totalLeads * 0.4).round(),
+        'in_progress_count': (totalLeads * 0.35).round(),
+        'qualified_count': (totalLeads * 0.2).round(),
+        'converted_count': convertedLeads,
+      },
+      'priority_distribution': {
+        'high': highPriorityLeads,
+        'medium': (totalLeads * 0.5).round(),
+        'low': totalLeads - highPriorityLeads - (totalLeads * 0.5).round(),
+      },
+      'source_performance': {
+        'whatsapp_campaign': {'count': 2, 'conversion_rate': 25.0},
+        'website': {'count': 1, 'conversion_rate': 20.0},
+        'referral': {'count': 2, 'conversion_rate': 35.0},
+        'email_campaign': {'count': 1, 'conversion_rate': 15.0},
+        'social_media': {'count': 1, 'conversion_rate': 10.0},
+        'partner': {'count': 1, 'conversion_rate': 30.0},
+      },
+      'conversion_metrics': {
+        'total_leads': totalLeads,
+        'converted': convertedLeads,
+        'conversion_rate': conversionRate,
+      },
+      'leads': filteredLeads,
+      'recent_activities': [
+        {'type': 'call', 'description': 'Called Rajesh Kumar - interested in term life', 'time': '2 hours ago'},
+        {'type': 'email', 'description': 'Sent quote to Priya Sharma', 'time': '4 hours ago'},
+        {'type': 'meeting', 'description': 'Meeting scheduled with Amit Patel', 'time': '6 hours ago'},
+        {'type': 'call', 'description': 'Follow-up call with Suresh Reddy', 'time': '1 day ago'},
       ],
     };
   }
