@@ -2,11 +2,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8012';
-  static const String apiVersion = '/api/v1';
+  static String get baseUrl => dotenv.env['API_BASE_URL'] ?? 'http://localhost:8015';
+  static String get apiVersion => dotenv.env['API_VERSION'] ?? '/api/v1';
 
   // Get full API URL - use relative URLs for web deployment
   static String get apiUrl {
@@ -23,11 +24,14 @@ class ApiService {
     const secureStorage = FlutterSecureStorage();
     final token = await secureStorage.read(key: 'access_token');
 
-    return {
+    final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
     };
+
+    print('🔍 ApiService: Headers being sent: $headers');
+    return headers;
   }
 
   // GET request
@@ -41,10 +45,12 @@ class ApiService {
         url += '?$queryString';
       }
 
+      print('🔍 ApiService: Making GET request to: $url');
       final response = await http.get(
         Uri.parse(url),
         headers: await getHeaders(),
       );
+      print('🔍 ApiService: Response status: ${response.statusCode}');
 
       return handleResponse(response);
     } catch (e) {

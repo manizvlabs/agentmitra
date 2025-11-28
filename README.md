@@ -143,6 +143,28 @@ flutter pub get
 flutter run
 ```
 
+#### 4. Environment Configuration
+
+The Flutter app uses environment variables for configuration. Copy the example file and modify as needed:
+
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Edit environment variables
+nano .env
+```
+
+**Environment Variables:**
+- `API_BASE_URL`: Backend API URL (default: `http://localhost:8015`)
+- `API_VERSION`: API version path (default: `/api/v1`)
+- `ENVIRONMENT`: Current environment (`development`, `staging`, `production`)
+
+**Available Environment Files:**
+- `.env`: Development configuration
+- `.env.production`: Production configuration
+- `.env.example`: Template file (don't modify)
+
 ### Running the Complete Stack
 
 ```bash

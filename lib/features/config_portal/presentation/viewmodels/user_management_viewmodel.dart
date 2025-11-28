@@ -1,5 +1,5 @@
 import '../../../../core/architecture/base/base_viewmodel.dart';
-import '../../../data/repositories/config_portal_repository.dart';
+import '../../data/repositories/config_portal_repository.dart';
 
 /// ViewModel for User Management
 class UserManagementViewModel extends BaseViewModel {
@@ -26,14 +26,17 @@ class UserManagementViewModel extends BaseViewModel {
 
   @override
   Future<void> initialize() async {
+    print('🔍 UserManagementViewModel: initialize called');
     await super.initialize();
     await loadUsers();
   }
 
   /// Load users with pagination
   Future<void> loadUsers({bool append = false}) async {
+    print('🔍 UserManagementViewModel: loadUsers called, append=$append, current users count: ${_users.length}');
     await executeAsync(
       () async {
+        print('🔍 UserManagementViewModel: executing loadUsers API call');
         final offset = append ? _users.length : 0;
         if (!append) {
           _currentPage = 0;
@@ -46,15 +49,21 @@ class UserManagementViewModel extends BaseViewModel {
           offset: offset,
         );
 
+        print('🔍 UserManagementViewModel: Repository response: $response');
+
         if (append) {
           _users.addAll(response['items'] as List<Map<String, dynamic>>);
+          print('🔍 UserManagementViewModel: Appended users, new total: ${_users.length}');
         } else {
           _users = response['items'] as List<Map<String, dynamic>>;
+          print('🔍 UserManagementViewModel: Set users, total: ${_users.length}');
         }
 
         _totalCount = response['total'] as int? ?? 0;
         _hasMore = response['hasMore'] as bool? ?? false;
         _currentPage++;
+
+        print('🔍 UserManagementViewModel: Updated state - totalCount: $_totalCount, hasMore: $_hasMore, currentPage: $_currentPage');
 
         notifyListeners();
       },

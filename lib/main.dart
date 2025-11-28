@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as provider;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/services/storage_service.dart';
 import 'core/services/pioneer_service.dart';
 import 'core/di/service_locator.dart';
@@ -113,6 +114,9 @@ class PlaceholderScreen extends StatelessWidget {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize environment variables
+  await dotenv.load(fileName: ".env");
 
   // Initialize storage service (web-compatible)
   if (!kIsWeb) {
@@ -227,6 +231,10 @@ class AgentMitraApp extends ConsumerWidget {
         // Policies ViewModel (for New Claim page)
         provider.ChangeNotifierProvider(
           create: (_) => PoliciesViewModel(),
+        ),
+        // User Management ViewModel
+        provider.ChangeNotifierProvider(
+          create: (_) => ServiceLocator.userManagementViewModel,
         ),
         // RBAC Service Provider
         provider.Provider(

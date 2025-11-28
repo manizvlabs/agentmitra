@@ -12,6 +12,7 @@ import '../../features/chatbot/presentation/viewmodels/chatbot_viewmodel.dart';
 import '../../features/chatbot/data/repositories/chatbot_repository.dart';
 import '../../features/chatbot/data/datasources/chatbot_remote_datasource.dart';
 import '../../features/analytics/presentation/viewmodels/analytics_viewmodel.dart';
+import '../../features/config_portal/presentation/viewmodels/user_management_viewmodel.dart';
 
 /// Service Locator for Dependency Injection
 /// Provides centralized access to all services, repositories, and ViewModels
@@ -62,6 +63,10 @@ class ServiceLocator {
   /// Analytics ViewModel - connects to advanced analytics APIs
   static AnalyticsViewModel get analyticsViewModel =>
     AnalyticsViewModel();
+
+  /// User Management ViewModel - connects to user management APIs
+  static UserManagementViewModel get userManagementViewModel =>
+    UserManagementViewModel();
 
   /// RBAC Service - Role-Based Access Control
   static RbacService? _rbacService;

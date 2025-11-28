@@ -9,14 +9,11 @@ import '../../../../shared/constants/api_constants.dart';
 /// Configuration Portal Repository
 /// Handles all API calls for Configuration Portal features
 class ConfigPortalRepository {
-  final ApiService _apiService;
   final LoggerService _logger;
 
   ConfigPortalRepository({
-    ApiService? apiService,
     LoggerService? logger,
-  })  : _apiService = apiService ?? ApiService(),
-        _logger = logger ?? LoggerService();
+  }) : _logger = logger ?? LoggerService();
 
   /// Data Import Methods
   Future<List<Map<String, dynamic>>> getImportHistory({
@@ -33,16 +30,22 @@ class ConfigPortalRepository {
         queryParams['status'] = status;
       }
 
-      final response = await _apiService.get(
+      final response = await ApiService.get(
         ApiConstants.importHistory(),
         queryParameters: queryParams,
       );
 
       // Handle both direct list and wrapped response
       if (response is List) {
-        return List<Map<String, dynamic>>.from(response);
+        return List<Map<String, dynamic>>.from(response as List);
       }
-      return List<Map<String, dynamic>>.from(response['data'] ?? response['items'] ?? []);
+      if (response is Map<String, dynamic>) {
+        final data = response['data'] ?? response['items'] ?? response;
+        if (data is List) {
+          return List<Map<String, dynamic>>.from(data);
+        }
+      }
+      return [];
     } catch (e) {
       _logger.error('Failed to fetch import history: $e');
       rethrow;
@@ -51,7 +54,7 @@ class ConfigPortalRepository {
 
   Future<Map<String, dynamic>> getImportStatistics() async {
     try {
-      final response = await _apiService.get(
+      final response = await ApiService.get(
         ApiConstants.importStatistics(),
       );
       // Handle both direct map and wrapped response
@@ -123,7 +126,7 @@ class ConfigPortalRepository {
     String? templateId,
   }) async {
     try {
-      final response = await _apiService.post(
+      final response = await ApiService.post(
         ApiConstants.importValidate(fileId),
         {
           if (templateId != null) 'template_id': templateId,
@@ -142,7 +145,7 @@ class ConfigPortalRepository {
     String? templateId,
   }) async {
     try {
-      final response = await _apiService.post(
+      final response = await ApiService.post(
         ApiConstants.importProcess(fileId),
         {
           if (templateId != null) 'template_id': templateId,
@@ -158,7 +161,7 @@ class ConfigPortalRepository {
   /// Get import status (for progress tracking)
   Future<Map<String, dynamic>> getImportStatus(String fileId) async {
     try {
-      final response = await _apiService.get(
+      final response = await ApiService.get(
         ApiConstants.importStatus(fileId),
       );
       return Map<String, dynamic>.from(response['data'] ?? response);
@@ -171,14 +174,20 @@ class ConfigPortalRepository {
   /// Excel Template Methods
   Future<List<Map<String, dynamic>>> getTemplates() async {
     try {
-      final response = await _apiService.get(
+      final response = await ApiService.get(
         ApiConstants.importTemplates(),
       );
       // Handle both direct list and wrapped response
       if (response is List) {
-        return List<Map<String, dynamic>>.from(response);
+        return List<Map<String, dynamic>>.from(response as List);
       }
-      return List<Map<String, dynamic>>.from(response['data'] ?? response['templates'] ?? []);
+      if (response is Map<String, dynamic>) {
+        final data = response['data'] ?? response['templates'] ?? response;
+        if (data is List) {
+          return List<Map<String, dynamic>>.from(data);
+        }
+      }
+      return [];
     } catch (e) {
       _logger.error('Failed to fetch templates: $e');
       rethrow;
@@ -187,7 +196,7 @@ class ConfigPortalRepository {
 
   Future<Map<String, dynamic>> getTemplate(String templateId) async {
     try {
-      final response = await _apiService.get(
+      final response = await ApiService.get(
         ApiConstants.importTemplate(templateId),
       );
       return Map<String, dynamic>.from(response['data'] ?? response);
@@ -201,7 +210,7 @@ class ConfigPortalRepository {
     required Map<String, dynamic> templateData,
   }) async {
     try {
-      final response = await _apiService.post(
+      final response = await ApiService.post(
         ApiConstants.importTemplates(),
         templateData,
       );
@@ -217,7 +226,7 @@ class ConfigPortalRepository {
     required Map<String, dynamic> templateData,
   }) async {
     try {
-      final response = await _apiService.put(
+      final response = await ApiService.put(
         ApiConstants.importTemplate(templateId),
         templateData,
       );
@@ -230,7 +239,7 @@ class ConfigPortalRepository {
 
   Future<void> deleteTemplate(String templateId) async {
     try {
-      await _apiService.delete(
+      await ApiService.delete(
         ApiConstants.importTemplate(templateId),
       );
     } catch (e) {
@@ -258,7 +267,7 @@ class ConfigPortalRepository {
         queryParams['status'] = status;
       }
 
-      final response = await _apiService.get(
+      final response = await ApiService.get(
         ApiConstants.customers,
         queryParameters: queryParams,
       );
@@ -271,7 +280,7 @@ class ConfigPortalRepository {
         'total': response['total'] ?? response['count'] ?? 0,
         'limit': limit,
         'offset': offset,
-        'hasMore': (response['total'] ?? response['count'] ?? 0) > (offset + limit),
+        'hasMore': (response['total'] ?? response['count'] ?? 0) > ((offset ?? 0) + (limit ?? 20)),
       };
     } catch (e) {
       _logger.error('Failed to fetch customers: $e');
@@ -283,7 +292,7 @@ class ConfigPortalRepository {
     required Map<String, dynamic> customerData,
   }) async {
     try {
-      final response = await _apiService.post(
+      final response = await ApiService.post(
         ApiConstants.customers,
         customerData,
       );
@@ -299,7 +308,7 @@ class ConfigPortalRepository {
     required Map<String, dynamic> customerData,
   }) async {
     try {
-      final response = await _apiService.put(
+      final response = await ApiService.put(
         ApiConstants.customerById(customerId),
         customerData,
       );
@@ -312,7 +321,7 @@ class ConfigPortalRepository {
 
   Future<void> deleteCustomer(String customerId) async {
     try {
-      await _apiService.delete(
+      await ApiService.delete(
         ApiConstants.customerById(customerId),
       );
     } catch (e) {
@@ -323,7 +332,7 @@ class ConfigPortalRepository {
 
   Future<Map<String, dynamic>> getCustomer(String customerId) async {
     try {
-      final response = await _apiService.get(
+      final response = await ApiService.get(
         ApiConstants.customerById(customerId),
       );
       return Map<String, dynamic>.from(response['data'] ?? response);
@@ -340,7 +349,7 @@ class ConfigPortalRepository {
     required String format,
   }) async {
     try {
-      final response = await _apiService.post(
+      final response = await ApiService.post(
         ApiConstants.reportGenerate(),
         {
           'report_type': reportType,
@@ -357,14 +366,20 @@ class ConfigPortalRepository {
 
   Future<List<Map<String, dynamic>>> getScheduledReports() async {
     try {
-      final response = await _apiService.get(
+      final response = await ApiService.get(
         ApiConstants.reportScheduled(),
       );
       // Handle both direct list and wrapped response
       if (response is List) {
-        return List<Map<String, dynamic>>.from(response);
+        return List<Map<String, dynamic>>.from(response as List);
       }
-      return List<Map<String, dynamic>>.from(response['data'] ?? response['scheduled'] ?? []);
+      if (response is Map<String, dynamic>) {
+        final data = response['data'] ?? response['scheduled'] ?? response;
+        if (data is List) {
+          return List<Map<String, dynamic>>.from(data);
+        }
+      }
+      return [];
     } catch (e) {
       _logger.error('Failed to fetch scheduled reports: $e');
       rethrow;
@@ -381,7 +396,7 @@ class ConfigPortalRepository {
         'offset': offset,
       };
 
-      final response = await _apiService.get(
+      final response = await ApiService.get(
         ApiConstants.reportHistory(),
         queryParameters: queryParams,
       );
@@ -394,7 +409,7 @@ class ConfigPortalRepository {
         'total': response['total'] ?? response['count'] ?? 0,
         'limit': limit,
         'offset': offset,
-        'hasMore': (response['total'] ?? response['count'] ?? 0) > (offset + limit),
+        'hasMore': (response['total'] ?? response['count'] ?? 0) > ((offset ?? 0) + (limit ?? 20)),
       };
     } catch (e) {
       _logger.error('Failed to fetch report history: $e');
@@ -405,7 +420,7 @@ class ConfigPortalRepository {
   Future<String> downloadReport(String reportId) async {
     try {
       // Returns download URL
-      final response = await _apiService.get(
+      final response = await ApiService.get(
         ApiConstants.reportDownload(reportId),
       );
       return response['download_url'] ?? response['url'] ?? '';
@@ -434,20 +449,34 @@ class ConfigPortalRepository {
         queryParams['role'] = role;
       }
 
-      final response = await _apiService.get(
+      final response = await ApiService.get(
         ApiConstants.users,
         queryParameters: queryParams,
       );
 
       // Return paginated response
+      // Handle both direct list and wrapped response
+      List<Map<String, dynamic>> usersList;
+      if (response is List) {
+        usersList = List<Map<String, dynamic>>.from(response as List);
+      } else if (response is Map<String, dynamic>) {
+        // If it's a map, try to extract users from various possible keys
+        final data = response['data'] ?? response['users'] ?? response['items'];
+        if (data is List) {
+          usersList = List<Map<String, dynamic>>.from(data);
+        } else {
+          usersList = [];
+        }
+      } else {
+        usersList = [];
+      }
+
       return {
-        'items': List<Map<String, dynamic>>.from(
-          response['data'] ?? response['users'] ?? [],
-        ),
-        'total': response['total'] ?? response['count'] ?? 0,
+        'items': usersList,
+        'total': usersList.length, // Backend doesn't provide total count
         'limit': limit,
         'offset': offset,
-        'hasMore': (response['total'] ?? response['count'] ?? 0) > (offset + limit),
+        'hasMore': usersList.length >= (limit ?? 20), // Simple pagination logic
       };
     } catch (e) {
       _logger.error('Failed to fetch users: $e');
@@ -459,7 +488,7 @@ class ConfigPortalRepository {
     required Map<String, dynamic> userData,
   }) async {
     try {
-      final response = await _apiService.post(
+      final response = await ApiService.post(
         ApiConstants.users,
         userData,
       );
@@ -475,7 +504,7 @@ class ConfigPortalRepository {
     required Map<String, dynamic> userData,
   }) async {
     try {
-      final response = await _apiService.put(
+      final response = await ApiService.put(
         ApiConstants.userById(userId),
         userData,
       );
@@ -488,7 +517,7 @@ class ConfigPortalRepository {
 
   Future<void> deleteUser(String userId) async {
     try {
-      await _apiService.delete(
+      await ApiService.delete(
         ApiConstants.userById(userId),
       );
     } catch (e) {
@@ -499,7 +528,7 @@ class ConfigPortalRepository {
 
   Future<Map<String, dynamic>> getUser(String userId) async {
     try {
-      final response = await _apiService.get(
+      final response = await ApiService.get(
         ApiConstants.userById(userId),
       );
       return Map<String, dynamic>.from(response['data'] ?? response);
@@ -514,7 +543,7 @@ class ConfigPortalRepository {
     required List<String> permissions,
   }) async {
     try {
-      final response = await _apiService.put(
+      final response = await ApiService.put(
         ApiConstants.userPermissions(userId),
         {'permissions': permissions},
       );
@@ -536,7 +565,7 @@ class ConfigPortalRepository {
         'offset': offset,
       };
 
-      final response = await _apiService.get(
+      final response = await ApiService.get(
         ApiConstants.userActivity(userId),
         queryParameters: queryParams,
       );
