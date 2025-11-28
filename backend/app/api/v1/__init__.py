@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_current_user_context, UserContext
-from . import auth, users, providers, agents, policies, presentations, chat, analytics, feature_flags, health, notifications, campaigns, callbacks, tenants, rbac, content
+from . import auth, users, providers, agents, policies, presentations, chat, analytics, feature_flags, health, notifications, campaigns, callbacks, tenants, rbac, content, external_services
 
 # Create main API router
 api_router = APIRouter(prefix="/api/v1", tags=["api"])
@@ -177,6 +177,7 @@ api_router.include_router(feature_flags.router, tags=["feature-flags"])
 api_router.include_router(health.router, tags=["health"])
 api_router.include_router(notifications.router, tags=["notifications"])
 api_router.include_router(content.router, tags=["content"])
+api_router.include_router(external_services.router, tags=["external-services"])
 api_router.include_router(tenants.router, prefix="/tenants", tags=["tenants"])
 api_router.include_router(rbac.router, prefix="/rbac", tags=["rbac"])
 # Admin router (optional - for testing/maintenance)

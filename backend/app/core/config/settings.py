@@ -14,14 +14,22 @@ BACKEND_DIR = Path(__file__).parent.parent.parent
 # Load .env files in order of precedence:
 # 1. .env.local (highest priority, should be gitignored)
 # 2. .env (default, can be committed)
-# 3. Environment variables (highest priority if set)
+# 3. env.development (development defaults)
+# 4. env.example (template)
+# 5. Environment variables (highest priority if set)
 env_local = BACKEND_DIR / ".env.local"
 env_file = BACKEND_DIR / ".env"
+env_development = BACKEND_DIR / "env.development"
+env_example = BACKEND_DIR / "env.example"
 
 if env_local.exists():
     load_dotenv(env_local, override=True)
 elif env_file.exists():
-    load_dotenv(env_file, override=False)
+    load_dotenv(env_file, override=True)
+elif env_development.exists():
+    load_dotenv(env_development, override=False)
+elif env_example.exists():
+    load_dotenv(env_example, override=False)
 
 
 class Settings(BaseSettings):
@@ -81,6 +89,10 @@ class Settings(BaseSettings):
     
     # External APIs
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
+    openai_model: str = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
+    openai_max_tokens: int = int(os.getenv("OPENAI_MAX_TOKENS", "300"))
+    openai_temperature: float = float(os.getenv("OPENAI_TEMPERATURE", "0.7"))
+    openai_organization: Optional[str] = os.getenv("OPENAI_ORGANIZATION")
     
     # SMS Provider
     sms_provider: str = os.getenv("SMS_PROVIDER", "twilio")
@@ -88,6 +100,12 @@ class Settings(BaseSettings):
     sms_api_secret: Optional[str] = os.getenv("SMS_API_SECRET")
     sms_from_number: Optional[str] = os.getenv("SMS_FROM_NUMBER")
     sms_sender_id: Optional[str] = os.getenv("SMS_SENDER_ID", "AGMITR")
+
+    # Twilio Configuration
+    twilio_account_sid: Optional[str] = os.getenv("TWILIO_ACCOUNT_SID")
+    twilio_auth_token: Optional[str] = os.getenv("TWILIO_AUTH_TOKEN")
+    twilio_phone_number: Optional[str] = os.getenv("TWILIO_PHONE_NUMBER")
+    twilio_messaging_service_sid: Optional[str] = os.getenv("TWILIO_MESSAGING_SERVICE_SID")
 
     # AWS Configuration (for SNS)
     aws_access_key_id: Optional[str] = os.getenv("AWS_ACCESS_KEY_ID")
@@ -116,6 +134,7 @@ class Settings(BaseSettings):
     # WhatsApp Business API Configuration
     whatsapp_api_url: str = os.getenv("WHATSAPP_API_URL", "https://graph.facebook.com/v18.0")
     whatsapp_access_token: str = os.getenv("WHATSAPP_ACCESS_TOKEN", "")
+    whatsapp_business_account_id: Optional[str] = os.getenv("WHATSAPP_BUSINESS_ACCOUNT_ID")
     whatsapp_business_number: str = os.getenv("WHATSAPP_BUSINESS_NUMBER", "")
     whatsapp_webhook_secret: str = os.getenv("WHATSAPP_WEBHOOK_SECRET", "")
     whatsapp_verify_token: str = os.getenv("WHATSAPP_VERIFY_TOKEN", "")

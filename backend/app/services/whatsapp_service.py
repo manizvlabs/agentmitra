@@ -2,39 +2,51 @@
 WhatsApp Business API Service
 =============================
 
-This service handles WhatsApp Business API integration including:
+Comprehensive WhatsApp integration for business messaging including:
 - Message sending and receiving
-- Template message management
+- Template management
 - Webhook processing
-- Message status tracking
-- Rate limiting and compliance
+- Media handling
+- Contact management
 """
 
+import logging
+import os
 import json
-import hashlib
 import hmac
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
+import hashlib
+from typing import Dict, List, Optional, Any, Union
+from datetime import datetime
+from pathlib import Path
 
 import httpx
 from sqlalchemy.orm import Session
 
 from app.core.config.settings import settings
-from app.models.whatsapp_message import WhatsAppMessage
-from app.models.whatsapp_template import WhatsAppTemplate
-from app.services.template_service import TemplateService
+from app.core.monitoring import monitoring
+
+logger = logging.getLogger(__name__)
 
 
 class WhatsAppService:
     """WhatsApp Business API integration service"""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Optional[Session] = None):
         self.db = db
-        self.template_service = TemplateService(db)
+
+        # WhatsApp configuration from environment
+        self.access_token = os.getenv("WHATSAPP_ACCESS_TOKEN", settings.whatsapp_access_token)
+        self.api_url = os.getenv("WHATSAPP_API_URL", settings.whatsapp_api_url)
+        self.business_number = os.getenv("WHATSAPP_BUSINESS_NUMBER", settings.whatsapp_business_number)
+        self.webhook_secret = os.getenv("WHATSAPP_WEBHOOK_SECRET", settings.whatsapp_webhook_secret)
+        self.verify_token = os.getenv("WHATSAPP_VERIFY_TOKEN", settings.whatsapp_verify_token)
+        self.business_account_id = os.getenv("WHATSAPP_BUSINESS_ACCOUNT_ID")
+
+        # Initialize HTTP client
         self.http_client = httpx.AsyncClient(
-            timeout=30.0,
+            timeout=httpx.Timeout(30.0, connect=10.0),
             headers={
-                "Authorization": f"Bearer {settings.whatsapp_access_token}",
+                "Authorization": f"Bearer {self.access_token}" if self.access_token else "",
                 "Content-Type": "application/json"
             }
         )
@@ -43,89 +55,146 @@ class WhatsAppService:
         self,
         to_phone: str,
         message_type: str,
-        content: Dict,
+        content: Dict[str, Any],
         template_name: Optional[str] = None
-    ) -> Dict:
-        """Send WhatsApp message"""
+    ) -> Dict[str, Any]:
+        """
+        Send WhatsApp message
 
-        # Validate phone number format
-        to_phone = self._format_phone_number(to_phone)
+        Args:
+            to_phone: Recipient phone number (E.164 format)
+            message_type: Type of message (text, template, image, document, etc.)
+            content: Message content
+            template_name: Template name for template messages
+        """
 
-        # Prepare message payload
-        payload = {
-            "messaging_product": "whatsapp",
-            "recipient_type": "individual",
-            "to": to_phone
-        }
+        if not self._is_configured():
+            return self._mock_whatsapp_response(to_phone, message_type, content)
 
-        if message_type == "template":
-            # Send template message
-            template = await self.template_service.get_template(template_name)
-            payload.update({
-                "type": "template",
-                "template": {
-                    "name": template.name,
-                    "language": {"code": template.language},
-                    "components": self._build_template_components(template, content)
+        try:
+            url = f"{self.api_url}/{self.business_number}/messages"
+
+            # Prepare message payload based on type
+            payload = self._prepare_message_payload(to_phone, message_type, content, template_name)
+
+            response = await self.http_client.post(url, json=payload)
+
+            if response.status_code == 200:
+                result = response.json()
+                message_data = {
+                    "provider": "whatsapp",
+                    "message_id": result["messages"][0]["id"],
+                    "status": "sent",
+                    "to": to_phone,
+                    "message_type": message_type,
+                    "timestamp": datetime.utcnow().isoformat()
                 }
-            })
-        elif message_type == "text":
-            # Send text message
-            payload.update({
-                "type": "text",
-                "text": {"body": content["body"]}
-            })
-        elif message_type == "interactive":
-            # Send interactive message (buttons, lists)
-            payload.update(content)
 
-        # Send message via WhatsApp API
-        response = await self._send_whatsapp_request(
-            f"{settings.whatsapp_api_url}/messages",
-            payload
+                monitoring.record_business_metrics("whatsapp_message_sent", {
+                    "message_type": message_type,
+                    "success": True
+                })
+
+                return message_data
+            else:
+                error_data = response.json()
+                raise Exception(f"WhatsApp API error: {error_data}")
+
+        except Exception as e:
+            monitoring.record_business_metrics("whatsapp_message_failed", {
+                "message_type": message_type,
+                "error": str(e)
+            })
+            logger.error(f"WhatsApp send failed: {e}")
+            raise
+
+    async def send_text_message(self, to_phone: str, text: str) -> Dict[str, Any]:
+        """Send simple text message"""
+        return await self.send_message(
+            to_phone=to_phone,
+            message_type="text",
+            content={"body": text}
         )
 
-        # Store message in database
-        await self._store_message({
-            "message_id": response["messages"][0]["id"],
-            "to_phone": to_phone,
-            "from_phone": settings.whatsapp_business_number,
-            "message_type": message_type,
-            "content": content,
-            "status": "sent",
-            "direction": "outbound",
-            "template_name": template_name
-        })
-
-        return response
-
-    async def process_webhook(self, webhook_data: Dict) -> bool:
-        """Process incoming WhatsApp webhook"""
-
-        # Verify webhook signature
-        if not self._verify_webhook_signature(webhook_data):
-            raise ValueError("Invalid webhook signature")
-
-        # Process each entry
-        for entry in webhook_data.get("entry", []):
-            for change in entry.get("changes", []):
-                if change.get("field") == "messages":
-                    await self._process_messages(change["value"])
-
-        return True
-
-    async def get_message_status(self, message_id: str) -> Dict:
-        """Get message delivery status"""
-
-        response = await self._send_whatsapp_request(
-            f"{settings.whatsapp_api_url}/messages/{message_id}"
-        )
-
-        return {
-            "message_id": message_id,
-            "status": response.get("status", "unknown"),
-            "timestamp": response.get("timestamp")
+    async def send_template_message(
+        self,
+        to_phone: str,
+        template_name: str,
+        language_code: str = "en",
+        components: Optional[List[Dict]] = None
+    ) -> Dict[str, Any]:
+        """Send template message"""
+        content = {
+            "name": template_name,
+            "language": {"code": language_code}
         }
+        if components:
+            content["components"] = components
+
+        return await self.send_message(
+            to_phone=to_phone,
+            message_type="template",
+            content=content,
+            template_name=template_name
+        )
+
+    async def send_otp_message(self, to_phone: str, otp: str) -> Dict[str, Any]:
+        """Send OTP via WhatsApp"""
+        text = f"Your Agent Mitra verification code is: {otp}. Valid for 5 minutes."
+        return await self.send_text_message(to_phone, text)
+
+    def verify_webhook_signature(self, request_body: bytes, signature: str) -> bool:
+        """Verify webhook signature from WhatsApp"""
+        if not self.webhook_secret:
+            logger.warning("WhatsApp webhook secret not configured")
+            return True  # Allow in development
+
+        expected_signature = hmac.new(
+            self.webhook_secret.encode(),
+            request_body,
+            hashlib.sha256
+        ).hexdigest()
+
+        return hmac.compare_digest(f"sha256={expected_signature}", signature)
+
+    async def process_webhook(self, webhook_data: Dict[str, Any]) -> bool:
+        """Process incoming WhatsApp webhook"""
+        try:
+            if "messages" in webhook_data.get("entry", [{}])[0].get("changes", [{}])[0]:
+                messages = webhook_data["entry"][0]["changes"][0]["messages"]
+
+                for message in messages:
+                    await self._process_incoming_message(message)
+
+            elif "statuses" in webhook_data.get("entry", [{}])[0].get("changes", [{}])[0]:
+                statuses = webhook_data["entry"][0]["changes"][0]["statuses"]
+
+                for status in statuses:
+                    await self._process_message_status(status)
+
+            return True
+
+        except Exception as e:
+            logger.error(f"Webhook processing failed: {e}")
+            return False
+
+    async def get_message_status(self, message_id: str) -> Dict[str, Any]:
+        """Get message delivery status"""
+        if not self._is_configured():
+            return {"status": "unknown", "mock": True}
+
+        try:
+            url = f"{self.api_url}/{message_id}"
+            response = await self.http_client.get(url)
+
+            if response.status_code == 200:
+                return response.json()
+            else:
+                return {"status": "error", "error": response.text}
+
+        except Exception as e:
+            logger.error(f"Failed to get message status: {e}")
+            return {"status": "error", "error": str(e)}
 
     async def create_template(
         self,
@@ -134,198 +203,208 @@ class WhatsAppService:
         language: str,
         content: str,
         variables: List[str]
-    ) -> Dict:
-        """Create WhatsApp message template"""
-
-        payload = {
-            "name": name,
-            "category": category,
-            "language": language,
-            "components": [
-                {
-                    "type": "body",
-                    "text": content
-                }
-            ]
-        }
-
-        # Add header if needed
-        if variables:
-            payload["components"].append({
-                "type": "footer",
-                "text": f"Variables: {', '.join(variables)}"
-            })
-
-        response = await self._send_whatsapp_request(
-            f"{settings.whatsapp_api_url}/message_templates",
-            payload,
-            method="POST"
-        )
-
-        # Store template in database
-        await self.template_service.create_template({
-            "template_id": response["id"],
-            "name": name,
-            "category": category,
-            "language": language,
-            "content": content,
-            "variables": variables,
-            "status": "pending_approval"
-        })
-
-        return response
-
-    async def get_templates(self) -> List[Dict]:
-        """Get approved message templates"""
-
-        response = await self._send_whatsapp_request(
-            f"{settings.whatsapp_api_url}/message_templates"
-        )
-
-        return response.get("data", [])
-
-    # Private methods
-    async def _send_whatsapp_request(
-        self,
-        url: str,
-        payload: Optional[Dict] = None,
-        method: str = "POST"
-    ) -> Dict:
-        """Send request to WhatsApp API"""
+    ) -> Dict[str, Any]:
+        """Create message template"""
+        if not self._is_configured():
+            return self._mock_template_creation(name, category)
 
         try:
-            if method == "POST":
-                response = await self.http_client.post(url, json=payload)
-            elif method == "GET":
-                response = await self.http_client.get(url)
+            url = f"{self.api_url}/{self.business_account_id}/message_templates"
+
+            payload = {
+                "name": name,
+                "category": category,
+                "language": language,
+                "components": [
+                    {
+                        "type": "body",
+                        "text": content
+                    }
+                ]
+            }
+
+            response = await self.http_client.post(url, json=payload)
+
+            if response.status_code == 200:
+                return response.json()
             else:
-                raise ValueError(f"Unsupported HTTP method: {method}")
+                raise Exception(f"Template creation failed: {response.text}")
 
-            response.raise_for_status()
-            return response.json()
-
-        except httpx.HTTPError as e:
-            # Log error and handle rate limiting
-            print(f"WhatsApp API error: {e}")
-            if response.status_code == 429:
-                # Implement backoff strategy
-                await self._handle_rate_limit()
+        except Exception as e:
+            logger.error(f"Template creation failed: {e}")
             raise
 
-    async def _process_messages(self, messages_data: Dict):
-        """Process incoming messages"""
+    async def get_templates(self) -> List[Dict[str, Any]]:
+        """Get available message templates"""
+        if not self._is_configured():
+            return self._mock_templates()
 
-        for message in messages_data.get("messages", []):
-            # Store incoming message
-            await self._store_message({
-                "message_id": message["id"],
-                "to_phone": settings.whatsapp_business_number,
-                "from_phone": message["from"],
-                "message_type": message["type"],
-                "content": message.get("text", {}).get("body", ""),
-                "status": "received",
-                "direction": "inbound",
-                "timestamp": message["timestamp"]
-            })
+        try:
+            url = f"{self.api_url}/{self.business_account_id}/message_templates"
+            response = await self.http_client.get(url)
 
-            # Process based on message type
-            if message["type"] == "text":
-                await self._handle_text_message(message)
-            elif message["type"] == "interactive":
-                await self._handle_interactive_message(message)
+            if response.status_code == 200:
+                return response.json().get("data", [])
+            else:
+                return []
 
-    async def _handle_text_message(self, message: Dict):
-        """Handle incoming text message"""
-        # Check if it's a chatbot query
-        from app.services.chatbot_service import ChatbotService
+        except Exception as e:
+            logger.error(f"Failed to get templates: {e}")
+            return []
 
-        chatbot_service = ChatbotService(self.db)
-        response = await chatbot_service.process_message(
-            message["from"],
-            message["text"]["body"]
-        )
+    def _prepare_message_payload(
+        self,
+        to_phone: str,
+        message_type: str,
+        content: Dict[str, Any],
+        template_name: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Prepare message payload for WhatsApp API"""
 
-        # Send response
-        if response:
-            await self.send_message(
-                message["from"],
-                "text",
-                {"body": response}
-            )
+        payload = {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": self._format_phone_number(to_phone)
+        }
 
-    async def _handle_interactive_message(self, message: Dict):
-        """Handle interactive message responses"""
-        # Process button clicks, list selections, etc.
-        interactive_data = message.get("interactive", {})
+        if message_type == "text":
+            payload["type"] = "text"
+            payload["text"] = {"body": content["body"]}
+        elif message_type == "template":
+            payload["type"] = "template"
+            payload["template"] = content
+        elif message_type == "image":
+            payload["type"] = "image"
+            payload["image"] = content
+        elif message_type == "document":
+            payload["type"] = "document"
+            payload["document"] = content
+        else:
+            raise ValueError(f"Unsupported message type: {message_type}")
 
-        if interactive_data.get("type") == "button_reply":
-            button_id = interactive_data["button_reply"]["id"]
-            await self._process_button_click(message["from"], button_id)
-
-        elif interactive_data.get("type") == "list_reply":
-            selection_id = interactive_data["list_reply"]["id"]
-            await self._process_list_selection(message["from"], selection_id)
-
-    async def _process_button_click(self, phone: str, button_id: str):
-        """Process button click actions"""
-        # Handle different button actions
-        if button_id == "call_agent":
-            # Create agent callback request
-            from app.services.callback_service import CallbackService
-            callback_service = CallbackService(self.db)
-            await callback_service.create_callback_request(phone)
-        elif button_id == "pay_premium":
-            # Send payment link
-            await self._send_payment_link(phone)
-        # Handle other button actions...
-
-    async def _store_message(self, message_data: Dict):
-        """Store WhatsApp message in database"""
-        whatsapp_message = WhatsAppMessage(**message_data)
-        self.db.add(whatsapp_message)
-        await self.db.commit()
-
-    def _verify_webhook_signature(self, webhook_data: Dict) -> bool:
-        """Verify WhatsApp webhook signature"""
-        signature = webhook_data.get("signature", "")
-        body = json.dumps(webhook_data, separators=(',', ':'))
-
-        expected_signature = hmac.new(
-            settings.whatsapp_webhook_secret.encode(),
-            body.encode(),
-            hashlib.sha256
-        ).hexdigest()
-
-        return hmac.compare_digest(signature, expected_signature)
+        return payload
 
     def _format_phone_number(self, phone: str) -> str:
-        """Format phone number for WhatsApp API"""
-        # Remove all non-numeric characters
-        phone = ''.join(filter(str.isdigit, phone))
+        """Format phone number for WhatsApp (ensure international format)"""
+        import re
 
-        # Add country code if missing
-        if not phone.startswith('91'):
-            phone = f'91{phone}'
+        # Remove all non-digit characters except +
+        clean_phone = re.sub(r'[^\d+]', '', phone)
 
-        return phone
+        # Ensure international format
+        if not clean_phone.startswith('+'):
+            if clean_phone.startswith('91'):
+                clean_phone = '+' + clean_phone
+            else:
+                clean_phone = '+91' + clean_phone
 
-    def _build_template_components(self, template: WhatsAppTemplate, variables: Dict) -> List[Dict]:
-        """Build template components for WhatsApp API"""
-        components = []
+        return clean_phone
 
-        # Body component
-        components.append({
-            "type": "body",
-            "parameters": [
-                {"type": "text", "text": variables.get(var, "")}
-                for var in template.variables
-            ]
+    def _is_configured(self) -> bool:
+        """Check if WhatsApp is properly configured"""
+        return bool(
+            self.access_token and
+            self.api_url and
+            self.business_number
+        )
+
+    def _mock_whatsapp_response(self, to_phone: str, message_type: str, content: Dict[str, Any]) -> Dict[str, Any]:
+        """Return mock response when WhatsApp is not configured"""
+        import uuid
+
+        return {
+            "provider": "whatsapp",
+            "message_id": f"wamid.{str(uuid.uuid4())[:16]}",
+            "status": "sent",
+            "to": to_phone,
+            "message_type": message_type,
+            "mock": True,
+            "note": "WhatsApp not configured - using mock response",
+            "timestamp": datetime.utcnow().isoformat()
+        }
+
+    def _mock_template_creation(self, name: str, category: str) -> Dict[str, Any]:
+        """Mock template creation response"""
+        import uuid
+
+        return {
+            "id": str(uuid.uuid4()),
+            "name": name,
+            "category": category,
+            "status": "APPROVED",
+            "mock": True,
+            "note": "WhatsApp not configured - using mock template creation"
+        }
+
+    def _mock_templates(self) -> List[Dict[str, Any]]:
+        """Mock templates response"""
+        return [
+            {
+                "id": "template_1",
+                "name": "welcome_message",
+                "category": "UTILITY",
+                "status": "APPROVED",
+                "language": "en",
+                "mock": True
+            },
+            {
+                "id": "template_2",
+                "name": "otp_verification",
+                "category": "AUTHENTICATION",
+                "status": "APPROVED",
+                "language": "en",
+                "mock": True
+            }
+        ]
+
+    async def _process_incoming_message(self, message: Dict[str, Any]):
+        """Process incoming message from webhook"""
+        # Extract message details
+        message_id = message.get("id")
+        from_number = message.get("from")
+        message_type = message.get("type")
+        timestamp = message.get("timestamp")
+
+        # Handle different message types
+        if message_type == "text":
+            text_content = message.get("text", {}).get("body")
+            await self._handle_text_message(from_number, text_content, message_id)
+        elif message_type == "image":
+            await self._handle_media_message(from_number, message, "image")
+        elif message_type == "document":
+            await self._handle_media_message(from_number, message, "document")
+
+        # Log message reception
+        monitoring.record_business_metrics("whatsapp_message_received", {
+            "message_type": message_type,
+            "from": from_number
         })
 
-        return components
+    async def _process_message_status(self, status: Dict[str, Any]):
+        """Process message status update from webhook"""
+        message_id = status.get("id")
+        status_value = status.get("status")
 
-    async def _handle_rate_limit(self):
-        """Handle WhatsApp API rate limiting"""
-        # Implement exponential backoff
-        import asyncio
-        await asyncio.sleep(60)  # Wait 1 minute before retrying
+        # Log status update
+        monitoring.record_business_metrics("whatsapp_status_update", {
+            "message_id": message_id,
+            "status": status_value
+        })
+
+    async def _handle_text_message(self, from_number: str, text: str, message_id: str):
+        """Handle incoming text message"""
+        # This could integrate with chatbot service for automated responses
+        logger.info(f"Received text message from {from_number}: {text[:50]}...")
+
+        # Placeholder for auto-response logic
+        # In production, this could trigger chatbot responses
+
+    async def _handle_media_message(self, from_number: str, message: Dict[str, Any], media_type: str):
+        """Handle incoming media message"""
+        logger.info(f"Received {media_type} message from {from_number}")
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.http_client.aclose()
