@@ -3,7 +3,6 @@ from fastapi import WebSocket
 import json
 from typing import Dict, List
 from datetime import datetime
-from app.services.feature_flag_service import FeatureFlagService
 import logging
 
 logger = logging.getLogger(__name__)
@@ -11,7 +10,6 @@ logger = logging.getLogger(__name__)
 class WebSocketManager:
     def __init__(self):
         self.active_connections: Dict[str, List[WebSocket]] = {}
-        self.feature_flag_service = FeatureFlagService()
 
     async def connect(self, websocket: WebSocket, user_id: str):
         """Connect a new WebSocket for a user"""
