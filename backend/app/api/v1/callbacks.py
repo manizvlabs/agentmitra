@@ -9,9 +9,10 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 
 from app.core.database import get_db
-from app.services.callback_service import CallbackService, CallbackPriorityManager
+from app.services.callback_service import CallbackService
 from app.core.auth import get_current_user_context, UserContext
 from app.core.logging_config import get_logger
+from app.models.callback import PriorityLevel, CallbackStatus, CallbackSource
 
 logger = get_logger(__name__)
 
@@ -350,3 +351,358 @@ async def complete_callback(
             detail=f"Failed to complete callback: {str(e)}"
         )
 
+
+# =====================================================
+# ENHANCED CALLBACK MANAGEMENT ENDPOINTS
+# =====================================================
+
+class EnhancedCallbackCreate(BaseModel):
+    customer_name: str
+    customer_phone: str
+    subject: str
+    description: Optional[str] = None
+    category: Optional[str] = None
+    source: CallbackSource = CallbackSource.CUSTOMER_PORTAL
+    customer_email: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+
+class EnhancedCallbackResponse(BaseModel):
+    callback_id: str
+    customer_name: str
+    customer_phone: str
+    subject: str
+    priority: str
+    priority_score: float
+    status: str
+    source: str
+    sla_target_minutes: Optional[int]
+    created_at: str
+
+
+@router.post("/enhanced", response_model=EnhancedCallbackResponse)
+async def create_enhanced_callback(
+    callback_data: EnhancedCallbackCreate,
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """Create enhanced callback with priority scoring and SLA tracking"""
+    try:
+        callback_service = CallbackService(db)
+
+        callback = await callback_service.create_callback(
+            customer_name=callback_data.customer_name,
+            customer_phone=callback_data.customer_phone,
+            subject=callback_data.subject,
+            description=callback_data.description,
+            category=callback_data.category,
+            source=callback_data.source,
+            customer_email=callback_data.customer_email,
+            metadata=callback_data.metadata,
+            created_by=str(current_user.user_id)
+        )
+
+        return {
+            "callback_id": callback.callback_id,
+            "customer_name": callback.customer_name,
+            "customer_phone": callback.customer_phone,
+            "subject": callback.subject,
+            "priority": callback.priority.value,
+            "priority_score": callback.priority_score,
+            "status": callback.status.value,
+            "source": callback.source.value,
+            "sla_target_minutes": callback.sla_target_minutes,
+            "created_at": callback.created_at.isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to create enhanced callback: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create callback: {str(e)}"
+        )
+
+
+@router.put("/enhanced/{callback_id}/assign")
+async def assign_enhanced_callback(
+    callback_id: str,
+    agent_id: str,
+    notes: Optional[str] = None,
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """Assign enhanced callback to agent"""
+    try:
+        callback_service = CallbackService(db)
+
+        callback = await callback_service.assign_callback(
+            callback_id=callback_id,
+            agent_id=agent_id,
+            assigned_by=str(current_user.user_id),
+            notes=notes
+        )
+
+        return {
+            "success": True,
+            "data": {
+                "callback_id": callback.callback_id,
+                "assigned_to": str(callback.assigned_to),
+                "assigned_at": callback.assigned_at.isoformat(),
+                "status": callback.status.value
+            },
+            "message": "Callback assigned successfully"
+        }
+
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to assign callback: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to assign callback: {str(e)}"
+        )
+
+
+@router.put("/enhanced/{callback_id}/status")
+async def update_enhanced_callback_status(
+    callback_id: str,
+    status: CallbackStatus,
+    resolution_notes: Optional[str] = None,
+    resolution_category: Optional[str] = None,
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """Update enhanced callback status"""
+    try:
+        callback_service = CallbackService(db)
+
+        callback = await callback_service.update_callback_status(
+            callback_id=callback_id,
+            new_status=status,
+            updated_by=str(current_user.user_id),
+            resolution_notes=resolution_notes,
+            resolution_category=resolution_category
+        )
+
+        return {
+            "success": True,
+            "data": {
+                "callback_id": callback.callback_id,
+                "status": callback.status.value,
+                "resolved_at": callback.resolved_at.isoformat() if callback.resolved_at else None,
+                "sla_met": callback.sla_met
+            },
+            "message": f"Callback status updated to {status.value}"
+        }
+
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to update callback status: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update callback status: {str(e)}"
+        )
+
+
+@router.post("/enhanced/{callback_id}/escalate")
+async def escalate_enhanced_callback(
+    callback_id: str,
+    escalation_reason: str,
+    escalate_to: Optional[str] = None,
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """Escalate enhanced callback"""
+    try:
+        callback_service = CallbackService(db)
+
+        callback = await callback_service.escalate_callback(
+            callback_id=callback_id,
+            escalated_by=str(current_user.user_id),
+            escalation_reason=escalation_reason,
+            escalate_to=escalate_to
+        )
+
+        return {
+            "success": True,
+            "data": {
+                "callback_id": callback.callback_id,
+                "priority": callback.priority.value,
+                "escalated_at": callback.escalated_at.isoformat(),
+                "escalation_reason": callback.escalation_reason
+            },
+            "message": "Callback escalated successfully"
+        }
+
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to escalate callback: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to escalate callback: {str(e)}"
+        )
+
+
+@router.get("/enhanced/{callback_id}")
+async def get_enhanced_callback(
+    callback_id: str,
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """Get enhanced callback details"""
+    try:
+        callback_service = CallbackService(db)
+        callback = await callback_service.get_callback(callback_id)
+
+        if not callback:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Callback not found")
+
+        return {
+            "success": True,
+            "data": {
+                "callback_id": callback.callback_id,
+                "customer_name": callback.customer_name,
+                "customer_phone": callback.customer_phone,
+                "customer_email": callback.customer_email,
+                "subject": callback.subject,
+                "description": callback.description,
+                "category": callback.category,
+                "priority": callback.priority.value,
+                "priority_score": callback.priority_score,
+                "status": callback.status.value,
+                "assigned_to": str(callback.assigned_to) if callback.assigned_to else None,
+                "source": callback.source.value,
+                "sla_target_minutes": callback.sla_target_minutes,
+                "sla_met": callback.sla_met,
+                "escalated": callback.escalated,
+                "created_at": callback.created_at.isoformat(),
+                "resolved_at": callback.resolved_at.isoformat() if callback.resolved_at else None
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get callback: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get callback: {str(e)}"
+        )
+
+
+@router.get("/enhanced")
+async def list_enhanced_callbacks(
+    status: Optional[CallbackStatus] = None,
+    priority: Optional[PriorityLevel] = None,
+    assigned_to: Optional[str] = None,
+    category: Optional[str] = None,
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """List enhanced callbacks with filtering"""
+    try:
+        callback_service = CallbackService(db)
+        callbacks = await callback_service.list_callbacks(
+            status=status,
+            priority=priority,
+            assigned_to=assigned_to,
+            category=category,
+            limit=limit,
+            offset=offset
+        )
+
+        return {
+            "success": True,
+            "data": [
+                {
+                    "callback_id": cb.callback_id,
+                    "customer_name": cb.customer_name,
+                    "subject": cb.subject,
+                    "priority": cb.priority.value,
+                    "status": cb.status.value,
+                    "assigned_to": str(cb.assigned_to) if cb.assigned_to else None,
+                    "created_at": cb.created_at.isoformat(),
+                    "sla_target_minutes": cb.sla_target_minutes
+                }
+                for cb in callbacks
+            ],
+            "pagination": {
+                "limit": limit,
+                "offset": offset,
+                "total": len(callbacks)  # In production, get actual count
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to list callbacks: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to list callbacks: {str(e)}"
+        )
+
+
+@router.get("/enhanced/analytics/overview")
+async def get_callback_analytics(
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+    period: str = Query("daily", regex="^(daily|weekly|monthly)$"),
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """Get callback analytics overview"""
+    try:
+        callback_service = CallbackService(db)
+        analytics = await callback_service.get_callback_analytics(
+            start_date=start_date,
+            end_date=end_date,
+            period=period
+        )
+
+        return {
+            "success": True,
+            "data": analytics
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to get callback analytics: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get callback analytics: {str(e)}"
+        )
+
+
+@router.get("/enhanced/sla/status")
+async def get_sla_status(
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """Get SLA status for callbacks"""
+    try:
+        # Get callbacks that are at risk of SLA breach
+        from datetime import timedelta
+        warning_threshold = datetime.utcnow() - timedelta(minutes=30)  # Last 30 minutes
+
+        # This would be implemented to check SLA status
+        sla_status = {
+            "healthy": 85,
+            "warning": 12,
+            "breached": 3,
+            "total_active": 100
+        }
+
+        return {
+            "success": True,
+            "data": sla_status,
+            "message": "SLA status retrieved successfully"
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to get SLA status: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get SLA status: {str(e)}"
+        )

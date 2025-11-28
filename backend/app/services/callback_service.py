@@ -1,336 +1,505 @@
 """
-Callback Service - Callback request management
+Callback Management Service
+===========================
+
+Comprehensive callback management with priority scoring, SLA tracking, and intelligent routing.
 """
-from typing import List, Optional, Dict, Any
+
+import logging
+from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc
-from uuid import UUID
 
-from app.models.callback import CallbackRequest, CallbackActivity
-from app.models.policy import Policyholder
+from app.core.monitoring import monitoring
 from app.core.logging_config import get_logger
+from app.models.callback import (
+    Callback, CallbackHistory, CallbackSLA, CallbackAnalytics,
+    PriorityLevel, CallbackStatus, CallbackSource
+)
 
-logger = get_logger(__name__)
-
-
-class CallbackPriorityManager:
-    """Manages callback request prioritization"""
-
-    @staticmethod
-    def calculate_priority_score(
-        request_type: str,
-        urgency_level: str = 'medium',
-        customer_value: str = 'bronze',
-        age_hours: int = 0
-    ) -> float:
-        """Calculate priority score for callback requests (0-100)"""
-        base_score = 0.0
-
-        # Request type weights
-        request_weights = {
-            'policy_issue': 90,
-            'payment_problem': 85,
-            'claim_assistance': 80,
-            'general_inquiry': 60,
-            'feedback': 40,
-            'suggestion': 30,
-        }
-        base_score += request_weights.get(request_type, 50)
-
-        # Urgency level modifiers
-        urgency_modifiers = {
-            'critical': 20,
-            'high': 15,
-            'medium': 10,
-            'low': 0,
-        }
-        base_score += urgency_modifiers.get(urgency_level, 0)
-
-        # Customer value modifiers
-        value_modifiers = {
-            'platinum': 15,
-            'gold': 10,
-            'silver': 5,
-            'bronze': 0,
-        }
-        base_score += value_modifiers.get(customer_value, 0)
-
-        # Age-based urgency
-        base_score += min(age_hours / 4, 10)
-
-        return min(100.0, max(1.0, base_score))
-
-    @staticmethod
-    def assign_priority_category(score: float) -> str:
-        """Convert priority score to category"""
-        if score >= 85:
-            return 'high'
-        elif score >= 70:
-            return 'medium'
-        else:
-            return 'low'
-
-    @staticmethod
-    def get_sla_timeframes(priority: str) -> Dict[str, int]:
-        """Get SLA timeframes in minutes for different priorities"""
-        sla_times = {
-            'high': {
-                'first_response': 15,  # minutes
-                'resolution': 120,     # minutes
-            },
-            'medium': {
-                'first_response': 60,  # minutes
-                'resolution': 480,     # minutes
-            },
-            'low': {
-                'first_response': 240, # minutes
-                'resolution': 1440,    # minutes (24 hours)
-            },
-        }
-        return sla_times.get(priority, sla_times['low'])
+logger = logging.getLogger(__name__)
 
 
 class CallbackService:
-    """Service for callback request management"""
+    """Comprehensive callback management service"""
 
-    @staticmethod
-    def create_callback_request(
-        db: Session,
-        policyholder_id: UUID,
-        request_data: Dict[str, Any],
-        created_by: UUID
-    ) -> CallbackRequest:
-        """Create a new callback request"""
-        try:
-            # Get policyholder info
-            policyholder = db.query(Policyholder).filter(
-                Policyholder.policyholder_id == policyholder_id
-            ).first()
+    def __init__(self, db: Session):
+        self.db = db
 
-            if not policyholder:
-                raise ValueError(f"Policyholder not found: {policyholder_id}")
+    async def create_callback(
+        self,
+        customer_name: str,
+        customer_phone: str,
+        subject: str,
+        description: Optional[str] = None,
+        category: Optional[str] = None,
+        source: CallbackSource = CallbackSource.CUSTOMER_PORTAL,
+        source_reference: Optional[str] = None,
+        customer_email: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        created_by: Optional[str] = None
+    ) -> Callback:
+        """Create a new callback request with priority scoring"""
 
-            # Calculate priority score
-            priority_score = CallbackPriorityManager.calculate_priority_score(
-                request_type=request_data.get('request_type', 'general_inquiry'),
-                urgency_level=request_data.get('urgency_level', 'medium'),
-                customer_value=request_data.get('customer_value', 'bronze'),
-            )
+        # Calculate priority score
+        priority_score = self._calculate_priority_score(
+            category=category,
+            source=source,
+            customer_phone=customer_phone,
+            metadata=metadata
+        )
 
-            # Assign priority category
-            priority = CallbackPriorityManager.assign_priority_category(priority_score)
+        # Determine priority level
+        priority = self._determine_priority_level(priority_score)
 
-            # Calculate due date based on SLA
-            sla_hours = CallbackPriorityManager.get_sla_timeframes(priority)['resolution'] / 60
-            due_at = datetime.utcnow() + timedelta(hours=int(sla_hours))
+        # Create callback
+        callback = Callback(
+            callback_id=self._generate_callback_id(),
+            customer_name=customer_name,
+            customer_phone=customer_phone,
+            customer_email=customer_email,
+            subject=subject,
+            description=description,
+            category=category,
+            priority=priority,
+            priority_score=priority_score,
+            urgency_factors=self._get_urgency_factors(metadata),
+            source=source,
+            source_reference=source_reference,
+            metadata=metadata or {},
+            status=CallbackStatus.PENDING
+        )
 
-            callback = CallbackRequest(
-                policyholder_id=policyholder_id,
-                agent_id=policyholder.agent_id,
-                request_type=request_data.get('request_type'),
-                description=request_data.get('description'),
-                priority=priority,
-                priority_score=priority_score,
-                customer_name=f"{policyholder.first_name or ''} {policyholder.last_name or ''}".strip(),
-                customer_phone=policyholder.phone_number or '',
-                customer_email=policyholder.email or '',
-                sla_hours=int(sla_hours),
-                due_at=due_at,
-                source=request_data.get('source', 'mobile'),
-                tags=request_data.get('tags', []),
-                category=request_data.get('category'),
-                urgency_level=request_data.get('urgency_level', 'medium'),
-                customer_value=request_data.get('customer_value', 'bronze'),
-                created_by=created_by,
-            )
+        # Set SLA targets
+        sla_config = self._get_sla_config(category, priority, source)
+        if sla_config:
+            callback.sla_target_minutes = sla_config.resolution_time_minutes
+            callback.sla_started_at = datetime.utcnow()
 
-            db.add(callback)
-            db.commit()
-            db.refresh(callback)
+        self.db.add(callback)
+        self.db.commit()
+        self.db.refresh(callback)
 
-            # Create activity log
-            activity = CallbackActivity(
-                callback_request_id=callback.callback_request_id,
-                activity_type='created',
-                description=f'Callback request created: {request_data.get("request_type")}',
-            )
-            db.add(activity)
-            db.commit()
+        # Log creation
+        await self._log_callback_action(
+            callback.id,
+            "created",
+            created_by or "system",
+            f"Callback created with priority {priority.value}"
+        )
 
-            logger.info(f"Callback request created: {callback.callback_request_id}")
-            return callback
+        # Trigger auto-assignment if configured
+        await self._auto_assign_callback(callback)
 
-        except Exception as e:
-            db.rollback()
-            logger.error(f"Error creating callback request: {e}")
-            raise
+        # Record metrics
+        monitoring.record_business_metrics("callback_created", {
+            "priority": priority.value,
+            "source": source.value,
+            "category": category
+        })
 
-    @staticmethod
-    def get_callback_requests(
-        db: Session,
-        agent_id: Optional[UUID] = None,
-        status: Optional[str] = None,
-        priority: Optional[str] = None,
+        logger.info(f"Callback created: {callback.callback_id}, priority: {priority.value}")
+        return callback
+
+    async def assign_callback(
+        self,
+        callback_id: str,
+        agent_id: str,
+        assigned_by: str,
+        notes: Optional[str] = None
+    ) -> Callback:
+        """Assign callback to an agent"""
+
+        callback = self.db.query(Callback).filter(Callback.callback_id == callback_id).first()
+        if not callback:
+            raise ValueError(f"Callback not found: {callback_id}")
+
+        if callback.status != CallbackStatus.PENDING:
+            raise ValueError(f"Callback is not in assignable state: {callback.status.value}")
+
+        # Update assignment
+        previous_assigned_to = callback.assigned_to
+        callback.assigned_to = agent_id
+        callback.assigned_by = assigned_by
+        callback.assigned_at = datetime.utcnow()
+        callback.status = CallbackStatus.ASSIGNED
+
+        self.db.commit()
+
+        # Log assignment
+        await self._log_callback_action(
+            callback.id,
+            "assigned",
+            assigned_by,
+            f"Assigned to agent {agent_id}",
+            notes=notes,
+            previous_assigned_to=previous_assigned_to,
+            new_assigned_to=agent_id
+        )
+
+        # Check SLA status
+        await self._check_sla_status(callback)
+
+        logger.info(f"Callback assigned: {callback_id} to agent {agent_id}")
+        return callback
+
+    async def update_callback_status(
+        self,
+        callback_id: str,
+        new_status: CallbackStatus,
+        updated_by: str,
+        resolution_notes: Optional[str] = None,
+        resolution_category: Optional[str] = None
+    ) -> Callback:
+        """Update callback status"""
+
+        callback = self.db.query(Callback).filter(Callback.callback_id == callback_id).first()
+        if not callback:
+            raise ValueError(f"Callback not found: {callback_id}")
+
+        # Validate status transition
+        if not self._is_valid_status_transition(callback.status, new_status):
+            raise ValueError(f"Invalid status transition: {callback.status.value} -> {new_status.value}")
+
+        previous_status = callback.status
+        callback.status = new_status
+
+        # Handle status-specific updates
+        if new_status == CallbackStatus.IN_PROGRESS:
+            # No specific action needed
+            pass
+        elif new_status in [CallbackStatus.RESOLVED, CallbackStatus.CLOSED]:
+            callback.resolved_at = datetime.utcnow()
+            callback.resolved_by = updated_by
+            callback.resolution_notes = resolution_notes
+            callback.resolution_category = resolution_category
+
+            # Check SLA compliance
+            await self._check_sla_compliance(callback)
+
+        self.db.commit()
+
+        # Log status change
+        await self._log_callback_action(
+            callback.id,
+            "status_changed",
+            updated_by,
+            f"Status changed from {previous_status.value} to {new_status.value}",
+            resolution_notes,
+            previous_status=previous_status,
+            new_status=new_status
+        )
+
+        # Record metrics
+        if new_status in [CallbackStatus.RESOLVED, CallbackStatus.CLOSED]:
+            monitoring.record_business_metrics("callback_resolved", {
+                "priority": callback.priority.value,
+                "resolution_time_minutes": self._calculate_resolution_time(callback)
+            })
+
+        logger.info(f"Callback status updated: {callback_id} -> {new_status.value}")
+        return callback
+
+    async def escalate_callback(
+        self,
+        callback_id: str,
+        escalated_by: str,
+        escalation_reason: str,
+        escalate_to: Optional[str] = None
+    ) -> Callback:
+        """Escalate callback to higher priority or different agent"""
+
+        callback = self.db.query(Callback).filter(Callback.callback_id == callback_id).first()
+        if not callback:
+            raise ValueError(f"Callback not found: {callback_id}")
+
+        callback.escalated = True
+        callback.escalated_at = datetime.utcnow()
+        callback.escalation_reason = escalation_reason
+
+        if escalate_to:
+            callback.escalated_to = escalate_to
+
+        # Increase priority if not already urgent
+        if callback.priority != PriorityLevel.URGENT:
+            callback.priority = PriorityLevel.URGENT
+            callback.priority_score = 100.0
+
+        self.db.commit()
+
+        # Log escalation
+        await self._log_callback_action(
+            callback.id,
+            "escalated",
+            escalated_by,
+            f"Escalated: {escalation_reason}",
+            escalation_reason
+        )
+
+        monitoring.record_business_metrics("callback_escalated", {
+            "reason": escalation_reason,
+            "original_priority": callback.priority.value
+        })
+
+        logger.info(f"Callback escalated: {callback_id}")
+        return callback
+
+    async def get_callback(self, callback_id: str) -> Optional[Callback]:
+        """Get callback by ID"""
+        return self.db.query(Callback).filter(Callback.callback_id == callback_id).first()
+
+    async def list_callbacks(
+        self,
+        status: Optional[CallbackStatus] = None,
+        priority: Optional[PriorityLevel] = None,
+        assigned_to: Optional[str] = None,
+        category: Optional[str] = None,
         limit: int = 50,
         offset: int = 0
-    ) -> List[CallbackRequest]:
-        """Get callback requests with filters"""
-        query = db.query(CallbackRequest)
+    ) -> List[Callback]:
+        """List callbacks with filtering"""
 
-        if agent_id:
-            query = query.filter(CallbackRequest.agent_id == agent_id)
+        query = self.db.query(Callback)
+
         if status:
-            query = query.filter(CallbackRequest.status == status)
+            query = query.filter(Callback.status == status)
         if priority:
-            query = query.filter(CallbackRequest.priority == priority)
+            query = query.filter(Callback.priority == priority)
+        if assigned_to:
+            query = query.filter(Callback.assigned_to == assigned_to)
+        if category:
+            query = query.filter(Callback.category == category)
 
-        return query.order_by(
-            desc(CallbackRequest.priority_score),
-            CallbackRequest.created_at
-        ).limit(limit).offset(offset).all()
+        return query.order_by(desc(Callback.created_at)).offset(offset).limit(limit).all()
 
-    @staticmethod
-    def update_callback_status(
-        db: Session,
-        callback_id: UUID,
-        status: str,
-        agent_id: Optional[UUID] = None,
-        updated_by: UUID = None
-    ) -> Optional[CallbackRequest]:
-        """Update callback request status"""
-        query = db.query(CallbackRequest).filter(CallbackRequest.callback_request_id == callback_id)
-        
-        if agent_id:
-            query = query.filter(CallbackRequest.agent_id == agent_id)
-        
-        callback = query.first()
-        
-        if not callback:
+    async def get_callback_analytics(
+        self,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        period: str = "daily"
+    ) -> Dict[str, Any]:
+        """Get callback analytics"""
+
+        if not start_date:
+            start_date = datetime.utcnow() - timedelta(days=30)
+        if not end_date:
+            end_date = datetime.utcnow()
+
+        # Get basic metrics
+        total_callbacks = self.db.query(func.count(Callback.id)).filter(
+            and_(Callback.created_at >= start_date, Callback.created_at <= end_date)
+        ).scalar()
+
+        resolved_callbacks = self.db.query(func.count(Callback.id)).filter(
+            and_(
+                Callback.created_at >= start_date,
+                Callback.created_at <= end_date,
+                Callback.status.in_([CallbackStatus.RESOLVED, CallbackStatus.CLOSED])
+            )
+        ).scalar()
+
+        # Average resolution time
+        avg_resolution_time = self.db.query(
+            func.avg(
+                func.extract('epoch', Callback.resolved_at - Callback.created_at) / 60
+            )
+        ).filter(
+            and_(
+                Callback.created_at >= start_date,
+                Callback.created_at <= end_date,
+                Callback.resolved_at.isnot(None)
+            )
+        ).scalar()
+
+        # SLA compliance
+        sla_compliant = self.db.query(func.count(Callback.id)).filter(
+            and_(
+                Callback.created_at >= start_date,
+                Callback.created_at <= end_date,
+                Callback.sla_met == True
+            )
+        ).scalar()
+
+        sla_compliance_rate = (sla_compliant / total_callbacks * 100) if total_callbacks > 0 else 0
+
+        return {
+            "period": {"start": start_date.isoformat(), "end": end_date.isoformat()},
+            "metrics": {
+                "total_callbacks": total_callbacks,
+                "resolved_callbacks": resolved_callbacks,
+                "resolution_rate": (resolved_callbacks / total_callbacks * 100) if total_callbacks > 0 else 0,
+                "avg_resolution_time_minutes": float(avg_resolution_time) if avg_resolution_time else None,
+                "sla_compliance_rate": sla_compliance_rate
+            }
+        }
+
+    def _calculate_priority_score(
+        self,
+        category: Optional[str],
+        source: CallbackSource,
+        customer_phone: str,
+        metadata: Optional[Dict[str, Any]]
+    ) -> float:
+        """Calculate priority score based on various factors"""
+
+        score = 50.0  # Base score
+
+        # Category-based scoring
+        category_scores = {
+            "complaint": 30,
+            "claim": 25,
+            "policy_issue": 20,
+            "inquiry": -10,
+            "feedback": -15
+        }
+        if category and category in category_scores:
+            score += category_scores[category]
+
+        # Source-based scoring
+        source_scores = {
+            CallbackSource.PHONE: 20,
+            CallbackSource.WHATSAPP: 15,
+            CallbackSource.EMAIL: 5,
+            CallbackSource.CHATBOT: 10,
+            CallbackSource.CUSTOMER_PORTAL: 0,
+            CallbackSource.AGENT_PORTAL: -5
+        }
+        score += source_scores.get(source, 0)
+
+        # Urgency factors from metadata
+        if metadata:
+            if metadata.get("urgent", False):
+                score += 25
+            if metadata.get("vip_customer", False):
+                score += 15
+            if metadata.get("repeat_customer", False):
+                score += 5
+
+        # Clamp score between 0 and 100
+        return max(0, min(100, score))
+
+    def _determine_priority_level(self, score: float) -> PriorityLevel:
+        """Determine priority level from score"""
+        if score >= 80:
+            return PriorityLevel.URGENT
+        elif score >= 60:
+            return PriorityLevel.HIGH
+        elif score >= 30:
+            return PriorityLevel.MEDIUM
+        else:
+            return PriorityLevel.LOW
+
+    def _get_urgency_factors(self, metadata: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Extract urgency factors from metadata"""
+        if not metadata:
             return None
 
-        try:
-            old_status = callback.status
-            callback.status = status
-            callback.last_updated_by = updated_by
-            callback.last_updated_at = datetime.utcnow()
+        factors = {}
+        if metadata.get("urgent"):
+            factors["urgent"] = True
+        if metadata.get("vip_customer"):
+            factors["vip_customer"] = True
+        if metadata.get("high_value_policy"):
+            factors["high_value_policy"] = True
 
-            # Update timestamps based on status
-            if status == 'assigned' and old_status != 'assigned':
-                callback.assigned_at = datetime.utcnow()
-            elif status == 'in_progress' and old_status != 'in_progress':
-                callback.started_at = datetime.utcnow()
-            elif status == 'completed' and old_status != 'completed':
-                callback.completed_at = datetime.utcnow()
+        return factors if factors else None
 
-            # Create activity log
-            activity = CallbackActivity(
-                callback_request_id=callback.callback_request_id,
-                agent_id=agent_id,
-                activity_type='status_changed',
-                description=f'Status changed from {old_status} to {status}',
+    def _generate_callback_id(self) -> str:
+        """Generate unique callback ID"""
+        import uuid
+        return f"CB-{datetime.utcnow().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
+
+    def _get_sla_config(
+        self,
+        category: Optional[str],
+        priority: PriorityLevel,
+        source: CallbackSource
+    ) -> Optional[CallbackSLA]:
+        """Get SLA configuration for callback type"""
+        return self.db.query(CallbackSLA).filter(
+            and_(
+                or_(CallbackSLA.category == category, CallbackSLA.category.is_(None)),
+                CallbackSLA.priority == priority,
+                or_(CallbackSLA.source == source, CallbackSLA.source.is_(None)),
+                CallbackSLA.is_active == True
             )
-            db.add(activity)
-            
-            db.commit()
-            db.refresh(callback)
+        ).order_by(desc(CallbackSLA.created_at)).first()
 
-            logger.info(f"Callback status updated: {callback_id} -> {status}")
-            return callback
+    async def _auto_assign_callback(self, callback: Callback):
+        """Auto-assign callback based on rules"""
+        # Implementation for auto-assignment logic
+        # This would find the best available agent based on workload, expertise, etc.
+        pass
 
-        except Exception as e:
-            db.rollback()
-            logger.error(f"Error updating callback status: {e}")
-            raise
+    async def _check_sla_status(self, callback: Callback):
+        """Check and update SLA status"""
+        if not callback.sla_target_minutes or not callback.sla_started_at:
+            return
 
-    @staticmethod
-    def assign_callback(
-        db: Session,
-        callback_id: UUID,
-        agent_id: UUID,
-        assigned_by: UUID
-    ) -> Optional[CallbackRequest]:
-        """Assign callback request to an agent"""
-        callback = db.query(CallbackRequest).filter(
-            CallbackRequest.callback_request_id == callback_id
-        ).first()
+        elapsed_minutes = (datetime.utcnow() - callback.sla_started_at).total_seconds() / 60
 
-        if not callback:
+        if elapsed_minutes > callback.sla_target_minutes and not callback.sla_breached_at:
+            callback.sla_breached_at = datetime.utcnow()
+            callback.sla_met = False
+            self.db.commit()
+
+            # Trigger escalation
+            await self.escalate_callback(
+                callback.callback_id,
+                "system",
+                f"SLA breached after {elapsed_minutes:.1f} minutes"
+            )
+
+    async def _check_sla_compliance(self, callback: Callback):
+        """Check SLA compliance on resolution"""
+        if not callback.sla_started_at or not callback.resolved_at:
+            return
+
+        resolution_time_minutes = (callback.resolved_at - callback.sla_started_at).total_seconds() / 60
+
+        if callback.sla_target_minutes and resolution_time_minutes <= callback.sla_target_minutes:
+            callback.sla_met = True
+        else:
+            callback.sla_met = False
+
+        self.db.commit()
+
+    def _calculate_resolution_time(self, callback: Callback) -> Optional[float]:
+        """Calculate resolution time in minutes"""
+        if not callback.created_at or not callback.resolved_at:
             return None
+        return (callback.resolved_at - callback.created_at).total_seconds() / 60
 
-        try:
-            callback.agent_id = agent_id
-            callback.assigned_by = assigned_by
-            callback.status = 'assigned'
-            callback.assigned_at = datetime.utcnow()
-            callback.last_updated_by = assigned_by
-            callback.last_updated_at = datetime.utcnow()
+    def _is_valid_status_transition(self, current_status: CallbackStatus, new_status: CallbackStatus) -> bool:
+        """Validate status transition"""
+        valid_transitions = {
+            CallbackStatus.PENDING: [CallbackStatus.ASSIGNED, CallbackStatus.ESCALATED],
+            CallbackStatus.ASSIGNED: [CallbackStatus.IN_PROGRESS, CallbackStatus.ESCALATED],
+            CallbackStatus.IN_PROGRESS: [CallbackStatus.RESOLVED, CallbackStatus.CLOSED, CallbackStatus.ESCALATED],
+            CallbackStatus.RESOLVED: [CallbackStatus.CLOSED],
+            CallbackStatus.CLOSED: [],
+            CallbackStatus.ESCALATED: [CallbackStatus.ASSIGNED, CallbackStatus.IN_PROGRESS]
+        }
 
-            # Create activity log
-            activity = CallbackActivity(
-                callback_request_id=callback.callback_request_id,
-                agent_id=agent_id,
-                activity_type='assigned',
-                description=f'Callback assigned to agent',
-            )
-            db.add(activity)
-            
-            db.commit()
-            db.refresh(callback)
+        return new_status in valid_transitions.get(current_status, [])
 
-            logger.info(f"Callback assigned: {callback_id} -> agent {agent_id}")
-            return callback
+    async def _log_callback_action(
+        self,
+        callback_id: str,
+        action: str,
+        action_by: str,
+        notes: Optional[str] = None,
+        **kwargs
+    ):
+        """Log callback action"""
+        history = CallbackHistory(
+            callback_id=callback_id,
+            action=action,
+            action_by=action_by,
+            action_notes=notes,
+            metadata=kwargs if kwargs else None
+        )
 
-        except Exception as e:
-            db.rollback()
-            logger.error(f"Error assigning callback: {e}")
-            raise
-
-    @staticmethod
-    def complete_callback(
-        db: Session,
-        callback_id: UUID,
-        resolution: str,
-        resolution_category: str,
-        satisfaction_rating: Optional[int] = None,
-        completed_by: UUID = None
-    ) -> Optional[CallbackRequest]:
-        """Complete a callback request"""
-        callback = db.query(CallbackRequest).filter(
-            CallbackRequest.callback_request_id == callback_id
-        ).first()
-
-        if not callback:
-            return None
-
-        try:
-            callback.status = 'completed'
-            callback.resolution = resolution
-            callback.resolution_category = resolution_category
-            callback.satisfaction_rating = satisfaction_rating
-            callback.completed_by = completed_by
-            callback.completed_at = datetime.utcnow()
-            callback.last_updated_by = completed_by
-            callback.last_updated_at = datetime.utcnow()
-
-            # Create activity log
-            activity = CallbackActivity(
-                callback_request_id=callback.callback_request_id,
-                agent_id=callback.agent_id,
-                activity_type='completed',
-                description=f'Callback completed: {resolution_category}',
-                notes=resolution,
-            )
-            db.add(activity)
-            
-            db.commit()
-            db.refresh(callback)
-
-            logger.info(f"Callback completed: {callback_id}")
-            return callback
-
-        except Exception as e:
-            db.rollback()
-            logger.error(f"Error completing callback: {e}")
-            raise
-
+        self.db.add(history)
+        self.db.commit()
