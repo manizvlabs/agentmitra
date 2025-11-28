@@ -27,6 +27,7 @@ from app.core.config.settings import settings
 from app.services.minio_storage_service import get_minio_service, MinIOStorageService
 from app.core.monitoring import monitoring
 from app.core.logging_config import get_logger
+from app.models.content import Content
 
 
 logger = logging.getLogger(__name__)

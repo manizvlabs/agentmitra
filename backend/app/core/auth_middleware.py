@@ -31,6 +31,7 @@ class UserContext:
 
     def __init__(self, user_id: str, username: str, email: str, roles: List[str], permissions: set):
         self.user_id = user_id
+        self.id = user_id  # Add id alias for compatibility
         self.username = username
         self.email = email
         self.roles = roles
@@ -51,6 +52,28 @@ class UserContext:
     def has_any_permission(self, permissions: List[str]) -> bool:
         """Check if user has any of the specified permissions"""
         return any(perm in self.permissions for perm in permissions)
+
+    @property
+    def role(self) -> str:
+        """Get the primary role (first role in the list)"""
+        return self.roles[0] if self.roles else ""
+
+    def has_role_level(self, role: str) -> bool:
+        """Check if user has role or higher level"""
+        role_hierarchy = {
+            "super_admin": 5,
+            "provider_admin": 4,
+            "regional_manager": 3,
+            "senior_agent": 2,
+            "junior_agent": 1,
+            "policyholder": 0,
+            "support_staff": 0
+        }
+
+        user_level = role_hierarchy.get(self.role, 0)
+        required_level = role_hierarchy.get(role, 0)
+
+        return user_level >= required_level
 
 
 async def get_current_user_context(

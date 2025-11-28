@@ -131,16 +131,16 @@ class User(Base, TimestampMixin):
     user_roles = relationship("UserRole", foreign_keys="UserRole.user_id")
 
     # Relationships - Quotes
-    daily_quotes = relationship("DailyQuote", back_populates="agent", cascade="all, delete-orphan")
-    quote_shares = relationship("QuoteSharingAnalytics", back_populates="agent", cascade="all, delete-orphan")
-    quote_performance = relationship("QuotePerformance", back_populates="agent", cascade="all, delete-orphan")
+    daily_quotes = relationship("DailyQuote", back_populates="agent", cascade="all, delete-orphan", foreign_keys="DailyQuote.agent_id")
+    quote_shares = relationship("QuoteSharingAnalytics", back_populates="agent", cascade="all, delete-orphan", foreign_keys="QuoteSharingAnalytics.agent_id")
+    quote_performance = relationship("QuotePerformance", back_populates="agent", cascade="all, delete-orphan", foreign_keys="QuotePerformance.agent_id")
 
     # Relationships - Trials
-    trial_subscriptions = relationship("TrialSubscription", back_populates="user", cascade="all, delete-orphan")
+    trial_subscriptions = relationship("TrialSubscription", back_populates="user", cascade="all, delete-orphan", foreign_keys="TrialSubscription.user_id")
 
     # Relationships - Subscriptions
-    subscriptions = relationship("UserSubscription", back_populates="user", cascade="all, delete-orphan")
-    billing_history = relationship("SubscriptionBillingHistory", back_populates="user", cascade="all, delete-orphan")
+    subscriptions = relationship("UserSubscription", back_populates="user", cascade="all, delete-orphan", foreign_keys="UserSubscription.user_id")
+    billing_history = relationship("SubscriptionBillingHistory", back_populates="user", cascade="all, delete-orphan", foreign_keys="SubscriptionBillingHistory.user_id")
     subscription_changes = relationship("SubscriptionChange", back_populates="user", cascade="all, delete-orphan", foreign_keys="SubscriptionChange.user_id")
 
     def __repr__(self):

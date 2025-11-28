@@ -86,7 +86,7 @@ class UserSubscription(Base, TimestampMixin, AuditMixin):
     tax_amount = Column(DECIMAL(10, 2), default=0)
 
     # Relationships
-    user = relationship("User", back_populates="subscriptions")
+    user = relationship("User", back_populates="subscriptions", foreign_keys=[user_id])
     plan = relationship("SubscriptionPlan", back_populates="subscriptions")
     billing_history = relationship("SubscriptionBillingHistory", back_populates="subscription")
     changes = relationship("SubscriptionChange", back_populates="subscription")
@@ -119,7 +119,7 @@ class SubscriptionBillingHistory(Base, TimestampMixin):
 
     # Relationships
     subscription = relationship("UserSubscription", back_populates="billing_history")
-    user = relationship("User", back_populates="billing_history")
+    user = relationship("User", back_populates="billing_history", foreign_keys=[user_id])
 
     def __repr__(self):
         return f"<SubscriptionBillingHistory(billing_id='{self.billing_id}', amount={self.amount}, status='{self.status}')>"

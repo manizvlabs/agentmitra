@@ -2,7 +2,8 @@
 Base model class for all database models
 """
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, DateTime, func, MetaData
+from sqlalchemy import Column, DateTime, func, MetaData, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
 
 # Configure metadata with default schema
 # All models will use lic_schema unless explicitly overridden
@@ -21,7 +22,6 @@ class TimestampMixin:
 
 class AuditMixin:
     """Mixin for audit fields like created_by, updated_by"""
-    from sqlalchemy import UUID
-    created_by = Column(UUID(as_uuid=True), ForeignKey("users.user_id"), nullable=True)
-    updated_by = Column(UUID(as_uuid=True), ForeignKey("users.user_id"), nullable=True)
+    created_by = Column(UUID(as_uuid=True), ForeignKey("lic_schema.users.user_id"), nullable=True)
+    updated_by = Column(UUID(as_uuid=True), ForeignKey("lic_schema.users.user_id"), nullable=True)
 

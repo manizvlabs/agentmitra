@@ -23,7 +23,7 @@ class TrialSubscription(Base, TimestampMixin, AuditMixin):
     reminder_sent = Column(Boolean, default=False)
 
     # Relationships
-    user = relationship("User", back_populates="trial_subscriptions")
+    user = relationship("User", back_populates="trial_subscriptions", foreign_keys=[user_id])
     engagement_data = relationship("TrialEngagement", back_populates="trial")
 
     def __repr__(self):

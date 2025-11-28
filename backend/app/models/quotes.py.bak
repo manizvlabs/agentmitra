@@ -12,7 +12,7 @@ class DailyQuote(Base, TimestampMixin, AuditMixin):
     __tablename__ = "daily_quotes"
 
     quote_id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
-    agent_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    agent_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.users.user_id", ondelete="CASCADE"), nullable=False)
     quote_text = Column(Text, nullable=False)
     author = Column(String(255))
     category = Column(String(100), default="motivation")
@@ -23,7 +23,7 @@ class DailyQuote(Base, TimestampMixin, AuditMixin):
     published_at = Column(TIMESTAMP)
 
     # Relationships
-    agent = relationship("User", back_populates="daily_quotes", foreign_keys=[agent_id])
+    agent = relationship("User", back_populates="daily_quotes")
     sharing_analytics = relationship("QuoteSharingAnalytics", back_populates="quote", primaryjoin="DailyQuote.quote_id == QuoteSharingAnalytics.quote_id")
     performance_metrics = relationship("QuotePerformance", back_populates="quote", primaryjoin="DailyQuote.quote_id == QuotePerformance.quote_id")
 
@@ -51,7 +51,7 @@ class QuoteSharingAnalytics(Base, TimestampMixin):
 
     # Relationships
     quote = relationship("DailyQuote", back_populates="sharing_analytics")
-    agent = relationship("User", back_populates="quote_shares", foreign_keys=[agent_id])
+    agent = relationship("User", back_populates="quote_shares")
 
     def __repr__(self):
         return f"<QuoteSharingAnalytics(share_id='{self.share_id}', platform='{self.platform}')>"
@@ -67,8 +67,8 @@ class QuotePerformance(Base, TimestampMixin):
     __tablename__ = "quote_performance"
 
     performance_id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
-    quote_id = Column(UUID(as_uuid=True), ForeignKey("daily_quotes.quote_id", ondelete="CASCADE"), nullable=False)
-    agent_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    quote_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.daily_quotes.quote_id", ondelete="CASCADE"), nullable=False)
+    agent_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.users.user_id", ondelete="CASCADE"), nullable=False)
     metric_date = Column(Date, server_default=func.current_date())
     views_count = Column(Integer, default=0)
     shares_count = Column(Integer, default=0)
@@ -78,7 +78,7 @@ class QuotePerformance(Base, TimestampMixin):
 
     # Relationships
     quote = relationship("DailyQuote", back_populates="performance_metrics")
-    agent = relationship("User", back_populates="quote_performance", foreign_keys=[agent_id])
+    agent = relationship("User", back_populates="quote_performance")
 
     __table_args__ = (
         {"schema": "lic_schema"}

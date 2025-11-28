@@ -5,10 +5,10 @@ import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, or_, desc
 
-# from ..models.notification import Notification, NotificationSettings, DeviceToken
+from ..models.notification import Notification, NotificationSettings, DeviceToken
 from ..core.logger import logger
 
-# class NotificationService:
+class NotificationService:
     def __init__(self, db: Session):
         self.db = db
 

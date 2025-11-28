@@ -685,6 +685,7 @@ class UserContext:
             raise TypeError(f"Expected User instance, got {type(user)}")
         self.user = user
         self.user_id = str(user.user_id)
+        self.id = str(user.user_id)  # Add id alias for compatibility
         self.phone_number = user.phone_number
         self.role = user.role
         self.email = user.email
