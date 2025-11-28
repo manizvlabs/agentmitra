@@ -1,171 +1,168 @@
 """
-Agent Management API Endpoints - Multi-tenant aware
+Agent Profile Management API Endpoints
+======================================
+
+API endpoints for:
+- Comprehensive agent profile management
+- Photo upload and profile picture handling
+- Advanced agent settings and preferences
+- Agent verification and approval workflows
+- Performance metrics and analytics
 """
-from fastapi import APIRouter, HTTPException, Depends, Query, status
+
+from typing import List, Optional, Dict, Any
+from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File, Form
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
-from typing import Optional, List, Dict, Any
+from datetime import datetime
 from sqlalchemy.orm import Session
+
 from app.core.database import get_db
-from app.core.auth import (
-    get_current_user_context,
-    UserContext,
-    auth_service,
-    require_any_permission
-)
-from app.core.tenant_middleware import get_tenant_context, get_tenant_service, get_audit_service
-from app.core.tenant_aware_service import AgentService
+from app.core.auth import get_current_user_context, require_permission
 from app.repositories.agent_repository import AgentRepository
-from app.repositories.user_repository import UserRepository
+from app.services.content_management_service import ContentManagementService
+from app.models.user import User
 from app.models.agent import Agent
-from datetime import datetime, date
 
-router = APIRouter()
+router = APIRouter(prefix="/agents", tags=["agents"])
 
 
-class AgentResponse(BaseModel):
+# Pydantic models for API
+class AgentProfileResponse(BaseModel):
     agent_id: str
     user_id: str
-    provider_id: Optional[str] = None
     agent_code: str
-    license_number: Optional[str] = None
-    license_expiry_date: Optional[date] = None
-    license_issuing_authority: Optional[str] = None
-    business_name: Optional[str] = None
-    business_address: Optional[Dict[str, Any]] = None
-    gst_number: Optional[str] = None
-    pan_number: Optional[str] = None
-    territory: Optional[str] = None
-    operating_regions: Optional[List[str]] = None
-    experience_years: Optional[int] = None
-    specializations: Optional[List[str]] = None
-    commission_rate: Optional[float] = None
-    whatsapp_business_number: Optional[str] = None
-    business_email: Optional[str] = None
-    website: Optional[str] = None
-    total_policies_sold: Optional[int] = None
-    total_premium_collected: Optional[float] = None
-    active_policyholders: Optional[int] = None
-    customer_satisfaction_score: Optional[float] = None
+    license_number: Optional[str]
+    license_expiry_date: Optional[str]
+    license_issuing_authority: Optional[str]
+
+    # Business information
+    business_name: Optional[str]
+    business_address: Optional[Dict[str, Any]]
+    gst_number: Optional[str]
+    pan_number: Optional[str]
+
+    # Operational details
+    territory: Optional[str]
+    operating_regions: Optional[List[str]]
+    experience_years: Optional[int]
+    specializations: Optional[List[str]]
+
+    # Communication
+    whatsapp_business_number: Optional[str]
+    business_email: Optional[str]
+    website: Optional[str]
+
+    # Performance metrics
+    total_policies_sold: int
+    total_premium_collected: float
+    active_policyholders: int
+    customer_satisfaction_score: Optional[float]
+
+    # Status
     status: str
     verification_status: str
-    approved_at: Optional[datetime] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    approved_at: Optional[str]
+    hierarchy_level: int
+    sub_agents_count: int
 
     # User information
-    user_info: Optional[Dict[str, Any]] = None
+    user_profile: Dict[str, Any]
 
 
-class AgentCreateRequest(BaseModel):
-    user_id: str
-    provider_id: Optional[str] = None
-    agent_code: str
-    license_number: Optional[str] = None
-    license_expiry_date: Optional[date] = None
-    license_issuing_authority: Optional[str] = None
+class AgentProfileUpdateRequest(BaseModel):
+    # Business information
     business_name: Optional[str] = None
     business_address: Optional[Dict[str, Any]] = None
     gst_number: Optional[str] = None
     pan_number: Optional[str] = None
+
+    # Operational details
     territory: Optional[str] = None
     operating_regions: Optional[List[str]] = None
     experience_years: Optional[int] = None
     specializations: Optional[List[str]] = None
-    commission_rate: Optional[float] = None
+
+    # Communication
     whatsapp_business_number: Optional[str] = None
     business_email: Optional[str] = None
     website: Optional[str] = None
 
-    @validator('agent_code')
-    def validate_agent_code(cls, v):
-        if not v or not v.replace('-', '').replace('_', '').isalnum():
-            raise ValueError('Agent code must be alphanumeric with hyphens/underscores')
-        return v
 
-    @validator('gst_number')
-    def validate_gst(cls, v):
-        if v and len(v) != 15:
-            raise ValueError('GST number must be 15 characters')
-        return v
-
-    @validator('pan_number')
-    def validate_pan(cls, v):
-        if v and len(v) != 10:
-            raise ValueError('PAN number must be 10 characters')
-        return v
+class AgentSettingsUpdateRequest(BaseModel):
+    notification_preferences: Optional[Dict[str, Any]] = None
+    dashboard_layout: Optional[Dict[str, Any]] = None
+    theme_preference: Optional[str] = None
+    language_preference: Optional[str] = None
+    timezone: Optional[str] = None
+    working_hours: Optional[Dict[str, Any]] = None
+    auto_save_enabled: Optional[bool] = None
+    two_factor_enabled: Optional[bool] = None
 
 
-class AgentUpdateRequest(BaseModel):
-    provider_id: Optional[str] = None
-    license_number: Optional[str] = None
-    license_expiry_date: Optional[date] = None
-    license_issuing_authority: Optional[str] = None
-    business_name: Optional[str] = None
-    business_address: Optional[Dict[str, Any]] = None
-    gst_number: Optional[str] = None
-    pan_number: Optional[str] = None
-    territory: Optional[str] = None
-    operating_regions: Optional[List[str]] = None
-    experience_years: Optional[int] = None
-    specializations: Optional[List[str]] = None
-    commission_rate: Optional[float] = None
-    whatsapp_business_number: Optional[str] = None
-    business_email: Optional[str] = None
-    website: Optional[str] = None
-    status: Optional[str] = None
+class AgentVerificationRequest(BaseModel):
+    license_number: str
+    license_expiry_date: str
+    license_issuing_authority: str
+    documents: List[str]  # List of document URLs/keys
+
+    @validator('license_expiry_date')
+    def validate_license_expiry(cls, v):
+        try:
+            datetime.fromisoformat(v.replace('Z', '+00:00'))
+            return v
+        except ValueError:
+            raise ValueError('Invalid date format. Use ISO format.')
 
 
-@router.get("/", response_model=List[AgentResponse])
-async def get_agents(
-    status_filter: Optional[str] = Query(None, alias="status", description="Filter by status"),
-    verification_status: Optional[str] = Query(None, description="Filter by verification status"),
-    territory: Optional[str] = Query(None, description="Filter by territory"),
-    provider_id: Optional[str] = Query(None, description="Filter by provider ID"),
-    search: Optional[str] = Query(None, description="Search by name, code, or business"),
-    limit: int = Query(20, ge=1, le=100, description="Number of results to return"),
-    offset: int = Query(0, ge=0, description="Number of results to skip"),
-    current_user: UserContext = Depends(require_any_permission(["agents.read", "agents.approve"])),
+class AgentPerformanceMetrics(BaseModel):
+    total_policies: int
+    total_premium: float
+    conversion_rate: float
+    customer_satisfaction: Optional[float]
+    monthly_growth: float
+    active_customers: int
+    leads_generated: int
+    quotes_created: int
+    presentations_delivered: int
+
+
+@router.get("/profile", response_model=AgentProfileResponse)
+async def get_agent_profile(
+    current_user: User = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """
-    Get all agents with filtering and search
-    - Requires agents.read or agents.approve permission
-    - Supports comprehensive filtering and search
+    Get current user's agent profile
     """
-    agent_repo = AgentRepository(db)
+    try:
+        agent_repo = AgentRepository(db)
 
-    filters = {}
-    if status_filter:
-        filters["status"] = status_filter
-    if verification_status:
-        filters["verification_status"] = verification_status
-    if territory:
-        filters["territory"] = territory
-    if provider_id:
-        filters["provider_id"] = provider_id
-    if search:
-        filters["search"] = search
+        # Get agent by user ID
+        agent = agent_repo.get_by_user_id(str(current_user.user_id))
+        if not agent:
+            raise HTTPException(status_code=404, detail="Agent profile not found")
 
-    agents = agent_repo.search_agents(filters, limit=limit, offset=offset)
+        # Build user profile data
+        user_profile = {
+            "first_name": current_user.first_name,
+            "last_name": current_user.last_name,
+            "display_name": current_user.display_name,
+            "email": current_user.email,
+            "phone_number": current_user.phone_number,
+            "avatar_url": current_user.avatar_url,
+            "language_preference": current_user.language_preference,
+            "timezone": current_user.timezone,
+            "theme_preference": current_user.theme_preference,
+            "last_login_at": current_user.last_login_at.isoformat() if current_user.last_login_at else None
+        }
 
-    response = []
-    for agent in agents:
-        user_info = None
-        if agent.user:
-            user_info = {
-                "full_name": agent.user.full_name,
-                "phone_number": agent.user.phone_number,
-                "email": agent.user.email,
-                "role": agent.user.role
-            }
-
-        response.append(AgentResponse(
+        return AgentProfileResponse(
             agent_id=str(agent.agent_id),
             user_id=str(agent.user_id),
-            provider_id=str(agent.provider_id) if agent.provider_id else None,
             agent_code=agent.agent_code,
             license_number=agent.license_number,
-            license_expiry_date=agent.license_expiry_date,
+            license_expiry_date=agent.license_expiry_date.isoformat() if agent.license_expiry_date else None,
             license_issuing_authority=agent.license_issuing_authority,
             business_name=agent.business_name,
             business_address=agent.business_address,
@@ -175,525 +172,451 @@ async def get_agents(
             operating_regions=agent.operating_regions,
             experience_years=agent.experience_years,
             specializations=agent.specializations,
-            commission_rate=float(agent.commission_rate) if agent.commission_rate else None,
             whatsapp_business_number=agent.whatsapp_business_number,
             business_email=agent.business_email,
             website=agent.website,
-            total_policies_sold=agent.total_policies_sold,
-            total_premium_collected=float(agent.total_premium_collected) if agent.total_premium_collected else None,
-            active_policyholders=agent.active_policyholders,
+            total_policies_sold=agent.total_policies_sold or 0,
+            total_premium_collected=float(agent.total_premium_collected or 0),
+            active_policyholders=agent.active_policyholders or 0,
             customer_satisfaction_score=float(agent.customer_satisfaction_score) if agent.customer_satisfaction_score else None,
             status=agent.status or "active",
             verification_status=agent.verification_status or "pending",
-            approved_at=agent.approved_at,
-            created_at=agent.created_at,
-            updated_at=agent.updated_at,
-            user_info=user_info
-        ))
-
-    return response
-
-
-@router.get("/profile", response_model=AgentResponse)
-async def get_agent_profile(
-    current_user: UserContext = Depends(get_current_user_context),
-    db: Session = Depends(get_db)
-):
-    """
-    Get current agent's profile
-    - Agents can view their own profile
-    """
-    agent_repo = AgentRepository(db)
-    agent = agent_repo.get_by_user_id(current_user.user_id)
-
-    if not agent:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Agent profile not found"
+            approved_at=agent.approved_at.isoformat() if agent.approved_at else None,
+            hierarchy_level=agent.hierarchy_level or 1,
+            sub_agents_count=agent.sub_agents_count or 0,
+            user_profile=user_profile
         )
 
-    return AgentResponse(
-        agent_id=str(agent.agent_id),
-        user_id=str(agent.user_id),
-        provider_id=str(agent.provider_id) if agent.provider_id else None,
-        agent_code=agent.agent_code,
-        license_number=agent.license_number,
-        license_expiry_date=agent.license_expiry_date,
-        license_issuing_authority=agent.license_issuing_authority,
-        business_name=agent.business_name,
-        business_address=agent.business_address,
-        gst_number=agent.gst_number,
-        pan_number=agent.pan_number,
-        territory=agent.territory,
-        operating_regions=agent.operating_regions,
-        experience_years=agent.experience_years,
-        specializations=agent.specializations,
-        commission_rate=float(agent.commission_rate) if agent.commission_rate else None,
-        whatsapp_business_number=agent.whatsapp_business_number,
-        business_email=agent.business_email,
-        website=agent.website,
-        total_policies_sold=agent.total_policies_sold,
-        total_premium_collected=float(agent.total_premium_collected) if agent.total_premium_collected else None,
-        active_policyholders=agent.active_policyholders,
-        customer_satisfaction_score=float(agent.customer_satisfaction_score) if agent.customer_satisfaction_score else None,
-        status=agent.status,
-        verification_status=agent.verification_status,
-        approved_at=agent.approved_at,
-        created_at=agent.created_at,
-        updated_at=agent.updated_at,
-        user_info={
-            "full_name": agent.user.full_name,
-            "phone_number": agent.user.phone_number,
-            "email": agent.user.email
-        } if agent.user else None,
-        provider_info={
-            "provider_name": agent.provider.provider_name,
-            "provider_code": agent.provider.provider_code
-        } if agent.provider else None
-    )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get agent profile: {str(e)}")
 
 
-@router.get("/{agent_id}", response_model=AgentResponse)
-async def get_agent(
-    agent_id: str,
-    current_user: UserContext = Depends(get_current_user_context),
-    tenant_context: Dict = Depends(get_tenant_context),
-    tenant_service = Depends(get_tenant_service),
-    audit_service = Depends(get_audit_service),
+@router.put("/profile", response_model=AgentProfileResponse)
+async def update_agent_profile(
+    profile_data: AgentProfileUpdateRequest,
+    current_user: User = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """
-    Get specific agent by ID - Multi-tenant aware
-    - Agents can view their own profile
-    - Managers can view agents in their territory
-    - Admins can view any agent
+    Update agent profile information
     """
     try:
-        # Use tenant-aware service
-        agent_service = AgentService(tenant_service)
-        agent_data = agent_service.get_agent_profile(
-            tenant_id=tenant_context['tenant_id'],
-            agent_id=agent_id,
-            user_id=current_user.user_id
-        )
-
-        # Audit the access
-        audit_service.audit_user_access(
-            tenant_id=tenant_context['tenant_id'],
-            user_id=current_user.user_id,
-            resource_type='agent',
-            resource_id=agent_id,
-            action='read',
-            success=True,
-            ip_address=tenant_context.get('ip_address')
-        )
-
-        # Get additional user info
-        user_repo = UserRepository(db)
-        user = user_repo.get_by_id(agent_data['user_id'])
-
-        user_info = None
-        if user:
-            user_info = {
-                "full_name": user.full_name,
-                "phone_number": user.phone_number,
-                "email": user.email,
-                "role": user.role
-            }
-
-        # Get the agent from database for additional fields
         agent_repo = AgentRepository(db)
-        agent = agent_repo.get_by_id(agent_id)
 
-        return AgentResponse(
-            agent_id=agent_data['agent_id'],
-            user_id=agent_data['user_id'],
-            provider_id=agent_data.get('provider_id'),
-            agent_code=agent_data['agent_code'],
-            license_number=agent_data.get('license_number'),
-            license_expiry_date=agent_data.get('license_expiry_date'),
-            license_issuing_authority=agent.license_issuing_authority if agent else None,
-            business_name=agent.business_name if agent else None,
-            business_address=agent.business_address if agent else None,
-            gst_number=agent.gst_number if agent else None,
-            pan_number=agent.pan_number if agent else None,
-            territory=agent.territory if agent else None,
-            operating_regions=agent.operating_regions if agent else None,
-            experience_years=agent.experience_years if agent else None,
-            specializations=agent.specializations if agent else None,
-            commission_rate=agent_data.get('commission_rate'),
-            whatsapp_business_number=agent.whatsapp_business_number if agent else None,
-            business_email=agent.business_email if agent else None,
-            website=agent.website if agent else None,
-            total_policies_sold=agent_data.get('total_policies_sold'),
-            total_premium_collected=agent_data.get('total_premium_collected'),
-            active_policyholders=agent_data.get('active_policyholders'),
-            customer_satisfaction_score=agent.customer_satisfaction_score if agent else None,
-            status=agent_data.get('status', 'active'),
-            verification_status=agent.verification_status if agent else 'pending',
-            approved_at=agent.approved_at if agent else None,
-            created_at=agent.created_at if agent else None,
-            updated_at=agent.updated_at if agent else None,
-            user_info=user_info
+        # Get agent by user ID
+        agent = agent_repo.get_by_user_id(str(current_user.user_id))
+        if not agent:
+            raise HTTPException(status_code=404, detail="Agent profile not found")
+
+        # Update agent fields
+        update_data = profile_data.dict(exclude_unset=True)
+        updated_agent = agent_repo.update(agent.agent_id, update_data)
+
+        if not updated_agent:
+            raise HTTPException(status_code=500, detail="Failed to update agent profile")
+
+        # Return updated profile
+        return await get_agent_profile(current_user, db)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update agent profile: {str(e)}")
+
+
+@router.put("/settings")
+async def update_agent_settings(
+    settings_data: AgentSettingsUpdateRequest,
+    current_user: User = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Update agent settings and preferences
+    """
+    try:
+        agent_repo = AgentRepository(db)
+
+        # Get agent by user ID
+        agent = agent_repo.get_by_user_id(str(current_user.user_id))
+        if not agent:
+            raise HTTPException(status_code=404, detail="Agent profile not found")
+
+        # Update user preferences
+        update_data = settings_data.dict(exclude_unset=True)
+        user_update_data = {}
+
+        # Map settings to user fields
+        if 'notification_preferences' in update_data:
+            user_update_data['notification_preferences'] = update_data['notification_preferences']
+        if 'theme_preference' in update_data:
+            user_update_data['theme_preference'] = update_data['theme_preference']
+        if 'language_preference' in update_data:
+            user_update_data['language_preference'] = update_data['language_preference']
+        if 'timezone' in update_data:
+            user_update_data['timezone'] = update_data['timezone']
+
+        if user_update_data:
+            from app.repositories.user_repository import UserRepository
+            user_repo = UserRepository(db)
+            user_repo.update(current_user.user_id, user_update_data)
+
+        # Store agent-specific settings (could be in a separate settings table)
+        agent_settings = update_data
+        # For now, we'll store in agent's business_address or create a settings field
+        if agent_settings:
+            # Update agent with settings
+            agent_repo.update(agent.agent_id, {'business_address': agent_settings})
+
+        return {
+            "success": True,
+            "message": "Agent settings updated successfully"
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update agent settings: {str(e)}")
+
+
+@router.post("/profile/photo")
+async def upload_profile_photo(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Upload agent profile photo
+
+    - **file**: Profile photo file (JPEG, PNG, max 5MB)
+    """
+    try:
+        # Validate file type
+        allowed_types = ['image/jpeg', 'image/png', 'image/jpg']
+        if file.content_type not in allowed_types:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid file type. Only JPEG and PNG files are allowed."
+            )
+
+        # Validate file size (5MB max)
+        file_size = 0
+        content = await file.read()
+        file_size = len(content)
+
+        if file_size > 5 * 1024 * 1024:  # 5MB
+            raise HTTPException(
+                status_code=400,
+                detail="File too large. Maximum size is 5MB."
+            )
+
+        # Reset file pointer
+        await file.seek(0)
+
+        # Upload to content management service
+        content_service = ContentManagementService(db)
+        upload_result = await content_service.upload_content(
+            file=file,
+            uploader_id=str(current_user.user_id),
+            content_type="image",
+            category="profile_photos",
+            metadata={"is_profile_photo": True, "agent_id": str(current_user.user_id)}
+        )
+
+        if not upload_result or 'content_id' not in upload_result:
+            raise HTTPException(status_code=500, detail="Failed to upload profile photo")
+
+        # Update user's avatar_url
+        from app.repositories.user_repository import UserRepository
+        user_repo = UserRepository(db)
+        user_repo.update(current_user.user_id, {
+            'avatar_url': upload_result['file_url'] or upload_result['content_id']
+        })
+
+        return {
+            "success": True,
+            "message": "Profile photo uploaded successfully",
+            "data": {
+                "photo_url": upload_result.get('file_url'),
+                "content_id": upload_result.get('content_id')
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to upload profile photo: {str(e)}")
+
+
+@router.post("/verification/request")
+async def submit_verification_request(
+    verification_data: AgentVerificationRequest,
+    current_user: User = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Submit agent verification request
+    """
+    try:
+        agent_repo = AgentRepository(db)
+
+        # Get agent by user ID
+        agent = agent_repo.get_by_user_id(str(current_user.user_id))
+        if not agent:
+            raise HTTPException(status_code=404, detail="Agent profile not found")
+
+        # Update agent verification data
+        update_data = {
+            'license_number': verification_data.license_number,
+            'license_expiry_date': verification_data.license_expiry_date,
+            'license_issuing_authority': verification_data.license_issuing_authority,
+            'verification_status': 'submitted'
+        }
+
+        updated_agent = agent_repo.update(agent.agent_id, update_data)
+
+        if not updated_agent:
+            raise HTTPException(status_code=500, detail="Failed to submit verification request")
+
+        return {
+            "success": True,
+            "message": "Verification request submitted successfully",
+            "data": {
+                "verification_status": "submitted",
+                "submitted_at": datetime.utcnow().isoformat()
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to submit verification request: {str(e)}")
+
+
+@router.post("/verification/{agent_id}/approve")
+async def approve_agent_verification(
+    agent_id: str,
+    approval_notes: Optional[str] = None,
+    current_user: User = Depends(require_permission("agents:verify")),
+    db: Session = Depends(get_db)
+):
+    """
+    Approve agent verification (admin only)
+
+    - **agent_id**: Agent ID to approve
+    - **approval_notes**: Optional approval notes
+    """
+    try:
+        agent_repo = AgentRepository(db)
+
+        # Get agent
+        agent = agent_repo.get_by_id(agent_id)
+        if not agent:
+            raise HTTPException(status_code=404, detail="Agent not found")
+
+        # Update verification status
+        update_data = {
+            'verification_status': 'verified',
+            'approved_at': datetime.utcnow(),
+            'approved_by': current_user.user_id,
+            'status': 'active'
+        }
+
+        updated_agent = agent_repo.update(agent_id, update_data)
+
+        if not updated_agent:
+            raise HTTPException(status_code=500, detail="Failed to approve agent verification")
+
+        return {
+            "success": True,
+            "message": "Agent verification approved successfully"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to approve agent verification: {str(e)}")
+
+
+@router.get("/performance/metrics", response_model=AgentPerformanceMetrics)
+async def get_agent_performance_metrics(
+    period: str = Query("30d", regex="^(7d|30d|90d|1y)$"),
+    current_user: User = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Get agent performance metrics
+
+    - **period**: Time period for metrics (7d, 30d, 90d, 1y)
+    """
+    try:
+        from app.services.analytics_service import AnalyticsService
+        analytics_service = AnalyticsService(db)
+
+        # Get agent performance data
+        performance_data = await analytics_service.get_agent_performance_metrics(
+            agent_id=str(current_user.user_id),
+            period=period
+        )
+
+        return AgentPerformanceMetrics(
+            total_policies=performance_data.get("total_policies", 0),
+            total_premium=performance_data.get("total_premium", 0.0),
+            conversion_rate=performance_data.get("conversion_rate", 0.0),
+            customer_satisfaction=performance_data.get("customer_satisfaction"),
+            monthly_growth=performance_data.get("monthly_growth", 0.0),
+            active_customers=performance_data.get("active_customers", 0),
+            leads_generated=performance_data.get("leads_generated", 0),
+            quotes_created=performance_data.get("quotes_created", 0),
+            presentations_delivered=performance_data.get("presentations_delivered", 0)
         )
 
     except Exception as e:
-        # Audit failed access
-        audit_service.audit_user_access(
-            tenant_id=tenant_context['tenant_id'],
-            user_id=current_user.user_id,
-            resource_type='agent',
-            resource_id=agent_id,
-            action='read',
-            success=False,
-            ip_address=tenant_context.get('ip_address')
-        )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving agent: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get performance metrics: {str(e)}")
 
 
-@router.post("/", response_model=AgentResponse)
-async def create_agent(
-    agent_data: AgentCreateRequest,
-    current_user: UserContext = Depends(get_current_user_context),
+@router.get("/hierarchy")
+async def get_agent_hierarchy(
+    current_user: User = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """
-    Create a new agent
-    - Only admins can create agents
+    Get agent hierarchy information (parent/child agents)
     """
-    # Check permission using database-driven authorization
-    if not current_user.has_permission("agents.create"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions to create agents"
-        )
+    try:
+        agent_repo = AgentRepository(db)
 
-    agent_repo = AgentRepository(db)
-    user_repo = UserRepository(db)
+        # Get agent by user ID
+        agent = agent_repo.get_by_user_id(str(current_user.user_id))
+        if not agent:
+            raise HTTPException(status_code=404, detail="Agent profile not found")
 
-    # Check if agent code already exists
-    existing_agent = agent_repo.get_by_agent_code(agent_data.agent_code)
-    if existing_agent:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Agent code already exists"
-        )
-
-    # Check if user exists and is not already an agent
-    user = user_repo.get_by_id(agent_data.user_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-
-    existing_agent_for_user = agent_repo.get_by_user_id(agent_data.user_id)
-    if existing_agent_for_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User is already registered as an agent"
-        )
-
-    # Create the agent
-    agent = agent_repo.create(agent_data.dict())
-
-    return AgentResponse(
-        agent_id=str(agent.agent_id),
-        user_id=str(agent.user_id),
-        provider_id=str(agent.provider_id) if agent.provider_id else None,
-        agent_code=agent.agent_code,
-        license_number=agent.license_number,
-        license_expiry_date=agent.license_expiry_date,
-        license_issuing_authority=agent.license_issuing_authority,
-        business_name=agent.business_name,
-        business_address=agent.business_address,
-        gst_number=agent.gst_number,
-        pan_number=agent.pan_number,
-        territory=agent.territory,
-        operating_regions=agent.operating_regions,
-        experience_years=agent.experience_years,
-        specializations=agent.specializations,
-        commission_rate=float(agent.commission_rate) if agent.commission_rate else None,
-        whatsapp_business_number=agent.whatsapp_business_number,
-        business_email=agent.business_email,
-        website=agent.website,
-        status=agent.status or "active",
-        verification_status=agent.verification_status or "pending",
-        created_at=agent.created_at,
-        updated_at=agent.updated_at
-    )
-
-
-@router.put("/{agent_id}", response_model=AgentResponse)
-async def update_agent(
-    agent_id: str,
-    agent_data: AgentUpdateRequest,
-    current_user: UserContext = Depends(require_any_permission(["agents.update", "agents.approve"])),
-    db: Session = Depends(get_db)
-):
-    """
-    Update agent information
-    - Agents can update their own profile (limited fields)
-    - Managers can update agents in their territory
-    - Admins can update any agent
-    """
-    agent_repo = AgentRepository(db)
-    agent = agent_repo.get_by_id(agent_id)
-
-    if not agent:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Agent not found"
-        )
-
-    # Check permissions
-    is_owner = current_user.user_id == str(agent.user_id)
-    can_update = (
-        is_owner or
-        auth_service.has_permission(current_user.user_id, "agents.update", db) or
-        (current_user.has_role("regional_manager") and agent.territory == getattr(current_user, 'territory', None))
-    )
-
-    if not can_update:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions to update this agent"
-        )
-
-    # Filter fields based on permissions
-    update_data = agent_data.dict(exclude_unset=True)
-
-    if is_owner and not current_user.has_role_level("regional_manager"):
-        # Owners can only update certain fields
-        allowed_fields = {
-            'business_name', 'business_address', 'business_email', 'website',
-            'whatsapp_business_number', 'territory', 'operating_regions'
-        }
-        update_data = {k: v for k, v in update_data.items() if k in allowed_fields}
-
-    # Update the agent
-    updated_agent = agent_repo.update(agent_id, update_data)
-    if not updated_agent:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update agent"
-        )
-
-    user_info = None
-    if updated_agent.user:
-        user_info = {
-            "full_name": updated_agent.user.full_name,
-            "phone_number": updated_agent.user.phone_number,
-            "email": updated_agent.user.email,
-            "role": updated_agent.user.role
+        hierarchy_info = {
+            "agent_id": str(agent.agent_id),
+            "hierarchy_level": agent.hierarchy_level or 1,
+            "parent_agent": None,
+            "sub_agents": []
         }
 
-    return AgentResponse(
-        agent_id=str(updated_agent.agent_id),
-        user_id=str(updated_agent.user_id),
-        provider_id=str(updated_agent.provider_id) if updated_agent.provider_id else None,
-        agent_code=updated_agent.agent_code,
-        license_number=updated_agent.license_number,
-        license_expiry_date=updated_agent.license_expiry_date,
-        license_issuing_authority=updated_agent.license_issuing_authority,
-        business_name=updated_agent.business_name,
-        business_address=updated_agent.business_address,
-        gst_number=updated_agent.gst_number,
-        pan_number=updated_agent.pan_number,
-        territory=updated_agent.territory,
-        operating_regions=updated_agent.operating_regions,
-        experience_years=updated_agent.experience_years,
-        specializations=updated_agent.specializations,
-        commission_rate=float(updated_agent.commission_rate) if updated_agent.commission_rate else None,
-        whatsapp_business_number=updated_agent.whatsapp_business_number,
-        business_email=updated_agent.business_email,
-        website=updated_agent.website,
-        total_policies_sold=updated_agent.total_policies_sold,
-        total_premium_collected=float(updated_agent.total_premium_collected) if updated_agent.total_premium_collected else None,
-        active_policyholders=updated_agent.active_policyholders,
-        customer_satisfaction_score=float(updated_agent.customer_satisfaction_score) if updated_agent.customer_satisfaction_score else None,
-        status=updated_agent.status or "active",
-        verification_status=updated_agent.verification_status or "pending",
-        approved_at=updated_agent.approved_at,
-        created_at=updated_agent.created_at,
-        updated_at=updated_agent.updated_at,
-        user_info=user_info
-    )
+        # Get parent agent info
+        if agent.parent_agent_id:
+            parent_agent = agent_repo.get_by_id(str(agent.parent_agent_id))
+            if parent_agent:
+                hierarchy_info["parent_agent"] = {
+                    "agent_id": str(parent_agent.agent_id),
+                    "agent_code": parent_agent.agent_code,
+                    "business_name": parent_agent.business_name,
+                    "hierarchy_level": parent_agent.hierarchy_level
+                }
 
+        # Get sub-agents (simplified - would need recursive query for full hierarchy)
+        if agent.sub_agents_count and agent.sub_agents_count > 0:
+            sub_agents = agent_repo.get_sub_agents(agent.agent_id, limit=10)
+            hierarchy_info["sub_agents"] = [
+                {
+                    "agent_id": str(sub.agent_id),
+                    "agent_code": sub.agent_code,
+                    "business_name": sub.business_name,
+                    "status": sub.status,
+                    "total_policies_sold": sub.total_policies_sold or 0
+                }
+                for sub in sub_agents
+            ]
 
-@router.post("/{agent_id}/approve")
-async def approve_agent(
-    agent_id: str,
-    current_user: UserContext = Depends(get_current_user_context),
-    db: Session = Depends(get_db)
-):
-    """
-    Approve agent verification
-    - Only managers and admins can approve agents
-    """
-    # Check permission using database-driven authorization
-    if not current_user.has_permission("agents.approve"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions to approve agents"
-        )
-
-    agent_repo = AgentRepository(db)
-
-    success = agent_repo.approve_agent(agent_id, current_user.user_id)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Agent not found"
-        )
-
-    return {"message": "Agent approved successfully", "agent_id": agent_id}
-
-
-@router.post("/{agent_id}/reject")
-async def reject_agent(
-    agent_id: str,
-    current_user: UserContext = Depends(get_current_user_context),
-    db: Session = Depends(get_db)
-):
-    """
-    Reject agent verification
-    - Only managers and admins can reject agents
-    """
-    agent_repo = AgentRepository(db)
-
-    success = agent_repo.reject_agent(agent_id)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Agent not found"
-        )
-
-    return {"message": "Agent rejected", "agent_id": agent_id}
-
-
-@router.delete("/{agent_id}")
-async def delete_agent(
-    agent_id: str,
-    current_user: UserContext = Depends(get_current_user_context),
-    db: Session = Depends(get_db)
-):
-    """
-    Delete agent (soft delete)
-    - Only super admins can delete agents
-    """
-    # Check permission using database-driven authorization
-    if not current_user.has_permission("agents.delete"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions to delete agents"
-        )
-    agent_repo = AgentRepository(db)
-
-    success = agent_repo.delete(agent_id)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Agent not found"
-        )
-
-    return {"message": "Agent deleted successfully", "agent_id": agent_id}
-
-
-@router.get("/code/{agent_code}", response_model=AgentResponse)
-async def get_agent_by_code(
-    agent_code: str,
-    current_user: UserContext = Depends(get_current_user_context),
-    db: Session = Depends(get_db)
-):
-    """
-    Get agent by agent code
-    - All authenticated users can search agents by code
-    """
-    agent_repo = AgentRepository(db)
-    agent = agent_repo.get_by_agent_code(agent_code)
-
-    if not agent:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Agent not found"
-        )
-
-    user_info = None
-    if agent.user:
-        user_info = {
-            "full_name": agent.user.full_name,
-            "phone_number": agent.user.phone_number,
-            "email": agent.user.email,
-            "role": agent.user.role
+        return {
+            "success": True,
+            "data": hierarchy_info
         }
 
-    return AgentResponse(
-        agent_id=str(agent.agent_id),
-        user_id=str(agent.user_id),
-        provider_id=str(agent.provider_id) if agent.provider_id else None,
-        agent_code=agent.agent_code,
-        license_number=agent.license_number,
-        license_expiry_date=agent.license_expiry_date,
-        license_issuing_authority=agent.license_issuing_authority,
-        business_name=agent.business_name,
-        business_address=agent.business_address,
-        gst_number=agent.gst_number,
-        pan_number=agent.pan_number,
-        territory=agent.territory,
-        operating_regions=agent.operating_regions,
-        experience_years=agent.experience_years,
-        specializations=agent.specializations,
-        commission_rate=float(agent.commission_rate) if agent.commission_rate else None,
-        whatsapp_business_number=agent.whatsapp_business_number,
-        business_email=agent.business_email,
-        website=agent.website,
-        total_policies_sold=agent.total_policies_sold,
-        total_premium_collected=float(agent.total_premium_collected) if agent.total_premium_collected else None,
-        active_policyholders=agent.active_policyholders,
-        customer_satisfaction_score=float(agent.customer_satisfaction_score) if agent.customer_satisfaction_score else None,
-        status=agent.status or "active",
-        verification_status=agent.verification_status or "pending",
-        approved_at=agent.approved_at,
-        created_at=agent.created_at,
-        updated_at=agent.updated_at,
-        user_info=user_info
-    )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get agent hierarchy: {str(e)}")
 
 
-@router.get("/pending/verification", response_model=List[AgentResponse])
-async def get_pending_verification_agents(
-    current_user: UserContext = Depends(get_current_user_context),
+@router.get("/search")
+async def search_agents(
+    query: str = Query(..., min_length=2, max_length=100),
+    limit: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(require_permission("agents:read")),
     db: Session = Depends(get_db)
 ):
     """
-    Get agents pending verification
-    - Only managers and admins can view pending agents
+    Search agents by name, code, or business name
+
+    - **query**: Search query
+    - **limit**: Maximum number of results
     """
-    agent_repo = AgentRepository(db)
-    agents = agent_repo.get_pending_verification_agents()
+    try:
+        agent_repo = AgentRepository(db)
+        agents = agent_repo.search_agents(query, limit=limit)
 
-    response = []
-    for agent in agents:
-        user_info = None
-        if agent.user:
-            user_info = {
-                "full_name": agent.user.full_name,
-                "phone_number": agent.user.phone_number,
-                "email": agent.user.email,
-                "role": agent.user.role
-            }
+        results = []
+        for agent in agents:
+            results.append({
+                "agent_id": str(agent.agent_id),
+                "agent_code": agent.agent_code,
+                "business_name": agent.business_name,
+                "territory": agent.territory,
+                "status": agent.status,
+                "verification_status": agent.verification_status,
+                "total_policies_sold": agent.total_policies_sold or 0,
+                "user": {
+                    "first_name": agent.user.first_name if agent.user else None,
+                    "last_name": agent.user.last_name if agent.user else None,
+                    "email": agent.user.email if agent.user else None,
+                    "phone_number": agent.user.phone_number if agent.user else None
+                }
+            })
 
-        response.append(AgentResponse(
+        return {
+            "success": True,
+            "data": results,
+            "count": len(results)
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to search agents: {str(e)}")
+
+
+@router.get("/{agent_id}", response_model=AgentProfileResponse)
+async def get_agent_by_id(
+    agent_id: str,
+    current_user: User = Depends(require_permission("agents:read")),
+    db: Session = Depends(get_db)
+):
+    """
+    Get agent profile by ID (admin/staff only)
+
+    - **agent_id**: Agent identifier
+    """
+    try:
+        agent_repo = AgentRepository(db)
+        agent = agent_repo.get_by_id(agent_id)
+
+        if not agent:
+            raise HTTPException(status_code=404, detail="Agent not found")
+
+        # Build user profile data
+        user = agent.user
+        user_profile = {
+            "first_name": user.first_name if user else None,
+            "last_name": user.last_name if user else None,
+            "display_name": user.display_name if user else None,
+            "email": user.email if user else None,
+            "phone_number": user.phone_number if user else None,
+            "avatar_url": user.avatar_url if user else None,
+            "language_preference": user.language_preference if user else None,
+            "timezone": user.timezone if user else None,
+            "theme_preference": user.theme_preference if user else None,
+            "last_login_at": user.last_login_at.isoformat() if user and user.last_login_at else None
+        }
+
+        return AgentProfileResponse(
             agent_id=str(agent.agent_id),
             user_id=str(agent.user_id),
-            provider_id=str(agent.provider_id) if agent.provider_id else None,
             agent_code=agent.agent_code,
             license_number=agent.license_number,
-            license_expiry_date=agent.license_expiry_date,
+            license_expiry_date=agent.license_expiry_date.isoformat() if agent.license_expiry_date else None,
             license_issuing_authority=agent.license_issuing_authority,
             business_name=agent.business_name,
             business_address=agent.business_address,
@@ -703,20 +626,22 @@ async def get_pending_verification_agents(
             operating_regions=agent.operating_regions,
             experience_years=agent.experience_years,
             specializations=agent.specializations,
-            commission_rate=float(agent.commission_rate) if agent.commission_rate else None,
             whatsapp_business_number=agent.whatsapp_business_number,
             business_email=agent.business_email,
             website=agent.website,
-            total_policies_sold=agent.total_policies_sold,
-            total_premium_collected=float(agent.total_premium_collected) if agent.total_premium_collected else None,
-            active_policyholders=agent.active_policyholders,
+            total_policies_sold=agent.total_policies_sold or 0,
+            total_premium_collected=float(agent.total_premium_collected or 0),
+            active_policyholders=agent.active_policyholders or 0,
             customer_satisfaction_score=float(agent.customer_satisfaction_score) if agent.customer_satisfaction_score else None,
             status=agent.status or "active",
             verification_status=agent.verification_status or "pending",
-            approved_at=agent.approved_at,
-            created_at=agent.created_at,
-            updated_at=agent.updated_at,
-            user_info=user_info
-        ))
+            approved_at=agent.approved_at.isoformat() if agent.approved_at else None,
+            hierarchy_level=agent.hierarchy_level or 1,
+            sub_agents_count=agent.sub_agents_count or 0,
+            user_profile=user_profile
+        )
 
-    return response
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get agent: {str(e)}")

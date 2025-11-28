@@ -1,42 +1,130 @@
 {
   "@@locale": "en",
-  "@@lastModified": "2025-01-03T10:00:00Z",
-  "@@version": "1.0.0",
+  "@@context": "Agent Mitra App - English",
 
-  "appName": "Agent Mitra",
-  "@appName": {
-    "description": "Application name",
-    "type": "text"
-  },
+  "app_name": "Agent Mitra",
+  "app_tagline": "Friend of Agents",
 
-  "tagline": "Friend of Agents",
-  "@tagline": {
-    "description": "App tagline",
-    "type": "text"
-  },
+  // Navigation
+  "nav_home": "Home",
+  "nav_policies": "My Policies",
+  "nav_customers": "Customers",
+  "nav_analytics": "Analytics",
+  "nav_profile": "Profile",
+  "nav_settings": "Settings",
 
-  "home": "Home",
-  "@home": {
-    "description": "Home navigation label",
-    "type": "text"
-  },
+  // Authentication
+  "login_title": "Welcome Back",
+  "login_subtitle": "Sign in to your account",
+  "login_phone_hint": "Enter phone number",
+  "login_password_hint": "Enter password",
+  "login_agent_code_hint": "Enter agent code",
+  "login_button": "Login",
+  "login_forgot_password": "Forgot Password?",
+  "login_sign_up": "Don't have an account? Sign Up",
+  "login_use_agent_code": "Use Agent Code",
+  "login_use_password": "Use Password",
 
-  "retry": "Retry",
-  "@retry": {
-    "description": "Retry button text",
-    "type": "text"
-  },
+  // Welcome Screen
+  "welcome_title": "Welcome to LIC Agent App",
+  "welcome_subtitle": "Connect with your agent & manage policies",
+  "welcome_get_started": "GET STARTED",
+  "welcome_have_account": "Already have an account?",
+  "welcome_trial_banner": "🎉 14-Day Free Trial Available!",
+  "welcome_trial_subtitle": "Explore all premium features • No commitment required",
 
-  "network_error": "Network Connection Error",
-  "@network_error": {
-    "description": "Network error title",
-    "type": "text"
-  },
+  // Trial Setup
+  "trial_setup_title": "Start Your Free Trial",
+  "trial_setup_subtitle": "Set up your profile to begin",
+  "trial_name_hint": "Full Name",
+  "trial_email_hint": "Email Address",
+  "trial_role_customer": "I'm a Policyholder",
+  "trial_role_agent": "I'm an Insurance Agent",
+  "trial_insurance_life": "Life Insurance",
+  "trial_insurance_health": "Health Insurance",
+  "trial_terms_accept": "I accept the Terms & Conditions",
+  "trial_privacy_policy": "Privacy Policy",
+  "trial_start_trial": "Start Free Trial",
+  "trial_valid_until": "Valid until {date}",
 
-  "network_error_message": "Please check your internet connection and try again",
-  "@network_error_message": {
-    "description": "Network error message",
-    "type": "text"
-  }
+  // Dashboard
+  "dashboard_welcome": "Welcome back, {name}!",
+  "dashboard_kpis_title": "Your Performance",
+  "dashboard_total_policies": "Total Policies",
+  "dashboard_total_premium": "Total Premium",
+  "dashboard_active_customers": "Active Customers",
+  "dashboard_conversion_rate": "Conversion Rate",
+  "dashboard_recent_activity": "Recent Activity",
+  "dashboard_quick_actions": "Quick Actions",
+  "dashboard_new_policy": "New Policy",
+  "dashboard_add_customer": "Add Customer",
+  "dashboard_create_quote": "Create Quote",
+
+  // Policies
+  "policies_title": "My Policies",
+  "policies_empty": "No policies found",
+  "policies_search_hint": "Search policies...",
+  "policies_filter_all": "All",
+  "policies_filter_active": "Active",
+  "policies_filter_expired": "Expired",
+  "policies_details_title": "Policy Details",
+  "policies_premium_amount": "Premium Amount",
+  "policies_next_due": "Next Due Date",
+
+  // Profile
+  "profile_title": "My Profile",
+  "profile_personal_info": "Personal Information",
+  "profile_business_info": "Business Information",
+  "profile_settings": "Settings",
+  "profile_edit": "Edit Profile",
+  "profile_save": "Save Changes",
+  "profile_photo_upload": "Upload Photo",
+
+  // Settings
+  "settings_title": "Settings",
+  "settings_language": "Language",
+  "settings_theme": "Theme",
+  "settings_notifications": "Notifications",
+  "settings_privacy": "Privacy",
+  "settings_about": "About",
+  "settings_logout": "Logout",
+
+  // Accessibility
+  "accessibility_font_size": "Font Size",
+  "accessibility_high_contrast": "High Contrast",
+  "accessibility_reduce_motion": "Reduce Motion",
+  "accessibility_screen_reader": "Screen Reader",
+
+  // Common
+  "common_save": "Save",
+  "common_cancel": "Cancel",
+  "common_delete": "Delete",
+  "common_edit": "Edit",
+  "common_back": "Back",
+  "common_next": "Next",
+  "common_previous": "Previous",
+  "common_loading": "Loading...",
+  "common_error": "Error",
+  "common_success": "Success",
+  "common_retry": "Retry",
+  "common_ok": "OK",
+  "common_yes": "Yes",
+  "common_no": "No",
+
+  // Error Messages
+  "error_network": "Network error. Please check your connection.",
+  "error_validation": "Please check your input and try again.",
+  "error_unknown": "An unexpected error occurred. Please try again.",
+  "error_permission_denied": "Permission denied. Please check your access rights.",
+
+  // Success Messages
+  "success_saved": "Changes saved successfully",
+  "success_deleted": "Item deleted successfully",
+  "success_updated": "Updated successfully",
+
+  // Placeholders
+  "placeholder_search": "Search...",
+  "placeholder_name": "Enter name",
+  "placeholder_email": "Enter email",
+  "placeholder_phone": "Enter phone number"
 }
-

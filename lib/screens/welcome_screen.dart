@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/services/auth_service.dart';
 import '../core/services/logger_service.dart';
+import '../core/services/feature_flag_service.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -12,8 +13,13 @@ class WelcomeScreen extends StatefulWidget {
 class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late AnimationController _slideController;
+  late AnimationController _trialBannerController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  late Animation<double> _trialBannerAnimation;
+
+  bool _showTrialBanner = false;
+  bool _trialFeaturesEnabled = false;
 
   @override
   void initState() {
@@ -28,6 +34,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
     // Slide animation controller
     _slideController = AnimationController(
       duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+
+    // Trial banner animation controller
+    _trialBannerController = AnimationController(
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
 
@@ -47,20 +59,50 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
       curve: Curves.easeOutCubic,
     ));
 
+    _trialBannerAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _trialBannerController,
+      curve: Curves.elasticOut,
+    ));
+
     // Start animations
     _fadeController.forward();
     _slideController.forward();
 
-    // Check auth status
+    // Check feature flags and auth status
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkAuthStatus();
+      _initializeScreen();
     });
+  }
+
+  Future<void> _initializeScreen() async {
+    // Check feature flags for trial features
+    final featureFlagService = FeatureFlagService();
+    _trialFeaturesEnabled = await featureFlagService.isFeatureEnabled('trial_enabled');
+
+    if (_trialFeaturesEnabled) {
+      setState(() {
+        _showTrialBanner = true;
+      });
+      // Show trial banner after a delay
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) {
+          _trialBannerController.forward();
+        }
+      });
+    }
+
+    // Check auth status
+    await _checkAuthStatus();
   }
 
   @override
   void dispose() {
     _fadeController.dispose();
     _slideController.dispose();
+    _trialBannerController.dispose();
     super.dispose();
   }
 
@@ -202,65 +244,83 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
 
                             const SizedBox(height: 40),
 
-                            // Trial banner with enhanced styling
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 16,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 10,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFe8f5e8),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Icon(
-                                      Icons.celebration,
-                                      color: Color(0xFF4caf50),
-                                      size: 24,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          '14-Day Free Trial',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            color: Color(0xFF2e7d32),
-                                          ),
+                            // Animated Trial Banner (only shown if trial features are enabled)
+                            if (_showTrialBanner && _trialFeaturesEnabled)
+                              AnimatedBuilder(
+                                animation: _trialBannerController,
+                                builder: (context, child) {
+                                  return Transform.scale(
+                                    scale: _trialBannerAnimation.value,
+                                    child: Opacity(
+                                      opacity: _trialBannerAnimation.value,
+                                      child: Container(
+                                        margin: const EdgeInsets.symmetric(horizontal: 20),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                          vertical: 16,
                                         ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          'No Credit Card Required',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: const Color(0xFF2e7d32).withOpacity(0.8),
+                                        decoration: BoxDecoration(
+                                          gradient: const LinearGradient(
+                                            colors: [Color(0xFF4caf50), Color(0xFF66bb6a)],
+                                            begin: Alignment.centerLeft,
+                                            end: Alignment.centerRight,
                                           ),
+                                          borderRadius: BorderRadius.circular(16),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(0xFF4caf50).withOpacity(0.3),
+                                              blurRadius: 15,
+                                              spreadRadius: 2,
+                                              offset: const Offset(0, 5),
+                                            ),
+                                          ],
                                         ),
-                                      ],
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(10),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withOpacity(0.2),
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              child: const Icon(
+                                                Icons.celebration,
+                                                color: Colors.white,
+                                                size: 28,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 16),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  const Text(
+                                                    '🎉 14-Day Free Trial Available!',
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight: FontWeight.w700,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    'Explore all premium features • No commitment required',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.white.withOpacity(0.9),
+                                                      fontWeight: FontWeight.w400,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  );
+                                },
                               ),
-                            ),
                           ],
                         ),
                       ),

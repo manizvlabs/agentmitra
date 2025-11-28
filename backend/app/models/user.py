@@ -130,6 +130,19 @@ class User(Base, TimestampMixin):
     # Relationships - RBAC relationships
     user_roles = relationship("UserRole", foreign_keys="UserRole.user_id")
 
+    # Relationships - Quotes
+    daily_quotes = relationship("DailyQuote", back_populates="agent", cascade="all, delete-orphan")
+    quote_shares = relationship("QuoteSharingAnalytics", back_populates="agent", cascade="all, delete-orphan")
+    quote_performance = relationship("QuotePerformance", back_populates="agent", cascade="all, delete-orphan")
+
+    # Relationships - Trials
+    trial_subscriptions = relationship("TrialSubscription", back_populates="user", cascade="all, delete-orphan")
+
+    # Relationships - Subscriptions
+    subscriptions = relationship("UserSubscription", back_populates="user", cascade="all, delete-orphan")
+    billing_history = relationship("SubscriptionBillingHistory", back_populates="user", cascade="all, delete-orphan")
+    subscription_changes = relationship("SubscriptionChange", back_populates="user", cascade="all, delete-orphan")
+
     def __repr__(self):
         return f"<User(user_id={self.user_id}, phone_number={self.phone_number}, role={self.role})>"
 

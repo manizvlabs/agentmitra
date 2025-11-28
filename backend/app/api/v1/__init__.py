@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_current_user_context, UserContext
-from . import auth, users, providers, agents, policies, presentations, chat, analytics, health, notifications, campaigns, tenants, rbac, content, external_services, feature_flags
+from . import auth, users, providers, agents, policies, presentations, chat, analytics, health, notifications, campaigns, tenants, rbac, content, external_services, feature_flags, quotes, trial, subscription, dashboard
 # Temporarily disable callbacks due to model conflicts
 # from . import callbacks
 
@@ -168,7 +168,7 @@ async def get_test_agent_profile(
 api_router.include_router(auth.router, prefix="/auth", tags=["authentication"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(providers.router, prefix="/providers", tags=["providers"])
-api_router.include_router(agents.router, prefix="/agents", tags=["agents"])
+api_router.include_router(agents.router, tags=["agents"])
 api_router.include_router(policies.router, prefix="/policies", tags=["policies"])
 api_router.include_router(presentations.router, prefix="/presentations", tags=["presentations"])
 api_router.include_router(chat.router, prefix="/chat", tags=["chat"])
@@ -180,6 +180,10 @@ api_router.include_router(feature_flags.router, tags=["feature-flags"])
 api_router.include_router(health.router, tags=["health"])
 api_router.include_router(notifications.router, tags=["notifications"])
 api_router.include_router(content.router, tags=["content"])
+api_router.include_router(quotes.router, tags=["quotes"])
+api_router.include_router(trial.router, tags=["trial"])
+api_router.include_router(subscription.router, tags=["subscription"])
+api_router.include_router(dashboard.router, tags=["dashboard"])
 api_router.include_router(external_services.router, tags=["external-services"])
 api_router.include_router(tenants.router, prefix="/tenants", tags=["tenants"])
 api_router.include_router(rbac.router, prefix="/rbac", tags=["rbac"])

@@ -371,25 +371,25 @@ BEGIN
 
     -- Build risk factors array
     IF payment_risk > 50 THEN
-        risk_factors := risk_factors || 'Overdue payments';
+        risk_factors := risk_factors || ARRAY['Overdue payments'];
     END IF;
     IF engagement_risk > 60 THEN
-        risk_factors := risk_factors || 'Low engagement';
+        risk_factors := risk_factors || ARRAY['Low engagement'];
     END IF;
     IF support_risk > 40 THEN
-        risk_factors := risk_factors || 'High support queries';
+        risk_factors := risk_factors || ARRAY['High support queries'];
     END IF;
     IF age_risk > 50 THEN
-        risk_factors := risk_factors || 'Recent policy holder';
+        risk_factors := risk_factors || ARRAY['Recent policy holder'];
     END IF;
     IF p_missed_payments > 0 THEN
-        risk_factors := risk_factors || 'Payment history issues';
+        risk_factors := risk_factors || ARRAY['Payment history issues'];
     END IF;
     IF contact_risk > 40 THEN
-        risk_factors := risk_factors || 'Long time since contact';
+        risk_factors := risk_factors || ARRAY['Long time since contact'];
     END IF;
 
-    IF array_length(risk_factors, 1) IS NULL THEN
+    IF array_length(risk_factors, 1) IS NULL OR array_length(risk_factors, 1) = 0 THEN
         risk_factors := ARRAY['General monitoring'];
     END IF;
 

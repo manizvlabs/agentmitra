@@ -144,12 +144,13 @@ class FeatureFlagService:
             # Try to get flags from Pioneer first
             pioneer_flags = await self._fetch_from_pioneer(user_id, tenant_id, user_properties)
 
-            # If we got flags from Pioneer, use them
+            # If we got flags from Pioneer, apply role-based filtering
             if pioneer_flags and len(pioneer_flags) > 0:
-                return pioneer_flags
+                return await self._apply_role_based_filtering(pioneer_flags, user_id, tenant_id)
 
-            # Fallback to database lookup
-            return await self._get_database_flags(user_id, tenant_id)
+            # Fallback to database lookup with role-based filtering
+            database_flags = await self._get_database_flags(user_id, tenant_id)
+            return await self._apply_role_based_filtering(database_flags, user_id, tenant_id)
 
         except Exception as e:
             logger.error(f"Error getting feature flags for user {user_id}: {e}")
@@ -178,6 +179,155 @@ class FeatureFlagService:
         except Exception as e:
             logger.error(f"Error getting database flags: {e}")
             return self.fallback_flags
+
+    async def _apply_role_based_filtering(self, flags: Dict[str, bool], user_id: str,
+                                         tenant_id: Optional[str] = None) -> Dict[str, bool]:
+        """Apply role-based access control to feature flags"""
+        try:
+            # Get user roles and permissions
+            user_roles = await self._get_user_roles(user_id)
+            user_permissions = await self._get_user_permissions(user_id)
+
+            # Define role-based feature flag restrictions
+            role_restrictions = {
+                # Features restricted to agents only
+                'agent_only_features': [
+                    'agent_dashboard_enabled',
+                    'customer_management_enabled',
+                    'marketing_campaigns_enabled',
+                    'commission_tracking_enabled',
+                    'lead_management_enabled',
+                    'advanced_analytics_enabled',
+                    'team_management_enabled',
+                    'regional_oversight_enabled',
+                    'content_management_enabled',
+                    'roi_analytics_enabled'
+                ],
+
+                # Features restricted to customers only
+                'customer_only_features': [
+                    'customer_dashboard_enabled',
+                    'policy_management_enabled',
+                    'premium_payments_enabled',
+                    'document_access_enabled'
+                ],
+
+                # Admin-only features
+                'admin_only_features': [
+                    'user_management_enabled',
+                    'feature_flag_control_enabled',
+                    'system_configuration_enabled',
+                    'audit_compliance_enabled',
+                    'financial_management_enabled',
+                    'tenant_management_enabled',
+                    'provider_administration_enabled'
+                ],
+
+                # Permission-based features
+                'permission_based_features': {
+                    'analytics:read': ['advanced_analytics_enabled', 'roi_analytics_enabled'],
+                    'campaigns:read': ['marketing_campaigns_enabled'],
+                    'customers:read': ['customer_management_enabled'],
+                    'feature_flags:read': ['feature_flag_control_enabled'],
+                    'users:read': ['user_management_enabled'],
+                    'policies:read': ['policy_management_enabled']
+                }
+            }
+
+            filtered_flags = flags.copy()
+
+            # Apply role-based restrictions
+            user_role_names = [role['name'] for role in user_roles]
+
+            # Check if user is agent
+            is_agent = any(role in ['senior_agent', 'junior_agent', 'regional_manager', 'provider_admin'] for role in user_role_names)
+
+            # Check if user is customer/policyholder
+            is_customer = 'policyholder' in user_role_names
+
+            # Check if user is admin
+            is_admin = any(role in ['super_admin', 'provider_admin', 'regional_manager'] for role in user_role_names)
+
+            # Apply restrictions based on roles
+            for flag_name in role_restrictions['agent_only_features']:
+                if flag_name in filtered_flags and not is_agent:
+                    filtered_flags[flag_name] = False
+
+            for flag_name in role_restrictions['customer_only_features']:
+                if flag_name in filtered_flags and not is_customer:
+                    filtered_flags[flag_name] = False
+
+            for flag_name in role_restrictions['admin_only_features']:
+                if flag_name in filtered_flags and not is_admin:
+                    filtered_flags[flag_name] = False
+
+            # Apply permission-based restrictions
+            for permission, restricted_flags in role_restrictions['permission_based_features'].items():
+                if permission not in user_permissions:
+                    for flag_name in restricted_flags:
+                        if flag_name in filtered_flags:
+                            filtered_flags[flag_name] = False
+
+            # Special handling for trial users
+            trial_status = await self._get_user_trial_status(user_id)
+            if trial_status and not trial_status.get('can_access_features', True):
+                # Disable premium features for expired trials
+                premium_features = [
+                    'advanced_analytics_enabled',
+                    'marketing_campaigns_enabled',
+                    'team_management_enabled',
+                    'roi_analytics_enabled',
+                    'whatsapp_integration_enabled'
+                ]
+                for flag_name in premium_features:
+                    if flag_name in filtered_flags:
+                        filtered_flags[flag_name] = False
+
+            return filtered_flags
+
+        except Exception as e:
+            logger.error(f"Error applying role-based filtering for user {user_id}: {e}")
+            return flags  # Return original flags if filtering fails
+
+    async def _get_user_roles(self, user_id: str) -> List[Dict[str, Any]]:
+        """Get user roles"""
+        try:
+            from app.services.rbac_service import RBACService
+            rbac_service = RBACService(self.db)
+            return rbac_service.get_user_roles(user_id)
+        except Exception as e:
+            logger.error(f"Error getting user roles for {user_id}: {e}")
+            return []
+
+    async def _get_user_permissions(self, user_id: str) -> List[str]:
+        """Get user permissions"""
+        try:
+            from app.services.rbac_service import RBACService
+            rbac_service = RBACService(self.db)
+            roles = await self._get_user_roles(user_id)
+            permissions = []
+            for role in roles:
+                role_permissions = rbac_service.get_role_permissions(role['name'])
+                permissions.extend(role_permissions)
+            return list(set(permissions))  # Remove duplicates
+        except Exception as e:
+            logger.error(f"Error getting user permissions for {user_id}: {e}")
+            return []
+
+    async def _get_user_trial_status(self, user_id: str) -> Optional[Dict[str, Any]]:
+        """Get user trial status"""
+        try:
+            from app.core.trial_subscription import TrialSubscriptionService
+            trial_service = TrialSubscriptionService()
+            # Get user object
+            from app.repositories.user_repository import UserRepository
+            user_repo = UserRepository(self.db)
+            user = user_repo.get_by_id(user_id)
+            if user:
+                return trial_service.check_trial_status(user)
+        except Exception as e:
+            logger.error(f"Error getting trial status for user {user_id}: {e}")
+        return None
 
     async def is_feature_enabled(self, flag_name: str, user_id: Optional[str] = None,
                                tenant_id: Optional[str] = None,

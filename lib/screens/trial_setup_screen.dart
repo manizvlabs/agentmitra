@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../core/services/feature_flag_service.dart';
+import '../features/auth/presentation/viewmodels/auth_viewmodel.dart';
 
 class TrialSetupScreen extends StatefulWidget {
   const TrialSetupScreen({super.key});
@@ -7,16 +10,22 @@ class TrialSetupScreen extends StatefulWidget {
   State<TrialSetupScreen> createState() => _TrialSetupScreenState();
 }
 
-class _TrialSetupScreenState extends State<TrialSetupScreen> {
+class _TrialSetupScreenState extends State<TrialSetupScreen> with TickerProviderStateMixin {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  late AnimationController _fadeController;
+  late AnimationController _scaleController;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
 
   bool _lifeInsuranceSelected = false;
   bool _healthInsuranceSelected = false;
   String? _selectedRole; // 'policyholder' or 'agent'
   String? _profilePicturePath;
   bool _termsAccepted = false;
+  bool _isLoading = false;
 
   bool get _isFormValid {
     final formValid = _formKey.currentState?.validate() ?? false;
@@ -40,9 +49,51 @@ class _TrialSetupScreenState extends State<TrialSetupScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    // Initialize animations
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _scaleController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeOut,
+    ));
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _scaleController,
+      curve: Curves.elasticOut,
+    ));
+
+    // Start animations
+    _fadeController.forward();
+    Future.delayed(const Duration(milliseconds: 200), () {
+      if (mounted) {
+        _scaleController.forward();
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _fadeController.dispose();
+    _scaleController.dispose();
     super.dispose();
   }
 
@@ -68,11 +119,15 @@ class _TrialSetupScreenState extends State<TrialSetupScreen> {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
               const SizedBox(height: 20),
 
               // Trial activated banner
@@ -686,6 +741,12 @@ class _TrialSetupScreenState extends State<TrialSetupScreen> {
             child: const Text('Upload Profile Picture'),
           ),
         ],
+      ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

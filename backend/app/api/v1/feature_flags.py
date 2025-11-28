@@ -463,3 +463,244 @@ async def check_feature_flag(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to check feature flag"
         )
+
+
+# Role-based access control endpoints
+@router.post("/role-access")
+async def manage_role_feature_access(
+    role_name: str,
+    feature_flags: Dict[str, bool],
+    db: Session = Depends(get_db),
+    current_user = Depends(require_permission("feature_flags.manage"))
+):
+    """
+    Manage feature flag access for a specific role
+
+    - **role_name**: Role name to update
+    - **feature_flags**: Dictionary of feature flags and their enabled status
+    """
+    try:
+        # Update feature flags for all users with this role
+        from app.services.rbac_service import RBACService
+        rbac_service = RBACService(db)
+        users_with_role = rbac_service.get_users_by_role(role_name)
+
+        success_count = 0
+        feature_flag_service = get_feature_flag_service(db)
+
+        for user in users_with_role:
+            user_id = str(user['user_id'])
+            user_success = True
+
+            for flag_name, enabled in feature_flags.items():
+                flag_success = await feature_flag_service.update_feature_flag(
+                    flag_name, enabled, user_id
+                )
+                if not flag_success:
+                    user_success = False
+
+            if user_success:
+                success_count += 1
+
+                # Broadcast updates to user's WebSocket connections
+                for flag_name, enabled in feature_flags.items():
+                    await websocket_manager.broadcast_feature_update(user_id, flag_name, enabled)
+
+        return {
+            "success": True,
+            "message": f"Updated feature access for {success_count}/{len(users_with_role)} users with role {role_name}",
+            "updated_users": success_count,
+            "total_users": len(users_with_role)
+        }
+
+    except Exception as e:
+        logger.error(f"Error managing role feature access for {role_name}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update role feature access"
+        )
+
+
+@router.post("/broadcast/role/{role_name}")
+async def broadcast_to_role(
+    role_name: str,
+    feature_key: str,
+    new_value: bool,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_permission("feature_flags.broadcast"))
+):
+    """
+    Broadcast feature flag update to all users with a specific role
+
+    - **role_name**: Target role name
+    - **feature_key**: Feature flag name
+    - **new_value**: New boolean value for the feature flag
+    """
+    try:
+        await websocket_manager.broadcast_to_role(role_name, feature_key, new_value, db)
+
+        return {
+            "success": True,
+            "message": f"Broadcasted feature flag {feature_key}={new_value} to all users with role {role_name}"
+        }
+
+    except Exception as e:
+        logger.error(f"Error broadcasting to role {role_name}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to broadcast to role"
+        )
+
+
+@router.post("/broadcast/tenant/{tenant_id}")
+async def broadcast_to_tenant(
+    tenant_id: str,
+    feature_key: str,
+    new_value: bool,
+    current_user = Depends(require_permission("feature_flags.broadcast"))
+):
+    """
+    Broadcast feature flag update to all users in a specific tenant
+
+    - **tenant_id**: Target tenant ID
+    - **feature_key**: Feature flag name
+    - **new_value**: New boolean value for the feature flag
+    """
+    try:
+        await websocket_manager.broadcast_to_tenant(tenant_id, feature_key, new_value)
+
+        return {
+            "success": True,
+            "message": f"Broadcasted feature flag {feature_key}={new_value} to all users in tenant {tenant_id}"
+        }
+
+    except Exception as e:
+        logger.error(f"Error broadcasting to tenant {tenant_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to broadcast to tenant"
+        )
+
+
+@router.get("/websocket/stats")
+async def get_websocket_stats(
+    current_user = Depends(require_permission("feature_flags.read"))
+):
+    """
+    Get WebSocket connection statistics
+    """
+    try:
+        stats = await websocket_manager.get_active_users_count()
+
+        return {
+            "success": True,
+            "data": stats
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting WebSocket stats: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get WebSocket statistics"
+        )
+
+
+@router.get("/role-access/{role_name}")
+async def get_role_feature_access(
+    role_name: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_permission("feature_flags.read"))
+):
+    """
+    Get feature flag access configuration for a specific role
+
+    - **role_name**: Role name to check
+    """
+    try:
+        # Get a sample user with this role to check their feature flags
+        from app.services.rbac_service import RBACService
+        rbac_service = RBACService(db)
+        users_with_role = rbac_service.get_users_by_role(role_name)
+
+        if not users_with_role:
+            return {
+                "success": True,
+                "data": {
+                    "role_name": role_name,
+                    "user_count": 0,
+                    "feature_flags": {}
+                }
+            }
+
+        # Get feature flags for the first user with this role
+        sample_user_id = str(users_with_role[0]['user_id'])
+        feature_flag_service = get_feature_flag_service(db)
+        flags = await feature_flag_service.get_user_feature_flags(sample_user_id)
+
+        return {
+            "success": True,
+            "data": {
+                "role_name": role_name,
+                "user_count": len(users_with_role),
+                "sample_user_id": sample_user_id,
+                "feature_flags": flags
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting role feature access for {role_name}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get role feature access"
+        )
+
+
+@router.get("/access-control/rules")
+async def get_access_control_rules(
+    current_user = Depends(require_permission("feature_flags.manage"))
+):
+    """
+    Get feature flag access control rules
+    """
+    access_rules = {
+        "agent_only_features": [
+            "agent_dashboard_enabled",
+            "customer_management_enabled",
+            "marketing_campaigns_enabled",
+            "commission_tracking_enabled",
+            "lead_management_enabled",
+            "advanced_analytics_enabled",
+            "team_management_enabled",
+            "regional_oversight_enabled",
+            "content_management_enabled",
+            "roi_analytics_enabled"
+        ],
+        "customer_only_features": [
+            "customer_dashboard_enabled",
+            "policy_management_enabled",
+            "premium_payments_enabled",
+            "document_access_enabled"
+        ],
+        "admin_only_features": [
+            "user_management_enabled",
+            "feature_flag_control_enabled",
+            "system_configuration_enabled",
+            "audit_compliance_enabled",
+            "financial_management_enabled",
+            "tenant_management_enabled",
+            "provider_administration_enabled"
+        ],
+        "permission_based_features": {
+            "analytics:read": ["advanced_analytics_enabled", "roi_analytics_enabled"],
+            "campaigns:read": ["marketing_campaigns_enabled"],
+            "customers:read": ["customer_management_enabled"],
+            "feature_flags:read": ["feature_flag_control_enabled"],
+            "users:read": ["user_management_enabled"],
+            "policies:read": ["policy_management_enabled"]
+        }
+    }
+
+    return {
+        "success": True,
+        "data": access_rules
+    }
