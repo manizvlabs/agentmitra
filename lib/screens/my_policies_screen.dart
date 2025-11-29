@@ -4,6 +4,9 @@ import '../core/widgets/offline_indicator.dart';
 import '../core/services/whatsapp_business_service.dart';
 import '../features/payments/presentation/viewmodels/policies_viewmodel.dart';
 import '../features/payments/data/models/policy_model.dart';
+import '../features/notifications/presentation/viewmodels/notification_viewmodel.dart';
+import '../features/notifications/data/models/notification_model.dart';
+import '../core/di/service_locator.dart';
 
 /// My Policies Screen for Agent App
 /// Displays policy information, client management, and segmentation tools
@@ -499,7 +502,9 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () {
+                  onPressed: () async {
+                    // Send notification to agent about customer's interest in new policy quotations
+                    await _notifyAgentOfQuoteInterest(context);
                     Navigator.of(context).pushNamed('/get-quote');
                   },
                   icon: const Icon(Icons.request_quote, size: 16),
@@ -869,6 +874,56 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
         );
       },
     );
+  }
+
+  Future<void> _notifyAgentOfQuoteInterest(BuildContext context) async {
+    try {
+      final authViewModel = ServiceLocator.authViewModel;
+      await authViewModel.initialize(); // Ensure user data is loaded
+      final currentUser = authViewModel.currentUser;
+
+      if (currentUser == null) {
+        // User not logged in, can't send notification
+        return;
+      }
+
+      final notificationViewModel = context.read<NotificationViewModel>();
+      final customerName = currentUser.fullName ?? currentUser.phoneNumber ?? 'Customer';
+
+      // Create notification for agent's interest in new policy quotations
+      final notification = NotificationModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        title: 'New Policy Quote Interest',
+        body: '$customerName is interested in getting quotations for new insurance policies. Please follow up to provide personalized quotes.',
+        timestamp: DateTime.now(),
+        type: NotificationType.general,
+        priority: NotificationPriority.medium,
+        data: {
+          'customer_id': currentUser.userId,
+          'customer_name': customerName,
+          'request_type': 'new_policy_quote',
+          'source': 'my_policies_screen',
+        },
+        category: 'Customer Interest',
+        senderId: currentUser.userId,
+      );
+
+      await notificationViewModel.addNotification(notification);
+
+      // Show success message to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Your request has been sent to your agent!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      // Log error but don't show to user to avoid interrupting the flow
+      debugPrint('Failed to send quote interest notification: $e');
+    }
   }
 
   void _showFilterDialog(BuildContext context, PoliciesViewModel viewModel) {
