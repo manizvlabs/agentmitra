@@ -31,18 +31,19 @@ class _CustomerDashboardState extends ConsumerState<CustomerDashboard> {
     final viewModel = ref.watch(customerDashboardViewModelProvider);
     final dashboardData = viewModel.dashboardData;
 
-    // Check if user is Regional Manager to show back button instead of menu
+    // Check if user is not a Policyholder (primary dashboard user) to show back button instead of menu
+    // Regional Managers, Senior Agents, and Junior Agents access this as secondary screen, so they need back button
     final rbacService = ServiceLocator.rbacService;
     final currentUserRole = rbacService.getCurrentUserRole();
-    final isRegionalManager = currentUserRole?.value == UserRole.regionalManager.value;
+    final isNotPrimaryUser = currentUserRole?.value != UserRole.policyholder.value;
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
-      drawer: isRegionalManager ? null : _buildDrawer(context), // Only show drawer for non-Regional Managers
+      drawer: isNotPrimaryUser ? null : _buildDrawer(context), // Only show drawer for Policyholders (primary users)
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: isRegionalManager
+        leading: isNotPrimaryUser
           ? IconButton(
               icon: const Icon(Icons.arrow_back, color: Color(0xFF1a237e)),
               onPressed: () => Navigator.of(context).pop(),
