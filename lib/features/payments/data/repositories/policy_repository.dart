@@ -50,6 +50,8 @@ class PolicyRepository {
 
       debugPrint('PolicyRepository - Remote API returned ${policies.length} policies');
 
+      debugPrint('PolicyRepository - API returned ${policies.length} policies');
+
       // Cache the result
       await localDataSource.cachePolicies(policies);
 
