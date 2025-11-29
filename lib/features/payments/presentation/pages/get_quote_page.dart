@@ -282,23 +282,24 @@ class _GetQuotePageState extends State<GetQuotePage> {
   }
 
   Widget _buildProductCard(Map<String, dynamic> product) {
-    final isSelected = _selectedProduct == product['id'];
+    final productId = product['id'] as String?;
+    final isSelected = _selectedProduct == productId;
     return InkWell(
-      onTap: () {
+      onTap: productId != null ? () {
         setState(() {
-          _selectedProduct = product['id'] as String;
+          _selectedProduct = productId;
         });
-      },
+      } : null,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected
+          color: isSelected && product['color'] is Color
               ? (product['color'] as Color).withOpacity(0.1)
               : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected
+            color: isSelected && product['color'] is Color
                 ? product['color'] as Color
                 : Colors.grey.shade200,
             width: isSelected ? 2 : 1,
@@ -309,12 +310,12 @@ class _GetQuotePageState extends State<GetQuotePage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: (product['color'] as Color).withOpacity(0.1),
+                color: product['color'] is Color ? (product['color'] as Color).withOpacity(0.1) : Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
-                product['icon'] as IconData,
-                color: product['color'] as Color,
+                product['icon'] is IconData ? product['icon'] as IconData : Icons.help,
+                color: product['color'] is Color ? product['color'] as Color : Colors.grey,
                 size: 24,
               ),
             ),
@@ -324,18 +325,18 @@ class _GetQuotePageState extends State<GetQuotePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    product['name'] as String,
+                    product['name'] as String? ?? 'Unknown Product',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: isSelected
+                      color: isSelected && product['color'] is Color
                           ? product['color'] as Color
                           : Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    product['description'] as String,
+                    product['description'] as String? ?? 'No description available',
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey.shade600,
@@ -356,13 +357,14 @@ class _GetQuotePageState extends State<GetQuotePage> {
   }
 
   Widget _buildAgentCard(Map<String, dynamic> agent) {
-    final isSelected = _selectedAgent == agent['id'];
+    final agentId = agent['id'] as String?;
+    final isSelected = _selectedAgent == agentId;
     return InkWell(
-      onTap: () {
+      onTap: agentId != null ? () {
         setState(() {
-          _selectedAgent = agent['id'] as String;
+          _selectedAgent = agentId;
         });
-      },
+      } : null,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -383,7 +385,7 @@ class _GetQuotePageState extends State<GetQuotePage> {
             CircleAvatar(
               backgroundColor: const Color(0xFF1a237e).withOpacity(0.1),
               child: Text(
-                (agent['name'] as String)[0],
+                (agent['name'] as String?)?.isNotEmpty == true ? (agent['name'] as String)[0] : '?',
                 style: const TextStyle(
                   color: Color(0xFF1a237e),
                   fontWeight: FontWeight.bold,
@@ -396,7 +398,7 @@ class _GetQuotePageState extends State<GetQuotePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    agent['name'] as String,
+                    agent['name'] as String? ?? 'Unknown Agent',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -408,12 +410,12 @@ class _GetQuotePageState extends State<GetQuotePage> {
                       const Icon(Icons.star, color: Colors.amber, size: 16),
                       const SizedBox(width: 4),
                       Text(
-                        '${agent['rating']}',
+                        '${agent['rating'] ?? 'N/A'}',
                         style: const TextStyle(fontSize: 12),
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        'Code: ${agent['code']}',
+                        'Code: ${agent['code'] ?? 'N/A'}',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade600,
