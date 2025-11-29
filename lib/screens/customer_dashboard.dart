@@ -5,6 +5,8 @@ import '../features/customer_dashboard/data/models/customer_dashboard_data.dart'
 import '../core/widgets/loading/loading_widgets.dart';
 import '../core/widgets/loading/empty_state_card.dart';
 import '../core/providers/global_providers.dart';
+import '../core/services/rbac_service.dart';
+import '../core/di/service_locator.dart';
 
 class CustomerDashboard extends ConsumerStatefulWidget {
   const CustomerDashboard({super.key});
@@ -29,16 +31,26 @@ class _CustomerDashboardState extends ConsumerState<CustomerDashboard> {
     final viewModel = ref.watch(customerDashboardViewModelProvider);
     final dashboardData = viewModel.dashboardData;
 
+    // Check if user is Regional Manager to show back button instead of menu
+    final rbacService = ServiceLocator.rbacService;
+    final currentUserRole = rbacService.getCurrentUserRole();
+    final isRegionalManager = currentUserRole?.value == UserRole.regionalManager.value;
+
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
-      drawer: _buildDrawer(context),
+      drawer: isRegionalManager ? null : _buildDrawer(context), // Only show drawer for non-Regional Managers
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: Color(0xFF1a237e)),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        ),
+        leading: isRegionalManager
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back, color: Color(0xFF1a237e)),
+              onPressed: () => Navigator.of(context).pop(),
+            )
+          : IconButton(
+              icon: const Icon(Icons.menu, color: Color(0xFF1a237e)),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+            ),
         title: const Text(
           'AGENT MITRA',
           style: TextStyle(
