@@ -366,7 +366,7 @@ class AgentMitraApp extends ConsumerWidget {
     // Customer Portal (Protected - requires authentication)
     '/customer-dashboard': _protectedRoute(
       (context) => const CustomerDashboard(),
-      requiredRoles: [UserRole.policyholder],
+      requiredRoles: [UserRole.policyholder, UserRole.regionalManager],
     ),
     '/policies': _protectedRoute(
       (context) => const PoliciesListPage(),
@@ -505,7 +505,7 @@ class AgentMitraApp extends ConsumerWidget {
     ),
     '/agent-config-dashboard': _protectedRoute(
       (context) => const AgentConfigDashboard(),
-      requiredRoles: [UserRole.providerAdmin, UserRole.superAdmin],
+      requiredRoles: [UserRole.providerAdmin, UserRole.superAdmin, UserRole.regionalManager],
     ),
     '/roi-analytics': _protectedRoute(
       (context) => const RoiAnalyticsDashboard(),
@@ -513,7 +513,7 @@ class AgentMitraApp extends ConsumerWidget {
     ),
     '/campaign-builder': _protectedRoute(
       (context) => const MarketingCampaignBuilder(),
-      requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent],
+      requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent, UserRole.regionalManager],
     ),
     
     // Configuration Portal Routes (Protected with RBAC)
@@ -535,7 +535,7 @@ class AgentMitraApp extends ConsumerWidget {
     ),
     '/user-management': _protectedRoute(
       (context) => const UserManagementPage(),
-      requiredRoles: [UserRole.superAdmin, UserRole.providerAdmin],
+      requiredRoles: [UserRole.superAdmin, UserRole.providerAdmin, UserRole.regionalManager],
       requiredPermissions: ['users.read'],
     ),
     '/super-admin-dashboard': _protectedRoute(
@@ -554,7 +554,11 @@ class AgentMitraApp extends ConsumerWidget {
       (context) => const SeniorAgentDashboard(),
       requiredRoles: [UserRole.seniorAgent],
     ),
-    
+    '/regional-manager-settings': _protectedRoute(
+      (context) => const PlaceholderScreen(title: 'Regional Manager Settings'),
+      requiredRoles: [UserRole.regionalManager],
+    ),
+
     // Dashboard and Callback Management (Protected)
     '/agent-dashboard': _protectedRoute(
       (context) => const DashboardPage(),

@@ -228,40 +228,40 @@ class _AgentSideDrawerState extends State<AgentSideDrawer> {
     ));
 
     // Agent Tools
-    menuItems.add(_MenuItem(
+      menuItems.add(_MenuItem(
       icon: Icons.format_quote,
-      title: 'Daily Quotes',
-      route: '/daily-quotes',
-      badge: _badges[BadgeService.dailyQuotes],
-      iconColor: Colors.purple,
-      backgroundColor: Colors.purple.withOpacity(0.1),
-    ));
+        title: 'Daily Quotes',
+        route: '/daily-quotes',
+        badge: _badges[BadgeService.dailyQuotes],
+        iconColor: Colors.purple,
+        backgroundColor: Colors.purple.withOpacity(0.1),
+      ));
 
-    menuItems.add(_MenuItem(
-      icon: Icons.calendar_today,
-      title: 'Premium Calendar',
-      route: '/premium-calendar',
+      menuItems.add(_MenuItem(
+        icon: Icons.calendar_today,
+        title: 'Premium Calendar',
+        route: '/premium-calendar',
       iconColor: Colors.cyan,
       backgroundColor: Colors.cyan.withOpacity(0.1),
-    ));
+      ));
 
-    menuItems.add(_MenuItem(
-      icon: Icons.chat_bubble,
-      title: 'Agent Chat',
-      route: '/agent-chat',
-      badge: _badges[BadgeService.agentChat],
+      menuItems.add(_MenuItem(
+        icon: Icons.chat_bubble,
+        title: 'Agent Chat',
+        route: '/agent-chat',
+        badge: _badges[BadgeService.agentChat],
       iconColor: Colors.lightBlue,
       backgroundColor: Colors.lightBlue.withOpacity(0.1),
-    ));
+      ));
 
-    menuItems.add(_MenuItem(
+      menuItems.add(_MenuItem(
       icon: Icons.notifications_active,
-      title: 'Reminders',
-      route: '/reminders',
-      badge: _badges[BadgeService.reminders],
-      iconColor: Colors.orange,
-      backgroundColor: Colors.orange.withOpacity(0.1),
-    ));
+        title: 'Reminders',
+        route: '/reminders',
+        badge: _badges[BadgeService.reminders],
+        iconColor: Colors.orange,
+        backgroundColor: Colors.orange.withOpacity(0.1),
+      ));
 
     // Learning & Support
     menuItems.add(_MenuItem(
@@ -284,18 +284,18 @@ class _AgentSideDrawerState extends State<AgentSideDrawer> {
     menuItems.add(_MenuItem(
       icon: Icons.add_circle,
       title: 'New Policy',
-      route: '/new-policy',
+      route: '/policy/create',
       iconColor: Colors.lightGreen,
       backgroundColor: Colors.lightGreen.withOpacity(0.1),
     ));
 
-    menuItems.add(_MenuItem(
+      menuItems.add(_MenuItem(
       icon: Icons.report_problem,
       title: 'New Claim',
-      route: '/new-claim',
+      route: '/claims/new',
       iconColor: Colors.redAccent,
       backgroundColor: Colors.redAccent.withOpacity(0.1),
-    ));
+      ));
 
     // Profile & Settings
     menuItems.add(_MenuItem(
@@ -306,21 +306,21 @@ class _AgentSideDrawerState extends State<AgentSideDrawer> {
       backgroundColor: Colors.red.withOpacity(0.1),
     ));
 
-    menuItems.add(_MenuItem(
-      icon: Icons.accessibility,
-      title: 'Accessibility',
-      route: '/accessibility-settings',
-      iconColor: Colors.blue,
-      backgroundColor: Colors.blue.withOpacity(0.1),
-    ));
+      menuItems.add(_MenuItem(
+        icon: Icons.accessibility,
+        title: 'Accessibility',
+        route: '/accessibility-settings',
+        iconColor: Colors.blue,
+        backgroundColor: Colors.blue.withOpacity(0.1),
+      ));
 
-    menuItems.add(_MenuItem(
-      icon: Icons.language,
-      title: 'Language',
-      route: '/language-selection',
-      iconColor: Colors.teal,
-      backgroundColor: Colors.teal.withOpacity(0.1),
-    ));
+      menuItems.add(_MenuItem(
+        icon: Icons.language,
+        title: 'Language',
+        route: '/language-selection',
+        iconColor: Colors.teal,
+        backgroundColor: Colors.teal.withOpacity(0.1),
+      ));
 
     return ListView.builder(
       padding: EdgeInsets.zero,

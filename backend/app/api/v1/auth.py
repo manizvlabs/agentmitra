@@ -1,7 +1,7 @@
 """
 Authentication API Endpoints
 """
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, validator
 from typing import Optional, List
@@ -19,7 +19,7 @@ from app.core.security import (
     validate_jwt_token,
     blacklist_token,
 )
-from app.core.auth import get_current_user_context, UserContext, require_permission
+from app.core.auth import get_current_user_context, get_current_user_optional, UserContext, require_permission
 from app.core.rate_limiter import otp_rate_limiter, auth_rate_limiter
 from app.core.audit_logger import AuditLogger
 from app.core.logging_config import get_logger
@@ -253,3 +253,35 @@ async def login(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Internal server error during authentication: {str(e)}"
         )
+
+
+@router.post("/logout", response_model=dict)
+async def logout(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_optional)
+):
+    """
+    Logout endpoint - clears authentication tokens
+    For JWT, this is mainly for client-side cleanup since tokens are stateless
+    """
+    # Log the logout attempt
+    ip_address = request.client.host if request.client else "unknown"
+    user_agent = request.headers.get("user-agent")
+
+    if current_user and hasattr(current_user, 'user_id') and current_user.user_id:
+        try:
+            await AuditLogger.log_logout(
+                db=db,
+                user_id=str(current_user.user_id),
+                ip_address=ip_address,
+                user_agent=user_agent,
+                success=True
+            )
+        except Exception as e:
+            # Log audit failure but don't fail the logout
+            logger.warning(f"Failed to log logout audit: {e}")
+
+    # For JWT-based auth, logout is mainly client-side
+    # In a more advanced setup, you could blacklist tokens here
+    return {"message": "Successfully logged out", "success": True}

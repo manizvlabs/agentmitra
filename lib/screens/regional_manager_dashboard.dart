@@ -370,19 +370,19 @@ class _RegionalManagerDashboardState extends State<RegionalManagerDashboard> {
           ListTile(
             leading: Icon(Icons.add_circle, color: Colors.grey[400], size: 20),
             title: const Text('New Policy', style: TextStyle(fontSize: 14)),
-            onTap: () => Navigator.of(context).pushNamed('/new-policy'),
+            onTap: () => Navigator.of(context).pushNamed('/policy/create'),
           ),
           ListTile(
             leading: Icon(Icons.report_problem, color: Colors.grey[400], size: 20),
             title: const Text('New Claim', style: TextStyle(fontSize: 14)),
-            onTap: () => Navigator.of(context).pushNamed('/new-claim'),
+            onTap: () => Navigator.of(context).pushNamed('/claims/new'),
           ),
 
           const Divider(),
           ListTile(
             leading: const Icon(Icons.settings, color: Colors.grey),
             title: const Text('Settings'),
-            onTap: () => _showSettingsDialog(context),
+            onTap: () => Navigator.of(context).pushNamed('/regional-manager-settings'),
           ),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.grey),
@@ -431,19 +431,4 @@ class _RegionalManagerDashboardState extends State<RegionalManagerDashboard> {
     );
   }
 
-  void _showSettingsDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Regional Settings'),
-        content: const Text('Regional settings panel coming soon...'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
 }

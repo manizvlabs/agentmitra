@@ -77,9 +77,13 @@ class _LoginFormState extends State<LoginForm> with TickerProviderStateMixin {
 
     LoggerService().info('Attempting login with phone: ${_phoneController.text}', tag: 'LoginForm');
 
+    // Ensure phone number has +91 prefix
+    final phoneNumber = _phoneController.text.trim();
+    final formattedPhoneNumber = phoneNumber.startsWith('+91') ? phoneNumber : '+91$phoneNumber';
+
     final viewModel = Provider.of<AuthViewModel>(context, listen: false);
     final authResponse = await viewModel.login(
-      phoneNumber: _phoneController.text.trim(),
+      phoneNumber: formattedPhoneNumber,
       password: _useAgentCode ? null : _passwordController.text,
       agentCode: _useAgentCode ? _agentCodeController.text.trim() : null,
     );
@@ -132,10 +136,14 @@ class _LoginFormState extends State<LoginForm> with TickerProviderStateMixin {
       return;
     }
 
-    LoggerService().info('Sending OTP to: ${_phoneController.text}', tag: 'LoginForm');
+    // Ensure phone number has +91 prefix
+    final phoneNumber = _phoneController.text.trim();
+    final formattedPhoneNumber = phoneNumber.startsWith('+91') ? phoneNumber : '+91$phoneNumber';
+
+    LoggerService().info('Sending OTP to: $formattedPhoneNumber', tag: 'LoginForm');
 
     final viewModel = Provider.of<AuthViewModel>(context, listen: false);
-    await viewModel.sendOtp(_phoneController.text.trim());
+    await viewModel.sendOtp(formattedPhoneNumber);
 
     if (!viewModel.hasError && mounted) {
       LoggerService().info('OTP sent successfully', tag: 'LoginForm');
@@ -165,15 +173,14 @@ class _LoginFormState extends State<LoginForm> with TickerProviderStateMixin {
             TextFormField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              maxLength: 10,
+              maxLength: 13,
               inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
+                FilteringTextInputFormatter.allow(RegExp(r'[+\d]')), // Allow + and digits
               ],
               decoration: InputDecoration(
                 labelText: 'Phone Number',
-                hintText: 'Enter 10-digit phone number',
+                hintText: 'Enter phone number (+91xxxxxxxxxx)',
                 prefixIcon: const Icon(Icons.phone_android),
-                prefixText: '+91 ',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -186,8 +193,21 @@ class _LoginFormState extends State<LoginForm> with TickerProviderStateMixin {
                 if (value == null || value.trim().isEmpty) {
                   return 'Please enter your phone number';
                 }
-                if (value.trim().length != 10) {
+                // Allow both formats: +91xxxxxxxxxx or xxxxxxxxxx
+                final cleanValue = value.trim().replaceAll('+91', '');
+                if (cleanValue.length != 10) {
                   return 'Please enter a valid 10-digit phone number';
+                }
+                // Ensure it starts with +91 if not present
+                if (!value.trim().startsWith('+91')) {
+                  // Prepend +91 if not present
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    final newValue = '+91${cleanValue}';
+                    _phoneController.text = newValue;
+                    _phoneController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: newValue.length),
+                    );
+                  });
                 }
                 return null;
               },

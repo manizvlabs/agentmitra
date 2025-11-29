@@ -14,7 +14,7 @@ class DashboardService {
   /// Fetch system overview data for Super Admin dashboard
   Future<SystemOverviewData> getSystemOverview() async {
     try {
-      final data = await ApiService.get('/dashboard/system-overview');
+      final data = await ApiService.get('/api/v1/dashboard/system-overview');
       return SystemOverviewData.fromJson(data);
     } catch (e) {
       debugPrint('Error fetching system overview: $e');
@@ -26,7 +26,7 @@ class DashboardService {
   /// Fetch provider overview data for Provider Admin dashboard
   Future<ProviderOverviewData> getProviderOverview() async {
     try {
-      final data = await ApiService.get('/dashboard/provider-overview');
+      final data = await ApiService.get('/api/v1/dashboard/provider-overview');
       return ProviderOverviewData.fromJson(data);
     } catch (e) {
       debugPrint('Error fetching provider overview: $e');
@@ -37,7 +37,7 @@ class DashboardService {
   /// Fetch regional overview data for Regional Manager dashboard
   Future<RegionalOverviewData> getRegionalOverview(String region) async {
     try {
-      final data = await ApiService.get('/dashboard/regional-overview?region=$region');
+      final data = await ApiService.get('/api/v1/dashboard/regional-overview?region=$region');
       return RegionalOverviewData.fromJson(data);
     } catch (e) {
       debugPrint('Error fetching regional overview: $e');
@@ -48,7 +48,7 @@ class DashboardService {
   /// Fetch senior agent overview data for Senior Agent dashboard
   Future<SeniorAgentOverviewData> getSeniorAgentOverview() async {
     try {
-      final data = await ApiService.get('/dashboard/senior-agent-overview');
+      final data = await ApiService.get('/api/v1/dashboard/senior-agent-overview');
       return SeniorAgentOverviewData.fromJson(data);
     } catch (e) {
       debugPrint('Error fetching senior agent overview: $e');
