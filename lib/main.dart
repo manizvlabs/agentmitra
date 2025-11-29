@@ -5,6 +5,7 @@ import 'package:provider/provider.dart' as provider;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/services/storage_service.dart';
 import 'core/services/pioneer_service.dart';
+import 'core/services/navigation_service.dart';
 import 'core/di/service_locator.dart';
 import 'core/providers/global_providers.dart';
 import 'core/config/app_config.dart';

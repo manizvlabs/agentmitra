@@ -1,10 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:provider/Provider.dart' as provider;
 import '../core/services/rbac_service.dart';
+import '../core/services/dashboard_service.dart';
+import '../core/models/dashboard_models.dart';
 import '../features/auth/presentation/viewmodels/auth_viewmodel.dart';
 
-class SeniorAgentDashboard extends StatelessWidget {
+class SeniorAgentDashboard extends StatefulWidget {
   const SeniorAgentDashboard({super.key});
+
+  @override
+  State<SeniorAgentDashboard> createState() => _SeniorAgentDashboardState();
+}
+
+class _SeniorAgentDashboardState extends State<SeniorAgentDashboard> {
+  final DashboardService _dashboardService = DashboardService();
+  SeniorAgentOverviewData? _agentData;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAgentData();
+  }
+
+  Future<void> _loadAgentData() async {
+    try {
+      final data = await _dashboardService.getSeniorAgentOverview();
+      if (mounted) {
+        setState(() {
+          _agentData = data;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading agent data: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,13 +65,197 @@ class SeniorAgentDashboard extends StatelessWidget {
         ],
       ),
       drawer: _buildNavigationDrawer(context),
-      body: const Center(
-        child: Text(
-          'Senior Agent Dashboard\n\nBusiness Operations & Analytics',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _loadAgentData,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Welcome Section
+                    Card(
+                      elevation: 4,
+                      color: Colors.deepPurple.shade50,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.business_center,
+                                    size: 32, color: Colors.deepPurple.shade700),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Welcome, ${currentUser?.name ?? 'Senior Agent'}',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.deepPurple.shade700,
+                                            ),
+                                      ),
+                                      Text(
+                                        'Business Operations & Analytics',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(color: Colors.deepPurple.shade600),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Personal Stats
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Your Performance',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.refresh),
+                          onPressed: _loadAgentData,
+                          tooltip: 'Refresh data',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            'Policies Sold',
+                            _agentData?.personalStats['totalPoliciesSold']?.toString() ?? '0',
+                            Icons.policy,
+                            Colors.deepPurple,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Monthly Revenue',
+                            '₹${(_agentData?.monthlyRevenue ?? 0).toStringAsFixed(0)}',
+                            Icons.currency_rupee,
+                            Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            'Team Size',
+                            _agentData?.teamStats['teamSize']?.toString() ?? '0',
+                            Icons.group,
+                            Colors.blue,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Pending Tasks',
+                            _agentData?.pendingTasks.toString() ?? '0',
+                            Icons.pending_actions,
+                            Colors.amber,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Top Customers Section
+                    if (_agentData?.topCustomers.isNotEmpty ?? false) ...[
+                      const SizedBox(height: 24),
+                      Text(
+                        'Top Customers',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: 16),
+                      ..._agentData!.topCustomers.map((customer) => Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: Colors.deepPurple.shade100,
+                            child: Text(
+                              customer.name.isNotEmpty ? customer.name[0].toUpperCase() : 'C',
+                              style: TextStyle(color: Colors.deepPurple.shade700),
+                            ),
+                          ),
+                          title: Text(customer.name),
+                          subtitle: Text('${customer.policyCount} policies'),
+                          trailing: Text(
+                            '₹${customer.totalPremium.toStringAsFixed(0)}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green.shade700,
+                            ),
+                          ),
+                        ),
+                      )),
+                    ],
+
+                    // Recent Activities Section
+                    if (_agentData?.recentActivities.isNotEmpty ?? false) ...[
+                      const SizedBox(height: 24),
+                      Text(
+                        'Recent Activities',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: 16),
+                      ..._agentData!.recentActivities.take(5).map((activity) => Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          leading: Icon(
+                            Icons.receipt,
+                            color: Colors.deepPurple.shade600,
+                          ),
+                          title: Text(activity.description),
+                          subtitle: Text(
+                            activity.timestamp != null
+                                ? 'Today'
+                                : 'Recently',
+                          ),
+                          trailing: Text(
+                            '₹${activity.amount.toStringAsFixed(0)}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green.shade700,
+                            ),
+                          ),
+                        ),
+                      )),
+                    ],
+                  ],
+                ),
+              ),
+            ),
     );
   }
 
@@ -239,6 +459,36 @@ class SeniorAgentDashboard extends StatelessWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Icon(icon, size: 24, color: color),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }

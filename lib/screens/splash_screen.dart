@@ -194,23 +194,40 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       final currentUser = await AuthService().getCurrentUser(context);
       final userRole = currentUser?.userRole;
 
+      // Debug logging
+      debugPrint('🔍 Splash Screen Debug:');
+      debugPrint('  - Current User: ${currentUser?.fullName}');
+      debugPrint('  - User ID: ${currentUser?.userId}');
+      debugPrint('  - Legacy Role: ${currentUser?.role}');
+      debugPrint('  - Roles List: ${currentUser?.roles}');
+      debugPrint('  - UserRole Enum: $userRole');
+      debugPrint('  - UserRole Value: ${userRole?.value}');
+
       // Navigate to role-specific dashboard
       if (userRole == UserRole.superAdmin) {
+        debugPrint('🚀 Redirecting Super Admin to /super-admin-dashboard');
         Navigator.of(context).pushReplacementNamed('/super-admin-dashboard');
       } else if (userRole == UserRole.providerAdmin) {
+        debugPrint('🚀 Redirecting Provider Admin to /provider-admin-dashboard');
         Navigator.of(context).pushReplacementNamed('/provider-admin-dashboard');
       } else if (userRole == UserRole.regionalManager) {
+        debugPrint('🚀 Redirecting Regional Manager to /regional-manager-dashboard');
         Navigator.of(context).pushReplacementNamed('/regional-manager-dashboard');
       } else if (userRole == UserRole.seniorAgent) {
+        debugPrint('🚀 Redirecting Senior Agent to /senior-agent-dashboard');
         Navigator.of(context).pushReplacementNamed('/senior-agent-dashboard');
       } else if (userRole == UserRole.juniorAgent) {
+        debugPrint('🚀 Redirecting Junior Agent to /agent-dashboard');
         Navigator.of(context).pushReplacementNamed('/agent-dashboard');
       } else if (userRole == UserRole.policyholder) {
+        debugPrint('🚀 Redirecting Policyholder to /customer-dashboard');
         Navigator.of(context).pushReplacementNamed('/customer-dashboard');
       } else if (userRole == UserRole.supportStaff) {
+        debugPrint('🚀 Redirecting Support Staff to /callback-management');
         Navigator.of(context).pushReplacementNamed('/callback-management');
       } else {
         // Default fallback
+        debugPrint('⚠️ Unknown role, defaulting to /customer-dashboard');
         Navigator.of(context).pushReplacementNamed('/customer-dashboard');
       }
     } else {

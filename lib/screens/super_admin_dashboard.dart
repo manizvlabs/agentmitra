@@ -1,12 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart' as provider;
 import '../core/services/rbac_service.dart';
+import '../core/services/navigation_service.dart';
+import '../core/services/dashboard_service.dart';
+import '../core/models/dashboard_models.dart';
+import '../core/widgets/context_aware_back_button.dart';
 import '../features/auth/presentation/viewmodels/auth_viewmodel.dart';
 
-class SuperAdminDashboard extends StatelessWidget {
+class SuperAdminDashboard extends StatefulWidget {
   const SuperAdminDashboard({super.key});
 
-  bool _hasPermission(BuildContext context, String permission) {
+  @override
+  State<SuperAdminDashboard> createState() => _SuperAdminDashboardState();
+}
+
+class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
+  final DashboardService _dashboardService = DashboardService();
+  SystemOverviewData? _systemData;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSystemData();
+  }
+
+  Future<void> _loadSystemData() async {
+    try {
+      final data = await _dashboardService.getSystemOverview();
+      if (mounted) {
+        setState(() {
+          _systemData = data;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading system data: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  bool _hasPermission(String permission) {
     final authViewModel = provider.Provider.of<AuthViewModel>(context, listen: false);
     final user = authViewModel.currentUser;
     return user?.permissions.contains(permission) ?? false;
@@ -17,11 +55,17 @@ class SuperAdminDashboard extends StatelessWidget {
     final authViewModel = provider.Provider.of<AuthViewModel>(context);
     final currentUser = authViewModel.currentUser;
 
+    // Initialize breadcrumb for this screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NavigationService().addNavigationItem('Super Admin Dashboard', '/super-admin-dashboard');
+    });
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Super Admin Dashboard'),
+      appBar: ContextAwareAppBar(
+        title: 'Super Admin Dashboard',
         backgroundColor: Colors.red.shade700,
         foregroundColor: Colors.white,
+        showBreadcrumbs: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -35,47 +79,194 @@ class SuperAdminDashboard extends StatelessWidget {
         ],
       ),
       drawer: _buildNavigationDrawer(context),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Welcome Section
-            Card(
-              elevation: 4,
-              color: Colors.red.shade50,
-              child: Padding(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _loadSystemData,
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Welcome Section
+                    Card(
+                      elevation: 4,
+                      color: Colors.red.shade50,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.admin_panel_settings,
+                                    size: 32, color: Colors.red.shade700),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Welcome, ${currentUser?.name ?? 'Super Admin'}',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.red.shade700,
+                                            ),
+                                      ),
+                                      Text(
+                                        'Full System Administrator',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(color: Colors.red.shade600),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // System Overview
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'System Overview',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.refresh),
+                          onPressed: _loadSystemData,
+                          tooltip: 'Refresh data',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
                     Row(
                       children: [
-                        Icon(Icons.admin_panel_settings,
-                            size: 32, color: Colors.red.shade700),
-                        const SizedBox(width: 12),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Welcome, ${currentUser?.name ?? 'Super Admin'}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineSmall
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.red.shade700,
-                                    ),
-                              ),
-                              Text(
-                                'Full System Administrator',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(color: Colors.red.shade600),
-                              ),
-                            ],
+                          child: _buildStatCard(
+                            'Total Users',
+                            _systemData?.totalUsers.toString() ?? '0',
+                            Icons.people_outline,
+                            Colors.blue,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Active Users',
+                            _systemData?.activeUsers.toString() ?? '0',
+                            Icons.online_prediction,
+                            Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            'Total Agents',
+                            _systemData?.totalAgents.toString() ?? '0',
+                            Icons.business,
+                            Colors.purple,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Active Agents',
+                            _systemData?.activeAgents.toString() ?? '0',
+                            Icons.business_center,
+                            Colors.indigo,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            'Total Policies',
+                            _systemData?.totalPolicies.toString() ?? '0',
+                            Icons.policy,
+                            Colors.teal,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Active Policies',
+                            _systemData?.activePolicies.toString() ?? '0',
+                            Icons.verified,
+                            Colors.cyan,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            'Monthly Revenue',
+                            '₹${(_systemData?.monthlyRevenue ?? 0).toStringAsFixed(0)}',
+                            Icons.currency_rupee,
+                            Colors.green,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Active Sessions',
+                            _systemData?.activeSessions.toString() ?? '0',
+                            Icons.computer,
+                            Colors.orange,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            'System Health',
+                            '${(_systemData?.systemHealth ?? 0).toStringAsFixed(1)}%',
+                            Icons.health_and_safety,
+                            (_systemData?.systemHealth ?? 0) >= 95 ? Colors.green : Colors.red,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Pending Approvals',
+                            _systemData?.pendingApprovals.toString() ?? '0',
+                            Icons.pending_actions,
+                            Colors.amber,
                           ),
                         ),
                       ],
@@ -84,70 +275,6 @@ class SuperAdminDashboard extends StatelessWidget {
                 ),
               ),
             ),
-
-            const SizedBox(height: 24),
-
-            // System Overview
-            Text(
-              'System Overview',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 16),
-
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    'Total Users',
-                    '1,247',
-                    Icons.people_outline,
-                    Colors.blue,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    'Active Sessions',
-                    '89',
-                    Icons.online_prediction,
-                    Colors.green,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    'API Calls (24h)',
-                    '45.2K',
-                    Icons.api,
-                    Colors.orange,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    'System Health',
-                    '98.5%',
-                    Icons.health_and_safety,
-                    Colors.green,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -195,23 +322,23 @@ class SuperAdminDashboard extends StatelessWidget {
             selected: true,
             onTap: () => Navigator.of(context).pop(),
           ),
-          if (_hasPermission(context, 'users.read'))
-            ListTile(
-              leading: const Icon(Icons.people, color: Colors.blue),
-              title: const Text('User Management'),
-              onTap: () => Navigator.of(context).pushNamed('/user-management'),
-            ),
-          if (_hasPermission(context, 'analytics.read'))
+          if (_hasPermission('users.read'))
+          ListTile(
+            leading: const Icon(Icons.people, color: Colors.blue),
+            title: const Text('User Management'),
+            onTap: () => context.navigateWithBreadcrumb('/user-management', 'User Management'),
+          ),
+          if (_hasPermission('analytics.read'))
             ListTile(
               leading: const Icon(Icons.analytics, color: Colors.green),
               title: const Text('System Analytics'),
-              onTap: () => Navigator.of(context).pushNamed('/reporting-dashboard'),
+              onTap: () => context.navigateWithBreadcrumb('/reporting-dashboard', 'System Analytics'),
             ),
           // Feature flags only for Super Admin role
           ListTile(
             leading: const Icon(Icons.flag, color: Colors.orange),
             title: const Text('Feature Flags'),
-            onTap: () => Navigator.of(context).pushNamed('/pioneer-demo'),
+            onTap: () => context.navigateWithBreadcrumb('/pioneer-demo', 'Feature Flags'),
           ),
 
           const Divider(),
@@ -445,8 +572,7 @@ class SuperAdminDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(BuildContext context, String title, String value,
-      IconData icon, Color color) {
+  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Card(
       elevation: 2,
       child: Padding(

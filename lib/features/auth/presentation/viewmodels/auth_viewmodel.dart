@@ -1,5 +1,6 @@
 /// Authentication ViewModel
 import '../../../../core/architecture/base/base_viewmodel.dart';
+import 'package:flutter/foundation.dart';
 import '../../../../core/services/rbac_service.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/logger_service.dart';
@@ -111,6 +112,15 @@ class AuthViewModel extends BaseViewModel {
           roles: roles,
           permissions: permissions,
         );
+
+        // Debug logging
+        debugPrint('🔐 AuthViewModel Login Debug:');
+        debugPrint('  - User ID: ${_currentUser?.userId}');
+        debugPrint('  - Legacy Role: ${_currentUser?.role}');
+        debugPrint('  - Roles List: ${_currentUser?.roles}');
+        debugPrint('  - Permissions: ${_currentUser?.permissions}');
+        debugPrint('  - UserRole Enum: ${_currentUser?.userRole}');
+        debugPrint('  - UserRole Value: ${_currentUser?.userRole?.value}');
       }
 
       return authResponse;

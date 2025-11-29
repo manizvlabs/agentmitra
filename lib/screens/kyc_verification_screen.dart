@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import '../core/widgets/offline_indicator.dart';
+import '../core/widgets/context_aware_back_button.dart';
+import '../core/services/navigation_service.dart';
+
+// Add this import for WorkflowStepIndicator
+import '../core/widgets/context_aware_back_button.dart';
 
 /// KYC Verification Status Screen for Customer Portal
 /// Shows verification progress, checklist, and next steps after document upload
@@ -130,8 +135,22 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> with Tick
     });
   }
 
+  int _getCurrentStep() {
+    // Calculate current step based on verification progress
+    if (_overallProgress >= 1.0) return 4; // Completed
+    if (_overallProgress >= 0.8) return 3; // Manual Review
+    if (_overallProgress >= 0.6) return 2; // Database Check
+    if (_overallProgress >= 0.3) return 1; // Identity Verification
+    return 0; // Document Validation
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Initialize breadcrumb for this screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NavigationService().addNavigationItem('KYC Verification', '/kyc-verification');
+    });
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: _buildAppBar(),
@@ -147,6 +166,21 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> with Tick
                 children: [
                   // Main Header
                   _buildMainHeader(),
+
+                  const SizedBox(height: 16),
+
+                  // Workflow Step Indicator
+                  WorkflowStepIndicator(
+                    currentStep: _getCurrentStep(),
+                    totalSteps: 5,
+                    stepLabels: const [
+                      'Document Upload',
+                      'Validation',
+                      'Verification',
+                      'Review',
+                      'Approval'
+                    ],
+                  ),
 
                   const SizedBox(height: 24),
 
@@ -199,21 +233,11 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> with Tick
   }
 
   PreferredSizeWidget _buildAppBar() {
-    return AppBar(
+    return ContextAwareAppBar(
+      title: 'KYC Verification',
       backgroundColor: Colors.red,
-      elevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-      title: const Text(
-        'KYC Verification',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+      foregroundColor: Colors.white,
+      showBreadcrumbs: true,
       actions: [
         IconButton(
           icon: const Icon(Icons.help_outline, color: Colors.white),

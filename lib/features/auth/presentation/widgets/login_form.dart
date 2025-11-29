@@ -95,26 +95,8 @@ class _LoginFormState extends State<LoginForm> with TickerProviderStateMixin {
       if (widget.onLoginSuccess != null) {
         widget.onLoginSuccess!.call();
       } else {
-        // Redirect based on user role
-        final user = authResponse.user;
-        if (user != null) {
-          switch (user.role) {
-            case 'super_admin':
-              Navigator.pushNamed(context, '/user-management');
-              break;
-            case 'policyholder':
-              Navigator.pushNamed(context, '/customer-dashboard');
-              break;
-            case 'junior_agent':
-            case 'senior_agent':
-              Navigator.pushNamed(context, '/agent-dashboard');
-              break;
-            default:
-              Navigator.pushNamed(context, '/customer-dashboard');
-          }
-        } else {
-          Navigator.pushNamed(context, '/customer-dashboard');
-        }
+        // Redirect to splash screen to handle role-based navigation
+        Navigator.of(context).pushReplacementNamed('/splash');
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
