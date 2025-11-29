@@ -54,7 +54,7 @@ class CustomerDashboardViewModel extends BaseViewModel {
       subtitle: 'Make payment',
       icon: Icons.payment,
       color: Colors.blue,
-      route: '/premium-payment',
+      route: '/policies', // Navigate to policies page instead
     ),
     const CustomerQuickAction(
       id: 'contact_agent',
