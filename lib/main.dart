@@ -10,6 +10,12 @@ import 'core/providers/global_providers.dart';
 import 'core/config/app_config.dart';
 import 'shared/theme/app_theme.dart';
 import 'features/presentations/presentation/viewmodels/presentation_viewmodel.dart';
+import 'features/auth/presentation/viewmodels/auth_viewmodel.dart';
+import 'features/dashboard/presentation/viewmodels/dashboard_viewmodel.dart';
+import 'features/notifications/presentation/viewmodels/notification_viewmodel.dart';
+import 'features/onboarding/presentation/viewmodels/onboarding_viewmodel.dart';
+import 'features/agent/presentation/viewmodels/agent_profile_viewmodel.dart';
+import 'features/payments/presentation/viewmodels/claims_viewmodel.dart';
 // Import all screens for web-compatible routing (no GoRouter)
 import 'screens/splash_screen.dart';
 import 'screens/welcome_screen.dart';
@@ -210,31 +216,31 @@ class AgentMitraApp extends ConsumerWidget {
     return provider.MultiProvider(
       providers: [
         // Real ViewModels connected to backend APIs via Service Locator
-        provider.ChangeNotifierProvider(
+        provider.ChangeNotifierProvider<AuthViewModel>(
           create: (_) => ServiceLocator.authViewModel,
         ),
         // Dashboard ViewModel - connects to real analytics APIs
-        provider.ChangeNotifierProvider(
+        provider.ChangeNotifierProvider<DashboardViewModel>(
           create: (_) => ServiceLocator.dashboardViewModel,
         ),
         // Notification ViewModel - mock data for testing
-        provider.ChangeNotifierProvider(
+        provider.ChangeNotifierProvider<NotificationViewModel>(
           create: (_) => ServiceLocator.notificationViewModel,
         ),
         // Onboarding ViewModel - mock data for testing
-        provider.ChangeNotifierProvider(
+        provider.ChangeNotifierProvider<OnboardingViewModel>(
           create: (_) => ServiceLocator.onboardingViewModel,
         ),
         // Agent Profile ViewModel - mock data for testing
-        provider.ChangeNotifierProvider(
+        provider.ChangeNotifierProvider<AgentProfileViewModel>(
           create: (_) => ServiceLocator.agentProfileViewModel,
         ),
         // Claims ViewModel - mock data for testing
-        provider.ChangeNotifierProvider(
+        provider.ChangeNotifierProvider<ClaimsViewModel>(
           create: (_) => ServiceLocator.claimsViewModel,
         ),
         // Policies ViewModel - mock data for testing
-        provider.ChangeNotifierProvider(
+        provider.ChangeNotifierProvider<PoliciesViewModel>(
           create: (_) => ServiceLocator.policiesViewModel,
         ),
         // Chatbot ViewModel
