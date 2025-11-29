@@ -80,7 +80,7 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: _buildAppBar(filteredPolicies.length, policies.length),
+      appBar: _buildAppBar(filteredPolicies.length, policies.length, policiesViewModel),
       body: SafeArea(
         child: SlideTransition(
           position: _slideAnimation,
@@ -130,7 +130,28 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
     );
   }
 
-  PreferredSizeWidget _buildAppBar(int filteredCount, int totalCount) {
+  PreferredSizeWidget _buildAppBar(int filteredCount, int totalCount, PoliciesViewModel viewModel) {
+    // Build filter chips for active filters
+    final activeFilters = <Widget>[];
+    if (viewModel.selectedStatus != null) {
+      activeFilters.add(_buildFilterChip(
+        'Status: ${viewModel.selectedStatus!.replaceAll('_', ' ').toUpperCase()}',
+        () => viewModel.setStatusFilter(null),
+      ));
+    }
+    if (viewModel.selectedProviderId != null) {
+      activeFilters.add(_buildFilterChip(
+        'Provider: ${viewModel.selectedProviderId}',
+        () => viewModel.setProviderFilter(null),
+      ));
+    }
+    if (viewModel.selectedPolicyType != null) {
+      activeFilters.add(_buildFilterChip(
+        'Type: ${viewModel.selectedPolicyType!.replaceAll('_', ' ').toUpperCase()}',
+        () => viewModel.setPolicyTypeFilter(null),
+      ));
+    }
+
     return AppBar(
       backgroundColor: Colors.red,
       elevation: 0,
@@ -168,6 +189,54 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
             },
           ),
       ],
+      bottom: activeFilters.isNotEmpty
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(50),
+              child: Container(
+                color: Colors.red.shade700,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: activeFilters,
+                  ),
+                ),
+              ),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildFilterChip(String label, VoidCallback onRemove) {
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: onRemove,
+            child: const Icon(
+              Icons.close,
+              size: 16,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -928,38 +997,107 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
 
   void _showFilterDialog(BuildContext context, PoliciesViewModel viewModel) {
     final statusOptions = ['active', 'pending_approval', 'lapsed', 'matured', 'cancelled'];
+    final insuranceProviderOptions = ['LIC', 'ICICI Prudential', 'HDFC Life', 'Max Life', 'SBI Life', 'PNB MetLife'];
+    final planTypeOptions = ['term_life', 'whole_life', 'endowment', 'ulip', 'money_back', 'pension'];
+
     String? selectedStatus = viewModel.selectedStatus;
+    String? selectedProvider = viewModel.selectedProviderId;
+    String? selectedPolicyType = viewModel.selectedPolicyType;
 
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           title: const Text('Filter Policies'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Status Filter'),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                value: selectedStatus,
-                hint: const Text('All Statuses'),
-                items: [
-                  const DropdownMenuItem<String>(
-                    value: null,
-                    child: Text('All Statuses'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Status Filter
+                const Text('Status', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: selectedStatus,
+                  hint: const Text('All Statuses'),
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
-                  ...statusOptions.map((status) => DropdownMenuItem<String>(
-                    value: status,
-                    child: Text(status.replaceAll('_', ' ').toUpperCase()),
-                  )),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    selectedStatus = value;
-                  });
-                },
-              ),
-            ],
+                  items: [
+                    const DropdownMenuItem<String>(
+                      value: null,
+                      child: Text('All Statuses'),
+                    ),
+                    ...statusOptions.map((status) => DropdownMenuItem<String>(
+                      value: status,
+                      child: Text(status.replaceAll('_', ' ').toUpperCase()),
+                    )),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      selectedStatus = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Insurance Provider Filter
+                const Text('Insurance Provider', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: selectedProvider,
+                  hint: const Text('All Providers'),
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  items: [
+                    const DropdownMenuItem<String>(
+                      value: null,
+                      child: Text('All Providers'),
+                    ),
+                    ...insuranceProviderOptions.map((provider) => DropdownMenuItem<String>(
+                      value: provider,
+                      child: Text(provider),
+                    )),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      selectedProvider = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Plan Type Filter
+                const Text('Plan Type', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: selectedPolicyType,
+                  hint: const Text('All Plan Types'),
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  items: [
+                    const DropdownMenuItem<String>(
+                      value: null,
+                      child: Text('All Plan Types'),
+                    ),
+                    ...planTypeOptions.map((type) => DropdownMenuItem<String>(
+                      value: type,
+                      child: Text(type.replaceAll('_', ' ').toUpperCase()),
+                    )),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      selectedPolicyType = value;
+                    });
+                  },
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -976,6 +1114,8 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
             ElevatedButton(
               onPressed: () {
                 viewModel.setStatusFilter(selectedStatus);
+                viewModel.setProviderFilter(selectedProvider);
+                viewModel.setPolicyTypeFilter(selectedPolicyType);
                 Navigator.of(context).pop();
               },
               child: const Text('Apply'),

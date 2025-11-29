@@ -24,6 +24,8 @@ class PoliciesViewModel extends ChangeNotifier {
   int _currentPage = 1;
   bool _hasMorePages = true;
   String? _selectedStatus;
+  String? _selectedProviderId;
+  String? _selectedPolicyType;
   String? _searchQuery;
 
   // Getters
@@ -32,6 +34,8 @@ class PoliciesViewModel extends ChangeNotifier {
   String? get error => _error;
   bool get hasMorePages => _hasMorePages;
   String? get selectedStatus => _selectedStatus;
+  String? get selectedProviderId => _selectedProviderId;
+  String? get selectedPolicyType => _selectedPolicyType;
   String? get searchQuery => _searchQuery;
 
   // Computed properties
@@ -48,6 +52,8 @@ class PoliciesViewModel extends ChangeNotifier {
   Future<void> loadPolicies({
     bool refresh = false,
     String? status,
+    String? providerId,
+    String? policyType,
     String? search,
   }) async {
     if (_isLoading && !refresh) return;
@@ -61,6 +67,8 @@ class PoliciesViewModel extends ChangeNotifier {
     }
 
     _selectedStatus = status;
+    _selectedProviderId = providerId;
+    _selectedPolicyType = policyType;
     _searchQuery = search;
 
     notifyListeners();
@@ -70,6 +78,8 @@ class PoliciesViewModel extends ChangeNotifier {
         page: _currentPage,
         limit: 20,
         status: status,
+        providerId: providerId,
+        policyType: policyType,
         search: search,
         forceRefresh: refresh,
       );
@@ -104,7 +114,13 @@ class PoliciesViewModel extends ChangeNotifier {
   }
 
   Future<void> refreshPolicies() async {
-    await loadPolicies(refresh: true, status: _selectedStatus, search: _searchQuery);
+    await loadPolicies(
+      refresh: true,
+      status: _selectedStatus,
+      providerId: _selectedProviderId,
+      policyType: _selectedPolicyType,
+      search: _searchQuery,
+    );
   }
 
   void clearError() {
@@ -114,16 +130,52 @@ class PoliciesViewModel extends ChangeNotifier {
 
   void setStatusFilter(String? status) {
     _selectedStatus = status;
-    loadPolicies(refresh: true, status: status, search: _searchQuery);
+    loadPolicies(
+      refresh: true,
+      status: status,
+      providerId: _selectedProviderId,
+      policyType: _selectedPolicyType,
+      search: _searchQuery,
+    );
+  }
+
+  void setProviderFilter(String? providerId) {
+    _selectedProviderId = providerId;
+    loadPolicies(
+      refresh: true,
+      status: _selectedStatus,
+      providerId: providerId,
+      policyType: _selectedPolicyType,
+      search: _searchQuery,
+    );
+  }
+
+  void setPolicyTypeFilter(String? policyType) {
+    _selectedPolicyType = policyType;
+    loadPolicies(
+      refresh: true,
+      status: _selectedStatus,
+      providerId: _selectedProviderId,
+      policyType: policyType,
+      search: _searchQuery,
+    );
   }
 
   void setSearchQuery(String? query) {
     _searchQuery = query;
-    loadPolicies(refresh: true, status: _selectedStatus, search: query);
+    loadPolicies(
+      refresh: true,
+      status: _selectedStatus,
+      providerId: _selectedProviderId,
+      policyType: _selectedPolicyType,
+      search: query,
+    );
   }
 
   void clearFilters() {
     _selectedStatus = null;
+    _selectedProviderId = null;
+    _selectedPolicyType = null;
     _searchQuery = null;
     loadPolicies(refresh: true);
   }
