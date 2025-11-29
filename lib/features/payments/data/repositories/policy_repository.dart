@@ -1,3 +1,5 @@
+import 'dart:developer';
+import 'package:flutter/foundation.dart';
 import 'package:dartz/dartz.dart';
 import '../datasources/policy_remote_datasource.dart';
 import '../datasources/policy_local_datasource.dart';
@@ -20,14 +22,19 @@ class PolicyRepository {
     String? sortOrder,
     bool forceRefresh = false,
   }) async {
+    debugPrint('PolicyRepository - getPolicies called: page=$page, limit=$limit, status=$status, providerId=$providerId, policyType=$policyType, search=$search, forceRefresh=$forceRefresh');
+
     try {
       // Try to get cached data first (unless force refresh is requested)
       if (!forceRefresh) {
         final cachedPolicies = await localDataSource.getCachedPolicies();
         if (cachedPolicies.isNotEmpty) {
+          debugPrint('PolicyRepository - Returning ${cachedPolicies.length} cached policies');
           return Right(cachedPolicies);
         }
       }
+
+      debugPrint('PolicyRepository - Fetching from remote API');
 
       // Fetch from remote
       final policies = await remoteDataSource.getPolicies(
@@ -41,19 +48,26 @@ class PolicyRepository {
         sortOrder: sortOrder,
       );
 
+      debugPrint('PolicyRepository - Remote API returned ${policies.length} policies');
+
       // Cache the result
       await localDataSource.cachePolicies(policies);
 
       return Right(policies);
     } catch (e) {
+      debugPrint('PolicyRepository - Remote API failed: $e');
+
       // If remote fails and we have cache, return cached data
       if (!forceRefresh) {
         try {
           final cachedPolicies = await localDataSource.getCachedPolicies();
           if (cachedPolicies.isNotEmpty) {
+            debugPrint('PolicyRepository - Returning ${cachedPolicies.length} cached policies as fallback');
             return Right(cachedPolicies);
           }
-        } catch (_) {}
+        } catch (cacheError) {
+          debugPrint('PolicyRepository - Cache fallback also failed: $cacheError');
+        }
       }
 
       return Left(Exception('Failed to fetch policies: $e'));

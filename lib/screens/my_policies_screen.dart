@@ -74,6 +74,11 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
     final policiesViewModel = context.watch<PoliciesViewModel>();
     final policies = policiesViewModel.policies;
     final isLoading = policiesViewModel.isLoading;
+    final error = policiesViewModel.error;
+
+    // Debug logs
+    debugPrint('MyPoliciesScreen - Build: policies.length=${policies.length}, isLoading=$isLoading, error=$error');
+    debugPrint('MyPoliciesScreen - ViewModel state: selectedStatus=${policiesViewModel.selectedStatus}, selectedProvider=${policiesViewModel.selectedProviderId}, selectedPolicyType=${policiesViewModel.selectedPolicyType}');
 
     // Use policies from viewmodel (already filtered by search and status)
     final filteredPolicies = policies;

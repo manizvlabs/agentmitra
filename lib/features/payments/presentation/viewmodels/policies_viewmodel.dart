@@ -56,7 +56,12 @@ class PoliciesViewModel extends ChangeNotifier {
     String? policyType,
     String? search,
   }) async {
-    if (_isLoading && !refresh) return;
+    debugPrint('PoliciesViewModel - loadPolicies called: refresh=$refresh, status=$status, providerId=$providerId, policyType=$policyType, search=$search');
+
+    if (_isLoading && !refresh) {
+      debugPrint('PoliciesViewModel - Already loading, skipping');
+      return;
+    }
 
     _isLoading = true;
     _error = null;
@@ -64,12 +69,15 @@ class PoliciesViewModel extends ChangeNotifier {
     if (refresh) {
       _currentPage = 1;
       _policies.clear();
+      debugPrint('PoliciesViewModel - Refresh mode: cleared policies');
     }
 
     _selectedStatus = status;
     _selectedProviderId = providerId;
     _selectedPolicyType = policyType;
     _searchQuery = search;
+
+    debugPrint('PoliciesViewModel - Updated filters: status=$_selectedStatus, providerId=$_selectedProviderId, policyType=$_selectedPolicyType, search=$_searchQuery');
 
     notifyListeners();
 
@@ -87,22 +95,29 @@ class PoliciesViewModel extends ChangeNotifier {
       result.fold(
         (error) {
           _error = error.toString();
+          debugPrint('PoliciesViewModel - API Error: $error');
         },
         (newPolicies) {
+          debugPrint('PoliciesViewModel - API Success: received ${newPolicies.length} policies');
           if (refresh || _currentPage == 1) {
             _policies = newPolicies;
+            debugPrint('PoliciesViewModel - Set policies (refresh/page 1): ${_policies.length} total');
           } else {
             _policies.addAll(newPolicies);
+            debugPrint('PoliciesViewModel - Added policies: ${_policies.length} total');
           }
 
           _hasMorePages = newPolicies.length == 20;
           if (_hasMorePages) _currentPage++;
+          debugPrint('PoliciesViewModel - hasMorePages: $_hasMorePages, currentPage: $_currentPage');
         },
       );
     } catch (e) {
       _error = 'Failed to load policies: $e';
+      debugPrint('PoliciesViewModel - Exception: $e');
     } finally {
       _isLoading = false;
+      debugPrint('PoliciesViewModel - Load completed: isLoading=false, policies=${_policies.length}, error=$_error');
       notifyListeners();
     }
   }
