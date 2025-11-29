@@ -96,7 +96,31 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
       final results = <String, bool>{};
 
-      // Check each essential feature
+      // Check if user is authenticated
+      final authViewModel = provider.Provider.of<AuthViewModel>(context, listen: false);
+      final isAuthenticated = authViewModel.isAuthenticated;
+
+      // If not authenticated, skip feature flag validation and assume essential features are enabled
+      if (!isAuthenticated) {
+        debugPrint('User not authenticated, skipping feature flag validation');
+        setState(() {
+          _validationStatus = 'Initializing app...';
+          _featureFlagsValidated = true;
+          // Assume essential features are enabled when not authenticated
+          _essentialFeatures = {
+            for (final feature in essentialFeatures) feature: true
+          };
+        });
+
+        Timer(const Duration(milliseconds: 1000), () async {
+          if (mounted) {
+            await _navigateBasedOnState();
+          }
+        });
+        return;
+      }
+
+      // Check each essential feature only if authenticated
       for (final feature in essentialFeatures) {
         try {
           final isEnabled = await _featureFlagService.isFeatureEnabled(feature);
@@ -107,7 +131,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
           });
         } catch (e) {
           debugPrint('Error checking feature flag $feature: $e');
-          results[feature] = false; // Default to disabled on error
+          results[feature] = true; // Default to enabled on error (for essential features)
         }
       }
 
@@ -129,7 +153,14 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       // Continue with navigation even if feature flag validation fails
       setState(() {
         _featureFlagsValidated = true;
-        _validationStatus = 'Proceeding with limited features...';
+        _validationStatus = 'App ready!';
+        // Assume essential features are enabled on error
+        _essentialFeatures = {
+          'dashboard_enabled': true,
+          'login_enabled': true,
+          'registration_enabled': true,
+          'otp_verification_enabled': true,
+        };
       });
 
       Timer(const Duration(milliseconds: 1000), () async {

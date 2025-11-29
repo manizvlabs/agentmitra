@@ -39,6 +39,12 @@ create_flag "presentation_branding_enabled" "Enable agent branding in presentati
 # Create dashboard flags
 create_flag "agent_dashboard_enabled" "Enable agent dashboard" true
 create_flag "customer_dashboard_enabled" "Enable customer dashboard" false
+create_flag "dashboard_enabled" "Enable main dashboard access" true
+
+# Create authentication flags
+create_flag "login_enabled" "Enable login functionality" true
+create_flag "registration_enabled" "Enable user registration" true
+create_flag "otp_verification_enabled" "Enable OTP verification" true
 
 # Create communication flags
 create_flag "whatsapp_integration_enabled" "Enable WhatsApp integration" true

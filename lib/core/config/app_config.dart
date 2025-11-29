@@ -135,8 +135,12 @@ class AppConfig {
     _debug = dotenv.get('DEBUG', fallback: 'true') == 'true';
 
     // API Configuration
-    _apiBaseUrl = dotenv.get('API_BASE_URL', fallback: 'http://localhost:8012');
-    _wsBaseUrl = dotenv.get('WS_BASE_URL', fallback: 'ws://localhost:8012');
+    // For web builds served through nginx proxy, use empty base URL to use same origin
+    // This allows nginx to proxy /api/ requests to the backend
+    final defaultApiUrl = kIsWeb ? '' : 'http://localhost:8012';
+    final defaultWsUrl = kIsWeb ? '' : 'ws://localhost:8012';
+    _apiBaseUrl = dotenv.get('API_BASE_URL', fallback: defaultApiUrl);
+    _wsBaseUrl = dotenv.get('WS_BASE_URL', fallback: defaultWsUrl);
     _apiVersion = dotenv.get('API_VERSION', fallback: '/api/v1');
     _apiTimeoutSeconds = int.parse(dotenv.get('API_TIMEOUT_SECONDS', fallback: '30'));
     _apiRetryAttempts = int.parse(dotenv.get('API_RETRY_ATTEMPTS', fallback: '3'));

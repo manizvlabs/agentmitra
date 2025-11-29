@@ -252,7 +252,12 @@ class TenantMiddleware(BaseHTTPMiddleware):
         ]
 
         path = request.url.path
-        return any(path.startswith(skip_path) for skip_path in skip_paths)
+        should_skip = any(path.startswith(skip_path) for skip_path in skip_paths)
+
+        if path.startswith("/api/v1/"):
+            logger.info(f"Path {path} starts with /api/v1/, should skip: {should_skip}")
+
+        return should_skip
 
     def _get_client_ip(self, request: Request) -> str:
         """Get client IP address from request"""
