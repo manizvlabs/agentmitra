@@ -21,7 +21,8 @@ class FeatureFlagService {
   Timer? _reconnectTimer;
 
   FeatureFlagService() {
-    _initializeWebSocket();
+    // Defer WebSocket initialization until user is authenticated
+    // WebSocket will be initialized when needed via initializeWebSocketForUser()
   }
 
   /// Stream of real-time feature flag updates
@@ -32,6 +33,13 @@ class FeatureFlagService {
 
   /// Initialize the service (async for future use)
   Future<void> initialize() async {
+    // WebSocket initialization is deferred until user authentication
+  }
+
+  /// Initialize WebSocket connection for authenticated user
+  Future<void> initializeWebSocketForUser() async {
+    if (_isWebSocketConnected) return; // Already connected
+
     await _initializeWebSocket();
   }
 
@@ -41,6 +49,7 @@ class FeatureFlagService {
       final currentUser = AuthService().currentUser;
       if (currentUser?.id == null) {
         debugPrint('Cannot initialize WebSocket: No authenticated user');
+        // Don't initialize WebSocket until user is authenticated
         return;
       }
 
@@ -146,6 +155,11 @@ class FeatureFlagService {
   /// Check if a feature flag is enabled
   Future<bool> isFeatureEnabled(String flagName, {String? userId, String? tenantId}) async {
     final effectiveUserId = userId ?? AuthService().currentUser?.id;
+
+    // Initialize WebSocket for authenticated users (only once)
+    if (effectiveUserId != null && !_isWebSocketConnected) {
+      initializeWebSocketForUser();
+    }
 
     // Check cache first
     final cacheKey = _getCacheKey(flagName, effectiveUserId, tenantId);
