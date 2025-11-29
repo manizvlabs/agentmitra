@@ -142,14 +142,27 @@ class FeatureFlagService {
       }
     }
 
-    // Get from Pioneer (will throw exception if not available)
-    final result = PioneerService.isFeatureEnabledSync(flagName);
+    try {
+      // Get from Pioneer (will throw exception if not available)
+      final result = PioneerService.isFeatureEnabledSync(flagName);
 
-    // Cache the result
-    _cache[cacheKey] = result;
-    _cacheTimestamps[cacheKey] = DateTime.now();
+      // Cache the result
+      _cache[cacheKey] = result;
+      _cacheTimestamps[cacheKey] = DateTime.now();
 
-    return result;
+      return result;
+    } catch (e) {
+      debugPrint('Error checking feature flag sync $flagName: $e');
+      // Return default value for known flags
+      final defaultValue = _getDefaultValueForFlag(flagName);
+      debugPrint('Using default value $defaultValue for feature flag $flagName (sync)');
+
+      // Cache the default result
+      _cache[cacheKey] = defaultValue;
+      _cacheTimestamps[cacheKey] = DateTime.now();
+
+      return defaultValue;
+    }
   }
 
   /// Check if a feature flag is enabled
@@ -171,9 +184,15 @@ class FeatureFlagService {
       }
     }
 
-    // Get from Pioneer (will throw exception if not available)
-    final result = await PioneerService.isFeatureEnabled(flagName);
+    try {
+      // Try Pioneer first (will throw exception if not available)
+      final result = await PioneerService.isFeatureEnabled(flagName);
+      return result;
+    } catch (e) {
+      debugPrint('Pioneer service not available for $flagName, trying backend APIs: $e');
+    }
 
+    try {
       // Try the enhanced backend feature flag API with user-specific flags
       if (effectiveUserId != null) {
         try {
@@ -195,19 +214,97 @@ class FeatureFlagService {
           return isEnabled;
         } catch (e) {
           debugPrint('Error with user-specific feature flags API: $e');
+          // Check if it's a JSON parsing error (HTML response)
+          if (e.toString().contains('FormatException') || e.toString().contains('Unexpected token')) {
+            debugPrint('Received HTML error page instead of JSON for user-specific feature flags API');
+          }
           // Fall through to legacy API
         }
       }
 
       // Fall back to legacy backend feature flag API
-      final response = await ApiService.get(
-        '/rbac/feature-flags',
-        queryParameters: {
-          if (tenantId != null) 'tenant_id': tenantId,
-        },
-      );
+      try {
+        final response = await ApiService.get(
+          '/rbac/feature-flags',
+          queryParameters: {
+            if (tenantId != null) 'tenant_id': tenantId,
+          },
+        );
 
-    return result;
+        // Handle different response formats
+        if (response is List) {
+          // Legacy API returns list of flags
+          final flags = response as List<dynamic>;
+          final flag = flags.firstWhere(
+            (f) => f is Map && f['flag_name'] == flagName,
+            orElse: () => null,
+          );
+          final isEnabled = flag != null ? (flag['is_enabled'] as bool? ?? false) : false;
+
+          // Cache the result
+          _cache[cacheKey] = isEnabled;
+          _cacheTimestamps[cacheKey] = DateTime.now();
+
+          return isEnabled;
+        } else if (response is Map) {
+          // Assume it's a map format
+          final flags = response as Map<String, dynamic>;
+          final isEnabled = flags[flagName] as bool? ?? false;
+
+          // Cache the result
+          _cache[cacheKey] = isEnabled;
+          _cacheTimestamps[cacheKey] = DateTime.now();
+
+          return isEnabled;
+        } else {
+          // Unknown format, return default
+          final defaultValue = _getDefaultValueForFlag(flagName);
+          _cache[cacheKey] = defaultValue;
+          _cacheTimestamps[cacheKey] = DateTime.now();
+          return defaultValue;
+        }
+      } catch (e) {
+        debugPrint('Error with legacy feature flags API: $e');
+        // Check if it's a JSON parsing error (HTML response)
+        if (e.toString().contains('FormatException') || e.toString().contains('Unexpected token')) {
+          debugPrint('Received HTML error page instead of JSON for legacy feature flags API');
+        }
+        // Fall through to default
+      }
+    } catch (e) {
+      debugPrint('Error checking feature flag $flagName: $e');
+      // Fall through to default
+    }
+
+    // If all APIs fail, return default values for known flags
+    final defaultValue = _getDefaultValueForFlag(flagName);
+    debugPrint('Using default value $defaultValue for feature flag $flagName');
+
+    // Cache the default result to avoid repeated API calls
+    _cache[cacheKey] = defaultValue;
+    _cacheTimestamps[cacheKey] = DateTime.now();
+
+    return defaultValue;
+  }
+
+  /// Get default values for known feature flags
+  bool _getDefaultValueForFlag(String flagName) {
+    // Define default values for known feature flags
+    const Map<String, bool> defaults = {
+      'dashboard_enabled': true,
+      'login_enabled': true,
+      'registration_enabled': true,
+      'otp_verification_enabled': true,
+      'feature_flag_control_enabled': false,
+      'analytics_enabled': true,
+      'notifications_enabled': true,
+      'chat_enabled': true,
+      'policies_enabled': true,
+      'claims_enabled': true,
+      'reports_enabled': true,
+    };
+
+    return defaults[flagName] ?? false; // Default to false for unknown flags
   }
 
   /// Check if user has a specific permission
