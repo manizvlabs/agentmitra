@@ -72,14 +72,8 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
     final policies = policiesViewModel.policies;
     final isLoading = policiesViewModel.isLoading;
 
-    // Filter policies based on search query
-    final filteredPolicies = _searchQuery.isEmpty
-        ? policies
-        : policies.where((policy) {
-            final query = _searchQuery.toLowerCase();
-            return policy.policyNumber.toLowerCase().contains(query) ||
-                   policy.planName.toLowerCase().contains(query);
-          }).toList();
+    // Use policies from viewmodel (already filtered by search and status)
+    final filteredPolicies = policies;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -107,7 +101,7 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
 
                     // Policy List (when loaded)
                     if (!isLoading || policies.isNotEmpty) ...[
-                      _buildPolicyOverview(filteredPolicies),
+                      _buildPolicyOverview(policies),
                       const SizedBox(height: 24),
                       _buildPolicyList(filteredPolicies),
                       const SizedBox(height: 24),
@@ -166,10 +160,8 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
           IconButton(
             icon: const Icon(Icons.filter_list, color: Colors.white),
             onPressed: () {
-              // TODO: Implement filters
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Filters coming soon!')),
-              );
+              final viewModel = context.read<PoliciesViewModel>();
+              _showFilterDialog(context, viewModel);
             },
           ),
       ],
@@ -199,10 +191,10 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
           icon: Icon(Icons.search, color: Colors.grey),
         ),
         onChanged: (value) {
-          setState(() {
-            _searchQuery = value;
-          });
-        },
+        // Update viewmodel search
+        final policiesViewModel = context.read<PoliciesViewModel>();
+        policiesViewModel.setSearchQuery(value.isEmpty ? null : value);
+      },
       ),
     );
   }
@@ -876,6 +868,66 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
           ),
         );
       },
+    );
+  }
+
+  void _showFilterDialog(BuildContext context, PoliciesViewModel viewModel) {
+    final statusOptions = ['active', 'pending_approval', 'lapsed', 'matured', 'cancelled'];
+    String? selectedStatus = viewModel.selectedStatus;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Filter Policies'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Status Filter'),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                value: selectedStatus,
+                hint: const Text('All Statuses'),
+                items: [
+                  const DropdownMenuItem<String>(
+                    value: null,
+                    child: Text('All Statuses'),
+                  ),
+                  ...statusOptions.map((status) => DropdownMenuItem<String>(
+                    value: status,
+                    child: Text(status.replaceAll('_', ' ').toUpperCase()),
+                  )),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    selectedStatus = value;
+                  });
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                viewModel.clearFilters();
+                Navigator.of(context).pop();
+              },
+              child: const Text('Clear All'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                viewModel.setStatusFilter(selectedStatus);
+                Navigator.of(context).pop();
+              },
+              child: const Text('Apply'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

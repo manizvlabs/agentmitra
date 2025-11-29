@@ -443,7 +443,7 @@ class _GetQuotePageState extends State<GetQuotePage> {
   }
 
   Future<void> _submitQuoteRequest() async {
-    if (!_formKey.currentState!.validate()) {
+    if (_formKey.currentState == null || !_formKey.currentState!.validate()) {
       return;
     }
 
