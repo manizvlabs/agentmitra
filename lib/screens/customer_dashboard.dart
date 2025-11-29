@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../features/customer_dashboard/presentation/viewmodels/customer_dashboard_viewmodel.dart';
 import '../features/customer_dashboard/data/models/customer_dashboard_data.dart';
 import '../core/widgets/loading/loading_widgets.dart';
@@ -107,7 +106,7 @@ class _CustomerDashboardState extends ConsumerState<CustomerDashboard> {
               ],
             ),
             onPressed: () {
-              context.push('/notifications');
+              Navigator.of(context).pushNamed('/notifications');
             },
           ),
         ],
@@ -161,16 +160,16 @@ class _CustomerDashboardState extends ConsumerState<CustomerDashboard> {
               // Already on home
               break;
             case 1:
-              context.push('/policies');
+              Navigator.of(context).pushNamed('/policies');
               break;
             case 2:
-              context.push('/smart-chatbot');
+              Navigator.of(context).pushNamed('/smart-chatbot');
               break;
             case 3:
-              context.push('/learning-center');
+              Navigator.of(context).pushNamed('/learning-center');
               break;
             case 4:
-              context.push('/profile');
+              Navigator.of(context).pushNamed('/profile');
               break;
           }
         },
@@ -283,7 +282,7 @@ class _CustomerDashboardState extends ConsumerState<CustomerDashboard> {
   Widget _buildQuickActionCard(CustomerQuickAction action) {
     return InkWell(
       onTap: () {
-        context.push(action.route);
+        Navigator.of(context).pushNamed(action.route);
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -481,7 +480,7 @@ class _CustomerDashboardState extends ConsumerState<CustomerDashboard> {
             child: InkWell(
               onTap: notification.actionRoute != null
                   ? () {
-                      context.push(notification.actionRoute!);
+                      Navigator.of(context).pushNamed(notification.actionRoute!);
                     }
                   : null,
               borderRadius: BorderRadius.circular(12),
@@ -523,7 +522,7 @@ class _CustomerDashboardState extends ConsumerState<CustomerDashboard> {
                       TextButton(
                         onPressed: () {
                           if (notification.actionRoute != null) {
-                            context.push(notification.actionRoute!);
+                            Navigator.of(context).pushNamed(notification.actionRoute!);
                           }
                         },
                         child: Text(notification.actionText!),
