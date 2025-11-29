@@ -99,6 +99,99 @@ class RegionalManagerDashboard extends StatelessWidget {
             onTap: () => Navigator.of(context).pushNamed('/campaign-builder'),
           ),
           const Divider(),
+
+          // Agent Portal (Regional Oversight)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text(
+              'Agent Portal',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.settings_applications, color: Colors.grey[400], size: 20),
+            title: const Text('Agent Config Dashboard', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/agent-config-dashboard'),
+          ),
+          ListTile(
+            leading: Icon(Icons.campaign, color: Colors.grey[400], size: 20),
+            title: const Text('Campaign Builder', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/campaign-builder'),
+          ),
+          ListTile(
+            leading: Icon(Icons.people_alt, color: Colors.grey[400], size: 20),
+            title: const Text('Customers', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/customers'),
+          ),
+
+          const Divider(),
+
+          // Customer Portal (Limited Access)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text(
+              'Customer Support',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.home, color: Colors.grey[400], size: 20),
+            title: const Text('Customer Dashboard', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/customer-dashboard'),
+          ),
+          ListTile(
+            leading: Icon(Icons.policy, color: Colors.grey[400], size: 20),
+            title: const Text('My Policies', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/policies'),
+          ),
+          ListTile(
+            leading: Icon(Icons.description, color: Colors.grey[400], size: 20),
+            title: const Text('Policy Details', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/policy-details'),
+          ),
+          ListTile(
+            leading: Icon(Icons.chat, color: Colors.grey[400], size: 20),
+            title: const Text('WhatsApp Integration', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/whatsapp-integration'),
+          ),
+
+          const Divider(),
+
+          // Policy Management
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text(
+              'Policy Management',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.add_circle, color: Colors.grey[400], size: 20),
+            title: const Text('New Policy', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/new-policy'),
+          ),
+          ListTile(
+            leading: Icon(Icons.report_problem, color: Colors.grey[400], size: 20),
+            title: const Text('New Claim', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/new-claim'),
+          ),
+
+          const Divider(),
           ListTile(
             leading: const Icon(Icons.settings, color: Colors.grey),
             title: const Text('Settings'),

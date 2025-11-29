@@ -103,6 +103,123 @@ class SeniorAgentDashboard extends StatelessWidget {
             title: const Text('Reports'),
             onTap: () => Navigator.of(context).pushNamed('/reports'),
           ),
+          // Customer Portal (Limited Access)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text(
+              'Customer Portal',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.home, color: Colors.grey[400], size: 20),
+            title: const Text('Customer Dashboard', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/customer-dashboard'),
+          ),
+          ListTile(
+            leading: Icon(Icons.policy, color: Colors.grey[400], size: 20),
+            title: const Text('My Policies', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/policies'),
+          ),
+          ListTile(
+            leading: Icon(Icons.description, color: Colors.grey[400], size: 20),
+            title: const Text('Policy Details', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/policy-details'),
+          ),
+
+          const Divider(),
+
+          // Communication
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text(
+              'Communication',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.chat, color: Colors.grey[400], size: 20),
+            title: const Text('WhatsApp Integration', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/whatsapp-integration'),
+          ),
+          ListTile(
+            leading: Icon(Icons.smart_toy, color: Colors.grey[400], size: 20),
+            title: const Text('Smart Chatbot', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/smart-chatbot'),
+          ),
+          ListTile(
+            leading: Icon(Icons.notifications, color: Colors.grey[400], size: 20),
+            title: const Text('Notifications', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/notifications'),
+          ),
+
+          const Divider(),
+
+          // Policy Management
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text(
+              'Policy Management',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.add_circle, color: Colors.grey[400], size: 20),
+            title: const Text('New Policy', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/new-policy'),
+          ),
+          ListTile(
+            leading: Icon(Icons.report_problem, color: Colors.grey[400], size: 20),
+            title: const Text('New Claim', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/new-claim'),
+          ),
+          ListTile(
+            leading: Icon(Icons.create, color: Colors.grey[400], size: 20),
+            title: const Text('Policy Create', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/policy/create'),
+          ),
+
+          const Divider(),
+
+          // Learning & Support
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text(
+              'Learning & Support',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.library_books, color: Colors.grey[400], size: 20),
+            title: const Text('Learning Center', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/learning-center'),
+          ),
+          ListTile(
+            leading: Icon(Icons.report, color: Colors.grey[400], size: 20),
+            title: const Text('Reports', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/reports'),
+          ),
+
           const Divider(),
           ListTile(
             leading: const Icon(Icons.settings, color: Colors.grey),
