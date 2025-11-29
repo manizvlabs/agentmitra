@@ -1,54 +1,57 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart' as provider;
 import '../features/payments/presentation/viewmodels/policy_detail_viewmodel.dart';
+import '../features/payments/presentation/viewmodels/policies_viewmodel.dart';
 import '../features/payments/data/repositories/policy_repository.dart';
 import '../features/payments/data/datasources/policy_remote_datasource.dart';
 import '../features/payments/data/datasources/policy_local_datasource.dart';
+import '../features/payments/data/models/policy_model.dart';
 
-class PolicyDetailsScreen extends StatefulWidget {
-  final String? policyId;
-
-  const PolicyDetailsScreen({
-    super.key,
-    this.policyId,
-  });
+class PolicyDetailsScreen extends ConsumerStatefulWidget {
+  const PolicyDetailsScreen({super.key});
 
   @override
-  State<PolicyDetailsScreen> createState() => _PolicyDetailsScreenState();
+  ConsumerState<PolicyDetailsScreen> createState() => _PolicyDetailsScreenState();
 }
 
-class _PolicyDetailsScreenState extends State<PolicyDetailsScreen> {
-  late PolicyDetailViewModel _viewModel;
+class _PolicyDetailsScreenState extends ConsumerState<PolicyDetailsScreen> {
+  PolicyDetailViewModel? _viewModel;
+  Policy? _selectedPolicy;
 
   @override
   void initState() {
     super.initState();
-    final policyId = widget.policyId ?? '';
-    // Create repository instance with data sources
+
+    // Load policies using the policies view model
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<PoliciesViewModel>().loadPolicies();
+      }
+    });
+  }
+
+  PolicyDetailViewModel _createViewModel(String policyId) {
     final repository = PolicyRepository(
       PolicyRemoteDataSourceImpl(),
       PolicyLocalDataSourceImpl(),
     );
-    _viewModel = PolicyDetailViewModel(
-      repository,
-      policyId,
-    );
-    _viewModel.loadPolicyDetails();
+    return PolicyDetailViewModel(repository, policyId);
   }
 
   @override
   void dispose() {
-    _viewModel.dispose();
+    _viewModel?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final policiesViewModel = context.watch<PoliciesViewModel>();
+    final policies = policiesViewModel.policies;
+    final isLoadingPolicies = policiesViewModel.isLoading;
 
-    return ChangeNotifierProvider.value(
-      value: _viewModel,
-      child: Scaffold(
+    return Scaffold(
         backgroundColor: Colors.grey.shade50,
         appBar: AppBar(
           backgroundColor: Colors.white,
@@ -65,7 +68,7 @@ class _PolicyDetailsScreenState extends State<PolicyDetailsScreen> {
             ),
           ),
           actions: [
-            Consumer<PolicyDetailViewModel>(
+            provider.Consumer<PolicyDetailViewModel>(
               builder: (context, viewModel, child) {
                 return IconButton(
                   icon: const Icon(Icons.download, color: Color(0xFF1a237e)),
@@ -81,86 +84,216 @@ class _PolicyDetailsScreenState extends State<PolicyDetailsScreen> {
             ),
           ],
         ),
-        body: Consumer<PolicyDetailViewModel>(
-          builder: (context, viewModel, child) {
-            if (viewModel.isLoading && viewModel.policy == null) {
-              return const Center(child: CircularProgressIndicator());
-            }
+        body: isLoadingPolicies
+            ? const Center(child: CircularProgressIndicator())
+            : policies.isEmpty
+                ? _buildNoPoliciesState()
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildPolicySelector(policies),
+                        const SizedBox(height: 16),
+                        if (_selectedPolicy != null && _viewModel != null) ...[
+                          provider.ChangeNotifierProvider.value(
+                            value: _viewModel!,
+                            child: provider.Consumer<PolicyDetailViewModel>(
+                              builder: (context, viewModel, child) {
+                              if (viewModel.isLoading && viewModel.policy == null) {
+                                return const Center(child: CircularProgressIndicator());
+                              }
 
-            if (viewModel.error != null && viewModel.policy == null) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Failed to load policy details',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      viewModel.error ?? 'Unknown error',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey,
+                              if (viewModel.error != null && viewModel.policy == null) {
+                                return _buildPolicyErrorState(viewModel);
+                              }
+
+                              final policy = viewModel.policy;
+                              if (policy == null) {
+                                return const Center(child: Text('Policy not found'));
+                              }
+
+                              return _buildPolicyDetailsContent(policy, viewModel);
+                              },
+                            ),
                           ),
-                      textAlign: TextAlign.center,
+                        ] else ...[
+                          _buildSelectPolicyPrompt(),
+                        ],
+                      ],
                     ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: () => viewModel.refresh(),
-                      child: const Text('Try Again'),
-                    ),
-                  ],
-                ),
-              );
-            }
+                  ),
+    );
+  }
 
-            final policy = viewModel.policy;
-            if (policy == null) {
-              return const Center(child: Text('Policy not found'));
-            }
-
-            final maturityDate = policy.maturityDate ?? DateTime.now().add(const Duration(days: 365 * 20));
-            final nextPaymentDate = policy.nextPaymentDate ?? DateTime.now().add(const Duration(days: 30));
-            final daysUntilMaturity = maturityDate.difference(DateTime.now()).inDays;
-
-            return RefreshIndicator(
-              onRefresh: () => viewModel.refresh(),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Policy Header Card
-                    _buildPolicyHeaderCard(policy),
-                    const SizedBox(height: 24),
-
-                    // Maturity Countdown Banner (if applicable)
-                    if (daysUntilMaturity <= 365 * 2)
-                      _buildMaturityCountdownBanner(maturityDate, daysUntilMaturity),
-
-                    // Premium & Payment Section
-                    _buildPremiumSection(policy, nextPaymentDate, viewModel),
-                    const SizedBox(height: 24),
-
-                    // Payment History Timeline
-                    _buildPaymentHistorySection(viewModel),
-                    const SizedBox(height: 24),
-
-                    // Coverage & Benefits
-                    _buildCoverageSection(policy, maturityDate, daysUntilMaturity),
-                    const SizedBox(height: 24),
-
-                    // Action Buttons
-                    _buildActionButtons(context, policy, viewModel),
-                    const SizedBox(height: 40),
-                  ],
-                ),
+  Widget _buildPolicySelector(List<Policy> policies) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Select Policy',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1a237e),
+            ),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<Policy>(
+            value: _selectedPolicy,
+            hint: const Text('Choose a policy to view details'),
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Colors.grey.shade300),
               ),
-            );
-          },
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            items: policies.map((policy) {
+              return DropdownMenuItem<Policy>(
+                value: policy,
+                child: Text('${policy.policyNumber} - ${policy.planName}'),
+              );
+            }).toList(),
+            onChanged: (Policy? newValue) {
+              setState(() {
+                _selectedPolicy = newValue;
+                if (newValue != null) {
+                  _viewModel = _createViewModel(newValue.policyId);
+                  _viewModel?.loadPolicyDetails();
+                }
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoPoliciesState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.policy_outlined, size: 80, color: Colors.grey.shade400),
+          const SizedBox(height: 24),
+          const Text(
+            'No Policies Taken Yet',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'You haven\'t purchased any insurance policies yet.\nContact an agent to get started with your insurance journey.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.of(context).pushNamed('/get-quote'),
+            icon: const Icon(Icons.add),
+            label: const Text('Get Insurance Quote'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1a237e),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSelectPolicyPrompt() {
+    return Container(
+      padding: const EdgeInsets.all(40),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: const Center(
+        child: Column(
+          children: [
+            Icon(Icons.policy, size: 48, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              'Select a policy from the dropdown above to view its details',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPolicyErrorState(PolicyDetailViewModel viewModel) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Column(
+          children: [
+            Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to load policy details',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              viewModel.error ?? 'Unknown error',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => viewModel.refresh(),
+              child: const Text('Try Again'),
+            ),
+          ],
         ),
       ),
     );
@@ -244,6 +377,48 @@ class _PolicyDetailsScreenState extends State<PolicyDetailsScreen> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPolicyDetailsContent(Policy policy, PolicyDetailViewModel viewModel) {
+    final maturityDate = policy.maturityDate ?? DateTime.now().add(const Duration(days: 365 * 20));
+    final nextPaymentDate = policy.nextPaymentDate ?? DateTime.now().add(const Duration(days: 30));
+    final daysUntilMaturity = maturityDate.difference(DateTime.now()).inDays;
+
+    return RefreshIndicator(
+      onRefresh: () => viewModel.refresh(),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Policy Header Card
+            _buildPolicyHeaderCard(policy),
+            const SizedBox(height: 24),
+
+            // Maturity Countdown Banner (if applicable)
+            if (daysUntilMaturity <= 365 * 2)
+              _buildMaturityCountdownBanner(maturityDate, daysUntilMaturity),
+
+            // Premium & Payment Section
+            _buildPremiumSection(policy, nextPaymentDate, viewModel),
+            const SizedBox(height: 24),
+
+            // Payment History Timeline
+            _buildPaymentHistorySection(viewModel),
+            const SizedBox(height: 24),
+
+            // Coverage & Benefits
+            _buildCoverageSection(policy, maturityDate, daysUntilMaturity),
+            const SizedBox(height: 24),
+
+            // Action Buttons
+            _buildActionButtons(context, policy, viewModel),
+            const SizedBox(height: 40),
+          ],
+        ),
       ),
     );
   }
@@ -679,10 +854,7 @@ class _PolicyDetailsScreenState extends State<PolicyDetailsScreen> {
                 'Pay Premium',
                 Icons.payment,
                 Colors.blue,
-                () => context.push('/premium-payment', extra: {
-                  'policyId': widget.policyId,
-                  'amount': policy.premiumAmount,
-                }),
+                () => Navigator.of(context).pushNamed('/premium-payment'),
               ),
             ),
             const SizedBox(width: 12),
@@ -692,7 +864,7 @@ class _PolicyDetailsScreenState extends State<PolicyDetailsScreen> {
                 'Contact Agent',
                 Icons.phone,
                 Colors.green,
-                () => context.push('/whatsapp-integration'),
+                () => Navigator.of(context).pushNamed('/whatsapp-integration'),
               ),
             ),
           ],
@@ -706,9 +878,7 @@ class _PolicyDetailsScreenState extends State<PolicyDetailsScreen> {
                 'File Claim',
                 Icons.assignment,
                 Colors.orange,
-                () => context.push('/new-claim', extra: {
-                  'policyId': widget.policyId,
-                }),
+                () => Navigator.of(context).pushNamed('/claims/new'),
               ),
             ),
             const SizedBox(width: 12),

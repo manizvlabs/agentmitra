@@ -384,11 +384,7 @@ class AgentMitraApp extends ConsumerWidget {
       requiredPermissions: ['policies.create'],
     ),
     '/policy-details': _protectedRoute(
-      (context) {
-        final args = ModalRoute.of(context)?.settings.arguments;
-        final policyId = args is Map<String, dynamic> ? args['policyId'] : null;
-        return PolicyDetailsScreen(policyId: policyId);
-      },
+      (context) => const PolicyDetailsScreen(),
       requiredPermissions: ['policies.read'],
     ),
     '/premium-payment': _protectedRoute(
