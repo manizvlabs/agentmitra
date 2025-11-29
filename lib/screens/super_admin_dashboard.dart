@@ -213,6 +213,215 @@ class SuperAdminDashboard extends StatelessWidget {
             title: const Text('Feature Flags'),
             onTap: () => Navigator.of(context).pushNamed('/pioneer-demo'),
           ),
+
+          const Divider(),
+
+          // Authentication & Onboarding
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text(
+              'Authentication & Onboarding',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.waving_hand, color: Colors.grey[400], size: 20),
+            title: const Text('Welcome Screen', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/welcome'),
+          ),
+          ListTile(
+            leading: Icon(Icons.phone, color: Colors.grey[400], size: 20),
+            title: const Text('Phone Verification', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/phone-verification'),
+          ),
+          ListTile(
+            leading: Icon(Icons.lock, color: Colors.grey[400], size: 20),
+            title: const Text('OTP Verification', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/otp-verification'),
+          ),
+          ListTile(
+            leading: Icon(Icons.login, color: Colors.grey[400], size: 20),
+            title: const Text('Login Page', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/login'),
+          ),
+          ListTile(
+            leading: Icon(Icons.rocket_launch, color: Colors.grey[400], size: 20),
+            title: const Text('Trial Setup', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/trial-setup'),
+          ),
+          ListTile(
+            leading: Icon(Icons.school, color: Colors.grey[400], size: 20),
+            title: const Text('Onboarding', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/onboarding'),
+          ),
+          ListTile(
+            leading: Icon(Icons.timer_off, color: Colors.grey[400], size: 20),
+            title: const Text('Trial Expiration', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/trial-expiration'),
+          ),
+
+          const Divider(),
+
+          // Customer Portal
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text(
+              'Customer Portal',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.home, color: Colors.grey[400], size: 20),
+            title: const Text('Customer Dashboard', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/customer-dashboard'),
+          ),
+          ListTile(
+            leading: Icon(Icons.policy, color: Colors.grey[400], size: 20),
+            title: const Text('My Policies', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/policies'),
+          ),
+          ListTile(
+            leading: Icon(Icons.description, color: Colors.grey[400], size: 20),
+            title: const Text('Policy Details', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/policy-details'),
+          ),
+          ListTile(
+            leading: Icon(Icons.chat, color: Colors.grey[400], size: 20),
+            title: const Text('WhatsApp Integration', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/whatsapp-integration'),
+          ),
+          ListTile(
+            leading: Icon(Icons.smart_toy, color: Colors.grey[400], size: 20),
+            title: const Text('Smart Chatbot', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/smart-chatbot'),
+          ),
+          ListTile(
+            leading: Icon(Icons.notifications, color: Colors.grey[400], size: 20),
+            title: const Text('Notifications', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/notifications'),
+          ),
+          ListTile(
+            leading: Icon(Icons.library_books, color: Colors.grey[400], size: 20),
+            title: const Text('Learning Center', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/learning-center'),
+          ),
+          ListTile(
+            leading: Icon(Icons.person, color: Colors.grey[400], size: 20),
+            title: const Text('Profile', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/profile'),
+          ),
+
+          // Agent Portal
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text(
+              'Agent Portal',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.settings_applications, color: Colors.grey[400], size: 20),
+            title: const Text('Agent Config Dashboard', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/agent-config-dashboard'),
+          ),
+          ListTile(
+            leading: Icon(Icons.trending_up, color: Colors.grey[400], size: 20),
+            title: const Text('ROI Analytics', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/roi-analytics'),
+          ),
+          ListTile(
+            leading: Icon(Icons.campaign, color: Colors.grey[400], size: 20),
+            title: const Text('Campaign Builder', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/campaign-builder'),
+          ),
+          ListTile(
+            leading: Icon(Icons.people_alt, color: Colors.grey[400], size: 20),
+            title: const Text('Customers', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/customers'),
+          ),
+          ListTile(
+            leading: Icon(Icons.report, color: Colors.grey[400], size: 20),
+            title: const Text('Reports', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/reports'),
+          ),
+
+          const Divider(),
+
+          // Policy Management
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text(
+              'Policy Management',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.add_circle, color: Colors.grey[400], size: 20),
+            title: const Text('New Policy', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/new-policy'),
+          ),
+          ListTile(
+            leading: Icon(Icons.report_problem, color: Colors.grey[400], size: 20),
+            title: const Text('New Claim', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/new-claim'),
+          ),
+          ListTile(
+            leading: Icon(Icons.create, color: Colors.grey[400], size: 20),
+            title: const Text('Policy Create', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/policy/create'),
+          ),
+
+          const Divider(),
+
+          // Admin Portal
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text(
+              'Admin Portal',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.business, color: Colors.grey[400], size: 20),
+            title: const Text('Tenant Onboarding', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/tenant-onboarding'),
+          ),
+          ListTile(
+            leading: Icon(Icons.assignment_ind, color: Colors.grey[400], size: 20),
+            title: const Text('Role Assignment', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/role-assignment/1'), // Example user ID
+          ),
+          ListTile(
+            leading: Icon(Icons.gavel, color: Colors.grey[400], size: 20),
+            title: const Text('Compliance Reports', style: TextStyle(fontSize: 14)),
+            onTap: () => Navigator.of(context).pushNamed('/compliance-reports'),
+          ),
+
           const Divider(),
           ListTile(
             leading: const Icon(Icons.settings, color: Colors.grey),
