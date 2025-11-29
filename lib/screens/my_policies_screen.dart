@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/widgets/offline_indicator.dart';
 import '../core/services/whatsapp_business_service.dart';
+import '../features/payments/presentation/viewmodels/policies_viewmodel.dart';
+import '../features/payments/data/models/policy_model.dart';
 
 /// My Policies Screen for Agent App
 /// Displays policy information, client management, and segmentation tools
@@ -16,8 +19,9 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  bool _isLoading = true;
-  List<Map<String, dynamic>> _policies = [];
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  bool _isSearching = false;
 
   @override
   void initState() {
@@ -46,80 +50,66 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
 
     _animationController.forward();
 
-    // Simulate loading data
-    _loadPolicies();
+    // Load real data using view model
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<PoliciesViewModel>().loadPolicies();
+      }
+    });
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadPolicies() async {
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
-
-    setState(() {
-      _isLoading = false;
-      _policies = [
-        {
-          'policyNumber': 'POL001234',
-          'planName': 'LIC Jeevan Anand',
-          'clientName': 'Rajesh Kumar',
-          'premium': 25000,
-          'status': 'Active',
-          'nextDue': '2024-03-15',
-          'coverage': 1000000,
-        },
-        {
-          'policyNumber': 'POL005678',
-          'planName': 'LIC Health Shield',
-          'clientName': 'Priya Sharma',
-          'premium': 15000,
-          'status': 'Active',
-          'nextDue': '2024-03-20',
-          'coverage': 500000,
-        },
-        {
-          'policyNumber': 'POL009012',
-          'planName': 'LIC Child Fortune',
-          'clientName': 'Amit Patel',
-          'premium': 30000,
-          'status': 'Active',
-          'nextDue': '2024-03-10',
-          'coverage': 2000000,
-        },
-      ];
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
+    final policiesViewModel = context.watch<PoliciesViewModel>();
+    final policies = policiesViewModel.policies;
+    final isLoading = policiesViewModel.isLoading;
+
+    // Filter policies based on search query
+    final filteredPolicies = _searchQuery.isEmpty
+        ? policies
+        : policies.where((policy) {
+            final query = _searchQuery.toLowerCase();
+            return policy.policyNumber.toLowerCase().contains(query) ||
+                   policy.planName.toLowerCase().contains(query);
+          }).toList();
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: _buildAppBar(),
+      appBar: _buildAppBar(filteredPolicies.length, policies.length),
       body: SafeArea(
         child: SlideTransition(
           position: _slideAnimation,
           child: FadeTransition(
             opacity: _fadeAnimation,
             child: RefreshIndicator(
-              onRefresh: _loadPolicies,
+              onRefresh: () async {
+                await context.read<PoliciesViewModel>().loadPolicies();
+              },
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Search Bar (when searching)
+                    if (_isSearching) _buildSearchBar(),
+
                     // Loading State
-                    if (_isLoading) _buildLoadingState(),
+                    if (isLoading && policies.isEmpty) _buildLoadingState(),
 
                     // Policy List (when loaded)
-                    if (!_isLoading) ...[
-                      _buildPolicyOverview(),
+                    if (!isLoading || policies.isNotEmpty) ...[
+                      _buildPolicyOverview(filteredPolicies),
                       const SizedBox(height: 24),
-                      _buildPolicyList(),
+                      _buildPolicyList(filteredPolicies),
                       const SizedBox(height: 24),
                       _buildClientManagement(),
                       const SizedBox(height: 24),
@@ -143,7 +133,7 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(int filteredCount, int totalCount) {
     return AppBar(
       backgroundColor: Colors.red,
       elevation: 0,
@@ -151,9 +141,9 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
         icon: const Icon(Icons.arrow_back, color: Colors.white),
         onPressed: () => Navigator.of(context).pop(),
       ),
-      title: const Text(
-        'My Policies',
-        style: TextStyle(
+      title: Text(
+        _searchQuery.isEmpty ? 'My Policies' : 'My Policies (${filteredCount}/${totalCount})',
+        style: const TextStyle(
           color: Colors.white,
           fontSize: 18,
           fontWeight: FontWeight.bold,
@@ -161,24 +151,59 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.search, color: Colors.white),
+          icon: Icon(_isSearching ? Icons.close : Icons.search, color: Colors.white),
           onPressed: () {
-            // TODO: Implement search
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Search coming soon!')),
-            );
+            setState(() {
+              _isSearching = !_isSearching;
+              if (!_isSearching) {
+                _searchController.clear();
+                _searchQuery = '';
+              }
+            });
           },
         ),
-        IconButton(
-          icon: const Icon(Icons.filter_list, color: Colors.white),
-          onPressed: () {
-            // TODO: Implement filters
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Filters coming soon!')),
-            );
-          },
-        ),
+        if (!_isSearching)
+          IconButton(
+            icon: const Icon(Icons.filter_list, color: Colors.white),
+            onPressed: () {
+              // TODO: Implement filters
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Filters coming soon!')),
+              );
+            },
+          ),
       ],
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: _searchController,
+        decoration: const InputDecoration(
+          hintText: 'Search policies by number, plan, or client...',
+          border: InputBorder.none,
+          icon: Icon(Icons.search, color: Colors.grey),
+        ),
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value;
+          });
+        },
+      ),
     );
   }
 
@@ -223,13 +248,13 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
     );
   }
 
-  Widget _buildPolicyOverview() {
-    final totalPolicies = _policies.length;
-    final totalCoverage = _policies.fold<int>(0, (sum, policy) => sum + (policy['coverage'] as int));
-    final nextPayment = _policies
-        .where((policy) => policy['status'] == 'Active')
-        .map((policy) => policy['premium'] as int)
-        .fold<int>(0, (sum, premium) => sum + premium);
+  Widget _buildPolicyOverview(List<Policy> policies) {
+    final totalPolicies = policies.length;
+    final totalCoverage = policies.fold<double>(0, (sum, policy) => sum + policy.sumAssured);
+    final nextPayment = policies
+        .where((policy) => policy.status == 'Active')
+        .map((policy) => policy.premiumAmount)
+        .fold<double>(0, (sum, premium) => sum + premium);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -318,7 +343,29 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
     );
   }
 
-  Widget _buildPolicyList() {
+  Widget _buildPolicyList(List<Policy> policies) {
+    if (policies.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(40),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Center(
+          child: Column(
+            children: [
+              Icon(Icons.policy, size: 48, color: Colors.grey),
+              SizedBox(height: 16),
+              Text(
+                'No policies found',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -333,9 +380,9 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: _policies.length,
+          itemCount: policies.length,
           itemBuilder: (context, index) {
-            final policy = _policies[index];
+            final policy = policies[index];
             return _buildPolicyCard(policy);
           },
         ),
@@ -343,7 +390,7 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
     );
   }
 
-  Widget _buildPolicyCard(Map<String, dynamic> policy) {
+  Widget _buildPolicyCard(Policy policy) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -381,7 +428,7 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      policy['policyNumber'],
+                      policy.policyNumber,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -389,7 +436,7 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
                       ),
                     ),
                     Text(
-                      policy['planName'],
+                      policy.planName,
                       style: const TextStyle(
                         fontSize: 12,
                         color: Colors.grey,
@@ -401,14 +448,14 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: _getStatusColor(policy.status).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text(
-                  'Active',
+                child: Text(
+                  policy.status.toUpperCase(),
                   style: TextStyle(
                     fontSize: 10,
-                    color: Colors.green,
+                    color: _getStatusColor(policy.status),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -420,16 +467,16 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
             children: [
               Expanded(
                 child: _buildPolicyDetail(
-                  'Client',
-                  policy['clientName'],
-                  Icons.person,
+                  'Premium',
+                  '₹${policy.premiumAmount.toStringAsFixed(0)}',
+                  Icons.currency_rupee,
                 ),
               ),
               Expanded(
                 child: _buildPolicyDetail(
-                  'Premium',
-                  '₹${policy['premium']}',
-                  Icons.currency_rupee,
+                  'Coverage',
+                  '₹${policy.sumAssured.toStringAsFixed(0)}',
+                  Icons.shield,
                 ),
               ),
             ],
@@ -439,15 +486,17 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
             children: [
               Expanded(
                 child: _buildPolicyDetail(
-                  'Coverage',
-                  '₹${policy['coverage']}',
-                  Icons.shield,
+                  'Frequency',
+                  policy.premiumFrequency,
+                  Icons.schedule,
                 ),
               ),
               Expanded(
                 child: _buildPolicyDetail(
                   'Next Due',
-                  policy['nextDue'],
+                  policy.nextPaymentDate != null
+                      ? '${policy.nextPaymentDate!.day}/${policy.nextPaymentDate!.month}/${policy.nextPaymentDate!.year}'
+                      : 'N/A',
                   Icons.calendar_today,
                 ),
               ),
@@ -458,11 +507,27 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
             children: [
               Expanded(
                 child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/get-quote');
+                  },
+                  icon: const Icon(Icons.request_quote, size: 16),
+                  label: const Text('Get Quote'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    textStyle: const TextStyle(fontSize: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
                   onPressed: () async {
                     final success = await WhatsAppBusinessService.sendPolicyMessage(
-                      phoneNumber: policy['clientPhone'] ?? '+919876543210',
-                      policyNumber: policy['policyNumber'],
-                      policyType: policy['planName'],
+                      phoneNumber: '+919876543210', // Placeholder phone
+                      policyNumber: policy.policyNumber,
+                      policyType: policy.planName,
                     );
 
                     if (success) {
@@ -477,44 +542,9 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
                   },
                   icon: const Icon(Icons.message, size: 16),
                   label: const Text('Message'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    textStyle: const TextStyle(fontSize: 12),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () async {
-                    // Calculate premium due date (next due date)
-                    final nextDue = policy['nextDue'];
-                    final premiumAmount = policy['premium'] as int;
-
-                    final success = await WhatsAppBusinessService.sendPremiumReminder(
-                      phoneNumber: policy['clientPhone'] ?? '+919876543210',
-                      policyNumber: policy['policyNumber'],
-                      premiumAmount: premiumAmount.toDouble(),
-                      dueDate: DateTime.now().add(const Duration(days: 30)), // Placeholder
-                    );
-
-                    if (success) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Premium reminder sent via WhatsApp!')),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Failed to send WhatsApp message')),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.notifications, size: 16),
-                  label: const Text('Remind'),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.orange),
-                    foregroundColor: Colors.orange,
+                    side: const BorderSide(color: Colors.green),
+                    foregroundColor: Colors.green,
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     textStyle: const TextStyle(fontSize: 12),
                   ),
@@ -525,6 +555,23 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
         ],
       ),
     );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return Colors.green;
+      case 'pending':
+      case 'pending_approval':
+        return Colors.orange;
+      case 'lapsed':
+      case 'cancelled':
+        return Colors.red;
+      case 'matured':
+        return Colors.blue;
+      default:
+        return Colors.grey;
+    }
   }
 
   Widget _buildPolicyDetail(String label, String value, IconData icon) {
