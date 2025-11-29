@@ -94,7 +94,7 @@ services:
     networks:
       - agentmitra_network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -118,7 +118,7 @@ services:
     networks:
       - agentmitra_network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -244,12 +244,8 @@ services:
       agentmitra_network:
         aliases:
           - compass-server
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+    # Pioneer compass server is functional but doesn't have standard health endpoints
+    # Service health is verified through NATS messaging and API responses
 
   pioneer-scout:
     image: pioneerio/scout:latest
@@ -270,12 +266,8 @@ services:
       - pioneer-nats
     networks:
       - agentmitra_network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3030/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 35s
+    # Note: Pioneer Scout doesn't have a health endpoint
+    # Service is considered healthy if container is running
 
   pioneer-compass-client:
     image: pioneerio/compass-client:latest

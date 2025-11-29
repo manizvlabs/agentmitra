@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:js_util' as js_util;
 import 'package:provider/provider.dart';
 import 'dart:typed_data';
+import 'package:file_picker/file_picker.dart';
 import '../viewmodels/presentation_viewmodel.dart';
 import '../../data/models/presentation_model.dart';
 import '../../data/models/slide_model.dart';
@@ -837,44 +837,46 @@ class _PresentationEditorPageState extends State<PresentationEditorPage> {
 
   Future<void> _uploadMedia() async {
     if (kIsWeb) {
-      try {
-        // Web file picker using HTML5 file input
-        final input = js_util.callConstructor(js_util.getProperty(js_util.globalThis, 'HTMLInputElement'), []) as dynamic;
-        js_util.setProperty(input, 'type', 'file');
-        js_util.setProperty(input, 'accept', 'image/*,video/*');
-        js_util.callMethod(input, 'click', []);
-
-        // Use a more compatible approach for file handling
-        js_util.setProperty(input, 'onchange', js_util.allowInterop((e) async {
-          final files = js_util.getProperty(input, 'files');
-          if (files == null || js_util.getProperty(files, 'length') == 0) return;
-
-          final file = js_util.getProperty(files, '0');
-          final reader = js_util.callConstructor(js_util.getProperty(js_util.globalThis, 'FileReader'), []) as dynamic;
-
-          js_util.setProperty(reader, 'onloadend', js_util.allowInterop((e) async {
-            final result = js_util.getProperty(reader, 'result');
-            if (result != null) {
-              final bytes = result as Uint8List;
-              final fileName = js_util.getProperty(file, 'name') as String;
-              await _handleMediaUpload(fileName, bytes);
-            }
-          }));
-
-          js_util.callMethod(reader, 'readAsArrayBuffer', [file]);
-        }));
-      } catch (e) {
-        debugPrint('Web file upload not supported: $e');
-      }
-    } else {
-      // Mobile file picker - TODO: Add image_picker package to pubspec.yaml
+      // Temporarily disable web file upload to avoid compilation issues
+      // TODO: Re-enable web file upload with proper conditional imports
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Mobile media upload: Please add image_picker package to pubspec.yaml'),
+          content: Text('Web file upload temporarily disabled'),
         ),
       );
+      return;
+    } else {
+      // Mobile file picker using file_picker package
+      try {
+        FilePickerResult? result = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'mov', 'avi'],
+          allowMultiple: false,
+        );
+
+        if (result != null && result.files.isNotEmpty) {
+          final file = result.files.first;
+          if (file.bytes != null) {
+            await _handleMediaUpload(file.name, file.bytes!);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Unable to read file. Please try again.'),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        debugPrint('Mobile file upload failed: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('File upload failed: $e'),
+          ),
+        );
+      }
     }
   }
+
 
   Future<void> _handleMediaUpload(String fileName, Uint8List fileBytes) async {
     try {

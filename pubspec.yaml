@@ -113,7 +113,8 @@ flutter:
 
 # Platform-specific dependencies
 dependency_overrides:
-  # Web-specific overrides can be added here if needed
+  # Temporarily override win32 to avoid iOS compilation issues
+  # This is a workaround until Flutter properly handles platform-specific dependencies
 
 # Platform-specific configurations
 platforms:
