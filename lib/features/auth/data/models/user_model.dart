@@ -73,6 +73,9 @@ class UserModel {
     };
   }
 
+  /// Get user ID (alias for userId for backward compatibility)
+  String get id => userId;
+
   /// Create a copy of this UserModel with modified fields
   UserModel copyWith({
     String? userId,

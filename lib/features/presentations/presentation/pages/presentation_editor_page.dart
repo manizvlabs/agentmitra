@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:js_util' as js_util;
 import 'package:provider/provider.dart';
 import 'dart:typed_data';
 import '../viewmodels/presentation_viewmodel.dart';
@@ -10,8 +11,7 @@ import '../widgets/color_picker_dialog.dart';
 import '../../../../core/services/agent_service.dart';
 import '../../../../core/services/logger_service.dart';
 
-// Conditional import for web
-import 'dart:html' as html show FileUploadInputElement, FileReader;
+// Web-specific imports are handled dynamically below
 
 /// Presentation Editor Page
 /// Full slide management with add, edit, delete, reorder functionality
@@ -837,26 +837,35 @@ class _PresentationEditorPageState extends State<PresentationEditorPage> {
 
   Future<void> _uploadMedia() async {
     if (kIsWeb) {
-      // Web file picker using HTML5 file input
-      final input = html.FileUploadInputElement()..accept = 'image/*,video/*';
-      input.click();
+      try {
+        // Web file picker using HTML5 file input
+        final input = js_util.callConstructor(js_util.getProperty(js_util.globalThis, 'HTMLInputElement'), []) as dynamic;
+        js_util.setProperty(input, 'type', 'file');
+        js_util.setProperty(input, 'accept', 'image/*,video/*');
+        js_util.callMethod(input, 'click', []);
 
-      input.onChange.listen((e) async {
-        final files = input.files;
-        if (files == null || files.isEmpty) return;
+        // Use a more compatible approach for file handling
+        js_util.setProperty(input, 'onchange', js_util.allowInterop((e) async {
+          final files = js_util.getProperty(input, 'files');
+          if (files == null || js_util.getProperty(files, 'length') == 0) return;
 
-        final file = files[0];
-        final reader = html.FileReader();
+          final file = js_util.getProperty(files, '0');
+          final reader = js_util.callConstructor(js_util.getProperty(js_util.globalThis, 'FileReader'), []) as dynamic;
 
-        reader.onLoadEnd.listen((e) async {
-          if (reader.result != null && reader.result is Uint8List) {
-            final bytes = reader.result as Uint8List;
-            await _handleMediaUpload(file.name, bytes);
-          }
-        });
+          js_util.setProperty(reader, 'onloadend', js_util.allowInterop((e) async {
+            final result = js_util.getProperty(reader, 'result');
+            if (result != null) {
+              final bytes = result as Uint8List;
+              final fileName = js_util.getProperty(file, 'name') as String;
+              await _handleMediaUpload(fileName, bytes);
+            }
+          }));
 
-        reader.readAsArrayBuffer(file);
-      });
+          js_util.callMethod(reader, 'readAsArrayBuffer', [file]);
+        }));
+      } catch (e) {
+        debugPrint('Web file upload not supported: $e');
+      }
     } else {
       // Mobile file picker - TODO: Add image_picker package to pubspec.yaml
       ScaffoldMessenger.of(context).showSnackBar(

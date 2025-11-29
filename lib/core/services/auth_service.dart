@@ -43,6 +43,15 @@ class AuthService {
     }
   }
 
+  /// Get current user (synchronous)
+  UserModel? get currentUser {
+    try {
+      return ServiceLocator.authViewModel.currentUser;
+    } catch (e) {
+      return null;
+    }
+  }
+
   /// Get current user
   Future<UserModel?> getCurrentUser([BuildContext? context]) async {
     final authViewModel = _getAuthViewModel(context);

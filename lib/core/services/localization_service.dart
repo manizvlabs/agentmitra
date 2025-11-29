@@ -71,6 +71,11 @@ class LocalizationService {
     return translation;
   }
 
+  /// Get localized string (alias for translate)
+  String getString(String key, {Map<String, String>? args}) {
+    return translate(key, args: args);
+  }
+
   /// Get current locale
   Locale get currentLocale => _currentLocale;
 

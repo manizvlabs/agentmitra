@@ -18,6 +18,7 @@ class AppConfig {
 
   // API Configuration
   late final String _apiBaseUrl;
+  late final String _wsBaseUrl;
   late final String _apiVersion;
   late final int _apiTimeoutSeconds;
   late final int _apiRetryAttempts;
@@ -135,6 +136,7 @@ class AppConfig {
 
     // API Configuration
     _apiBaseUrl = dotenv.get('API_BASE_URL', fallback: 'http://localhost:8012');
+    _wsBaseUrl = dotenv.get('WS_BASE_URL', fallback: 'ws://localhost:8012');
     _apiVersion = dotenv.get('API_VERSION', fallback: '/api/v1');
     _apiTimeoutSeconds = int.parse(dotenv.get('API_TIMEOUT_SECONDS', fallback: '30'));
     _apiRetryAttempts = int.parse(dotenv.get('API_RETRY_ATTEMPTS', fallback: '3'));
@@ -251,6 +253,7 @@ class AppConfig {
   bool get debug => _debug;
 
   String get apiBaseUrl => _apiBaseUrl;
+  String get wsBaseUrl => _wsBaseUrl;
   String get apiVersion => _apiVersion;
   String get fullApiUrl => '$_apiBaseUrl$_apiVersion';
   int get apiTimeoutSeconds => _apiTimeoutSeconds;

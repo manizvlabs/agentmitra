@@ -52,10 +52,10 @@ class DashboardRepository extends BaseRepository {
     try {
       final response = await ApiService.get('/analytics/roi/agent/$agentId?period=$timeframe');
 
-      if (response.success && response.data != null) {
-        return response.data!;
+      if (response['success'] == true && response['data'] != null) {
+        return response['data']!;
       } else {
-        throw Exception(response.message ?? 'Failed to fetch ROI data');
+        throw Exception(response['message'] ?? 'Failed to fetch ROI data');
       }
     } catch (e) {
       // Return mock data for development if API fails
@@ -71,10 +71,10 @@ class DashboardRepository extends BaseRepository {
     try {
       final response = await ApiService.get('/analytics/forecast/agent/$agentId?period=$period');
 
-      if (response.success && response.data != null) {
-        return response.data!;
+      if (response['success'] == true && response['data'] != null) {
+        return response['data']!;
       } else {
-        throw Exception(response.message ?? 'Failed to fetch forecast data');
+        throw Exception(response['message'] ?? 'Failed to fetch forecast data');
       }
     } catch (e) {
       // Return mock data for development if API fails
@@ -97,10 +97,10 @@ class DashboardRepository extends BaseRepository {
 
       final response = await ApiService.get('/analytics/leads/hot/agent/$agentId$queryString');
 
-      if (response.success && response.data != null) {
-        return response.data!;
+      if (response['success'] == true && response['data'] != null) {
+        return response['data']!;
       } else {
-        throw Exception(response.message ?? 'Failed to fetch hot leads data');
+        throw Exception(response['message'] ?? 'Failed to fetch hot leads data');
       }
     } catch (e) {
       // Return mock data for development if API fails
@@ -123,10 +123,10 @@ class DashboardRepository extends BaseRepository {
 
       final response = await ApiService.get('/analytics/customers/at-risk/agent/$agentId$queryString');
 
-      if (response.success && response.data != null) {
-        return response.data!;
+      if (response['success'] == true && response['data'] != null) {
+        return response['data']!;
       } else {
-        throw Exception(response.message ?? 'Failed to fetch at-risk customers data');
+        throw Exception(response['message'] ?? 'Failed to fetch at-risk customers data');
       }
     } catch (e) {
       // Return mock data for development if API fails
@@ -141,10 +141,10 @@ class DashboardRepository extends BaseRepository {
     try {
       final response = await ApiService.get('/customer/dashboard/$customerId');
 
-      if (response.success && response.data != null) {
-        return response.data!;
+      if (response['success'] == true && response['data'] != null) {
+        return response['data']!;
       } else {
-        throw Exception(response.message ?? 'Failed to fetch customer data');
+        throw Exception(response['message'] ?? 'Failed to fetch customer data');
       }
     } catch (e) {
       // Return mock data for development if API fails
@@ -855,17 +855,17 @@ class DashboardRepository extends BaseRepository {
     ];
 
     // Filter customers based on criteria
-    var filteredCustomers = allCustomers;
+    List<Map<String, dynamic>> filteredCustomers = allCustomers;
 
     if (riskLevel != 'all') {
-      filteredCustomers = filteredCustomers.where((customer) => customer['risk_level'] == riskLevel).toList();
+      filteredCustomers = filteredCustomers.where((customer) => customer['risk_level'] == riskLevel).cast<Map<String, dynamic>>().toList();
     }
 
     if (priority != 'all') {
       filteredCustomers = filteredCustomers.where((customer) {
         final retentionPriority = customer['retention_plan']?['priority'] ?? 'medium';
         return retentionPriority == priority;
-      }).toList();
+      }).cast<Map<String, dynamic>>().toList();
     }
 
     // Calculate statistics

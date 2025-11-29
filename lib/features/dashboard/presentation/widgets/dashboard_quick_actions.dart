@@ -1,5 +1,54 @@
 import 'package:flutter/material.dart';
 
+/// Dashboard Quick Actions Widget
+/// Shows common actions customers can take
+class DashboardQuickActions extends StatelessWidget {
+  const DashboardQuickActions({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.flash_on,
+            size: 48,
+            color: Colors.grey,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Quick Actions',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Colors.grey,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Common actions will be available here',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.grey,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Quick Actions Widget
 /// Shows common actions customers can take
 class QuickActionsWidget extends StatelessWidget {
