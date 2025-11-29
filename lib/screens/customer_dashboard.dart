@@ -55,24 +55,19 @@ class _CustomerDashboardState extends ConsumerState<CustomerDashboard> {
               ],
             ),
             onPressed: () {
-              // TODO: Implement global search
+              Navigator.of(context).pushNamed('/global-search');
             },
           ),
-          Consumer(
-            builder: (context, ref, child) {
-              final themeMode = ref.watch(themeModeProvider);
-              return IconButton(
-                icon: Icon(
-                  themeMode == ThemeMode.dark ? Icons.light_mode : Icons.dark_mode,
-                  color: const Color(0xFF1a237e),
-                  size: 24,
-                ),
-                onPressed: () {
-                  ref.read(themeModeProvider.notifier).toggleTheme();
-                },
-                tooltip: themeMode == ThemeMode.dark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
-              );
+          IconButton(
+            icon: Icon(
+              ref.watch(themeModeProvider) == ThemeMode.dark ? Icons.light_mode : Icons.dark_mode,
+              color: const Color(0xFF1a237e),
+              size: 24,
+            ),
+            onPressed: () {
+              ref.read(themeModeProvider.notifier).toggleTheme();
             },
+            tooltip: ref.watch(themeModeProvider) == ThemeMode.dark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
           ),
           IconButton(
             icon: Stack(
