@@ -6,6 +6,12 @@ import '../features/auth/presentation/viewmodels/auth_viewmodel.dart';
 class SuperAdminDashboard extends StatelessWidget {
   const SuperAdminDashboard({super.key});
 
+  bool _hasPermission(BuildContext context, String permission) {
+    final authViewModel = provider.Provider.of<AuthViewModel>(context, listen: false);
+    final user = authViewModel.currentUser;
+    return user?.permissions.contains(permission) ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final authViewModel = provider.Provider.of<AuthViewModel>(context);
@@ -29,11 +35,117 @@ class SuperAdminDashboard extends StatelessWidget {
         ],
       ),
       drawer: _buildNavigationDrawer(context),
-      body: const Center(
-        child: Text(
-          'Super Admin Dashboard\n\nFull System Access Available',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Welcome Section
+            Card(
+              elevation: 4,
+              color: Colors.red.shade50,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.admin_panel_settings,
+                            size: 32, color: Colors.red.shade700),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Welcome, ${currentUser?.name ?? 'Super Admin'}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.red.shade700,
+                                    ),
+                              ),
+                              Text(
+                                'Full System Administrator',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(color: Colors.red.shade600),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // System Overview
+            Text(
+              'System Overview',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 16),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatCard(
+                    context,
+                    'Total Users',
+                    '1,247',
+                    Icons.people_outline,
+                    Colors.blue,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildStatCard(
+                    context,
+                    'Active Sessions',
+                    '89',
+                    Icons.online_prediction,
+                    Colors.green,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatCard(
+                    context,
+                    'API Calls (24h)',
+                    '45.2K',
+                    Icons.api,
+                    Colors.orange,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildStatCard(
+                    context,
+                    'System Health',
+                    '98.5%',
+                    Icons.health_and_safety,
+                    Colors.green,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -83,16 +195,19 @@ class SuperAdminDashboard extends StatelessWidget {
             selected: true,
             onTap: () => Navigator.of(context).pop(),
           ),
-          ListTile(
-            leading: const Icon(Icons.people, color: Colors.blue),
-            title: const Text('User Management'),
-            onTap: () => Navigator.of(context).pushNamed('/user-management'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.analytics, color: Colors.green),
-            title: const Text('System Analytics'),
-            onTap: () => Navigator.of(context).pushNamed('/reporting-dashboard'),
-          ),
+          if (_hasPermission(context, 'users.read'))
+            ListTile(
+              leading: const Icon(Icons.people, color: Colors.blue),
+              title: const Text('User Management'),
+              onTap: () => Navigator.of(context).pushNamed('/user-management'),
+            ),
+          if (_hasPermission(context, 'analytics.read'))
+            ListTile(
+              leading: const Icon(Icons.analytics, color: Colors.green),
+              title: const Text('System Analytics'),
+              onTap: () => Navigator.of(context).pushNamed('/reporting-dashboard'),
+            ),
+          // Feature flags only for Super Admin role
           ListTile(
             leading: const Icon(Icons.flag, color: Colors.orange),
             title: const Text('Feature Flags'),
@@ -117,6 +232,37 @@ class SuperAdminDashboard extends StatelessWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(BuildContext context, String title, String value,
+      IconData icon, Color color) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Icon(icon, size: 24, color: color),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
