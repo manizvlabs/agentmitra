@@ -1,3 +1,5 @@
+import 'dart:developer';
+import 'package:flutter/foundation.dart';
 import '../../../../core/services/api_service.dart';
 import '../models/policy_model.dart';
 
@@ -55,10 +57,25 @@ class PolicyRemoteDataSourceImpl implements PolicyRemoteDataSource {
         },
       );
 
-      if (response is Map<String, dynamic> && response['data'] is List) {
+      // Handle different response formats
+      if (response is List) {
+        // Response is directly an array of policies
+        debugPrint('PolicyRemoteDataSource - Response is direct array with ${response.length} items');
+        final data = response as List<dynamic>;
+        return data.map((json) => Policy.fromJson(json as Map<String, dynamic>)).toList();
+      } else if (response is Map<String, dynamic> && response['data'] is List) {
+        // Response is wrapped in data key
+        debugPrint('PolicyRemoteDataSource - Response is wrapped in data key');
         final data = response['data'] as List<dynamic>;
         return data.map((json) => Policy.fromJson(json as Map<String, dynamic>)).toList();
+      } else if (response is Map<String, dynamic> && response.containsKey('policies')) {
+        // Response has policies key
+        debugPrint('PolicyRemoteDataSource - Response has policies key');
+        final data = response['policies'] as List<dynamic>;
+        return data.map((json) => Policy.fromJson(json as Map<String, dynamic>)).toList();
       }
+
+      debugPrint('PolicyRemoteDataSource - Unexpected response format: ${response.runtimeType}');
       return [];
     } catch (e) {
       throw Exception('Failed to fetch policies: $e');
