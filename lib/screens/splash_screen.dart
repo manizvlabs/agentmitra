@@ -4,6 +4,7 @@ import 'dart:async';
 import '../features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../core/services/feature_flag_service.dart';
 import '../core/services/auth_service.dart';
+import '../core/services/rbac_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -191,9 +192,25 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     if (isAuthenticated) {
       // Check user role for appropriate dashboard
       final currentUser = await AuthService().getCurrentUser(context);
-      if (currentUser?.role == 'agent' || currentUser?.role?.contains('agent') == true) {
+      final userRole = currentUser?.userRole;
+
+      // Navigate to role-specific dashboard
+      if (userRole == UserRole.superAdmin) {
+        Navigator.of(context).pushReplacementNamed('/super-admin-dashboard');
+      } else if (userRole == UserRole.providerAdmin) {
+        Navigator.of(context).pushReplacementNamed('/provider-admin-dashboard');
+      } else if (userRole == UserRole.regionalManager) {
+        Navigator.of(context).pushReplacementNamed('/regional-manager-dashboard');
+      } else if (userRole == UserRole.seniorAgent) {
+        Navigator.of(context).pushReplacementNamed('/senior-agent-dashboard');
+      } else if (userRole == UserRole.juniorAgent) {
         Navigator.of(context).pushReplacementNamed('/agent-dashboard');
+      } else if (userRole == UserRole.policyholder) {
+        Navigator.of(context).pushReplacementNamed('/customer-dashboard');
+      } else if (userRole == UserRole.supportStaff) {
+        Navigator.of(context).pushReplacementNamed('/callback-management');
       } else {
+        // Default fallback
         Navigator.of(context).pushReplacementNamed('/customer-dashboard');
       }
     } else {

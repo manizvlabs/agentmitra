@@ -1,3 +1,5 @@
+import '../../../../../core/services/rbac_service.dart';
+
 /// User data model
 class UserModel {
   final String userId;
@@ -75,6 +77,17 @@ class UserModel {
 
   /// Get user ID (alias for userId for backward compatibility)
   String get id => userId;
+
+  /// Get user name (alias for fullName)
+  String? get name => fullName;
+
+  /// Get primary user role
+  UserRole? get userRole {
+    if (roles.isNotEmpty) {
+      return UserRole.fromString(roles.first);
+    }
+    return UserRole.fromString(role);
+  }
 
   /// Create a copy of this UserModel with modified fields
   UserModel copyWith({

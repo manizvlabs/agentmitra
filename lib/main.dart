@@ -66,6 +66,10 @@ import 'features/config_portal/presentation/pages/excel_template_config_page.dar
 import 'features/config_portal/presentation/pages/customer_data_management_page.dart';
 import 'features/config_portal/presentation/pages/reporting_dashboard_page.dart';
 import 'features/config_portal/presentation/pages/user_management_page.dart';
+import 'screens/super_admin_dashboard.dart';
+import 'screens/provider_admin_dashboard.dart';
+import 'screens/regional_manager_dashboard.dart';
+import 'screens/senior_agent_dashboard.dart';
 import 'core/widgets/protected_route.dart';
 import 'core/services/rbac_service.dart';
 
@@ -532,6 +536,22 @@ class AgentMitraApp extends ConsumerWidget {
       (context) => const UserManagementPage(),
       requiredRoles: [UserRole.superAdmin, UserRole.providerAdmin],
       requiredPermissions: ['users.read'],
+    ),
+    '/super-admin-dashboard': _protectedRoute(
+      (context) => const SuperAdminDashboard(),
+      requiredRoles: [UserRole.superAdmin],
+    ),
+    '/provider-admin-dashboard': _protectedRoute(
+      (context) => const ProviderAdminDashboard(),
+      requiredRoles: [UserRole.providerAdmin],
+    ),
+    '/regional-manager-dashboard': _protectedRoute(
+      (context) => const RegionalManagerDashboard(),
+      requiredRoles: [UserRole.regionalManager],
+    ),
+    '/senior-agent-dashboard': _protectedRoute(
+      (context) => const SeniorAgentDashboard(),
+      requiredRoles: [UserRole.seniorAgent],
     ),
     
     // Dashboard and Callback Management (Protected)
