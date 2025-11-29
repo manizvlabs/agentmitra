@@ -646,6 +646,7 @@ class _CustomerDashboardState extends ConsumerState<CustomerDashboard> {
               ],
             ),
           ),
+          // Dashboard
           ListTile(
             leading: const Icon(Icons.home, color: Color(0xFF1a237e)),
             title: const Text('Dashboard'),
@@ -654,7 +655,95 @@ class _CustomerDashboardState extends ConsumerState<CustomerDashboard> {
               // Already on dashboard
             },
           ),
+
           const Divider(),
+
+          // Customer Portal
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              'Customer Portal',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.policy, color: Color(0xFF1a237e)),
+            title: const Text('My Policies'),
+            subtitle: const Text('View and manage your policies'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.of(context).pushNamed('/policies');
+            },
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.description, color: Color(0xFF1a237e)),
+            title: const Text('Policy Details'),
+            subtitle: const Text('Detailed policy information'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.of(context).pushNamed('/policy-details');
+            },
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.chat, color: Color(0xFF1a237e)),
+            title: const Text('WhatsApp Integration'),
+            subtitle: const Text('Chat with your agent'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.of(context).pushNamed('/whatsapp-integration');
+            },
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.smart_toy, color: Color(0xFF1a237e)),
+            title: const Text('Smart Chatbot'),
+            subtitle: const Text('AI-powered assistance'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.of(context).pushNamed('/smart-chatbot');
+            },
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.notifications, color: Color(0xFF1a237e)),
+            title: const Text('Notifications'),
+            subtitle: const Text('View important updates'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.of(context).pushNamed('/notifications');
+            },
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.library_books, color: Color(0xFF1a237e)),
+            title: const Text('Learning Center'),
+            subtitle: const Text('Insurance education resources'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.of(context).pushNamed('/learning-center');
+            },
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.person, color: Color(0xFF1a237e)),
+            title: const Text('Profile'),
+            subtitle: const Text('Manage your profile'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.of(context).pushNamed('/profile');
+            },
+          ),
+
+          const Divider(),
+
+          // Onboarding (for reference/completion)
           const Padding(
             padding: EdgeInsets.all(16.0),
             child: Text(
@@ -666,6 +755,7 @@ class _CustomerDashboardState extends ConsumerState<CustomerDashboard> {
               ),
             ),
           ),
+
           ListTile(
             leading: const Icon(Icons.search, color: Color(0xFF1a237e)),
             title: const Text('Find Agent'),
@@ -675,6 +765,7 @@ class _CustomerDashboardState extends ConsumerState<CustomerDashboard> {
               Navigator.of(context).pushNamed('/agent-discovery');
             },
           ),
+
           ListTile(
             leading: const Icon(Icons.verified_user, color: Color(0xFF1a237e)),
             title: const Text('Agent Verification'),
@@ -684,6 +775,7 @@ class _CustomerDashboardState extends ConsumerState<CustomerDashboard> {
               Navigator.of(context).pushNamed('/agent-verification');
             },
           ),
+
           ListTile(
             leading: const Icon(Icons.upload_file, color: Color(0xFF1a237e)),
             title: const Text('Upload Documents'),
@@ -693,6 +785,7 @@ class _CustomerDashboardState extends ConsumerState<CustomerDashboard> {
               Navigator.of(context).pushNamed('/document-upload');
             },
           ),
+
           ListTile(
             leading: const Icon(Icons.fingerprint, color: Color(0xFF1a237e)),
             title: const Text('KYC Verification'),
@@ -702,6 +795,7 @@ class _CustomerDashboardState extends ConsumerState<CustomerDashboard> {
               Navigator.of(context).pushNamed('/kyc-verification');
             },
           ),
+
           ListTile(
             leading: const Icon(Icons.emergency, color: Color(0xFF1a237e)),
             title: const Text('Emergency Contact'),
@@ -711,36 +805,9 @@ class _CustomerDashboardState extends ConsumerState<CustomerDashboard> {
               Navigator.of(context).pushNamed('/emergency-contact');
             },
           ),
+
           const Divider(),
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text(
-              'Communication',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.chat, color: Color(0xFF1a237e)),
-            title: const Text('WhatsApp Integration'),
-            subtitle: const Text('Chat with your agent'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.of(context).pushNamed('/whatsapp-integration');
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.person, color: Color(0xFF1a237e)),
-            title: const Text('Profile'),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/profile');
-            },
-          ),
+
           ListTile(
             leading: const Icon(Icons.settings, color: Color(0xFF1a237e)),
             title: const Text('Settings'),

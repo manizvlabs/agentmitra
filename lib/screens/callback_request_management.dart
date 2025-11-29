@@ -34,12 +34,13 @@ class _CallbackRequestManagementState extends State<CallbackRequestManagement>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
+      drawer: _buildNavigationDrawer(context),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 2,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1a237e)),
-          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.menu, color: Color(0xFF1a237e)),
+          onPressed: () => Scaffold.of(context).openDrawer(),
         ),
         title: const Text(
           'Callback Requests',
@@ -601,6 +602,207 @@ class _CallbackRequestManagementState extends State<CallbackRequestManagement>
     // TODO: Navigate to create callback page
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Create callback functionality coming soon')),
+    );
+  }
+
+  Widget _buildNavigationDrawer(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: BoxDecoration(
+              color: Colors.green.shade700,
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Colors.white,
+                  child: Icon(Icons.support_agent,
+                      size: 30, color: Colors.green),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  'Support Staff',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Customer Support',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Support Operations
+          _buildSectionHeader('Support Operations'),
+          _buildDrawerItem(
+            context,
+            'Dashboard',
+            Icons.dashboard,
+            () => Navigator.of(context).pushNamed('/callback-management'),
+            selected: true,
+          ),
+
+          _buildDrawerItem(
+            context,
+            'Callback Management',
+            Icons.phone_callback,
+            () => Navigator.of(context).pop(),
+            selected: true,
+          ),
+
+          const Divider(),
+
+          // Customer Portal Access
+          _buildSectionHeader('Customer Support'),
+          _buildDrawerItem(
+            context,
+            'Customer Dashboard',
+            Icons.home,
+            () => Navigator.of(context).pushNamed('/customer-dashboard'),
+          ),
+
+          _buildDrawerItem(
+            context,
+            'My Policies',
+            Icons.policy,
+            () => Navigator.of(context).pushNamed('/policies'),
+          ),
+
+          _buildDrawerItem(
+            context,
+            'Policy Details',
+            Icons.description,
+            () => Navigator.of(context).pushNamed('/policy-details'),
+          ),
+
+          _buildDrawerItem(
+            context,
+            'WhatsApp Integration',
+            Icons.chat,
+            () => Navigator.of(context).pushNamed('/whatsapp-integration'),
+          ),
+
+          _buildDrawerItem(
+            context,
+            'Smart Chatbot',
+            Icons.smart_toy,
+            () => Navigator.of(context).pushNamed('/smart-chatbot'),
+          ),
+
+          _buildDrawerItem(
+            context,
+            'Notifications',
+            Icons.notifications,
+            () => Navigator.of(context).pushNamed('/notifications'),
+          ),
+
+          _buildDrawerItem(
+            context,
+            'Learning Center',
+            Icons.library_books,
+            () => Navigator.of(context).pushNamed('/learning-center'),
+          ),
+
+          const Divider(),
+
+          // Agent Portal (Limited)
+          _buildSectionHeader('Agent Support'),
+          _buildDrawerItem(
+            context,
+            'Agent Dashboard',
+            Icons.business,
+            () => Navigator.of(context).pushNamed('/agent-dashboard'),
+          ),
+
+          _buildDrawerItem(
+            context,
+            'Customers',
+            Icons.people,
+            () => Navigator.of(context).pushNamed('/customers'),
+          ),
+
+          const Divider(),
+
+          _buildDrawerItem(
+            context,
+            'Settings',
+            Icons.settings,
+            () => _showSettingsDialog(context),
+          ),
+
+          _buildDrawerItem(
+            context,
+            'Logout',
+            Icons.logout,
+            () async {
+              // TODO: Implement proper logout
+              if (context.mounted) {
+                Navigator.of(context).pushReplacementNamed('/welcome');
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey[600],
+          letterSpacing: 1.2,
+        ).copyWith(fontSize: 12),
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem(BuildContext context, String title, IconData icon,
+      VoidCallback onTap, {bool selected = false}) {
+    return ListTile(
+      leading: Icon(icon,
+          color: selected ? Colors.green.shade700 : Colors.grey[600]),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: selected ? Colors.green.shade700 : Colors.black,
+          fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+      selected: selected,
+      onTap: onTap,
+    );
+  }
+
+  void _showSettingsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Support Settings'),
+        content: const Text('Support settings panel coming soon...'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
     );
   }
 }

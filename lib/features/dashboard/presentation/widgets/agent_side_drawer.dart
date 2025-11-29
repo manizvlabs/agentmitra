@@ -135,85 +135,169 @@ class _AgentSideDrawerState extends State<AgentSideDrawer> {
   Widget _buildMenuItems(BuildContext context) {
     final menuItems = <_MenuItem>[];
 
-    // Always show Home
+    // Business Operations
     menuItems.add(_MenuItem(
       icon: Icons.home,
-      title: 'Home',
-      route: '/customer-dashboard', // Agent dashboard
+      title: 'Dashboard',
+      route: '/agent-dashboard',
       iconColor: Colors.yellow,
       backgroundColor: Colors.yellow.withOpacity(0.1),
     ));
 
-    // Conditionally show Daily Quotes
-    if (_featureFlags['daily_quotes_enabled'] ?? true) {
-      menuItems.add(_MenuItem(
-        icon: Icons.lightbulb,
-        title: 'Daily Quotes',
-        route: '/daily-quotes',
-        badge: _badges[BadgeService.dailyQuotes],
-        iconColor: Colors.purple,
-        backgroundColor: Colors.purple.withOpacity(0.1),
-      ));
-    }
+    menuItems.add(_MenuItem(
+      icon: Icons.business,
+      title: 'My Business',
+      route: '/agent-dashboard',
+      iconColor: Colors.blue,
+      backgroundColor: Colors.blue.withOpacity(0.1),
+    ));
 
-    // Conditionally show My Policies
-    if (_featureFlags['policies_enabled'] ?? true) {
-      menuItems.add(_MenuItem(
-        icon: Icons.policy,
-        title: 'My Policies',
-        route: '/my-policies',
-        iconColor: Colors.purple,
-        backgroundColor: Colors.purple.withOpacity(0.1),
-      ));
-    }
+    // Customer Management
+    menuItems.add(_MenuItem(
+      icon: Icons.people,
+      title: 'Customers',
+      route: '/customers',
+      iconColor: Colors.green,
+      backgroundColor: Colors.green.withOpacity(0.1),
+    ));
 
-    // Conditionally show Premium Calendar
-    if (_featureFlags['premium_calendar_enabled'] ?? false) {
-      menuItems.add(_MenuItem(
-        icon: Icons.calendar_today,
-        title: 'Premium Calendar',
-        route: '/premium-calendar',
-        iconColor: Colors.blue,
-        backgroundColor: Colors.blue.withOpacity(0.1),
-      ));
-    }
+    menuItems.add(_MenuItem(
+      icon: Icons.home,
+      title: 'Customer Dashboard',
+      route: '/customer-dashboard',
+      iconColor: Colors.teal,
+      backgroundColor: Colors.teal.withOpacity(0.1),
+    ));
 
-    // Conditionally show Agent Chat
-    if (_featureFlags['agent_chat_enabled'] ?? true) {
-      menuItems.add(_MenuItem(
-        icon: Icons.chat_bubble,
-        title: 'Agent Chat',
-        route: '/agent-chat',
-        badge: _badges[BadgeService.agentChat],
-        iconColor: Colors.blue,
-        backgroundColor: Colors.blue.withOpacity(0.1),
-      ));
-    }
+    menuItems.add(_MenuItem(
+      icon: Icons.policy,
+      title: 'My Policies',
+      route: '/policies',
+      iconColor: Colors.purple,
+      backgroundColor: Colors.purple.withOpacity(0.1),
+    ));
 
-    // Conditionally show Reminders
-    if (_featureFlags['reminders_enabled'] ?? true) {
-      menuItems.add(_MenuItem(
-        icon: Icons.notifications,
-        title: 'Reminders',
-        route: '/reminders',
-        badge: _badges[BadgeService.reminders],
-        iconColor: Colors.orange,
-        backgroundColor: Colors.orange.withOpacity(0.1),
-      ));
-    }
+    menuItems.add(_MenuItem(
+      icon: Icons.description,
+      title: 'Policy Details',
+      route: '/policy-details',
+      iconColor: Colors.indigo,
+      backgroundColor: Colors.indigo.withOpacity(0.1),
+    ));
 
-    // Conditionally show Presentations
-    if (_featureFlags['presentations_enabled'] ?? true) {
-      menuItems.add(_MenuItem(
-        icon: Icons.slideshow,
-        title: 'Presentations',
-        route: '/presentations',
-        iconColor: Colors.green,
-        backgroundColor: Colors.green.withOpacity(0.1),
-      ));
-    }
+    // Marketing & Sales
+    menuItems.add(_MenuItem(
+      icon: Icons.campaign,
+      title: 'Campaign Builder',
+      route: '/campaign-builder',
+      iconColor: Colors.orange,
+      backgroundColor: Colors.orange.withOpacity(0.1),
+    ));
 
-    // Always show Profile
+    menuItems.add(_MenuItem(
+      icon: Icons.slideshow,
+      title: 'Presentations',
+      route: '/presentations',
+      iconColor: Colors.red,
+      backgroundColor: Colors.red.withOpacity(0.1),
+    ));
+
+    // Communication
+    menuItems.add(_MenuItem(
+      icon: Icons.chat,
+      title: 'WhatsApp Integration',
+      route: '/whatsapp-integration',
+      iconColor: Colors.green,
+      backgroundColor: Colors.green.withOpacity(0.1),
+    ));
+
+    menuItems.add(_MenuItem(
+      icon: Icons.smart_toy,
+      title: 'Smart Chatbot',
+      route: '/smart-chatbot',
+      iconColor: Colors.blue,
+      backgroundColor: Colors.blue.withOpacity(0.1),
+    ));
+
+    menuItems.add(_MenuItem(
+      icon: Icons.notifications,
+      title: 'Notifications',
+      route: '/notifications',
+      iconColor: Colors.amber,
+      backgroundColor: Colors.amber.withOpacity(0.1),
+    ));
+
+    // Agent Tools
+    menuItems.add(_MenuItem(
+      icon: Icons.format_quote,
+      title: 'Daily Quotes',
+      route: '/daily-quotes',
+      badge: _badges[BadgeService.dailyQuotes],
+      iconColor: Colors.purple,
+      backgroundColor: Colors.purple.withOpacity(0.1),
+    ));
+
+    menuItems.add(_MenuItem(
+      icon: Icons.calendar_today,
+      title: 'Premium Calendar',
+      route: '/premium-calendar',
+      iconColor: Colors.cyan,
+      backgroundColor: Colors.cyan.withOpacity(0.1),
+    ));
+
+    menuItems.add(_MenuItem(
+      icon: Icons.chat_bubble,
+      title: 'Agent Chat',
+      route: '/agent-chat',
+      badge: _badges[BadgeService.agentChat],
+      iconColor: Colors.lightBlue,
+      backgroundColor: Colors.lightBlue.withOpacity(0.1),
+    ));
+
+    menuItems.add(_MenuItem(
+      icon: Icons.notifications_active,
+      title: 'Reminders',
+      route: '/reminders',
+      badge: _badges[BadgeService.reminders],
+      iconColor: Colors.orange,
+      backgroundColor: Colors.orange.withOpacity(0.1),
+    ));
+
+    // Learning & Support
+    menuItems.add(_MenuItem(
+      icon: Icons.library_books,
+      title: 'Learning Center',
+      route: '/learning-center',
+      iconColor: Colors.brown,
+      backgroundColor: Colors.brown.withOpacity(0.1),
+    ));
+
+    menuItems.add(_MenuItem(
+      icon: Icons.report,
+      title: 'Reports',
+      route: '/reports',
+      iconColor: Colors.grey,
+      backgroundColor: Colors.grey.withOpacity(0.1),
+    ));
+
+    // Policy Management
+    menuItems.add(_MenuItem(
+      icon: Icons.add_circle,
+      title: 'New Policy',
+      route: '/new-policy',
+      iconColor: Colors.lightGreen,
+      backgroundColor: Colors.lightGreen.withOpacity(0.1),
+    ));
+
+    menuItems.add(_MenuItem(
+      icon: Icons.report_problem,
+      title: 'New Claim',
+      route: '/new-claim',
+      iconColor: Colors.redAccent,
+      backgroundColor: Colors.redAccent.withOpacity(0.1),
+    ));
+
+    // Profile & Settings
     menuItems.add(_MenuItem(
       icon: Icons.person,
       title: 'Profile',
@@ -222,27 +306,21 @@ class _AgentSideDrawerState extends State<AgentSideDrawer> {
       backgroundColor: Colors.red.withOpacity(0.1),
     ));
 
-    // Conditionally show Accessibility
-    if (_featureFlags['accessibility_enabled'] ?? true) {
-      menuItems.add(_MenuItem(
-        icon: Icons.accessibility,
-        title: 'Accessibility',
-        route: '/accessibility-settings',
-        iconColor: Colors.blue,
-        backgroundColor: Colors.blue.withOpacity(0.1),
-      ));
-    }
+    menuItems.add(_MenuItem(
+      icon: Icons.accessibility,
+      title: 'Accessibility',
+      route: '/accessibility-settings',
+      iconColor: Colors.blue,
+      backgroundColor: Colors.blue.withOpacity(0.1),
+    ));
 
-    // Conditionally show Language
-    if (_featureFlags['language_enabled'] ?? true) {
-      menuItems.add(_MenuItem(
-        icon: Icons.language,
-        title: 'Language',
-        route: '/language-selection',
-        iconColor: Colors.teal,
-        backgroundColor: Colors.teal.withOpacity(0.1),
-      ));
-    }
+    menuItems.add(_MenuItem(
+      icon: Icons.language,
+      title: 'Language',
+      route: '/language-selection',
+      iconColor: Colors.teal,
+      backgroundColor: Colors.teal.withOpacity(0.1),
+    ));
 
     return ListView.builder(
       padding: EdgeInsets.zero,

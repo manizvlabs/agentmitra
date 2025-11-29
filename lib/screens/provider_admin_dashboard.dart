@@ -305,6 +305,9 @@ class ProviderAdminDashboard extends StatelessWidget {
               ],
             ),
           ),
+
+          // Provider Management
+          _buildSectionHeader('Provider Management'),
           _buildDrawerItem(
             context,
             'Dashboard',
@@ -342,7 +345,84 @@ class ProviderAdminDashboard extends StatelessWidget {
             Icons.report,
             () => Navigator.of(context).pushNamed('/reporting-dashboard'),
           ),
+
           const Divider(),
+
+          // Agent Portal Access
+          _buildSectionHeader('Agent Portal'),
+          _buildDrawerItem(
+            context,
+            'Agent Config Dashboard',
+            Icons.settings_applications,
+            () => Navigator.of(context).pushNamed('/agent-config-dashboard'),
+          ),
+          _buildDrawerItem(
+            context,
+            'ROI Analytics',
+            Icons.trending_up,
+            () => Navigator.of(context).pushNamed('/roi-analytics'),
+          ),
+          _buildDrawerItem(
+            context,
+            'Campaign Builder',
+            Icons.campaign,
+            () => Navigator.of(context).pushNamed('/campaign-builder'),
+          ),
+          _buildDrawerItem(
+            context,
+            'Customers',
+            Icons.people_alt,
+            () => Navigator.of(context).pushNamed('/customers'),
+          ),
+
+          const Divider(),
+
+          // Policy Management
+          _buildSectionHeader('Policy Management'),
+          _buildDrawerItem(
+            context,
+            'New Policy',
+            Icons.add_circle,
+            () => Navigator.of(context).pushNamed('/new-policy'),
+          ),
+          _buildDrawerItem(
+            context,
+            'New Claim',
+            Icons.report_problem,
+            () => Navigator.of(context).pushNamed('/new-claim'),
+          ),
+          _buildDrawerItem(
+            context,
+            'Create Policy',
+            Icons.create,
+            () => Navigator.of(context).pushNamed('/policy/create'),
+          ),
+
+          const Divider(),
+
+          // Admin Portal
+          _buildSectionHeader('Admin Portal'),
+          _buildDrawerItem(
+            context,
+            'Tenant Onboarding',
+            Icons.business,
+            () => Navigator.of(context).pushNamed('/tenant-onboarding'),
+          ),
+          _buildDrawerItem(
+            context,
+            'Role Assignment',
+            Icons.assignment_ind,
+            () => Navigator.of(context).pushNamed('/role-assignment/1'),
+          ),
+          _buildDrawerItem(
+            context,
+            'Compliance Reports',
+            Icons.gavel,
+            () => Navigator.of(context).pushNamed('/compliance-reports'),
+          ),
+
+          const Divider(),
+
           _buildDrawerItem(
             context,
             'Settings',
@@ -363,6 +443,21 @@ class ProviderAdminDashboard extends StatelessWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey[600],
+          letterSpacing: 1.2,
+        ).copyWith(fontSize: 12),
       ),
     );
   }

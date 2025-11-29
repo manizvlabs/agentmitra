@@ -384,6 +384,9 @@ class RegionalManagerDashboard extends StatelessWidget {
               ],
             ),
           ),
+
+          // Regional Operations
+          _buildSectionHeader('Regional Operations'),
           _buildDrawerItem(
             context,
             'Dashboard',
@@ -415,7 +418,78 @@ class RegionalManagerDashboard extends StatelessWidget {
             Icons.report,
             () => Navigator.of(context).pushNamed('/reporting-dashboard'),
           ),
+
           const Divider(),
+
+          // Agent Portal
+          _buildSectionHeader('Agent Portal'),
+          _buildDrawerItem(
+            context,
+            'Agent Config Dashboard',
+            Icons.settings_applications,
+            () => Navigator.of(context).pushNamed('/agent-config-dashboard'),
+          ),
+          _buildDrawerItem(
+            context,
+            'Campaign Builder',
+            Icons.campaign,
+            () => Navigator.of(context).pushNamed('/campaign-builder'),
+          ),
+          _buildDrawerItem(
+            context,
+            'Customers',
+            Icons.people_alt,
+            () => Navigator.of(context).pushNamed('/customers'),
+          ),
+
+          const Divider(),
+
+          // Customer Portal (Limited Access)
+          _buildSectionHeader('Customer Support'),
+          _buildDrawerItem(
+            context,
+            'Customer Dashboard',
+            Icons.home,
+            () => Navigator.of(context).pushNamed('/customer-dashboard'),
+          ),
+          _buildDrawerItem(
+            context,
+            'My Policies',
+            Icons.policy,
+            () => Navigator.of(context).pushNamed('/policies'),
+          ),
+          _buildDrawerItem(
+            context,
+            'Policy Details',
+            Icons.description,
+            () => Navigator.of(context).pushNamed('/policy-details'),
+          ),
+          _buildDrawerItem(
+            context,
+            'WhatsApp Integration',
+            Icons.chat,
+            () => Navigator.of(context).pushNamed('/whatsapp-integration'),
+          ),
+
+          const Divider(),
+
+          // Policy Management
+          _buildSectionHeader('Policy Management'),
+          _buildDrawerItem(
+            context,
+            'New Policy',
+            Icons.add_circle,
+            () => Navigator.of(context).pushNamed('/new-policy'),
+          ),
+          _buildDrawerItem(
+            context,
+            'New Claim',
+            Icons.report_problem,
+            () => Navigator.of(context).pushNamed('/new-claim'),
+          ),
+
+          const Divider(),
+
           _buildDrawerItem(
             context,
             'Settings',
@@ -436,6 +510,21 @@ class RegionalManagerDashboard extends StatelessWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey[600],
+          letterSpacing: 1.2,
+        ).copyWith(fontSize: 12),
       ),
     );
   }

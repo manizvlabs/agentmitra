@@ -433,6 +433,9 @@ class SeniorAgentDashboard extends StatelessWidget {
               ],
             ),
           ),
+
+          // Business Operations
+          _buildSectionHeader('Business Operations'),
           _buildDrawerItem(
             context,
             'Dashboard',
@@ -448,13 +451,47 @@ class SeniorAgentDashboard extends StatelessWidget {
           ),
           _buildDrawerItem(
             context,
+            'ROI Analytics',
+            Icons.trending_up,
+            () => Navigator.of(context).pushNamed('/roi-analytics'),
+          ),
+
+          const Divider(),
+
+          // Customer Management
+          _buildSectionHeader('Customer Management'),
+          _buildDrawerItem(
+            context,
             'Customers',
             Icons.people,
             () => Navigator.of(context).pushNamed('/customers'),
           ),
           _buildDrawerItem(
             context,
-            'Campaigns',
+            'Customer Dashboard',
+            Icons.home,
+            () => Navigator.of(context).pushNamed('/customer-dashboard'),
+          ),
+          _buildDrawerItem(
+            context,
+            'My Policies',
+            Icons.policy,
+            () => Navigator.of(context).pushNamed('/policies'),
+          ),
+          _buildDrawerItem(
+            context,
+            'Policy Details',
+            Icons.description,
+            () => Navigator.of(context).pushNamed('/policy-details'),
+          ),
+
+          const Divider(),
+
+          // Marketing & Sales
+          _buildSectionHeader('Marketing & Sales'),
+          _buildDrawerItem(
+            context,
+            'Campaign Builder',
             Icons.campaign,
             () => Navigator.of(context).pushNamed('/campaign-builder'),
           ),
@@ -466,17 +503,76 @@ class SeniorAgentDashboard extends StatelessWidget {
           ),
           _buildDrawerItem(
             context,
-            'Analytics',
-            Icons.analytics,
-            () => Navigator.of(context).pushNamed('/roi-analytics'),
-          ),
-          _buildDrawerItem(
-            context,
             'Daily Quotes',
             Icons.format_quote,
             () => Navigator.of(context).pushNamed('/daily-quotes'),
           ),
+
           const Divider(),
+
+          // Communication
+          _buildSectionHeader('Communication'),
+          _buildDrawerItem(
+            context,
+            'WhatsApp Integration',
+            Icons.chat,
+            () => Navigator.of(context).pushNamed('/whatsapp-integration'),
+          ),
+          _buildDrawerItem(
+            context,
+            'Smart Chatbot',
+            Icons.smart_toy,
+            () => Navigator.of(context).pushNamed('/smart-chatbot'),
+          ),
+          _buildDrawerItem(
+            context,
+            'Notifications',
+            Icons.notifications,
+            () => Navigator.of(context).pushNamed('/notifications'),
+          ),
+
+          const Divider(),
+
+          // Policy Management
+          _buildSectionHeader('Policy Management'),
+          _buildDrawerItem(
+            context,
+            'New Policy',
+            Icons.add_circle,
+            () => Navigator.of(context).pushNamed('/new-policy'),
+          ),
+          _buildDrawerItem(
+            context,
+            'New Claim',
+            Icons.report_problem,
+            () => Navigator.of(context).pushNamed('/new-claim'),
+          ),
+          _buildDrawerItem(
+            context,
+            'Create Policy',
+            Icons.create,
+            () => Navigator.of(context).pushNamed('/policy/create'),
+          ),
+
+          const Divider(),
+
+          // Learning & Support
+          _buildSectionHeader('Learning & Support'),
+          _buildDrawerItem(
+            context,
+            'Learning Center',
+            Icons.library_books,
+            () => Navigator.of(context).pushNamed('/learning-center'),
+          ),
+          _buildDrawerItem(
+            context,
+            'Reports',
+            Icons.report,
+            () => Navigator.of(context).pushNamed('/reports'),
+          ),
+
+          const Divider(),
+
           _buildDrawerItem(
             context,
             'Settings',
@@ -497,6 +593,21 @@ class SeniorAgentDashboard extends StatelessWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey[600],
+          letterSpacing: 1.2,
+        ).copyWith(fontSize: 12),
       ),
     );
   }
