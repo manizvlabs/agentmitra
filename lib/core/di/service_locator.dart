@@ -55,9 +55,9 @@ class ServiceLocator {
   static PoliciesViewModel get policiesViewModel =>
     PoliciesViewModel();
 
-  /// Chatbot ViewModel factory - requires agentId parameter
-  static ChatbotViewModel createChatbotViewModel(String agentId) {
-    return ChatbotViewModel(ChatbotRepository(ChatbotRemoteDataSourceImpl()), agentId);
+  /// Chatbot ViewModel factory
+  static ChatbotViewModel createChatbotViewModel() {
+    return ChatbotViewModel(ChatbotRepository(ChatbotRemoteDataSourceImpl()));
   }
 
   /// Analytics ViewModel - connects to advanced analytics APIs

@@ -36,6 +36,12 @@ class AuthService {
     }
 
     try {
+      // Don't re-initialize if already authenticated, just check current state
+      if (authViewModel.isAuthenticated) {
+        return true;
+      }
+
+      // Only initialize if not already authenticated
       await authViewModel.initialize();
       return authViewModel.isAuthenticated;
     } catch (e) {

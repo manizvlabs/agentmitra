@@ -250,7 +250,7 @@ class AgentMitraApp extends ConsumerWidget {
         ),
         // Chatbot ViewModel
         provider.ChangeNotifierProvider(
-          create: (_) => ServiceLocator.createChatbotViewModel('current-agent'),
+          create: (_) => ServiceLocator.createChatbotViewModel(),
         ),
         provider.ChangeNotifierProvider(
           create: (_) => PresentationViewModel(),

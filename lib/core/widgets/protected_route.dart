@@ -44,17 +44,22 @@ class _ProtectedRouteState extends State<ProtectedRoute> {
     });
 
     try {
-      // Check authentication
+      // Check authentication with better error handling
       final authService = AuthService();
       _isAuthenticated = await authService.isAuthenticated(context);
 
       if (!_isAuthenticated) {
+        // Log authentication failure for debugging
+        print('🔍 DEBUG: ProtectedRoute - User not authenticated for route');
         setState(() {
           _isLoading = false;
           _hasAccess = false;
+          _errorMessage = 'Please log in to access this page.';
         });
         return;
       }
+
+      print('🔍 DEBUG: ProtectedRoute - User authenticated, checking permissions');
 
       // Get RBAC service from provider or service locator
       RbacService? rbacService;

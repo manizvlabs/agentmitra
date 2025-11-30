@@ -20,6 +20,7 @@ import re
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any, Tuple
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from enum import Enum
 
 from app.core.config.settings import settings
@@ -70,8 +71,15 @@ class ChatbotService:
         self.video_service = VideoTutorialService(db)
         self.actionable_report_service = ActionableReportService(db)
 
-        # Initialize OpenAI client
-        self.openai_client = openai.OpenAI(api_key=settings.openai_api_key)
+        # Initialize OpenAI client if API key is provided
+        self.openai_api_key = settings.openai_api_key
+        if self.openai_api_key and self.openai_api_key.strip() and self.openai_api_key != "dev-openai-api-key":
+            self.openai_client = openai.OpenAI(api_key=self.openai_api_key)
+            self.openai_enabled = True
+        else:
+            self.openai_client = None
+            self.openai_enabled = False
+            logger.warning("OpenAI API key not configured. Chatbot will use fallback responses.")
 
         # Enhanced system prompt for advanced chatbot
         self.system_prompt = """
@@ -145,23 +153,36 @@ class ChatbotService:
         """Process a user message and generate AI response"""
 
         start_time = datetime.now()
+        logger.info(f"DEBUG: Starting process_message for session {session_id}, message: '{message[:50]}...'")
 
         try:
             # Detect intent and entities (simplified)
+            logger.info(f"DEBUG: Analyzing intent for message: '{message[:50]}...'")
             intent_analysis = await self._analyze_intent(message)
+            logger.info(f"DEBUG: Intent analysis completed: {intent_analysis}")
 
             # Search knowledge base for relevant information
+            logger.info(f"DEBUG: Searching knowledge base for message: '{message[:50]}...'")
             knowledge_results = await self._search_knowledge_base(message)
+            logger.info(f"DEBUG: Knowledge base search completed, found {len(knowledge_results)} results")
 
             # Get video recommendations based on intent
-            video_recommendations = await self.video_service.get_recommended_videos(
-                user_id=user_id,
-                intent_query=intent_analysis.get("intent", ""),
-                context=context,
-                limit=3
-            )
+            logger.info(f"DEBUG: Getting video recommendations for user {user_id}, intent: {intent_analysis.get('intent', 'unknown')}")
+            try:
+                video_recommendations = await self.video_service.get_recommended_videos(
+                    user_id=user_id,
+                    intent_query=intent_analysis.get("intent", ""),
+                    context=context,
+                    limit=3
+                )
+                logger.info(f"DEBUG: Video recommendations completed, found {len(video_recommendations) if video_recommendations else 0} videos")
+            except Exception as video_error:
+                logger.error(f"DEBUG: Video service error: {video_error}")
+                video_recommendations = []
+                logger.info("DEBUG: Continuing with empty video recommendations")
 
             # Generate response using OpenAI
+            logger.info(f"DEBUG: Generating response using intent: {intent_analysis.get('intent')}")
             response_content = await self._generate_response(
                 message=message,
                 intent=intent_analysis,
@@ -169,11 +190,14 @@ class ChatbotService:
                 video_recommendations=video_recommendations,
                 context=context
             )
+            logger.info(f"DEBUG: Response generation completed, response length: {len(response_content)}")
 
             # Calculate response time
             response_time = (datetime.now() - start_time).total_seconds() * 1000
+            logger.info(f"DEBUG: Total processing time: {response_time}ms")
 
             # Create message record
+            logger.info("DEBUG: Creating message records")
             user_message = ChatMessage(
                 message_id=str(uuid.uuid4()),
                 session_id=session_id,
@@ -203,7 +227,7 @@ class ChatbotService:
             # Update session
             # self._update_session_message_count(session_id)
 
-            return {
+            result = {
                 "response": response_content,
                 "session_id": session_id,
                 "intent": intent_analysis.get("intent"),
@@ -213,8 +237,11 @@ class ChatbotService:
                 "knowledge_used": len(knowledge_results) > 0,
                 "video_recommendations": video_recommendations[:3] if video_recommendations else []
             }
+            logger.info(f"DEBUG: Process message completed successfully")
+            return result
 
         except Exception as e:
+            logger.error(f"DEBUG: Exception in process_message: {str(e)}", exc_info=True)
             # Fallback response for errors
             return {
                 "response": "I apologize, but I'm having trouble processing your message right now. Please try again or contact our support team for assistance.",
@@ -224,7 +251,11 @@ class ChatbotService:
             }
 
     async def _analyze_intent(self, message: str) -> Dict[str, Any]:
-        """Analyze user intent using OpenAI"""
+        """Analyze user intent using OpenAI or fallback pattern matching"""
+
+        # Check if OpenAI is enabled
+        if not self.openai_enabled or not self.openai_client:
+            return self._analyze_intent_fallback(message)
 
         try:
             prompt = f"""
@@ -243,7 +274,7 @@ class ChatbotService:
             """
 
             response = self.openai_client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model=settings.openai_model or "gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "You are an intent analysis expert for insurance chatbots. Return only valid JSON."},
                     {"role": "user", "content": prompt}
@@ -263,14 +294,49 @@ class ChatbotService:
 
         except Exception as e:
             # Log the error for debugging
-            print(f"OpenAI API Error in _analyze_intent: {e}")
+            logger.warning(f"OpenAI API Error in _analyze_intent: {e}")
             # Fallback intent analysis
-            return {
-                "intent": "general_inquiry",
-                "confidence": 0.5,
-                "entities": {},
-                "suggested_actions": ["escalate_to_agent"]
-            }
+            return self._analyze_intent_fallback(message)
+
+    def _analyze_intent_fallback(self, message: str) -> Dict[str, Any]:
+        """Fallback intent analysis using pattern matching when OpenAI is not available"""
+        message_lower = message.lower()
+        
+        # Pattern matching for common intents
+        if any(word in message_lower for word in ["policy", "coverage", "plan", "insurance"]):
+            intent = "policy_inquiry"
+            confidence = 0.7
+        elif any(word in message_lower for word in ["claim", "claiming", "claim status"]):
+            intent = "claim_status"
+            confidence = 0.8
+        elif any(word in message_lower for word in ["premium", "payment", "pay", "due"]):
+            intent = "premium_payment"
+            confidence = 0.8
+        elif any(word in message_lower for word in ["buy", "purchase", "new policy", "apply"]):
+            intent = "policy_purchase"
+            confidence = 0.7
+        elif any(word in message_lower for word in ["document", "certificate", "paper", "download"]):
+            intent = "document_request"
+            confidence = 0.7
+        elif any(word in message_lower for word in ["complaint", "problem", "issue", "wrong", "bad"]):
+            intent = "complaint"
+            confidence = 0.7
+        elif any(word in message_lower for word in ["agent", "contact", "speak", "talk", "human"]):
+            intent = "agent_contact"
+            confidence = 0.8
+        elif any(word in message_lower for word in ["quote", "price", "cost", "rate"]):
+            intent = "quote_request"
+            confidence = 0.7
+        else:
+            intent = "general_info"
+            confidence = 0.5
+        
+        return {
+            "intent": intent,
+            "confidence": confidence,
+            "entities": {},
+            "suggested_actions": ["provide_info", "escalate_to_agent"]
+        }
 
     async def _search_knowledge_base(self, query: str) -> List[Dict[str, Any]]:
         """Search knowledge base for relevant articles"""
@@ -278,9 +344,9 @@ class ChatbotService:
         try:
             # Query knowledge base articles from database
             # This assumes knowledge_base_articles table exists
-            result = self.db.execute("""
+            result = self.db.execute(text("""
                 SELECT id, title, content, category
-                FROM knowledge_base_articles
+                FROM lic_schema.knowledge_base_articles
                 WHERE
                     title ILIKE :query OR
                     content ILIKE :query OR
@@ -293,7 +359,7 @@ class ChatbotService:
                     END,
                     LENGTH(content) DESC
                 LIMIT 5
-            """, {"query": f"%{query}%"})
+            """), {"query": f"%{query}%"})
 
             articles = []
             for row in result:
@@ -356,31 +422,64 @@ class ChatbotService:
         Keep it concise but comprehensive.
         """
 
+        # Check if OpenAI is enabled
+        if not self.openai_enabled or not self.openai_client:
+            # Fallback response when OpenAI is not configured
+            logger.warning("OpenAI not configured, using fallback response")
+            return self._generate_fallback_response(message, intent, knowledge)
+
         try:
             response = self.openai_client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model=settings.openai_model or "gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": self.system_prompt},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=500,
-                temperature=0.7
+                max_tokens=settings.openai_max_tokens or 500,
+                temperature=settings.openai_temperature or 0.7
             )
 
             return response.choices[0].message.content.strip()
 
         except openai.RateLimitError as e:
             # Handle quota exceeded / rate limit errors gracefully
-            print(f"OpenAI Rate Limit Error: {e}")
-            raise Exception("AI service quota exceeded. Please try again later or contact support.")
+            logger.error(f"OpenAI Rate Limit Error: {e}")
+            return self._generate_fallback_response(message, intent, knowledge)
         except openai.APIError as e:
             # Handle other OpenAI API errors
-            print(f"OpenAI API Error: {e}")
-            raise Exception("AI service temporarily unavailable. Please try again later.")
+            logger.error(f"OpenAI API Error: {e}")
+            return self._generate_fallback_response(message, intent, knowledge)
         except Exception as e:
             # Handle any other errors
-            print(f"Unexpected error in OpenAI API: {e}")
-            raise Exception("Failed to generate AI response. Please try again later.")
+            logger.error(f"Unexpected error in OpenAI API: {e}")
+            return self._generate_fallback_response(message, intent, knowledge)
+
+    def _generate_fallback_response(self, message: str, intent: Dict[str, Any], knowledge: List[Dict[str, Any]]) -> str:
+        """Generate a fallback response when OpenAI is not available"""
+        intent_type = intent.get("intent", "general_inquiry")
+        
+        # Basic intent-based responses
+        responses = {
+            "policy_inquiry": "I can help you with policy information. Please provide your policy number or describe what you'd like to know about your policy.",
+            "claim_status": "I can help you check your claim status. Please provide your claim number or policy number.",
+            "premium_payment": "I can assist you with premium payment information. Please provide your policy number to check payment status.",
+            "policy_purchase": "I'd be happy to help you purchase a new policy. Please let me know what type of insurance you're interested in.",
+            "document_request": "I can help you request policy documents. Please provide your policy number.",
+            "complaint": "I'm sorry to hear about your concern. Please provide details and I'll help escalate this to our support team.",
+            "general_info": "I'm here to help with any insurance-related questions. What would you like to know?",
+            "agent_contact": "I can help you connect with an agent. Please let me know your preferred contact method.",
+            "quote_request": "I can help you get a quote. Please provide details about the type of insurance you need.",
+        }
+        
+        response = responses.get(intent_type, "Thank you for your message. I'm here to help with insurance-related questions. How can I assist you today?")
+        
+        # Add knowledge base information if available
+        if knowledge:
+            response += "\n\nHere's some relevant information that might help:\n"
+            for item in knowledge[:2]:
+                response += f"- {item.get('title', 'Information')}: {item.get('content', '')[:100]}...\n"
+        
+        return response
 
     async def end_session(self, session_id: str, satisfaction_score: Optional[int] = None) -> bool:
         """End a chatbot session"""

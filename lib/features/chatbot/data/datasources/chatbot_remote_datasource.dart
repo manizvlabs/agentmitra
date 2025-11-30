@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import '../../../../core/services/api_service.dart';
 import '../models/chatbot_model.dart';
 
@@ -17,13 +18,28 @@ class ChatbotRemoteDataSourceImpl implements ChatbotRemoteDataSource {
 
   @override
   Future<ChatSession> createSession(String agentId, {String? customerId}) async {
+    developer.log('DEBUG: ChatbotRemoteDataSource.createSession called for agent: $agentId', name: 'CHATBOT_DS');
+
     try {
-      final response = await ApiService.post('/chat/sessions', {
-        'user_id': agentId, // Backend expects user_id
+      // Backend will use the authenticated user's ID from JWT token
+      // Only send device_info, backend will extract user_id from auth context
+      final requestBody = {
         'device_info': {'platform': 'mobile'},
-      });
-      return ChatSession.fromJson(response);
+      };
+
+      developer.log('DEBUG: ChatbotRemoteDataSource - Making API call to /chat/sessions', name: 'CHATBOT_DS');
+      developer.log('DEBUG: ChatbotRemoteDataSource - Request body: $requestBody', name: 'CHATBOT_DS');
+
+      final response = await ApiService.post('/chat/sessions', requestBody);
+
+      developer.log('DEBUG: ChatbotRemoteDataSource - API response: $response', name: 'CHATBOT_DS');
+
+      final session = ChatSession.fromJson(response);
+      developer.log('DEBUG: ChatbotRemoteDataSource - Created session: ${session.sessionId}', name: 'CHATBOT_DS');
+
+      return session;
     } catch (e) {
+      developer.log('DEBUG: ChatbotRemoteDataSource - Exception in createSession: $e', name: 'CHATBOT_DS', error: e);
       throw Exception('Failed to create chat session: $e');
     }
   }
@@ -49,14 +65,31 @@ class ChatbotRemoteDataSourceImpl implements ChatbotRemoteDataSource {
 
   @override
   Future<ChatbotResponse> sendMessage(String sessionId, String message) async {
+    print('🔍 DEBUG: ChatbotRemoteDataSource.sendMessage called');
+    developer.log('DEBUG: ChatbotRemoteDataSource.sendMessage called', name: 'CHATBOT');
+    print('🔍 DEBUG: Session ID: $sessionId');
+    developer.log('DEBUG: Session ID: $sessionId', name: 'CHATBOT');
+    print('🔍 DEBUG: Message: $message');
+    developer.log('DEBUG: Message: $message', name: 'CHATBOT');
+
     try {
-      final response = await ApiService.post('/chat/sessions/$sessionId/messages', {
+      final requestBody = {
         'message': message,
         'user_id': 'test-user', // TODO: Get from auth context
-      });
+      };
+
+      print('🔍 DEBUG: Making API call to /chat/sessions/$sessionId/messages');
+      developer.log('DEBUG: Making API call to /chat/sessions/$sessionId/messages', name: 'CHATBOT');
+      print('🔍 DEBUG: Request body: $requestBody');
+      developer.log('DEBUG: Request body: $requestBody', name: 'CHATBOT');
+
+      final response = await ApiService.post('/chat/sessions/$sessionId/messages', requestBody);
+
+      print('🔍 DEBUG: API response received: $response');
+      developer.log('DEBUG: API response received: $response', name: 'CHATBOT');
 
       // Convert backend response to ChatbotResponse
-      return ChatbotResponse(
+      final chatbotResponse = ChatbotResponse(
         responseId: response['session_id'] ?? '',
         message: response['response'] ?? '',
         intent: response['intent'],
@@ -65,7 +98,13 @@ class ChatbotRemoteDataSourceImpl implements ChatbotRemoteDataSource {
         requiresAgent: false, // TODO: Add escalation logic
         escalationReason: null,
       );
+
+      print('🔍 DEBUG: Converted ChatbotResponse: ${chatbotResponse.message}');
+      developer.log('DEBUG: Converted ChatbotResponse: ${chatbotResponse.message}', name: 'CHATBOT');
+      return chatbotResponse;
     } catch (e) {
+      print('🔍 DEBUG: Exception in sendMessage: $e');
+      developer.log('DEBUG: Exception in sendMessage: $e', name: 'CHATBOT', error: e);
       throw Exception('Failed to send message: $e');
     }
   }

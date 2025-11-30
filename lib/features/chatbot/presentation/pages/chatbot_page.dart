@@ -1,5 +1,8 @@
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/services/api_service.dart';
+import '../../../../core/services/auth_service.dart';
 import '../viewmodels/chatbot_viewmodel.dart';
 import '../widgets/chat_message_list.dart';
 import '../widgets/chat_input_field.dart';
@@ -16,13 +19,98 @@ class _ChatbotPageState extends State<ChatbotPage> {
   @override
   void initState() {
     super.initState();
+    print('🔍 DEBUG: ChatbotPage.initState called');
+    developer.log('DEBUG: ChatbotPage.initState called', name: 'CHATBOT_PAGE');
+
+    // Show debug message on screen
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ChatbotViewModel>().initializeChat();
+      print('🔍 DEBUG: ChatbotPage - Checking authentication first');
+      developer.log('DEBUG: ChatbotPage - Checking authentication first', name: 'CHATBOT_PAGE');
+
+      // Check if user is authenticated before proceeding
+      _checkAuthenticationAndInitialize();
     });
+  }
+
+  Future<void> _checkAuthenticationAndInitialize() async {
+    try {
+      final authService = AuthService();
+      final isAuthenticated = await authService.isAuthenticated(context);
+
+      if (!isAuthenticated) {
+        print('🔍 DEBUG: ChatbotPage - User not authenticated, cannot initialize chatbot');
+        developer.log('DEBUG: ChatbotPage - User not authenticated, cannot initialize chatbot', name: 'CHATBOT_PAGE');
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please log in to use the chatbot'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+        return;
+      }
+
+      print('🔍 DEBUG: ChatbotPage - User authenticated, proceeding with initialization');
+      developer.log('DEBUG: ChatbotPage - User authenticated, proceeding with initialization', name: 'CHATBOT_PAGE');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('🔍 DEBUG: Initializing Chatbot...'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+
+      // Test direct API call first
+      await _testDirectApiCall();
+
+      // Initialize chatbot
+      if (mounted) {
+        context.read<ChatbotViewModel>().initializeChat();
+      }
+    } catch (e) {
+      print('🔍 DEBUG: ChatbotPage - Error during authentication check: $e');
+      developer.log('DEBUG: ChatbotPage - Error during authentication check: $e', name: 'CHATBOT_PAGE', error: e);
+    }
+  }
+
+  Future<void> _testDirectApiCall() async {
+    print('🔍 DEBUG: Testing direct API call');
+    try {
+      final response = await ApiService.post('/chat/sessions', {
+        'device_info': {'platform': 'web_test'},
+      });
+      print('🔍 DEBUG: Direct API call successful: $response');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('🔍 API Test Success: ${response['session_id']}'),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      print('🔍 DEBUG: Direct API call failed: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('🔍 API Test Failed: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    developer.log('DEBUG: ChatbotPage.build called', name: 'CHATBOT_PAGE');
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -44,17 +132,22 @@ class _ChatbotPageState extends State<ChatbotPage> {
             builder: (context, viewModel, child) {
               return PopupMenuButton<String>(
                 onSelected: (value) {
+                  developer.log('DEBUG: ChatbotPage - Menu selected: $value', name: 'CHATBOT_PAGE');
                   switch (value) {
                     case 'end_session':
+                      developer.log('DEBUG: ChatbotPage - Showing end session dialog', name: 'CHATBOT_PAGE');
                       _showEndSessionDialog(context, viewModel);
                       break;
                     case 'transfer':
+                      developer.log('DEBUG: ChatbotPage - Showing transfer dialog', name: 'CHATBOT_PAGE');
                       _showTransferDialog(context, viewModel);
                       break;
                     case 'clear':
+                      developer.log('DEBUG: ChatbotPage - Showing clear chat dialog', name: 'CHATBOT_PAGE');
                       _showClearChatDialog(context, viewModel);
                       break;
                     case 'export':
+                      developer.log('DEBUG: ChatbotPage - Exporting conversation', name: 'CHATBOT_PAGE');
                       viewModel.exportConversation();
                       break;
                   }

@@ -10,6 +10,9 @@ from datetime import datetime
 from app.core.database import get_db
 from app.core.auth import get_current_user_context, UserContext
 from app.services.chatbot_service import ChatbotService
+from app.core.logging_config import get_logger
+
+logger = get_logger(__name__)
 from app.models.analytics import (
     ChatbotSession,
     ChatMessage,
@@ -49,7 +52,25 @@ class CreateSessionRequest(BaseModel):
     device_info: Optional[Dict[str, Any]] = None
 
 
-@router.post("/sessions", response_model=ChatbotSession)
+class ChatSessionResponse(BaseModel):
+    """Response model for chat session that matches Flutter expectations"""
+    sessionId: str
+    agentId: str
+    customerId: Optional[str] = None
+    startedAt: datetime
+    endedAt: Optional[datetime] = None
+    status: str = "active"
+    topic: Optional[str] = None
+    messageCount: int = 0
+    context: Optional[Dict[str, Any]] = None
+
+    class Config:
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
+
+
+@router.post("/sessions", response_model=ChatSessionResponse)
 async def create_chat_session(
     request: CreateSessionRequest,
     current_user: UserContext = Depends(get_current_user_context),
@@ -59,11 +80,23 @@ async def create_chat_session(
     try:
         chatbot = ChatbotService(db)
         session = await chatbot.create_session(
-            user_id=request.user_id,
+            user_id=request.user_id or current_user.user_id,
             device_info=request.device_info
         )
-        return session
+        
+        # Map backend ChatbotSession to Flutter-compatible format
+        return ChatSessionResponse(
+            sessionId=session.session_id,
+            agentId=current_user.user_id,  # Use current user as agent
+            customerId=session.user_id if session.user_id != current_user.user_id else None,
+            startedAt=session.started_at,
+            endedAt=session.ended_at,
+            status="active" if session.ended_at is None else "ended",
+            messageCount=session.message_count,
+            context=session.device_info
+        )
     except Exception as e:
+        logger.error(f"Failed to create chat session: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to create chat session: {str(e)}")
 
 
