@@ -23,10 +23,10 @@ async def get_dashboard_analytics(
     """Dashboard analytics endpoint for authenticated users"""
     try:
         from app.repositories.analytics_repository import AnalyticsRepository
-        from app.repositories.policy_repository import InsurancePolicyRepository
+        from app.repositories.policy_repository import PolicyRepository
 
         analytics_repo = AnalyticsRepository(db)
-        policy_repo = InsurancePolicyRepository(db)
+        policy_repo = PolicyRepository(db)
 
         # Get real dashboard KPIs
         kpis = analytics_repo.get_dashboard_kpis()
