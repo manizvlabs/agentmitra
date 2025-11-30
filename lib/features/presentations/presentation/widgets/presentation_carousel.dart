@@ -37,19 +37,14 @@ class _PresentationCarouselState extends State<PresentationCarousel> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadPresentation();
-    });
-  }
-
-  void _loadPresentation() {
-    final viewModel =
-        Provider.of<PresentationViewModel>(context, listen: false);
-    viewModel.loadActivePresentation(widget.agentId);
+    // Remove automatic loading - parent widget should handle this
   }
 
   void _refreshPresentation() {
-    _loadPresentation();
+    // Refresh is now handled by parent widget
+    final viewModel =
+        Provider.of<PresentationViewModel>(context, listen: false);
+    viewModel.refreshActivePresentation(widget.agentId);
   }
 
   @override

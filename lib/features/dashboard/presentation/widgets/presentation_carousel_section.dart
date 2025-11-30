@@ -22,6 +22,26 @@ class PresentationCarouselSection extends StatefulWidget {
 }
 
 class _PresentationCarouselSectionState extends State<PresentationCarouselSection> {
+  bool _hasLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Load presentation once when widget is created
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_hasLoaded) {
+        _loadPresentation();
+      }
+    });
+  }
+
+  void _loadPresentation() {
+    if (_hasLoaded) return;
+    _hasLoaded = true;
+
+    final viewModel = Provider.of<PresentationViewModel>(context, listen: false);
+    viewModel.loadActivePresentation(widget.agentId);
+  }
   @override
   Widget build(BuildContext context) {
     return Consumer<PresentationViewModel>(
