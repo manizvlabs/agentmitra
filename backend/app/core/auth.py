@@ -689,6 +689,15 @@ class UserContext:
         self.phone_number = user.phone_number
         self.role = user.role
         self.email = user.email
+        # Expose user profile attributes
+        self.first_name = user.first_name
+        self.last_name = user.last_name
+        self.display_name = user.display_name
+        self.avatar_url = user.avatar_url
+        self.language_preference = user.language_preference
+        self.timezone = user.timezone
+        self.theme_preference = user.theme_preference
+        self.last_login_at = user.last_login_at
         self.token_data = token_data
         self._db = db
         self._agent_id = None
