@@ -178,6 +178,9 @@ class _ChatbotPageState extends State<ChatbotPage> {
       ),
       body: Consumer<ChatbotViewModel>(
         builder: (context, viewModel, child) {
+          print('🔍 DEBUG: Consumer<ChatbotViewModel>.builder called - messages: ${viewModel.messages.length}, isTyping: ${viewModel.isTyping}, error: ${viewModel.error}');
+          developer.log('DEBUG: Consumer<ChatbotViewModel>.builder called - messages: ${viewModel.messages.length}', name: 'CHATBOT_PAGE');
+
           if (viewModel.isLoading && viewModel.messages.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }

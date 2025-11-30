@@ -263,7 +263,9 @@ class ChatbotViewModel extends ChangeNotifier {
       _error = 'Failed to send message: $e';
     } finally {
       _isTyping = false;
+      print('🔍 DEBUG: ChatbotViewModel - About to call notifyListeners(), messages count: ${_messages.length}');
       notifyListeners();
+      print('🔍 DEBUG: ChatbotViewModel - notifyListeners() called');
       developer.log('DEBUG: ChatbotViewModel - sendMessage completed', name: 'CHATBOT_VM');
     }
   }
