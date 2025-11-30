@@ -40,7 +40,7 @@ class ChatbotViewModel extends ChangeNotifier {
 
   // Actions
   Future<void> initializeChat() async {
-    print('🔍 DEBUG: ChatbotViewModel.initializeChat called');
+    print('🔍 DEBUG: ChatbotViewModel.initializeChat called - instance: ${hashCode}');
     developer.log('DEBUG: ChatbotViewModel.initializeChat called', name: 'CHATBOT_VM');
 
     if (_isLoading) {
@@ -247,8 +247,9 @@ class ChatbotViewModel extends ChangeNotifier {
             isRead: true,
           );
           _messages.add(botMessage);
-          print('🔍 DEBUG: ChatbotViewModel - Messages count after adding bot response: ${_messages.length}');
+                print('🔍 DEBUG: ChatbotViewModel - Messages count after adding bot response: ${_messages.length}');
           print('🔍 DEBUG: ChatbotViewModel - Bot message content: "${botMessage.content}"');
+          print('🔍 DEBUG: ChatbotViewModel - ViewModel instance: ${hashCode}');
           developer.log('DEBUG: ChatbotViewModel - Added bot message to UI', name: 'CHATBOT_VM');
 
           // Check if agent escalation is needed
