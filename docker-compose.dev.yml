@@ -85,12 +85,12 @@ services:
     container_name: agentmitra_pioneer_compass_dev
     restart: unless-stopped
     environment:
-      - PGHOST=host.docker.internal
-      - PGPORT=5432
-      - PGDATABASE=pioneer
-      - PGUSER=pioneer
-      - PGPASSWORD=pioneer123
-      - NATS_URL=nats://host.docker.internal:4223
+      - POSTGRES_HOST=host.docker.internal
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=pioneer
+      - POSTGRES_PASSWORD=pioneer123
+      - POSTGRES_DB=pioneer
+      - NATS_SERVER=pioneer-nats:4222
     ports:
       - "4001:3001"  # Pioneer REST API
     depends_on:
@@ -111,8 +111,12 @@ services:
     container_name: agentmitra_pioneer_scout_dev
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgresql://pioneer:pioneer123@host.docker.internal:5432/pioneer
-      - NATS_URL=nats://host.docker.internal:4223
+      - POSTGRES_HOST=host.docker.internal
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=pioneer
+      - POSTGRES_PASSWORD=pioneer123
+      - POSTGRES_DB=pioneer
+      - NATS_SERVER=pioneer-nats:4222
       - COMPASS_URL=http://pioneer-compass-server:3001
     ports:
       - "4002:3030"  # Pioneer SSE endpoint
