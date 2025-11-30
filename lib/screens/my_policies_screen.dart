@@ -80,6 +80,9 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
     debugPrint('MyPoliciesScreen - Build: policies.length=${policies.length}, isLoading=$isLoading, error=$error');
     debugPrint('MyPoliciesScreen - ViewModel state: selectedStatus=${policiesViewModel.selectedStatus}, selectedProvider=${policiesViewModel.selectedProviderId}, selectedPolicyType=${policiesViewModel.selectedPolicyType}');
 
+    // Debug user information
+    _debugUserInfo();
+
     // Use policies from viewmodel (already filtered by search and status)
     final filteredPolicies = policies;
 
@@ -210,6 +213,24 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
             )
           : null,
     );
+  }
+
+  Future<void> _debugUserInfo() async {
+    try {
+      final authViewModel = ServiceLocator.authViewModel;
+      await authViewModel.initialize();
+      final currentUser = authViewModel.currentUser;
+      final rbacService = ServiceLocator.rbacService;
+      final userRole = rbacService.getCurrentUserRole();
+
+      debugPrint('MyPoliciesScreen - User Info:');
+      debugPrint('  - User ID: ${currentUser?.userId}');
+      debugPrint('  - User Name: ${currentUser?.fullName ?? currentUser?.phoneNumber}');
+      debugPrint('  - User Role: ${userRole?.value}');
+      debugPrint('  - Is Authenticated: ${authViewModel.isAuthenticated}');
+    } catch (e) {
+      debugPrint('MyPoliciesScreen - Error getting user info: $e');
+    }
   }
 
   Widget _buildFilterChip(String label, VoidCallback onRemove) {
@@ -1001,11 +1022,24 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
   }
 
   void _showFilterDialog(BuildContext context, PoliciesViewModel viewModel) {
-    final statusOptions = ['active', 'pending_approval', 'lapsed', 'matured', 'cancelled'];
+    // Map display names to API values
+    final statusDisplayToApi = {
+      'Active': 'active',
+      'Pending Approval': 'pending_approval',
+      'Lapsed': 'lapsed',
+      'Maturing': 'matured', // Backend uses 'matured', UI shows 'Maturing'
+      'Cancelled': 'cancelled',
+    };
+    final statusApiToDisplay = <String, String>{};
+    statusDisplayToApi.forEach((k, v) {
+      statusApiToDisplay[v] = k;
+    });
+
+    final statusOptions = ['Active', 'Pending Approval', 'Lapsed', 'Maturing', 'Cancelled'];
     final insuranceProviderOptions = ['LIC', 'ICICI Prudential', 'HDFC Life', 'Max Life', 'SBI Life', 'PNB MetLife'];
     final planTypeOptions = ['term_life', 'whole_life', 'endowment', 'ulip', 'money_back', 'pension'];
 
-    String? selectedStatus = viewModel.selectedStatus;
+    String? selectedStatusDisplay = viewModel.selectedStatus != null ? statusApiToDisplay[viewModel.selectedStatus] : null;
     String? selectedProvider = viewModel.selectedProviderId;
     String? selectedPolicyType = viewModel.selectedPolicyType;
 
@@ -1023,7 +1057,7 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
                 const Text('Status', style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: selectedStatus,
+                  value: selectedStatusDisplay,
                   hint: const Text('All Statuses'),
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
@@ -1036,12 +1070,12 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
                     ),
                     ...statusOptions.map((status) => DropdownMenuItem<String>(
                       value: status,
-                      child: Text(status.replaceAll('_', ' ').toUpperCase()),
+                      child: Text(status),
                     )),
                   ],
                   onChanged: (value) {
                     setState(() {
-                      selectedStatus = value;
+                      selectedStatusDisplay = value;
                     });
                   },
                 ),
@@ -1118,7 +1152,8 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
             ),
             ElevatedButton(
               onPressed: () {
-                viewModel.setStatusFilter(selectedStatus);
+                final apiStatus = selectedStatusDisplay != null ? statusDisplayToApi[selectedStatusDisplay] : null;
+                viewModel.setStatusFilter(apiStatus);
                 viewModel.setProviderFilter(selectedProvider);
                 viewModel.setPolicyTypeFilter(selectedPolicyType);
                 Navigator.of(context).pop();

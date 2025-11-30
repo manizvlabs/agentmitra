@@ -23,12 +23,45 @@ class _PolicyDetailsScreenState extends ConsumerState<PolicyDetailsScreen> {
   void initState() {
     super.initState();
 
-    // Load policies using the policies view model
+    // Check for navigation arguments
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
+        final args = ModalRoute.of(context)?.settings.arguments;
+        String? policyId;
+
+        if (args is Map<String, dynamic> && args.containsKey('policyId')) {
+          policyId = args['policyId'] as String?;
+        }
+
+        // Load policies
         context.read<PoliciesViewModel>().loadPolicies();
+
+        // If a specific policy was requested, find and select it
+        if (policyId != null) {
+          _selectPolicyById(policyId);
+        }
       }
     });
+  }
+
+  void _selectPolicyById(String policyId) {
+    final policiesViewModel = context.read<PoliciesViewModel>();
+    final policies = policiesViewModel.policies;
+
+    // Find the policy by ID
+    Policy? policy;
+    try {
+      policy = policies.firstWhere((p) => p.policyId == policyId);
+    } catch (e) {
+      policy = null;
+    }
+
+    if (policy != null) {
+      setState(() {
+        _selectedPolicy = policy;
+        _viewModel = _createViewModel(policy!.policyId);
+      });
+    }
   }
 
   PolicyDetailViewModel _createViewModel(String policyId) {
@@ -50,6 +83,19 @@ class _PolicyDetailsScreenState extends ConsumerState<PolicyDetailsScreen> {
     final policiesViewModel = context.watch<PoliciesViewModel>();
     final policies = policiesViewModel.policies;
     final isLoadingPolicies = policiesViewModel.isLoading;
+
+    // If we have a policyId from navigation but haven't selected it yet, try to select it
+    if (_selectedPolicy == null && policies.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final args = ModalRoute.of(context)?.settings.arguments;
+        if (args is Map<String, dynamic> && args.containsKey('policyId')) {
+          final policyId = args['policyId'] as String?;
+          if (policyId != null) {
+            _selectPolicyById(policyId);
+          }
+        }
+      });
+    }
 
     return Scaffold(
         backgroundColor: Colors.grey.shade50,
@@ -88,14 +134,38 @@ class _PolicyDetailsScreenState extends ConsumerState<PolicyDetailsScreen> {
             ? const Center(child: CircularProgressIndicator())
             : policies.isEmpty
                 ? _buildNoPoliciesState()
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildPolicySelector(policies),
-                        const SizedBox(height: 16),
-                        if (_selectedPolicy != null && _viewModel != null) ...[
+                : _selectedPolicy != null && _viewModel != null
+                    ? SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: provider.ChangeNotifierProvider.value(
+                          value: _viewModel!,
+                          child: provider.Consumer<PolicyDetailViewModel>(
+                            builder: (context, viewModel, child) {
+                            if (viewModel.isLoading && viewModel.policy == null) {
+                              return const Center(child: CircularProgressIndicator());
+                            }
+
+                            if (viewModel.error != null && viewModel.policy == null) {
+                              return _buildPolicyErrorState(viewModel);
+                            }
+
+                            final policy = viewModel.policy;
+                            if (policy == null) {
+                              return const Center(child: Text('Policy not found'));
+                            }
+
+                            return _buildPolicyDetailsContent(policy, viewModel);
+                          }),
+                        ),
+                      )
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildPolicySelector(policies),
+                            const SizedBox(height: 16),
+                            if (_selectedPolicy != null && _viewModel != null) ...[
                           provider.ChangeNotifierProvider.value(
                             value: _viewModel!,
                             child: provider.Consumer<PolicyDetailViewModel>(
