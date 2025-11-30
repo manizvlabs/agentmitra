@@ -49,6 +49,10 @@ services:
       # - FEATUREHUB_ENVIRONMENT=${FEATUREHUB_ENVIRONMENT:-production}
       - PIONEER_URL=http://pioneer:4001
       - PIONEER_API_KEY=${PIONEER_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-sk-your-openai-api-key-here}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-3.5-turbo}
+      - OPENAI_MAX_TOKENS=${OPENAI_MAX_TOKENS:-500}
+      - OPENAI_TEMPERATURE=${OPENAI_TEMPERATURE:-0.7}
       - MINIO_ENDPOINT=minio:9000
       - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
       - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}

@@ -84,6 +84,10 @@ class PresentationRepository:
         if not agent_id:
             raise ValueError("Invalid agent_id")
 
+        tenant_id = self._to_uuid(presentation_data.get("tenant_id"))
+        if not tenant_id:
+            raise ValueError("Invalid tenant_id")
+
         template_id = None
         if presentation_data.get("template_id"):
             template_id = self._to_uuid(presentation_data.get("template_id"))
@@ -91,6 +95,7 @@ class PresentationRepository:
         presentation = Presentation(
             presentation_id=uuid.uuid4(),
             agent_id=agent_id,
+            tenant_id=tenant_id,
             name=presentation_data.get("name"),
             description=presentation_data.get("description"),
             status=presentation_data.get("status", "draft"),

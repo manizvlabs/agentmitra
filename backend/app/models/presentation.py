@@ -15,6 +15,7 @@ class Presentation(Base, TimestampMixin):
 
     presentation_id = Column(UUID(as_uuid=True), primary_key=True)
     agent_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.agents.agent_id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     status = Column(String(50), nullable=False, default="draft")  # 'draft', 'published', 'archived'
@@ -151,6 +152,7 @@ class PresentationMedia(Base, TimestampMixin):
 
     media_id = Column(UUID(as_uuid=True), primary_key=True)
     agent_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.agents.agent_id"), nullable=False, index=True)
+    tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     
     # Media details
     media_type = Column(String(50), nullable=False)  # 'image', 'video'

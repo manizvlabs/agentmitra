@@ -1,7 +1,7 @@
 """
 Presentation Carousel API Endpoints
 """
-from fastapi import APIRouter, HTTPException, Depends, status, File, UploadFile
+from fastapi import APIRouter, HTTPException, Depends, status, File, UploadFile, Request
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
@@ -151,6 +151,7 @@ async def get_agent_presentations(
 
 @router.post("/agent/{agent_id}")
 async def create_presentation(
+    request: Request,
     agent_id: str,
     presentation: PresentationModel,
     current_user: UserContext = Depends(get_current_user_context),
@@ -191,6 +192,9 @@ async def create_presentation(
         for slide in presentation.slides
     ]
     
+    # Get tenant_id from request state (set by tenant middleware)
+    tenant_id = getattr(request.state, 'tenant_id', '00000000-0000-0000-0000-000000000000')
+
     created = presentation_repo.create({
         "agent_id": agent_id,
         "name": presentation.name,
@@ -200,6 +204,7 @@ async def create_presentation(
         "template_id": presentation.template_id,
         "tags": presentation.tags,
         "slides": slides_data,
+        "tenant_id": tenant_id,
     })
     
     return {
@@ -211,6 +216,7 @@ async def create_presentation(
 
 @router.put("/agent/{agent_id}/{presentation_id}")
 async def update_presentation(
+    request: Request,
     agent_id: str,
     presentation_id: str,
     presentation: PresentationModel,
@@ -302,6 +308,7 @@ async def get_templates(
 
 @router.post("/media/upload")
 async def upload_media(
+    request: Request,
     file: UploadFile = File(...),
     current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
@@ -331,11 +338,15 @@ async def upload_media(
             folder="presentations"
         )
         
+        # Get tenant_id from request state
+        tenant_id = getattr(request.state, 'tenant_id', '00000000-0000-0000-0000-000000000000')
+
         # Save metadata to database
         import uuid
         media = PresentationMedia(
             media_id=uuid.uuid4(),
             agent_id=current_user.agent_id,
+            tenant_id=uuid.UUID(tenant_id),
             media_type=media_type,
             mime_type=file.content_type,
             file_name=file.filename,
