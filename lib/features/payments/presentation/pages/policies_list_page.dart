@@ -198,7 +198,7 @@ class _PoliciesListPageState extends State<PoliciesListPage> {
     final filters = [
       {'label': 'All', 'value': null},
       {'label': 'Active', 'value': 'active'},
-      {'label': 'Maturing', 'value': 'maturing'},
+      {'label': 'Maturing', 'value': 'matured'}, // Backend expects 'matured'
       {'label': 'Lapsed', 'value': 'lapsed'},
     ];
 

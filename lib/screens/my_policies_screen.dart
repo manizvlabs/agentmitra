@@ -142,8 +142,9 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
     // Build filter chips for active filters
     final activeFilters = <Widget>[];
     if (viewModel.selectedStatus != null) {
+      final statusText = viewModel.selectedStatus!.replaceAll('_', ' ').toUpperCase();
       activeFilters.add(_buildFilterChip(
-        'Status: ${viewModel.selectedStatus!.replaceAll('_', ' ').toUpperCase()}',
+        'Status: $statusText',
         () => viewModel.setStatusFilter(null),
       ));
     }
@@ -154,8 +155,9 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
       ));
     }
     if (viewModel.selectedPolicyType != null) {
+      final typeText = viewModel.selectedPolicyType!.replaceAll('_', ' ').toUpperCase();
       activeFilters.add(_buildFilterChip(
-        'Type: ${viewModel.selectedPolicyType!.replaceAll('_', ' ').toUpperCase()}',
+        'Type: $typeText',
         () => viewModel.setPolicyTypeFilter(null),
       ));
     }
@@ -1153,6 +1155,7 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
             ElevatedButton(
               onPressed: () {
                 final apiStatus = selectedStatusDisplay != null ? statusDisplayToApi[selectedStatusDisplay] : null;
+                debugPrint('MyPoliciesScreen - Apply filters: displayStatus=$selectedStatusDisplay, apiStatus=$apiStatus');
                 viewModel.setStatusFilter(apiStatus);
                 viewModel.setProviderFilter(selectedProvider);
                 viewModel.setPolicyTypeFilter(selectedPolicyType);
