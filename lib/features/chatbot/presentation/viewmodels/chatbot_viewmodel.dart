@@ -229,6 +229,7 @@ class ChatbotViewModel extends ChangeNotifier {
         },
         (botResponse) {
           developer.log('DEBUG: ChatbotViewModel - Got bot response: "${botResponse.message}"', name: 'CHATBOT_VM');
+          print('🔍 DEBUG: ChatbotViewModel - Messages count before adding bot response: ${_messages.length}');
           // Add bot response
           final botMessage = ChatMessage(
             messageId: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -246,6 +247,8 @@ class ChatbotViewModel extends ChangeNotifier {
             isRead: true,
           );
           _messages.add(botMessage);
+          print('🔍 DEBUG: ChatbotViewModel - Messages count after adding bot response: ${_messages.length}');
+          print('🔍 DEBUG: ChatbotViewModel - Bot message content: "${botMessage.content}"');
           developer.log('DEBUG: ChatbotViewModel - Added bot message to UI', name: 'CHATBOT_VM');
 
           // Check if agent escalation is needed

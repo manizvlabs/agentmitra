@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/services/api_service.dart';
@@ -193,12 +194,22 @@ class _ChatbotPageState extends State<ChatbotPage> {
 
               // Messages List
               Expanded(
-                child: ChatMessageList(
-                  messages: viewModel.messages,
-                  isTyping: viewModel.isTyping,
-                  onQuickReplySelected: (reply) {
-                    viewModel.updateCurrentMessage(reply);
-                    viewModel.sendMessage();
+                child: Builder(
+                  builder: (context) {
+                    print('🔍 DEBUG: ChatbotPage - Rendering ChatMessageList with ${viewModel.messages.length} messages');
+                    developer.log('DEBUG: ChatbotPage - Rendering ChatMessageList with ${viewModel.messages.length} messages', name: 'CHATBOT_PAGE');
+                    for (int i = 0; i < viewModel.messages.length; i++) {
+                      final msg = viewModel.messages[i];
+                      print('🔍 DEBUG: ChatbotPage - Message $i: sender=${msg.sender}, content="${msg.content.substring(0, min(50, msg.content.length))}${msg.content.length > 50 ? '...' : ''}"');
+                    }
+                    return ChatMessageList(
+                      messages: viewModel.messages,
+                      isTyping: viewModel.isTyping,
+                      onQuickReplySelected: (reply) {
+                        viewModel.updateCurrentMessage(reply);
+                        viewModel.sendMessage();
+                      },
+                    );
                   },
                 ),
               ),
