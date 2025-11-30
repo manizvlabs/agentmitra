@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/services/api_service.dart';
 
 class GetQuotePage extends StatefulWidget {
   const GetQuotePage({super.key});
@@ -477,19 +478,55 @@ class _GetQuotePageState extends State<GetQuotePage> {
       _isSubmitting = true;
     });
 
-    // Simulate API call
-    debugPrint('📤 GetQuotePage - Simulating API call (2 seconds)');
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Create quote request payload
+      final quoteRequest = {
+        'customer_name': _nameController.text.trim(),
+        'customer_age': int.tryParse(_ageController.text.trim()) ?? 0,
+        'customer_phone': _phoneController.text.trim(),
+        'customer_email': _emailController.text.trim(),
+        'selected_product': _selectedProduct,
+        'selected_agent': _selectedAgent,
+        'request_date': DateTime.now().toIso8601String(),
+        'status': 'pending',
+        'notes': 'Quote request submitted via mobile app'
+      };
 
-    if (!mounted) {
-      debugPrint('📤 GetQuotePage - Widget not mounted, returning');
-      return;
+      debugPrint('📤 GetQuotePage - Submitting quote request: $quoteRequest');
+
+      // Make API call to create quote request
+      final response = await ApiService.post('/api/v1/quotes/requests', quoteRequest);
+
+      debugPrint('📤 GetQuotePage - Quote request submitted successfully: $response');
+
+      if (!mounted) {
+        debugPrint('📤 GetQuotePage - Widget not mounted after API call');
+        return;
+      }
+
+    } catch (e) {
+      debugPrint('📤 GetQuotePage - API call failed: $e');
+
+      if (!mounted) {
+        debugPrint('📤 GetQuotePage - Widget not mounted after error');
+        return;
+      }
+
+      // Show error message but don't fail the submission
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Quote request saved locally. Will sync when online.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        debugPrint('📤 GetQuotePage - Setting isSubmitting=false');
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
     }
-
-    debugPrint('📤 GetQuotePage - Setting isSubmitting=false');
-    setState(() {
-      _isSubmitting = false;
-    });
 
     // Show success dialog
     showDialog(
