@@ -20,45 +20,91 @@ Policy _$PolicyFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Policy {
+  @JsonKey(name: 'policy_id')
   String get policyId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'policy_number')
   String get policyNumber => throw _privateConstructorUsedError;
-  String get providerPolicyId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'provider_policy_id')
+  String? get providerPolicyId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'policyholder_id')
   String get policyholderId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'agent_id')
   String get agentId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'provider_id')
   String get providerId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'policy_type')
   String get policyType => throw _privateConstructorUsedError;
+  @JsonKey(name: 'plan_name')
   String get planName => throw _privateConstructorUsedError;
-  String get planCode => throw _privateConstructorUsedError;
-  String get category => throw _privateConstructorUsedError;
+  @JsonKey(name: 'plan_code')
+  String? get planCode => throw _privateConstructorUsedError;
+  @JsonKey(name: 'category')
+  String? get category => throw _privateConstructorUsedError;
+  @JsonKey(name: 'sum_assured')
   double get sumAssured => throw _privateConstructorUsedError;
+  @JsonKey(name: 'premium_amount')
   double get premiumAmount => throw _privateConstructorUsedError;
+  @JsonKey(name: 'premium_frequency')
   String get premiumFrequency => throw _privateConstructorUsedError;
-  String get premiumMode => throw _privateConstructorUsedError;
+  @JsonKey(name: 'premium_mode')
+  String? get premiumMode => throw _privateConstructorUsedError;
+  @JsonKey(name: 'application_date')
   DateTime get applicationDate => throw _privateConstructorUsedError;
+  @JsonKey(name: 'approval_date')
   DateTime? get approvalDate => throw _privateConstructorUsedError;
+  @JsonKey(name: 'start_date')
   DateTime get startDate => throw _privateConstructorUsedError;
+  @JsonKey(name: 'maturity_date')
   DateTime? get maturityDate => throw _privateConstructorUsedError;
+  @JsonKey(name: 'renewal_date')
   DateTime? get renewalDate => throw _privateConstructorUsedError;
+  @JsonKey(name: 'status')
   String get status => throw _privateConstructorUsedError;
+  @JsonKey(name: 'sub_status')
   String? get subStatus => throw _privateConstructorUsedError;
+  @JsonKey(name: 'payment_status')
   String? get paymentStatus => throw _privateConstructorUsedError;
+  @JsonKey(name: 'coverage_details')
   Map<String, dynamic>? get coverageDetails =>
       throw _privateConstructorUsedError;
+  @JsonKey(name: 'exclusions')
   Map<String, dynamic>? get exclusions => throw _privateConstructorUsedError;
+  @JsonKey(name: 'terms_and_conditions')
   Map<String, dynamic>? get termsAndConditions =>
       throw _privateConstructorUsedError;
+  @JsonKey(name: 'policy_document_url')
   String? get policyDocumentUrl => throw _privateConstructorUsedError;
+  @JsonKey(name: 'application_form_url')
   String? get applicationFormUrl => throw _privateConstructorUsedError;
+  @JsonKey(name: 'medical_reports')
   Map<String, dynamic>? get medicalReports =>
       throw _privateConstructorUsedError;
+  @JsonKey(name: 'nominee_details')
   Map<String, dynamic>? get nomineeDetails =>
       throw _privateConstructorUsedError;
+  @JsonKey(name: 'assignee_details')
   Map<String, dynamic>? get assigneeDetails =>
       throw _privateConstructorUsedError;
+  @JsonKey(name: 'last_payment_date')
   DateTime? get lastPaymentDate => throw _privateConstructorUsedError;
+  @JsonKey(name: 'next_payment_date')
   DateTime? get nextPaymentDate => throw _privateConstructorUsedError;
+  @JsonKey(name: 'total_payments')
   int? get totalPayments => throw _privateConstructorUsedError;
-  double? get outstandingAmount => throw _privateConstructorUsedError;
+  @JsonKey(name: 'outstanding_amount')
+  double? get outstandingAmount =>
+      throw _privateConstructorUsedError; // Additional fields from API response
+  @JsonKey(name: 'policyholder_info')
+  Map<String, dynamic>? get policyholderInfo =>
+      throw _privateConstructorUsedError;
+  @JsonKey(name: 'agent_info')
+  Map<String, dynamic>? get agentInfo => throw _privateConstructorUsedError;
+  @JsonKey(name: 'provider_info')
+  Map<String, dynamic>? get providerInfo => throw _privateConstructorUsedError;
+  @JsonKey(name: 'created_at')
+  DateTime? get createdAt => throw _privateConstructorUsedError;
+  @JsonKey(name: 'updated_at')
+  DateTime? get updatedAt => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -71,40 +117,47 @@ abstract class $PolicyCopyWith<$Res> {
       _$PolicyCopyWithImpl<$Res, Policy>;
   @useResult
   $Res call(
-      {String policyId,
-      String policyNumber,
-      String providerPolicyId,
-      String policyholderId,
-      String agentId,
-      String providerId,
-      String policyType,
-      String planName,
-      String planCode,
-      String category,
-      double sumAssured,
-      double premiumAmount,
-      String premiumFrequency,
-      String premiumMode,
-      DateTime applicationDate,
-      DateTime? approvalDate,
-      DateTime startDate,
-      DateTime? maturityDate,
-      DateTime? renewalDate,
-      String status,
-      String? subStatus,
-      String? paymentStatus,
-      Map<String, dynamic>? coverageDetails,
-      Map<String, dynamic>? exclusions,
+      {@JsonKey(name: 'policy_id') String policyId,
+      @JsonKey(name: 'policy_number') String policyNumber,
+      @JsonKey(name: 'provider_policy_id') String? providerPolicyId,
+      @JsonKey(name: 'policyholder_id') String policyholderId,
+      @JsonKey(name: 'agent_id') String agentId,
+      @JsonKey(name: 'provider_id') String providerId,
+      @JsonKey(name: 'policy_type') String policyType,
+      @JsonKey(name: 'plan_name') String planName,
+      @JsonKey(name: 'plan_code') String? planCode,
+      @JsonKey(name: 'category') String? category,
+      @JsonKey(name: 'sum_assured') double sumAssured,
+      @JsonKey(name: 'premium_amount') double premiumAmount,
+      @JsonKey(name: 'premium_frequency') String premiumFrequency,
+      @JsonKey(name: 'premium_mode') String? premiumMode,
+      @JsonKey(name: 'application_date') DateTime applicationDate,
+      @JsonKey(name: 'approval_date') DateTime? approvalDate,
+      @JsonKey(name: 'start_date') DateTime startDate,
+      @JsonKey(name: 'maturity_date') DateTime? maturityDate,
+      @JsonKey(name: 'renewal_date') DateTime? renewalDate,
+      @JsonKey(name: 'status') String status,
+      @JsonKey(name: 'sub_status') String? subStatus,
+      @JsonKey(name: 'payment_status') String? paymentStatus,
+      @JsonKey(name: 'coverage_details') Map<String, dynamic>? coverageDetails,
+      @JsonKey(name: 'exclusions') Map<String, dynamic>? exclusions,
+      @JsonKey(name: 'terms_and_conditions')
       Map<String, dynamic>? termsAndConditions,
-      String? policyDocumentUrl,
-      String? applicationFormUrl,
-      Map<String, dynamic>? medicalReports,
-      Map<String, dynamic>? nomineeDetails,
-      Map<String, dynamic>? assigneeDetails,
-      DateTime? lastPaymentDate,
-      DateTime? nextPaymentDate,
-      int? totalPayments,
-      double? outstandingAmount});
+      @JsonKey(name: 'policy_document_url') String? policyDocumentUrl,
+      @JsonKey(name: 'application_form_url') String? applicationFormUrl,
+      @JsonKey(name: 'medical_reports') Map<String, dynamic>? medicalReports,
+      @JsonKey(name: 'nominee_details') Map<String, dynamic>? nomineeDetails,
+      @JsonKey(name: 'assignee_details') Map<String, dynamic>? assigneeDetails,
+      @JsonKey(name: 'last_payment_date') DateTime? lastPaymentDate,
+      @JsonKey(name: 'next_payment_date') DateTime? nextPaymentDate,
+      @JsonKey(name: 'total_payments') int? totalPayments,
+      @JsonKey(name: 'outstanding_amount') double? outstandingAmount,
+      @JsonKey(name: 'policyholder_info')
+      Map<String, dynamic>? policyholderInfo,
+      @JsonKey(name: 'agent_info') Map<String, dynamic>? agentInfo,
+      @JsonKey(name: 'provider_info') Map<String, dynamic>? providerInfo,
+      @JsonKey(name: 'created_at') DateTime? createdAt,
+      @JsonKey(name: 'updated_at') DateTime? updatedAt});
 }
 
 /// @nodoc
@@ -122,18 +175,18 @@ class _$PolicyCopyWithImpl<$Res, $Val extends Policy>
   $Res call({
     Object? policyId = null,
     Object? policyNumber = null,
-    Object? providerPolicyId = null,
+    Object? providerPolicyId = freezed,
     Object? policyholderId = null,
     Object? agentId = null,
     Object? providerId = null,
     Object? policyType = null,
     Object? planName = null,
-    Object? planCode = null,
-    Object? category = null,
+    Object? planCode = freezed,
+    Object? category = freezed,
     Object? sumAssured = null,
     Object? premiumAmount = null,
     Object? premiumFrequency = null,
-    Object? premiumMode = null,
+    Object? premiumMode = freezed,
     Object? applicationDate = null,
     Object? approvalDate = freezed,
     Object? startDate = null,
@@ -154,6 +207,11 @@ class _$PolicyCopyWithImpl<$Res, $Val extends Policy>
     Object? nextPaymentDate = freezed,
     Object? totalPayments = freezed,
     Object? outstandingAmount = freezed,
+    Object? policyholderInfo = freezed,
+    Object? agentInfo = freezed,
+    Object? providerInfo = freezed,
+    Object? createdAt = freezed,
+    Object? updatedAt = freezed,
   }) {
     return _then(_value.copyWith(
       policyId: null == policyId
@@ -164,10 +222,10 @@ class _$PolicyCopyWithImpl<$Res, $Val extends Policy>
           ? _value.policyNumber
           : policyNumber // ignore: cast_nullable_to_non_nullable
               as String,
-      providerPolicyId: null == providerPolicyId
+      providerPolicyId: freezed == providerPolicyId
           ? _value.providerPolicyId
           : providerPolicyId // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       policyholderId: null == policyholderId
           ? _value.policyholderId
           : policyholderId // ignore: cast_nullable_to_non_nullable
@@ -188,14 +246,14 @@ class _$PolicyCopyWithImpl<$Res, $Val extends Policy>
           ? _value.planName
           : planName // ignore: cast_nullable_to_non_nullable
               as String,
-      planCode: null == planCode
+      planCode: freezed == planCode
           ? _value.planCode
           : planCode // ignore: cast_nullable_to_non_nullable
-              as String,
-      category: null == category
+              as String?,
+      category: freezed == category
           ? _value.category
           : category // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       sumAssured: null == sumAssured
           ? _value.sumAssured
           : sumAssured // ignore: cast_nullable_to_non_nullable
@@ -208,10 +266,10 @@ class _$PolicyCopyWithImpl<$Res, $Val extends Policy>
           ? _value.premiumFrequency
           : premiumFrequency // ignore: cast_nullable_to_non_nullable
               as String,
-      premiumMode: null == premiumMode
+      premiumMode: freezed == premiumMode
           ? _value.premiumMode
           : premiumMode // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       applicationDate: null == applicationDate
           ? _value.applicationDate
           : applicationDate // ignore: cast_nullable_to_non_nullable
@@ -292,6 +350,26 @@ class _$PolicyCopyWithImpl<$Res, $Val extends Policy>
           ? _value.outstandingAmount
           : outstandingAmount // ignore: cast_nullable_to_non_nullable
               as double?,
+      policyholderInfo: freezed == policyholderInfo
+          ? _value.policyholderInfo
+          : policyholderInfo // ignore: cast_nullable_to_non_nullable
+              as Map<String, dynamic>?,
+      agentInfo: freezed == agentInfo
+          ? _value.agentInfo
+          : agentInfo // ignore: cast_nullable_to_non_nullable
+              as Map<String, dynamic>?,
+      providerInfo: freezed == providerInfo
+          ? _value.providerInfo
+          : providerInfo // ignore: cast_nullable_to_non_nullable
+              as Map<String, dynamic>?,
+      createdAt: freezed == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      updatedAt: freezed == updatedAt
+          ? _value.updatedAt
+          : updatedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ) as $Val);
   }
 }
@@ -304,40 +382,47 @@ abstract class _$$PolicyImplCopyWith<$Res> implements $PolicyCopyWith<$Res> {
   @override
   @useResult
   $Res call(
-      {String policyId,
-      String policyNumber,
-      String providerPolicyId,
-      String policyholderId,
-      String agentId,
-      String providerId,
-      String policyType,
-      String planName,
-      String planCode,
-      String category,
-      double sumAssured,
-      double premiumAmount,
-      String premiumFrequency,
-      String premiumMode,
-      DateTime applicationDate,
-      DateTime? approvalDate,
-      DateTime startDate,
-      DateTime? maturityDate,
-      DateTime? renewalDate,
-      String status,
-      String? subStatus,
-      String? paymentStatus,
-      Map<String, dynamic>? coverageDetails,
-      Map<String, dynamic>? exclusions,
+      {@JsonKey(name: 'policy_id') String policyId,
+      @JsonKey(name: 'policy_number') String policyNumber,
+      @JsonKey(name: 'provider_policy_id') String? providerPolicyId,
+      @JsonKey(name: 'policyholder_id') String policyholderId,
+      @JsonKey(name: 'agent_id') String agentId,
+      @JsonKey(name: 'provider_id') String providerId,
+      @JsonKey(name: 'policy_type') String policyType,
+      @JsonKey(name: 'plan_name') String planName,
+      @JsonKey(name: 'plan_code') String? planCode,
+      @JsonKey(name: 'category') String? category,
+      @JsonKey(name: 'sum_assured') double sumAssured,
+      @JsonKey(name: 'premium_amount') double premiumAmount,
+      @JsonKey(name: 'premium_frequency') String premiumFrequency,
+      @JsonKey(name: 'premium_mode') String? premiumMode,
+      @JsonKey(name: 'application_date') DateTime applicationDate,
+      @JsonKey(name: 'approval_date') DateTime? approvalDate,
+      @JsonKey(name: 'start_date') DateTime startDate,
+      @JsonKey(name: 'maturity_date') DateTime? maturityDate,
+      @JsonKey(name: 'renewal_date') DateTime? renewalDate,
+      @JsonKey(name: 'status') String status,
+      @JsonKey(name: 'sub_status') String? subStatus,
+      @JsonKey(name: 'payment_status') String? paymentStatus,
+      @JsonKey(name: 'coverage_details') Map<String, dynamic>? coverageDetails,
+      @JsonKey(name: 'exclusions') Map<String, dynamic>? exclusions,
+      @JsonKey(name: 'terms_and_conditions')
       Map<String, dynamic>? termsAndConditions,
-      String? policyDocumentUrl,
-      String? applicationFormUrl,
-      Map<String, dynamic>? medicalReports,
-      Map<String, dynamic>? nomineeDetails,
-      Map<String, dynamic>? assigneeDetails,
-      DateTime? lastPaymentDate,
-      DateTime? nextPaymentDate,
-      int? totalPayments,
-      double? outstandingAmount});
+      @JsonKey(name: 'policy_document_url') String? policyDocumentUrl,
+      @JsonKey(name: 'application_form_url') String? applicationFormUrl,
+      @JsonKey(name: 'medical_reports') Map<String, dynamic>? medicalReports,
+      @JsonKey(name: 'nominee_details') Map<String, dynamic>? nomineeDetails,
+      @JsonKey(name: 'assignee_details') Map<String, dynamic>? assigneeDetails,
+      @JsonKey(name: 'last_payment_date') DateTime? lastPaymentDate,
+      @JsonKey(name: 'next_payment_date') DateTime? nextPaymentDate,
+      @JsonKey(name: 'total_payments') int? totalPayments,
+      @JsonKey(name: 'outstanding_amount') double? outstandingAmount,
+      @JsonKey(name: 'policyholder_info')
+      Map<String, dynamic>? policyholderInfo,
+      @JsonKey(name: 'agent_info') Map<String, dynamic>? agentInfo,
+      @JsonKey(name: 'provider_info') Map<String, dynamic>? providerInfo,
+      @JsonKey(name: 'created_at') DateTime? createdAt,
+      @JsonKey(name: 'updated_at') DateTime? updatedAt});
 }
 
 /// @nodoc
@@ -353,18 +438,18 @@ class __$$PolicyImplCopyWithImpl<$Res>
   $Res call({
     Object? policyId = null,
     Object? policyNumber = null,
-    Object? providerPolicyId = null,
+    Object? providerPolicyId = freezed,
     Object? policyholderId = null,
     Object? agentId = null,
     Object? providerId = null,
     Object? policyType = null,
     Object? planName = null,
-    Object? planCode = null,
-    Object? category = null,
+    Object? planCode = freezed,
+    Object? category = freezed,
     Object? sumAssured = null,
     Object? premiumAmount = null,
     Object? premiumFrequency = null,
-    Object? premiumMode = null,
+    Object? premiumMode = freezed,
     Object? applicationDate = null,
     Object? approvalDate = freezed,
     Object? startDate = null,
@@ -385,6 +470,11 @@ class __$$PolicyImplCopyWithImpl<$Res>
     Object? nextPaymentDate = freezed,
     Object? totalPayments = freezed,
     Object? outstandingAmount = freezed,
+    Object? policyholderInfo = freezed,
+    Object? agentInfo = freezed,
+    Object? providerInfo = freezed,
+    Object? createdAt = freezed,
+    Object? updatedAt = freezed,
   }) {
     return _then(_$PolicyImpl(
       policyId: null == policyId
@@ -395,10 +485,10 @@ class __$$PolicyImplCopyWithImpl<$Res>
           ? _value.policyNumber
           : policyNumber // ignore: cast_nullable_to_non_nullable
               as String,
-      providerPolicyId: null == providerPolicyId
+      providerPolicyId: freezed == providerPolicyId
           ? _value.providerPolicyId
           : providerPolicyId // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       policyholderId: null == policyholderId
           ? _value.policyholderId
           : policyholderId // ignore: cast_nullable_to_non_nullable
@@ -419,14 +509,14 @@ class __$$PolicyImplCopyWithImpl<$Res>
           ? _value.planName
           : planName // ignore: cast_nullable_to_non_nullable
               as String,
-      planCode: null == planCode
+      planCode: freezed == planCode
           ? _value.planCode
           : planCode // ignore: cast_nullable_to_non_nullable
-              as String,
-      category: null == category
+              as String?,
+      category: freezed == category
           ? _value.category
           : category // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       sumAssured: null == sumAssured
           ? _value.sumAssured
           : sumAssured // ignore: cast_nullable_to_non_nullable
@@ -439,10 +529,10 @@ class __$$PolicyImplCopyWithImpl<$Res>
           ? _value.premiumFrequency
           : premiumFrequency // ignore: cast_nullable_to_non_nullable
               as String,
-      premiumMode: null == premiumMode
+      premiumMode: freezed == premiumMode
           ? _value.premiumMode
           : premiumMode // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       applicationDate: null == applicationDate
           ? _value.applicationDate
           : applicationDate // ignore: cast_nullable_to_non_nullable
@@ -523,6 +613,26 @@ class __$$PolicyImplCopyWithImpl<$Res>
           ? _value.outstandingAmount
           : outstandingAmount // ignore: cast_nullable_to_non_nullable
               as double?,
+      policyholderInfo: freezed == policyholderInfo
+          ? _value._policyholderInfo
+          : policyholderInfo // ignore: cast_nullable_to_non_nullable
+              as Map<String, dynamic>?,
+      agentInfo: freezed == agentInfo
+          ? _value._agentInfo
+          : agentInfo // ignore: cast_nullable_to_non_nullable
+              as Map<String, dynamic>?,
+      providerInfo: freezed == providerInfo
+          ? _value._providerInfo
+          : providerInfo // ignore: cast_nullable_to_non_nullable
+              as Map<String, dynamic>?,
+      createdAt: freezed == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      updatedAt: freezed == updatedAt
+          ? _value.updatedAt
+          : updatedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ));
   }
 }
@@ -531,96 +641,133 @@ class __$$PolicyImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$PolicyImpl implements _Policy {
   const _$PolicyImpl(
-      {required this.policyId,
-      required this.policyNumber,
-      required this.providerPolicyId,
-      required this.policyholderId,
-      required this.agentId,
-      required this.providerId,
-      required this.policyType,
-      required this.planName,
-      required this.planCode,
-      required this.category,
-      required this.sumAssured,
-      required this.premiumAmount,
-      required this.premiumFrequency,
-      required this.premiumMode,
-      required this.applicationDate,
-      this.approvalDate,
-      required this.startDate,
-      this.maturityDate,
-      this.renewalDate,
-      required this.status,
-      this.subStatus,
-      this.paymentStatus,
+      {@JsonKey(name: 'policy_id') required this.policyId,
+      @JsonKey(name: 'policy_number') required this.policyNumber,
+      @JsonKey(name: 'provider_policy_id') this.providerPolicyId,
+      @JsonKey(name: 'policyholder_id') required this.policyholderId,
+      @JsonKey(name: 'agent_id') required this.agentId,
+      @JsonKey(name: 'provider_id') required this.providerId,
+      @JsonKey(name: 'policy_type') required this.policyType,
+      @JsonKey(name: 'plan_name') required this.planName,
+      @JsonKey(name: 'plan_code') this.planCode,
+      @JsonKey(name: 'category') this.category,
+      @JsonKey(name: 'sum_assured') required this.sumAssured,
+      @JsonKey(name: 'premium_amount') required this.premiumAmount,
+      @JsonKey(name: 'premium_frequency') required this.premiumFrequency,
+      @JsonKey(name: 'premium_mode') this.premiumMode,
+      @JsonKey(name: 'application_date') required this.applicationDate,
+      @JsonKey(name: 'approval_date') this.approvalDate,
+      @JsonKey(name: 'start_date') required this.startDate,
+      @JsonKey(name: 'maturity_date') this.maturityDate,
+      @JsonKey(name: 'renewal_date') this.renewalDate,
+      @JsonKey(name: 'status') required this.status,
+      @JsonKey(name: 'sub_status') this.subStatus,
+      @JsonKey(name: 'payment_status') this.paymentStatus,
+      @JsonKey(name: 'coverage_details')
       final Map<String, dynamic>? coverageDetails,
-      final Map<String, dynamic>? exclusions,
+      @JsonKey(name: 'exclusions') final Map<String, dynamic>? exclusions,
+      @JsonKey(name: 'terms_and_conditions')
       final Map<String, dynamic>? termsAndConditions,
-      this.policyDocumentUrl,
-      this.applicationFormUrl,
+      @JsonKey(name: 'policy_document_url') this.policyDocumentUrl,
+      @JsonKey(name: 'application_form_url') this.applicationFormUrl,
+      @JsonKey(name: 'medical_reports')
       final Map<String, dynamic>? medicalReports,
+      @JsonKey(name: 'nominee_details')
       final Map<String, dynamic>? nomineeDetails,
+      @JsonKey(name: 'assignee_details')
       final Map<String, dynamic>? assigneeDetails,
-      this.lastPaymentDate,
-      this.nextPaymentDate,
-      this.totalPayments,
-      this.outstandingAmount})
+      @JsonKey(name: 'last_payment_date') this.lastPaymentDate,
+      @JsonKey(name: 'next_payment_date') this.nextPaymentDate,
+      @JsonKey(name: 'total_payments') this.totalPayments,
+      @JsonKey(name: 'outstanding_amount') this.outstandingAmount,
+      @JsonKey(name: 'policyholder_info')
+      final Map<String, dynamic>? policyholderInfo,
+      @JsonKey(name: 'agent_info') final Map<String, dynamic>? agentInfo,
+      @JsonKey(name: 'provider_info') final Map<String, dynamic>? providerInfo,
+      @JsonKey(name: 'created_at') this.createdAt,
+      @JsonKey(name: 'updated_at') this.updatedAt})
       : _coverageDetails = coverageDetails,
         _exclusions = exclusions,
         _termsAndConditions = termsAndConditions,
         _medicalReports = medicalReports,
         _nomineeDetails = nomineeDetails,
-        _assigneeDetails = assigneeDetails;
+        _assigneeDetails = assigneeDetails,
+        _policyholderInfo = policyholderInfo,
+        _agentInfo = agentInfo,
+        _providerInfo = providerInfo;
 
   factory _$PolicyImpl.fromJson(Map<String, dynamic> json) =>
       _$$PolicyImplFromJson(json);
 
   @override
+  @JsonKey(name: 'policy_id')
   final String policyId;
   @override
+  @JsonKey(name: 'policy_number')
   final String policyNumber;
   @override
-  final String providerPolicyId;
+  @JsonKey(name: 'provider_policy_id')
+  final String? providerPolicyId;
   @override
+  @JsonKey(name: 'policyholder_id')
   final String policyholderId;
   @override
+  @JsonKey(name: 'agent_id')
   final String agentId;
   @override
+  @JsonKey(name: 'provider_id')
   final String providerId;
   @override
+  @JsonKey(name: 'policy_type')
   final String policyType;
   @override
+  @JsonKey(name: 'plan_name')
   final String planName;
   @override
-  final String planCode;
+  @JsonKey(name: 'plan_code')
+  final String? planCode;
   @override
-  final String category;
+  @JsonKey(name: 'category')
+  final String? category;
   @override
+  @JsonKey(name: 'sum_assured')
   final double sumAssured;
   @override
+  @JsonKey(name: 'premium_amount')
   final double premiumAmount;
   @override
+  @JsonKey(name: 'premium_frequency')
   final String premiumFrequency;
   @override
-  final String premiumMode;
+  @JsonKey(name: 'premium_mode')
+  final String? premiumMode;
   @override
+  @JsonKey(name: 'application_date')
   final DateTime applicationDate;
   @override
+  @JsonKey(name: 'approval_date')
   final DateTime? approvalDate;
   @override
+  @JsonKey(name: 'start_date')
   final DateTime startDate;
   @override
+  @JsonKey(name: 'maturity_date')
   final DateTime? maturityDate;
   @override
+  @JsonKey(name: 'renewal_date')
   final DateTime? renewalDate;
   @override
+  @JsonKey(name: 'status')
   final String status;
   @override
+  @JsonKey(name: 'sub_status')
   final String? subStatus;
   @override
+  @JsonKey(name: 'payment_status')
   final String? paymentStatus;
   final Map<String, dynamic>? _coverageDetails;
   @override
+  @JsonKey(name: 'coverage_details')
   Map<String, dynamic>? get coverageDetails {
     final value = _coverageDetails;
     if (value == null) return null;
@@ -631,6 +778,7 @@ class _$PolicyImpl implements _Policy {
 
   final Map<String, dynamic>? _exclusions;
   @override
+  @JsonKey(name: 'exclusions')
   Map<String, dynamic>? get exclusions {
     final value = _exclusions;
     if (value == null) return null;
@@ -641,6 +789,7 @@ class _$PolicyImpl implements _Policy {
 
   final Map<String, dynamic>? _termsAndConditions;
   @override
+  @JsonKey(name: 'terms_and_conditions')
   Map<String, dynamic>? get termsAndConditions {
     final value = _termsAndConditions;
     if (value == null) return null;
@@ -651,11 +800,14 @@ class _$PolicyImpl implements _Policy {
   }
 
   @override
+  @JsonKey(name: 'policy_document_url')
   final String? policyDocumentUrl;
   @override
+  @JsonKey(name: 'application_form_url')
   final String? applicationFormUrl;
   final Map<String, dynamic>? _medicalReports;
   @override
+  @JsonKey(name: 'medical_reports')
   Map<String, dynamic>? get medicalReports {
     final value = _medicalReports;
     if (value == null) return null;
@@ -666,6 +818,7 @@ class _$PolicyImpl implements _Policy {
 
   final Map<String, dynamic>? _nomineeDetails;
   @override
+  @JsonKey(name: 'nominee_details')
   Map<String, dynamic>? get nomineeDetails {
     final value = _nomineeDetails;
     if (value == null) return null;
@@ -676,6 +829,7 @@ class _$PolicyImpl implements _Policy {
 
   final Map<String, dynamic>? _assigneeDetails;
   @override
+  @JsonKey(name: 'assignee_details')
   Map<String, dynamic>? get assigneeDetails {
     final value = _assigneeDetails;
     if (value == null) return null;
@@ -685,17 +839,62 @@ class _$PolicyImpl implements _Policy {
   }
 
   @override
+  @JsonKey(name: 'last_payment_date')
   final DateTime? lastPaymentDate;
   @override
+  @JsonKey(name: 'next_payment_date')
   final DateTime? nextPaymentDate;
   @override
+  @JsonKey(name: 'total_payments')
   final int? totalPayments;
   @override
+  @JsonKey(name: 'outstanding_amount')
   final double? outstandingAmount;
+// Additional fields from API response
+  final Map<String, dynamic>? _policyholderInfo;
+// Additional fields from API response
+  @override
+  @JsonKey(name: 'policyholder_info')
+  Map<String, dynamic>? get policyholderInfo {
+    final value = _policyholderInfo;
+    if (value == null) return null;
+    if (_policyholderInfo is EqualUnmodifiableMapView) return _policyholderInfo;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(value);
+  }
+
+  final Map<String, dynamic>? _agentInfo;
+  @override
+  @JsonKey(name: 'agent_info')
+  Map<String, dynamic>? get agentInfo {
+    final value = _agentInfo;
+    if (value == null) return null;
+    if (_agentInfo is EqualUnmodifiableMapView) return _agentInfo;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(value);
+  }
+
+  final Map<String, dynamic>? _providerInfo;
+  @override
+  @JsonKey(name: 'provider_info')
+  Map<String, dynamic>? get providerInfo {
+    final value = _providerInfo;
+    if (value == null) return null;
+    if (_providerInfo is EqualUnmodifiableMapView) return _providerInfo;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(value);
+  }
+
+  @override
+  @JsonKey(name: 'created_at')
+  final DateTime? createdAt;
+  @override
+  @JsonKey(name: 'updated_at')
+  final DateTime? updatedAt;
 
   @override
   String toString() {
-    return 'Policy(policyId: $policyId, policyNumber: $policyNumber, providerPolicyId: $providerPolicyId, policyholderId: $policyholderId, agentId: $agentId, providerId: $providerId, policyType: $policyType, planName: $planName, planCode: $planCode, category: $category, sumAssured: $sumAssured, premiumAmount: $premiumAmount, premiumFrequency: $premiumFrequency, premiumMode: $premiumMode, applicationDate: $applicationDate, approvalDate: $approvalDate, startDate: $startDate, maturityDate: $maturityDate, renewalDate: $renewalDate, status: $status, subStatus: $subStatus, paymentStatus: $paymentStatus, coverageDetails: $coverageDetails, exclusions: $exclusions, termsAndConditions: $termsAndConditions, policyDocumentUrl: $policyDocumentUrl, applicationFormUrl: $applicationFormUrl, medicalReports: $medicalReports, nomineeDetails: $nomineeDetails, assigneeDetails: $assigneeDetails, lastPaymentDate: $lastPaymentDate, nextPaymentDate: $nextPaymentDate, totalPayments: $totalPayments, outstandingAmount: $outstandingAmount)';
+    return 'Policy(policyId: $policyId, policyNumber: $policyNumber, providerPolicyId: $providerPolicyId, policyholderId: $policyholderId, agentId: $agentId, providerId: $providerId, policyType: $policyType, planName: $planName, planCode: $planCode, category: $category, sumAssured: $sumAssured, premiumAmount: $premiumAmount, premiumFrequency: $premiumFrequency, premiumMode: $premiumMode, applicationDate: $applicationDate, approvalDate: $approvalDate, startDate: $startDate, maturityDate: $maturityDate, renewalDate: $renewalDate, status: $status, subStatus: $subStatus, paymentStatus: $paymentStatus, coverageDetails: $coverageDetails, exclusions: $exclusions, termsAndConditions: $termsAndConditions, policyDocumentUrl: $policyDocumentUrl, applicationFormUrl: $applicationFormUrl, medicalReports: $medicalReports, nomineeDetails: $nomineeDetails, assigneeDetails: $assigneeDetails, lastPaymentDate: $lastPaymentDate, nextPaymentDate: $nextPaymentDate, totalPayments: $totalPayments, outstandingAmount: $outstandingAmount, policyholderInfo: $policyholderInfo, agentInfo: $agentInfo, providerInfo: $providerInfo, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -768,7 +967,17 @@ class _$PolicyImpl implements _Policy {
             (identical(other.totalPayments, totalPayments) ||
                 other.totalPayments == totalPayments) &&
             (identical(other.outstandingAmount, outstandingAmount) ||
-                other.outstandingAmount == outstandingAmount));
+                other.outstandingAmount == outstandingAmount) &&
+            const DeepCollectionEquality()
+                .equals(other._policyholderInfo, _policyholderInfo) &&
+            const DeepCollectionEquality()
+                .equals(other._agentInfo, _agentInfo) &&
+            const DeepCollectionEquality()
+                .equals(other._providerInfo, _providerInfo) &&
+            (identical(other.createdAt, createdAt) ||
+                other.createdAt == createdAt) &&
+            (identical(other.updatedAt, updatedAt) ||
+                other.updatedAt == updatedAt));
   }
 
   @JsonKey(ignore: true)
@@ -808,7 +1017,12 @@ class _$PolicyImpl implements _Policy {
         lastPaymentDate,
         nextPaymentDate,
         totalPayments,
-        outstandingAmount
+        outstandingAmount,
+        const DeepCollectionEquality().hash(_policyholderInfo),
+        const DeepCollectionEquality().hash(_agentInfo),
+        const DeepCollectionEquality().hash(_providerInfo),
+        createdAt,
+        updatedAt
       ]);
 
   @JsonKey(ignore: true)
@@ -827,111 +1041,173 @@ class _$PolicyImpl implements _Policy {
 
 abstract class _Policy implements Policy {
   const factory _Policy(
-      {required final String policyId,
-      required final String policyNumber,
-      required final String providerPolicyId,
-      required final String policyholderId,
-      required final String agentId,
-      required final String providerId,
-      required final String policyType,
-      required final String planName,
-      required final String planCode,
-      required final String category,
-      required final double sumAssured,
-      required final double premiumAmount,
+      {@JsonKey(name: 'policy_id') required final String policyId,
+      @JsonKey(name: 'policy_number') required final String policyNumber,
+      @JsonKey(name: 'provider_policy_id') final String? providerPolicyId,
+      @JsonKey(name: 'policyholder_id') required final String policyholderId,
+      @JsonKey(name: 'agent_id') required final String agentId,
+      @JsonKey(name: 'provider_id') required final String providerId,
+      @JsonKey(name: 'policy_type') required final String policyType,
+      @JsonKey(name: 'plan_name') required final String planName,
+      @JsonKey(name: 'plan_code') final String? planCode,
+      @JsonKey(name: 'category') final String? category,
+      @JsonKey(name: 'sum_assured') required final double sumAssured,
+      @JsonKey(name: 'premium_amount') required final double premiumAmount,
+      @JsonKey(name: 'premium_frequency')
       required final String premiumFrequency,
-      required final String premiumMode,
+      @JsonKey(name: 'premium_mode') final String? premiumMode,
+      @JsonKey(name: 'application_date')
       required final DateTime applicationDate,
-      final DateTime? approvalDate,
-      required final DateTime startDate,
-      final DateTime? maturityDate,
-      final DateTime? renewalDate,
-      required final String status,
-      final String? subStatus,
-      final String? paymentStatus,
+      @JsonKey(name: 'approval_date') final DateTime? approvalDate,
+      @JsonKey(name: 'start_date') required final DateTime startDate,
+      @JsonKey(name: 'maturity_date') final DateTime? maturityDate,
+      @JsonKey(name: 'renewal_date') final DateTime? renewalDate,
+      @JsonKey(name: 'status') required final String status,
+      @JsonKey(name: 'sub_status') final String? subStatus,
+      @JsonKey(name: 'payment_status') final String? paymentStatus,
+      @JsonKey(name: 'coverage_details')
       final Map<String, dynamic>? coverageDetails,
-      final Map<String, dynamic>? exclusions,
+      @JsonKey(name: 'exclusions') final Map<String, dynamic>? exclusions,
+      @JsonKey(name: 'terms_and_conditions')
       final Map<String, dynamic>? termsAndConditions,
-      final String? policyDocumentUrl,
-      final String? applicationFormUrl,
+      @JsonKey(name: 'policy_document_url') final String? policyDocumentUrl,
+      @JsonKey(name: 'application_form_url') final String? applicationFormUrl,
+      @JsonKey(name: 'medical_reports')
       final Map<String, dynamic>? medicalReports,
+      @JsonKey(name: 'nominee_details')
       final Map<String, dynamic>? nomineeDetails,
+      @JsonKey(name: 'assignee_details')
       final Map<String, dynamic>? assigneeDetails,
-      final DateTime? lastPaymentDate,
-      final DateTime? nextPaymentDate,
-      final int? totalPayments,
-      final double? outstandingAmount}) = _$PolicyImpl;
+      @JsonKey(name: 'last_payment_date') final DateTime? lastPaymentDate,
+      @JsonKey(name: 'next_payment_date') final DateTime? nextPaymentDate,
+      @JsonKey(name: 'total_payments') final int? totalPayments,
+      @JsonKey(name: 'outstanding_amount') final double? outstandingAmount,
+      @JsonKey(name: 'policyholder_info')
+      final Map<String, dynamic>? policyholderInfo,
+      @JsonKey(name: 'agent_info') final Map<String, dynamic>? agentInfo,
+      @JsonKey(name: 'provider_info') final Map<String, dynamic>? providerInfo,
+      @JsonKey(name: 'created_at') final DateTime? createdAt,
+      @JsonKey(name: 'updated_at') final DateTime? updatedAt}) = _$PolicyImpl;
 
   factory _Policy.fromJson(Map<String, dynamic> json) = _$PolicyImpl.fromJson;
 
   @override
+  @JsonKey(name: 'policy_id')
   String get policyId;
   @override
+  @JsonKey(name: 'policy_number')
   String get policyNumber;
   @override
-  String get providerPolicyId;
+  @JsonKey(name: 'provider_policy_id')
+  String? get providerPolicyId;
   @override
+  @JsonKey(name: 'policyholder_id')
   String get policyholderId;
   @override
+  @JsonKey(name: 'agent_id')
   String get agentId;
   @override
+  @JsonKey(name: 'provider_id')
   String get providerId;
   @override
+  @JsonKey(name: 'policy_type')
   String get policyType;
   @override
+  @JsonKey(name: 'plan_name')
   String get planName;
   @override
-  String get planCode;
+  @JsonKey(name: 'plan_code')
+  String? get planCode;
   @override
-  String get category;
+  @JsonKey(name: 'category')
+  String? get category;
   @override
+  @JsonKey(name: 'sum_assured')
   double get sumAssured;
   @override
+  @JsonKey(name: 'premium_amount')
   double get premiumAmount;
   @override
+  @JsonKey(name: 'premium_frequency')
   String get premiumFrequency;
   @override
-  String get premiumMode;
+  @JsonKey(name: 'premium_mode')
+  String? get premiumMode;
   @override
+  @JsonKey(name: 'application_date')
   DateTime get applicationDate;
   @override
+  @JsonKey(name: 'approval_date')
   DateTime? get approvalDate;
   @override
+  @JsonKey(name: 'start_date')
   DateTime get startDate;
   @override
+  @JsonKey(name: 'maturity_date')
   DateTime? get maturityDate;
   @override
+  @JsonKey(name: 'renewal_date')
   DateTime? get renewalDate;
   @override
+  @JsonKey(name: 'status')
   String get status;
   @override
+  @JsonKey(name: 'sub_status')
   String? get subStatus;
   @override
+  @JsonKey(name: 'payment_status')
   String? get paymentStatus;
   @override
+  @JsonKey(name: 'coverage_details')
   Map<String, dynamic>? get coverageDetails;
   @override
+  @JsonKey(name: 'exclusions')
   Map<String, dynamic>? get exclusions;
   @override
+  @JsonKey(name: 'terms_and_conditions')
   Map<String, dynamic>? get termsAndConditions;
   @override
+  @JsonKey(name: 'policy_document_url')
   String? get policyDocumentUrl;
   @override
+  @JsonKey(name: 'application_form_url')
   String? get applicationFormUrl;
   @override
+  @JsonKey(name: 'medical_reports')
   Map<String, dynamic>? get medicalReports;
   @override
+  @JsonKey(name: 'nominee_details')
   Map<String, dynamic>? get nomineeDetails;
   @override
+  @JsonKey(name: 'assignee_details')
   Map<String, dynamic>? get assigneeDetails;
   @override
+  @JsonKey(name: 'last_payment_date')
   DateTime? get lastPaymentDate;
   @override
+  @JsonKey(name: 'next_payment_date')
   DateTime? get nextPaymentDate;
   @override
+  @JsonKey(name: 'total_payments')
   int? get totalPayments;
   @override
+  @JsonKey(name: 'outstanding_amount')
   double? get outstandingAmount;
+  @override // Additional fields from API response
+  @JsonKey(name: 'policyholder_info')
+  Map<String, dynamic>? get policyholderInfo;
+  @override
+  @JsonKey(name: 'agent_info')
+  Map<String, dynamic>? get agentInfo;
+  @override
+  @JsonKey(name: 'provider_info')
+  Map<String, dynamic>? get providerInfo;
+  @override
+  @JsonKey(name: 'created_at')
+  DateTime? get createdAt;
+  @override
+  @JsonKey(name: 'updated_at')
+  DateTime? get updatedAt;
   @override
   @JsonKey(ignore: true)
   _$$PolicyImplCopyWith<_$PolicyImpl> get copyWith =>

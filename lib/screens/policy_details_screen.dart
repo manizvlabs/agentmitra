@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as provider;
 import '../features/payments/presentation/viewmodels/policy_detail_viewmodel.dart';
@@ -21,6 +22,7 @@ class _PolicyDetailsScreenState extends ConsumerState<PolicyDetailsScreen> {
 
   @override
   void initState() {
+    debugPrint('📄 PolicyDetailsScreen - initState called');
     super.initState();
 
     // Check for navigation arguments
@@ -33,34 +35,49 @@ class _PolicyDetailsScreenState extends ConsumerState<PolicyDetailsScreen> {
           policyId = args['policyId'] as String?;
         }
 
+        debugPrint('📄 PolicyDetailsScreen - Navigation args: $args, extracted policyId: $policyId');
+
         // Load policies
+        debugPrint('📄 PolicyDetailsScreen - Loading policies from viewmodel');
         context.read<PoliciesViewModel>().loadPolicies();
 
         // If a specific policy was requested, find and select it
         if (policyId != null) {
+          debugPrint('📄 PolicyDetailsScreen - Selecting policy by ID: $policyId');
           _selectPolicyById(policyId);
+        } else {
+          debugPrint('📄 PolicyDetailsScreen - No specific policy requested, showing selector');
         }
       }
     });
   }
 
   void _selectPolicyById(String policyId) {
+    debugPrint('📄 PolicyDetailsScreen - _selectPolicyById called with policyId: $policyId');
     final policiesViewModel = context.read<PoliciesViewModel>();
     final policies = policiesViewModel.policies;
+
+    debugPrint('📄 PolicyDetailsScreen - Available policies count: ${policies.length}');
 
     // Find the policy by ID
     Policy? policy;
     try {
       policy = policies.firstWhere((p) => p.policyId == policyId);
+      debugPrint('📄 PolicyDetailsScreen - Found policy: ${policy.policyId} (${policy.policyNumber})');
     } catch (e) {
       policy = null;
+      debugPrint('📄 PolicyDetailsScreen - Policy not found with ID: $policyId, error: $e');
     }
 
     if (policy != null) {
+      debugPrint('📄 PolicyDetailsScreen - Setting selected policy and creating viewmodel');
       setState(() {
         _selectedPolicy = policy;
         _viewModel = _createViewModel(policy!.policyId);
       });
+      debugPrint('📄 PolicyDetailsScreen - Policy selection completed');
+    } else {
+      debugPrint('📄 PolicyDetailsScreen - No policy found, staying with selector');
     }
   }
 
@@ -84,15 +101,21 @@ class _PolicyDetailsScreenState extends ConsumerState<PolicyDetailsScreen> {
     final policies = policiesViewModel.policies;
     final isLoadingPolicies = policiesViewModel.isLoading;
 
+    debugPrint('📄 PolicyDetailsScreen - Build: policies=${policies.length}, isLoading=$isLoadingPolicies, selectedPolicy=${_selectedPolicy?.policyId}, viewModel=${_viewModel != null}');
+
     // If we have a policyId from navigation but haven't selected it yet, try to select it
     if (_selectedPolicy == null && policies.isNotEmpty) {
+      debugPrint('📄 PolicyDetailsScreen - Attempting to select policy from navigation args during build');
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final args = ModalRoute.of(context)?.settings.arguments;
         if (args is Map<String, dynamic> && args.containsKey('policyId')) {
           final policyId = args['policyId'] as String?;
           if (policyId != null) {
+            debugPrint('📄 PolicyDetailsScreen - Found policyId in navigation args: $policyId');
             _selectPolicyById(policyId);
           }
+        } else {
+          debugPrint('📄 PolicyDetailsScreen - No policyId found in navigation args');
         }
       });
     }

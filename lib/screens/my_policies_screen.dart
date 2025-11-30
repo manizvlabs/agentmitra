@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../core/widgets/offline_indicator.dart';
 import '../core/services/whatsapp_business_service.dart';
@@ -28,6 +29,7 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
 
   @override
   void initState() {
+    debugPrint('🔄 MyPoliciesScreen - initState called');
     super.initState();
 
     _animationController = AnimationController(
@@ -291,9 +293,11 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
           icon: Icon(Icons.search, color: Colors.grey),
         ),
         onChanged: (value) {
+        debugPrint('🔍 MyPoliciesScreen - Search onChanged: value="$value"');
         // Update viewmodel search
         final policiesViewModel = context.read<PoliciesViewModel>();
         policiesViewModel.setSearchQuery(value.isEmpty ? null : value);
+        debugPrint('🔍 MyPoliciesScreen - Search query set to: ${value.isEmpty ? null : value}');
       },
       ),
     );
@@ -483,10 +487,11 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
   }
 
   Widget _buildPolicyCard(Policy policy) {
+    debugPrint('🏗️ MyPoliciesScreen - Building policy card: policyId=${policy.policyId}, policyNumber=${policy.policyNumber}, status=${policy.status}');
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
@@ -600,8 +605,10 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () async {
+                    debugPrint('💰 MyPoliciesScreen - Get Quote clicked for policy: ${policy.policyId} (${policy.policyNumber})');
                     // Send notification to agent about customer's interest in new policy quotations
                     await _notifyAgentOfQuoteInterest(context);
+                    debugPrint('💰 MyPoliciesScreen - Navigating to /get-quote');
                     Navigator.of(context).pushNamed('/get-quote');
                   },
                   icon: const Icon(Icons.request_quote, size: 16),
@@ -1024,6 +1031,9 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
   }
 
   void _showFilterDialog(BuildContext context, PoliciesViewModel viewModel) {
+    debugPrint('🎛️ MyPoliciesScreen - Opening filter dialog');
+    debugPrint('🎛️ MyPoliciesScreen - Current filters: status=${viewModel.selectedStatus}, provider=${viewModel.selectedProviderId}, policyType=${viewModel.selectedPolicyType}');
+
     // Map display names to API values
     final statusDisplayToApi = {
       'Active': 'active',
@@ -1155,10 +1165,11 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
             ElevatedButton(
               onPressed: () {
                 final apiStatus = selectedStatusDisplay != null ? statusDisplayToApi[selectedStatusDisplay] : null;
-                debugPrint('MyPoliciesScreen - Apply filters: displayStatus=$selectedStatusDisplay, apiStatus=$apiStatus');
+                debugPrint('🎛️ MyPoliciesScreen - Apply filters: displayStatus=$selectedStatusDisplay, apiStatus=$apiStatus, provider=$selectedProvider, policyType=$selectedPolicyType');
                 viewModel.setStatusFilter(apiStatus);
                 viewModel.setProviderFilter(selectedProvider);
                 viewModel.setPolicyTypeFilter(selectedPolicyType);
+                debugPrint('🎛️ MyPoliciesScreen - Filters applied, closing dialog');
                 Navigator.of(context).pop();
               },
               child: const Text('Apply'),

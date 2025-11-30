@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 
 class GetQuotePage extends StatefulWidget {
@@ -85,6 +86,7 @@ class _GetQuotePageState extends State<GetQuotePage> {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('📝 GetQuotePage - Building page: selectedProduct=$_selectedProduct, selectedAgent=$_selectedAgent, isSubmitting=$_isSubmitting');
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
@@ -284,11 +286,14 @@ class _GetQuotePageState extends State<GetQuotePage> {
   Widget _buildProductCard(Map<String, dynamic> product) {
     final productId = product['id'] as String?;
     final isSelected = _selectedProduct == productId;
+    debugPrint('📦 GetQuotePage - Building product card: id=$productId, name=${product['name']}, isSelected=$isSelected');
     return InkWell(
       onTap: productId != null ? () {
+        debugPrint('📦 GetQuotePage - Product selected: $productId');
         setState(() {
           _selectedProduct = productId;
         });
+        debugPrint('📦 GetQuotePage - Selected product updated to: $_selectedProduct');
       } : null,
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -359,11 +364,14 @@ class _GetQuotePageState extends State<GetQuotePage> {
   Widget _buildAgentCard(Map<String, dynamic> agent) {
     final agentId = agent['id'] as String?;
     final isSelected = _selectedAgent == agentId;
+    debugPrint('👤 GetQuotePage - Building agent card: id=$agentId, name=${agent['name']}, isSelected=$isSelected');
     return InkWell(
       onTap: agentId != null ? () {
+        debugPrint('👤 GetQuotePage - Agent selected: $agentId');
         setState(() {
           _selectedAgent = agentId;
         });
+        debugPrint('👤 GetQuotePage - Selected agent updated to: $_selectedAgent');
       } : null,
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -445,11 +453,16 @@ class _GetQuotePageState extends State<GetQuotePage> {
   }
 
   Future<void> _submitQuoteRequest() async {
+    debugPrint('📤 GetQuotePage - Submit quote request started');
+    debugPrint('📤 GetQuotePage - Form state: formKey=${_formKey.currentState != null}, selectedProduct=$_selectedProduct, selectedAgent=$_selectedAgent');
+
     if (_formKey.currentState == null || !_formKey.currentState!.validate()) {
+      debugPrint('📤 GetQuotePage - Form validation failed');
       return;
     }
 
     if (_selectedProduct == null) {
+      debugPrint('📤 GetQuotePage - No product selected, showing error');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a product'),
@@ -459,15 +472,21 @@ class _GetQuotePageState extends State<GetQuotePage> {
       return;
     }
 
+    debugPrint('📤 GetQuotePage - Setting isSubmitting=true');
     setState(() {
       _isSubmitting = true;
     });
 
     // Simulate API call
+    debugPrint('📤 GetQuotePage - Simulating API call (2 seconds)');
     await Future.delayed(const Duration(seconds: 2));
 
-    if (!mounted) return;
+    if (!mounted) {
+      debugPrint('📤 GetQuotePage - Widget not mounted, returning');
+      return;
+    }
 
+    debugPrint('📤 GetQuotePage - Setting isSubmitting=false');
     setState(() {
       _isSubmitting = false;
     });
