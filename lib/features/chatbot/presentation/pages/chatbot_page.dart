@@ -109,6 +109,58 @@ class _ChatbotPageState extends State<ChatbotPage> {
     }
   }
 
+  Widget _buildChatBody() {
+    final viewModel = context.watch<ChatbotViewModel>();
+    print('🔍 DEBUG: context.watch<ChatbotViewModel> called - messages: ${viewModel.messages.length}, isTyping: ${viewModel.isTyping}, error: ${viewModel.error}, instance: ${viewModel.hashCode}');
+    developer.log('DEBUG: context.watch<ChatbotViewModel> called - messages: ${viewModel.messages.length}', name: 'CHATBOT_PAGE');
+
+    if (viewModel.isLoading && viewModel.messages.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (viewModel.error != null && viewModel.messages.isEmpty) {
+      return _buildErrorView(viewModel);
+    }
+
+    return Column(
+      children: [
+        // Chat Header
+        if (viewModel.currentSession != null)
+          ChatHeader(session: viewModel.currentSession!),
+
+        // Messages List
+        Expanded(
+          child: Builder(
+            builder: (context) {
+              print('🔍 DEBUG: ChatbotPage - Rendering ChatMessageList with ${viewModel.messages.length} messages');
+              developer.log('DEBUG: ChatbotPage - Rendering ChatMessageList with ${viewModel.messages.length} messages', name: 'CHATBOT_PAGE');
+              for (int i = 0; i < viewModel.messages.length; i++) {
+                final msg = viewModel.messages[i];
+                print('🔍 DEBUG: ChatbotPage - Message $i: sender=${msg.sender}, content="${msg.content.substring(0, min(50, msg.content.length))}${msg.content.length > 50 ? '...' : ''}"');
+              }
+              return ChatMessageList(
+                messages: viewModel.messages,
+                isTyping: viewModel.isTyping,
+                onQuickReplySelected: (reply) {
+                  viewModel.updateCurrentMessage(reply);
+                  viewModel.sendMessage();
+                },
+              );
+            },
+          ),
+        ),
+
+        // Input Field
+        ChatInputField(
+          currentMessage: viewModel.currentMessage,
+          onMessageChanged: viewModel.updateCurrentMessage,
+          onSendMessage: viewModel.sendMessage,
+          isEnabled: viewModel.hasActiveSession && !viewModel.isTyping,
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     developer.log('DEBUG: ChatbotPage.build called', name: 'CHATBOT_PAGE');
@@ -176,58 +228,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
           ),
         ],
       ),
-      body: Consumer<ChatbotViewModel>(
-        builder: (context, viewModel, child) {
-          print('🔍 DEBUG: Consumer<ChatbotViewModel>.builder called - messages: ${viewModel.messages.length}, isTyping: ${viewModel.isTyping}, error: ${viewModel.error}, instance: ${viewModel.hashCode}');
-          developer.log('DEBUG: Consumer<ChatbotViewModel>.builder called - messages: ${viewModel.messages.length}', name: 'CHATBOT_PAGE');
-
-          if (viewModel.isLoading && viewModel.messages.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (viewModel.error != null && viewModel.messages.isEmpty) {
-            return _buildErrorView(viewModel);
-          }
-
-          return Column(
-            children: [
-              // Chat Header
-              if (viewModel.currentSession != null)
-                ChatHeader(session: viewModel.currentSession!),
-
-              // Messages List
-              Expanded(
-                child: Builder(
-                  builder: (context) {
-                    print('🔍 DEBUG: ChatbotPage - Rendering ChatMessageList with ${viewModel.messages.length} messages');
-                    developer.log('DEBUG: ChatbotPage - Rendering ChatMessageList with ${viewModel.messages.length} messages', name: 'CHATBOT_PAGE');
-                    for (int i = 0; i < viewModel.messages.length; i++) {
-                      final msg = viewModel.messages[i];
-                      print('🔍 DEBUG: ChatbotPage - Message $i: sender=${msg.sender}, content="${msg.content.substring(0, min(50, msg.content.length))}${msg.content.length > 50 ? '...' : ''}"');
-                    }
-                    return ChatMessageList(
-                      messages: viewModel.messages,
-                      isTyping: viewModel.isTyping,
-                      onQuickReplySelected: (reply) {
-                        viewModel.updateCurrentMessage(reply);
-                        viewModel.sendMessage();
-                      },
-                    );
-                  },
-                ),
-              ),
-
-              // Input Field
-              ChatInputField(
-                currentMessage: viewModel.currentMessage,
-                onMessageChanged: viewModel.updateCurrentMessage,
-                onSendMessage: viewModel.sendMessage,
-                isEnabled: viewModel.hasActiveSession && !viewModel.isTyping,
-              ),
-            ],
-          );
-        },
-      ),
+      body: _buildChatBody(),
     );
   }
 
