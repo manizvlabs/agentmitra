@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/auth_service.dart';
 import '../viewmodels/chatbot_viewmodel.dart';
+import '../../data/models/chatbot_model.dart';
 import '../widgets/chat_message_list.dart';
 import '../widgets/chat_input_field.dart';
 import '../widgets/chat_header.dart';
@@ -17,19 +18,43 @@ class ChatbotPage extends StatefulWidget {
 }
 
 class _ChatbotPageState extends State<ChatbotPage> {
+  late ChatbotViewModel _viewModel;
+  List<ChatMessage> _messages = [];
+  bool _isLoading = false;
+  bool _isTyping = false;
+  String? _error;
+  String _currentMessage = '';
+  ChatSession? _currentSession;
   @override
   void initState() {
     super.initState();
     print('🔍 DEBUG: ChatbotPage.initState called');
     developer.log('DEBUG: ChatbotPage.initState called', name: 'CHATBOT_PAGE');
 
-    // Show debug message on screen
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      print('🔍 DEBUG: ChatbotPage - Checking authentication first');
-      developer.log('DEBUG: ChatbotPage - Checking authentication first', name: 'CHATBOT_PAGE');
+    // Get ViewModel from Provider
+    _viewModel = context.read<ChatbotViewModel>();
 
-      // Check if user is authenticated before proceeding
-      _checkAuthenticationAndInitialize();
+    // Listen to ViewModel changes
+    _viewModel.addListener(_onViewModelChanged);
+
+    // Initialize chat
+    _viewModel.initializeChat();
+  }
+
+  @override
+  void dispose() {
+    _viewModel.removeListener(_onViewModelChanged);
+    super.dispose();
+  }
+
+  void _onViewModelChanged() {
+    setState(() {
+      _messages = List.from(_viewModel.messages);
+      _isLoading = _viewModel.isLoading;
+      _isTyping = _viewModel.isTyping;
+      _error = _viewModel.error;
+      _currentMessage = _viewModel.currentMessage;
+      _currentSession = _viewModel.currentSession;
     });
   }
 
@@ -112,11 +137,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
   @override
   Widget build(BuildContext context) {
     developer.log('DEBUG: ChatbotPage.build called', name: 'CHATBOT_PAGE');
-
-    // Use context.watch at the top level of build method
-    final viewModel = context.watch<ChatbotViewModel>();
-    print('🔍 DEBUG: context.watch<ChatbotViewModel> called - messages: ${viewModel.messages.length}, isTyping: ${viewModel.isTyping}, error: ${viewModel.error}, instance: ${viewModel.hashCode}');
-    developer.log('DEBUG: context.watch<ChatbotViewModel> called - messages: ${viewModel.messages.length}', name: 'CHATBOT_PAGE');
+    print('🔍 DEBUG: ChatbotPage.build - messages: ${_messages.length}, isTyping: $_isTyping, error: $_error');
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -140,19 +161,19 @@ class _ChatbotPageState extends State<ChatbotPage> {
               switch (value) {
                 case 'end_session':
                   developer.log('DEBUG: ChatbotPage - Ending session', name: 'CHATBOT_PAGE');
-                  viewModel.endSession();
+                  _viewModel.endSession();
                   break;
                 case 'transfer':
                   developer.log('DEBUG: ChatbotPage - Showing transfer dialog', name: 'CHATBOT_PAGE');
-                  _showTransferDialog(context, viewModel);
+                  _showTransferDialog(context, _viewModel);
                   break;
                 case 'clear':
                   developer.log('DEBUG: ChatbotPage - Showing clear chat dialog', name: 'CHATBOT_PAGE');
-                  _showClearChatDialog(context, viewModel);
+                  _showClearChatDialog(context, _viewModel);
                   break;
                 case 'export':
                   developer.log('DEBUG: ChatbotPage - Exporting conversation', name: 'CHATBOT_PAGE');
-                  viewModel.exportConversation();
+                  _viewModel.exportConversation();
                   break;
               }
             },
@@ -177,41 +198,41 @@ class _ChatbotPageState extends State<ChatbotPage> {
           ),
         ],
       ),
-      body: _buildChatBody(viewModel),
+      body: _buildChatBody(),
     );
   }
 
-  Widget _buildChatBody(ChatbotViewModel viewModel) {
-    if (viewModel.isLoading && viewModel.messages.isEmpty) {
+  Widget _buildChatBody() {
+    if (_isLoading && _messages.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (viewModel.error != null && viewModel.messages.isEmpty) {
-      return _buildErrorView(viewModel);
+    if (_error != null && _messages.isEmpty) {
+      return _buildErrorView(_viewModel);
     }
 
     return Column(
       children: [
         // Chat Header
-        if (viewModel.currentSession != null)
-          ChatHeader(session: viewModel.currentSession!),
+        if (_currentSession != null)
+          ChatHeader(session: _currentSession!),
 
         // Messages List
         Expanded(
           child: Builder(
             builder: (context) {
-              print('🔍 DEBUG: ChatbotPage - Rendering ChatMessageList with ${viewModel.messages.length} messages');
-              developer.log('DEBUG: ChatbotPage - Rendering ChatMessageList with ${viewModel.messages.length} messages', name: 'CHATBOT_PAGE');
-              for (int i = 0; i < viewModel.messages.length; i++) {
-                final msg = viewModel.messages[i];
+              print('🔍 DEBUG: ChatbotPage - Rendering ChatMessageList with ${_messages.length} messages');
+              developer.log('DEBUG: ChatbotPage - Rendering ChatMessageList with ${_messages.length} messages', name: 'CHATBOT_PAGE');
+              for (int i = 0; i < _messages.length; i++) {
+                final msg = _messages[i];
                 print('🔍 DEBUG: ChatbotPage - Message $i: sender=${msg.sender}, content="${msg.content.substring(0, min(50, msg.content.length))}${msg.content.length > 50 ? '...' : ''}"');
               }
               return ChatMessageList(
-                messages: viewModel.messages,
-                isTyping: viewModel.isTyping,
+                messages: _messages,
+                isTyping: _isTyping,
                 onQuickReplySelected: (reply) {
-                  viewModel.updateCurrentMessage(reply);
-                  viewModel.sendMessage();
+                  _viewModel.updateCurrentMessage(reply);
+                  _viewModel.sendMessage();
                 },
               );
             },
@@ -220,10 +241,13 @@ class _ChatbotPageState extends State<ChatbotPage> {
 
         // Input Field
         ChatInputField(
-          currentMessage: viewModel.currentMessage,
-          onMessageChanged: viewModel.updateCurrentMessage,
-          onSendMessage: viewModel.sendMessage,
-          isEnabled: viewModel.hasActiveSession && !viewModel.isTyping,
+          currentMessage: _currentMessage,
+          onMessageChanged: (message) {
+            setState(() => _currentMessage = message);
+            _viewModel.updateCurrentMessage(message);
+          },
+          onSendMessage: _viewModel.sendMessage,
+          isEnabled: _currentSession != null && !_isTyping,
         ),
       ],
     );
