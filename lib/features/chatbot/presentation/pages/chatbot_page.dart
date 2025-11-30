@@ -109,11 +109,79 @@ class _ChatbotPageState extends State<ChatbotPage> {
     }
   }
 
-  Widget _buildChatBody() {
+  @override
+  Widget build(BuildContext context) {
+    developer.log('DEBUG: ChatbotPage.build called', name: 'CHATBOT_PAGE');
+
+    // Use context.watch at the top level of build method
     final viewModel = context.watch<ChatbotViewModel>();
     print('🔍 DEBUG: context.watch<ChatbotViewModel> called - messages: ${viewModel.messages.length}, isTyping: ${viewModel.isTyping}, error: ${viewModel.error}, instance: ${viewModel.hashCode}');
     developer.log('DEBUG: context.watch<ChatbotViewModel> called - messages: ${viewModel.messages.length}', name: 'CHATBOT_PAGE');
 
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF1a237e)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'AI Assistant',
+          style: TextStyle(
+            color: Color(0xFF1a237e),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              switch (value) {
+                case 'end_session':
+                  developer.log('DEBUG: ChatbotPage - Ending session', name: 'CHATBOT_PAGE');
+                  viewModel.endSession();
+                  break;
+                case 'transfer':
+                  developer.log('DEBUG: ChatbotPage - Showing transfer dialog', name: 'CHATBOT_PAGE');
+                  _showTransferDialog(context, viewModel);
+                  break;
+                case 'clear':
+                  developer.log('DEBUG: ChatbotPage - Showing clear chat dialog', name: 'CHATBOT_PAGE');
+                  _showClearChatDialog(context, viewModel);
+                  break;
+                case 'export':
+                  developer.log('DEBUG: ChatbotPage - Exporting conversation', name: 'CHATBOT_PAGE');
+                  viewModel.exportConversation();
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'end_session',
+                child: Text('End Session'),
+              ),
+              const PopupMenuItem(
+                value: 'transfer',
+                child: Text('Transfer to Agent'),
+              ),
+              const PopupMenuItem(
+                value: 'clear',
+                child: Text('Clear Chat'),
+              ),
+              const PopupMenuItem(
+                value: 'export',
+                child: Text('Export Conversation'),
+              ),
+            ],
+          ),
+        ],
+      ),
+      body: _buildChatBody(viewModel),
+    );
+  }
+
+  Widget _buildChatBody(ChatbotViewModel viewModel) {
     if (viewModel.isLoading && viewModel.messages.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -161,76 +229,6 @@ class _ChatbotPageState extends State<ChatbotPage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    developer.log('DEBUG: ChatbotPage.build called', name: 'CHATBOT_PAGE');
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1a237e)),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text(
-          'AI Assistant',
-          style: TextStyle(
-            color: Color(0xFF1a237e),
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          Consumer<ChatbotViewModel>(
-            builder: (context, viewModel, child) {
-              return PopupMenuButton<String>(
-                onSelected: (value) {
-                  developer.log('DEBUG: ChatbotPage - Menu selected: $value', name: 'CHATBOT_PAGE');
-                  switch (value) {
-                    case 'end_session':
-                      developer.log('DEBUG: ChatbotPage - Showing end session dialog', name: 'CHATBOT_PAGE');
-                      _showEndSessionDialog(context, viewModel);
-                      break;
-                    case 'transfer':
-                      developer.log('DEBUG: ChatbotPage - Showing transfer dialog', name: 'CHATBOT_PAGE');
-                      _showTransferDialog(context, viewModel);
-                      break;
-                    case 'clear':
-                      developer.log('DEBUG: ChatbotPage - Showing clear chat dialog', name: 'CHATBOT_PAGE');
-                      _showClearChatDialog(context, viewModel);
-                      break;
-                    case 'export':
-                      developer.log('DEBUG: ChatbotPage - Exporting conversation', name: 'CHATBOT_PAGE');
-                      viewModel.exportConversation();
-                      break;
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'end_session',
-                    child: Text('End Session'),
-                  ),
-                  const PopupMenuItem(
-                    value: 'transfer',
-                    child: Text('Transfer to Agent'),
-                  ),
-                  const PopupMenuItem(
-                    value: 'clear',
-                    child: Text('Clear Chat'),
-                  ),
-                  const PopupMenuItem(
-                    value: 'export',
-                    child: Text('Export Conversation'),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-      body: _buildChatBody(),
-    );
-  }
 
   Widget _buildErrorView(ChatbotViewModel viewModel) {
     return Center(
