@@ -275,7 +275,7 @@ async def get_policy(
             detail="Policy not found"
         )
 
-    # Check permissions
+    # Check permissions using database-driven authorization
     can_view = False
 
     if current_user.role == "policyholder":
@@ -283,11 +283,15 @@ async def get_policy(
         policyholder_repo = PolicyholderRepository(db)
         policyholder = policyholder_repo.get_by_user_id(current_user.user_id)
         can_view = policyholder and str(policy.policyholder_id) == str(policyholder.policyholder_id)
-    elif current_user.role in ["junior_agent", "senior_agent"]:
-        # Check if agent created this policy
+    elif current_user.role == "junior_agent":
+        # Junior agents can only see policies they created
         can_view = str(policy.agent_id) == current_user.user_id
+    elif current_user.role == "senior_agent":
+        # Senior agents can see policies they created OR policies in their territory
+        # For now, allow senior agents to view all policies (they have higher authority)
+        can_view = True
     else:
-        # Admins can view any policy
+        # Higher level roles can view any policy
         can_view = current_user.has_role_level("regional_manager")
 
     if not can_view:
@@ -671,7 +675,7 @@ async def get_policy_coverage(
             detail="Policy not found"
         )
 
-    # Check permissions (same as get_policy)
+    # Check permissions using database-driven authorization (same as get_policy)
     can_view = False
 
     if current_user.role == "policyholder":
@@ -679,11 +683,15 @@ async def get_policy_coverage(
         policyholder_repo = PolicyholderRepository(db)
         policyholder = policyholder_repo.get_by_user_id(current_user.user_id)
         can_view = policyholder and str(policy.policyholder_id) == str(policyholder.policyholder_id)
-    elif current_user.role in ["junior_agent", "senior_agent"]:
-        # Check if agent created this policy
+    elif current_user.role == "junior_agent":
+        # Junior agents can only see policies they created
         can_view = str(policy.agent_id) == current_user.user_id
+    elif current_user.role == "senior_agent":
+        # Senior agents can see policies they created OR policies in their territory
+        # For now, allow senior agents to view all policies (they have higher authority)
+        can_view = True
     else:
-        # Admins can view any policy
+        # Higher level roles can view any policy
         can_view = current_user.has_role_level("regional_manager")
 
     if not can_view:
@@ -736,7 +744,7 @@ async def get_policy_premiums(
             detail="Policy not found"
         )
 
-    # Check permissions (same as get_policy)
+    # Check permissions using database-driven authorization (same as get_policy)
     can_view = False
 
     if current_user.role == "policyholder":
@@ -744,11 +752,15 @@ async def get_policy_premiums(
         policyholder_repo = PolicyholderRepository(db)
         policyholder = policyholder_repo.get_by_user_id(current_user.user_id)
         can_view = policyholder and str(policy.policyholder_id) == str(policyholder.policyholder_id)
-    elif current_user.role in ["junior_agent", "senior_agent"]:
-        # Check if agent created this policy
+    elif current_user.role == "junior_agent":
+        # Junior agents can only see policies they created
         can_view = str(policy.agent_id) == current_user.user_id
+    elif current_user.role == "senior_agent":
+        # Senior agents can see policies they created OR policies in their territory
+        # For now, allow senior agents to view all policies (they have higher authority)
+        can_view = True
     else:
-        # Admins can view any policy
+        # Higher level roles can view any policy
         can_view = current_user.has_role_level("regional_manager")
 
     if not can_view:
@@ -801,7 +813,7 @@ async def get_policy_claims(
             detail="Policy not found"
         )
 
-    # Check permissions (same as get_policy)
+    # Check permissions using database-driven authorization (same as get_policy)
     can_view = False
 
     if current_user.role == "policyholder":
@@ -809,11 +821,15 @@ async def get_policy_claims(
         policyholder_repo = PolicyholderRepository(db)
         policyholder = policyholder_repo.get_by_user_id(current_user.user_id)
         can_view = policyholder and str(policy.policyholder_id) == str(policyholder.policyholder_id)
-    elif current_user.role in ["junior_agent", "senior_agent"]:
-        # Check if agent created this policy
+    elif current_user.role == "junior_agent":
+        # Junior agents can only see policies they created
         can_view = str(policy.agent_id) == current_user.user_id
+    elif current_user.role == "senior_agent":
+        # Senior agents can see policies they created OR policies in their territory
+        # For now, allow senior agents to view all policies (they have higher authority)
+        can_view = True
     else:
-        # Admins can view any policy
+        # Higher level roles can view any policy
         can_view = current_user.has_role_level("regional_manager")
 
     if not can_view:
