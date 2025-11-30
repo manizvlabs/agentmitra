@@ -47,6 +47,29 @@ class PioneerService {
   /// Check if FeatureHub is initialized
   static bool get isInitialized => _isInitialized;
 
+  /// Get default value for a feature flag when Pioneer is not available
+  static bool _getDefaultValueForFlag(String flagName) {
+    // Default feature flag values (conservative defaults)
+    const defaultFlags = {
+      'payments_enabled': false,
+      'chat_enabled': true,
+      'presentation_carousel_enabled': false,
+      'CONTAINER_COLOUR_FEATURE': false,
+      'analytics_enabled': true,
+      'notifications_enabled': true,
+      'voice_input_enabled': false,
+      'file_attachments_enabled': true,
+      'video_tutorials_enabled': true,
+      'whatsapp_integration_enabled': true,
+      'advanced_analytics_enabled': false,
+      'ai_insights_enabled': false,
+      'voice_commands_enabled': false,
+      'ar_preview_enabled': false,
+    };
+
+    return defaultFlags[flagName] ?? false;
+  }
+
   /// Load features from Pioneer API
   static Future<void> _loadFeatures() async {
     await _fetchFeaturesFromPioneer();
@@ -97,12 +120,14 @@ class PioneerService {
   /// Check if a feature flag is enabled (synchronous - uses cached data)
   static bool isFeatureEnabledSync(String flagName) {
     if (!_isInitialized) {
-      throw Exception('Pioneer not initialized');
+      debugPrint('Pioneer not initialized, returning default value for $flagName');
+      return _getDefaultValueForFlag(flagName);
     }
 
     final feature = _features[flagName];
     if (feature == null) {
-      throw Exception('Feature flag "$flagName" not found in Pioneer');
+      debugPrint('Feature flag "$flagName" not found in Pioneer, returning default');
+      return _getDefaultValueForFlag(flagName);
     }
 
     // Pioneer stores boolean values in 'value' or 'is_active' field
@@ -112,13 +137,18 @@ class PioneerService {
   /// Check if a feature flag is enabled (asynchronous - fetches fresh data)
   static Future<bool> isFeatureEnabled(String flagName) async {
     if (!_isInitialized) {
-      throw Exception('Pioneer not initialized');
+      debugPrint('Pioneer not initialized, returning default value for $flagName');
+      return _getDefaultValueForFlag(flagName);
     }
 
     // Refresh features periodically (every 5 minutes)
     if (_lastFetchTime == null ||
         DateTime.now().difference(_lastFetchTime!) > const Duration(minutes: 5)) {
-      await _loadFeatures();
+      try {
+        await _loadFeatures();
+      } catch (e) {
+        debugPrint('Failed to refresh Pioneer features: $e, using cached/default values');
+      }
     }
 
     return isFeatureEnabledSync(flagName);
