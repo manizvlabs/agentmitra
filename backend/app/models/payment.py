@@ -15,7 +15,7 @@ from app.models.base import Base, TimestampMixin, AuditMixin
 class PaymentTransaction(Base, TimestampMixin, AuditMixin):
     """Premium payment model"""
 
-    __tablename__ = "premium_payments"
+    __tablename__ = "payment_transactions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     policy_id = Column(UUID(as_uuid=True), ForeignKey("insurance_policies.id"), nullable=False, index=True)
@@ -41,7 +41,7 @@ class PaymentRefund(Base, TimestampMixin, AuditMixin):
     __tablename__ = "payment_refunds"
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
-    payment_id = Column(UUID(as_uuid=True), ForeignKey("premium_payments.id"), nullable=False, index=True)
+    payment_id = Column(UUID(as_uuid=True), ForeignKey("payment_transactions.id"), nullable=False, index=True)
     refund_id = Column(String(255), nullable=False)  # Gateway refund ID
     amount = Column(DECIMAL(10, 2), nullable=False)
     reason = Column(Text, nullable=True)

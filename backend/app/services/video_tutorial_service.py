@@ -551,8 +551,11 @@ class VideoTutorialService:
             # 2. Upload to YouTube using YouTube Data API v3
             await self._upload_to_youtube(video_tutorial, content_result)
 
-            # 3. Generate transcription using OpenAI Whisper
-            await self._generate_transcription(video_tutorial)
+            # 3. Generate transcription using OpenAI Whisper (if enabled)
+            if settings.video_transcription_auto:
+                await self._generate_transcription(video_tutorial)
+            else:
+                logger.info(f"Auto-transcription disabled. Skipping transcription for video {video_tutorial.video_id}")
 
             # 4. Generate search tags using AI analysis
             await self._generate_search_tags(video_tutorial)

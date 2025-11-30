@@ -150,32 +150,40 @@ class InsurancePolicy(Base, TimestampMixin):
 
 class PremiumPayment(Base, TimestampMixin):
     """Premium payment model matching lic_schema.premium_payments"""
-    __tablename__ = "policy_premium_payments"
+    __tablename__ = "premium_payments"
     __table_args__ = {'schema': 'lic_schema'}
 
     payment_id = Column(UUID(as_uuid=True), primary_key=True)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey('lic_schema.tenants.tenant_id'), nullable=False)
-    policy_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.insurance_policies.policy_id"), nullable=False)
-    policyholder_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.policyholders.policyholder_id"), nullable=False)
+    policy_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.insurance_policies.policy_id"))
+    policyholder_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.policyholders.policyholder_id"))
 
     # Payment details
     amount = Column(DECIMAL(12, 2), nullable=False)
-    payment_date = Column(TIMESTAMP, nullable=False)
-    due_date = Column(TIMESTAMP, nullable=False)
-    payment_method = Column(String(50))  # 'online', 'bank_transfer', 'cash', 'cheque'
-    transaction_id = Column(String(100))
-    payment_gateway = Column(String(50))  # 'razorpay', 'stripe', etc.
+    currency = Column(String(3), default='INR')
+    payment_date = Column(TIMESTAMP, default=func.now())
+    due_date = Column(TIMESTAMP)
+    grace_period_days = Column(Integer, default=30)
 
-    # Status
-    status = Column(String(50), default='pending')  # 'pending', 'completed', 'failed', 'refunded'
+    # Payment method
+    payment_method = Column(String(50))  # 'upi', 'net_banking', 'credit_card', etc.
+    payment_gateway = Column(String(50))  # 'razorpay', 'paytm', 'phonepe'
+    gateway_transaction_id = Column(String(255))
+    gateway_response = Column(JSONB)
+
+    # Status tracking
+    status = Column(String(50), default='pending')
     failure_reason = Column(Text)
+    retry_count = Column(Integer, default=0)
 
-    # Additional details
-    payment_details = Column(JSONB)  # Gateway response, metadata
-    receipt_url = Column(String(500))
+    # Reconciliation
+    reconciled = Column(Boolean, default=False)
+    reconciled_at = Column(TIMESTAMP)
+    reconciled_by = Column(UUID(as_uuid=True), ForeignKey("lic_schema.users.user_id"))
 
-    # Audit
-    processed_by = Column(UUID(as_uuid=True), ForeignKey("lic_schema.users.user_id"))
+    # Additional metadata
+    ip_address = Column(String(50))
+    user_agent = Column(Text)
+    device_info = Column(JSONB)
 
     # Relationships
     policy = relationship("InsurancePolicy", back_populates="payments")
@@ -195,7 +203,7 @@ class Commission(Base, TimestampMixin):
     # Commission details
     agent_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.agents.agent_id"), nullable=False)
     policy_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.insurance_policies.policy_id"), nullable=False)
-    payment_id = Column(UUID(as_uuid=True), ForeignKey("policy_premium_payments.payment_id"), nullable=False)
+    payment_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.premium_payments.payment_id"), nullable=False)
 
     # Commission calculation
     commission_amount = Column(DECIMAL(10, 2), nullable=False)

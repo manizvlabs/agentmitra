@@ -650,6 +650,183 @@ async def delete_policy(
     return {"message": "Policy cancelled successfully", "policy_id": policy_id}
 
 
+@router.get("/{policy_id}/coverage")
+async def get_policy_coverage(
+    policy_id: str,
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Get policy coverage details
+    - Policyholders can view their own policies
+    - Agents can view policies they created
+    - Admins can view any policy
+    """
+    policy_repo = PolicyRepository(db)
+    policy = policy_repo.get_by_id(policy_id)
+
+    if not policy:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Policy not found"
+        )
+
+    # Check permissions (same as get_policy)
+    can_view = False
+
+    if current_user.role == "policyholder":
+        # Check if policy belongs to current user
+        policyholder_repo = PolicyholderRepository(db)
+        policyholder = policyholder_repo.get_by_user_id(current_user.user_id)
+        can_view = policyholder and str(policy.policyholder_id) == str(policyholder.policyholder_id)
+    elif current_user.role in ["junior_agent", "senior_agent"]:
+        # Check if agent created this policy
+        can_view = str(policy.agent_id) == current_user.user_id
+    else:
+        # Admins can view any policy
+        can_view = current_user.has_role_level("regional_manager")
+
+    if not can_view:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions to view this policy"
+        )
+
+    # Return coverage details
+    coverage_details = policy.coverage_details or {}
+
+    # Ensure we return a list format for frontend compatibility
+    if isinstance(coverage_details, dict):
+        # Convert dict to list if needed
+        coverage_list = []
+        for key, value in coverage_details.items():
+            if isinstance(value, dict):
+                coverage_list.append({
+                    "coverage_type": key,
+                    "details": value
+                })
+            else:
+                coverage_list.append({
+                    "coverage_type": key,
+                    "amount": value
+                })
+        return {"coverage": coverage_list}
+    else:
+        return {"coverage": coverage_details}
+
+
+@router.get("/{policy_id}/premiums")
+async def get_policy_premiums(
+    policy_id: str,
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Get policy premium payments history
+    - Policyholders can view their own policies
+    - Agents can view policies they created
+    - Admins can view any policy
+    """
+    policy_repo = PolicyRepository(db)
+    policy = policy_repo.get_by_id(policy_id)
+
+    if not policy:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Policy not found"
+        )
+
+    # Check permissions (same as get_policy)
+    can_view = False
+
+    if current_user.role == "policyholder":
+        # Check if policy belongs to current user
+        policyholder_repo = PolicyholderRepository(db)
+        policyholder = policyholder_repo.get_by_user_id(current_user.user_id)
+        can_view = policyholder and str(policy.policyholder_id) == str(policyholder.policyholder_id)
+    elif current_user.role in ["junior_agent", "senior_agent"]:
+        # Check if agent created this policy
+        can_view = str(policy.agent_id) == current_user.user_id
+    else:
+        # Admins can view any policy
+        can_view = current_user.has_role_level("regional_manager")
+
+    if not can_view:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions to view this policy"
+        )
+
+    # Get premium payments for this policy
+    payment_repo = PaymentRepository(db)
+    payments = payment_repo.get_by_policy(policy_id)
+
+    # Format payments for response
+    premiums = []
+    for payment in payments:
+        premiums.append({
+            "id": str(payment.payment_id),
+            "amount": float(payment.amount),
+            "payment_date": payment.payment_date.isoformat() if payment.payment_date else None,
+            "due_date": payment.due_date.isoformat() if payment.due_date else None,
+            "status": payment.status,
+            "transaction_id": payment.gateway_transaction_id,
+            "payment_method": payment.payment_method,
+            "payment_gateway": payment.payment_gateway
+        })
+
+    return {"premiums": premiums}
+
+
+@router.get("/{policy_id}/claims")
+async def get_policy_claims(
+    policy_id: str,
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Get policy claims history
+    - Policyholders can view their own policies
+    - Agents can view policies they created
+    - Admins can view any policy
+
+    Note: Claims functionality is not yet implemented, returns empty array
+    """
+    policy_repo = PolicyRepository(db)
+    policy = policy_repo.get_by_id(policy_id)
+
+    if not policy:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Policy not found"
+        )
+
+    # Check permissions (same as get_policy)
+    can_view = False
+
+    if current_user.role == "policyholder":
+        # Check if policy belongs to current user
+        policyholder_repo = PolicyholderRepository(db)
+        policyholder = policyholder_repo.get_by_user_id(current_user.user_id)
+        can_view = policyholder and str(policy.policyholder_id) == str(policyholder.policyholder_id)
+    elif current_user.role in ["junior_agent", "senior_agent"]:
+        # Check if agent created this policy
+        can_view = str(policy.agent_id) == current_user.user_id
+    else:
+        # Admins can view any policy
+        can_view = current_user.has_role_level("regional_manager")
+
+    if not can_view:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions to view this policy"
+        )
+
+    # TODO: Implement claims functionality when claims model is added
+    # For now, return empty array to prevent 404 errors
+    return {"claims": []}
+
+
 @router.get("/number/{policy_number}", response_model=PolicyResponse)
 async def get_policy_by_number(
     policy_number: str,
