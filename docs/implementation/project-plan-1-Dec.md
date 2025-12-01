@@ -1,209 +1,611 @@
 # Agent Mitra - Complete App Restructuring & Conformance Plan
+
 **Date:** December 1, 2024  
-**Branch:** feature/v3  
-**Objective:** Achieve 100% conformance with discovery documents through systematic restructuring
+**Branch:** feature/v4  
+**Objective:** Achieve 100% conformance with discovery documents using existing 272 API endpoints and 88 database tables
 
 ---
 
-## Executive Summary
+## Table of Contents
 
-This plan provides step-by-step instructions for restructuring the Agent Mitra Flutter mobile app and React config portal to achieve **100% conformance** with the following discovery documents:
+1. [Executive Summary](#1-executive-summary)
+2. [Backend Integration Reference](#2-backend-integration-reference)
+3. [Database Schema Reference](#3-database-schema-reference)
+4. [Phase 1: Navigation Architecture Foundation](#4-phase-1-navigation-architecture-foundation)
+5. [Phase 2: Customer Portal Restructuring](#5-phase-2-customer-portal-restructuring)
+6. [Phase 3: Agent Portal Restructuring & Presentation Carousel](#6-phase-3-agent-portal-restructuring--presentation-carousel)
+7. [Phase 4: Admin Portal Restructuring](#7-phase-4-admin-portal-restructuring)
+8. [Phase 5: Onboarding Flow Implementation](#8-phase-5-onboarding-flow-implementation)
+9. [Phase 6: React Config Portal Implementation](#9-phase-6-react-config-portal-implementation)
+10. [Phase 7: Wireframe Conformance Verification](#10-phase-7-wireframe-conformance-verification)
+11. [Phase 8: API & Database Integration Verification](#11-phase-8-api--database-integration-verification)
+12. [Phase 9: Testing & Final Validation](#12-phase-9-testing--final-validation)
+13. [Implementation Guidelines](#13-implementation-guidelines)
 
-- `discovery/content/content-structure.md` - Content organization and hierarchy
+---
+
+## 1. Executive Summary
+
+This plan provides step-by-step instructions for restructuring the Agent Mitra Flutter mobile app and React config portal to achieve **100% conformance** with discovery documents while integrating with the **existing 272 backend API endpoints** and **88 database tables** in `agentmitra_dev.lic_schema`.
+
+### Key Principles
+1. **100% Wireframe Conformance** - Every screen must match `discovery/content/wireframes.md` exactly
+2. **Zero Mock Data** - All screens must integrate with real backend APIs
+3. **Real Database Queries** - Use existing 88 tables in `lic_schema` via repositories
+4. **Flyway Migrations Only** - All database changes via existing migration files
+5. **Role-Based Navigation** - Implement proper navigation hierarchy per user type
+6. **Presentation Carousel** - Full implementation of new feature per `discovery/design/presentation-carousel-homepage.md`
+
+### Discovery Documents Reference
+- `discovery/content/wireframes.md` - **Primary UI/UX reference** (100% conformance required)
+- `discovery/design/presentation-carousel-homepage.md` - **New feature specification**
 - `discovery/content/information-architecture.md` - Information architecture and user types
 - `discovery/content/navigation-hierarchy.md` - Navigation patterns and user flows
 - `discovery/content/user-journey.md` - Complete user journey flows
-- `discovery/content/wireframes.md` - UI/UX wireframes and design specifications
-
-### Key Principles
-1. **No Mock Data** - All screens must integrate with real backend APIs
-2. **Real Database Queries** - Use existing backend services and repositories
-3. **Flyway Migrations Only** - All database changes via existing migration files
-4. **100% Conformance** - Every screen must match discovery document specifications
-5. **Role-Based Navigation** - Implement proper navigation hierarchy per user type
+- `discovery/content/content-structure.md` - Content organization and hierarchy
 
 ---
 
-## Current State Analysis
+## 2. Backend Integration Reference
 
-### Flutter App Issues Identified
+### 2.1 API Endpoint Categories (272 Total Endpoints - Verified from Backend)
 
-#### 1. Navigation Architecture Problems
-- **Current:** 51+ individual screens with flat routing
-- **Issue:** No hierarchical navigation structure
-- **Required:** Role-based bottom tab navigation (4-5 tabs) + drawer/hamburger menus
+**Note:** This section lists all actual API endpoints found in `backend/app/api/v1/`. Total count: 272 endpoints.
 
-#### 2. Screen Duplication
-- **Current:** Multiple dashboards (`SuperAdminDashboard`, `ProviderAdminDashboard`, `RegionalManagerDashboard`, `SeniorAgentDashboard`)
-- **Issue:** Duplicate functionality, inconsistent UX
-- **Required:** Single unified dashboard per user type with role-based content filtering
+#### Authentication & Authorization (`/api/v1/auth/*`)
+- `POST /api/v1/auth/login` - Agent code or phone + password login
+- `POST /api/v1/auth/logout` - Logout user and invalidate session
+- **Note:** OTP verification endpoints may be handled via external services (`/api/v1/external/sms/otp`, `/api/v1/external/whatsapp/otp`)
 
-#### 3. Missing Navigation Patterns
-- **Current:** Flat route structure, no tab containers
-- **Issue:** Doesn't match IA navigation hierarchy
-- **Required:** Bottom tabs + drawer menus as per navigation-hierarchy.md
+#### Users (`/api/v1/users/*`)
+- `GET /api/v1/users/me` - Get current user profile
+- `GET /api/v1/users/` - Search and filter users (admin/manager only)
+- `GET /api/v1/users/{user_id}` - Get user by ID
+- `PUT /api/v1/users/{user_id}` - Update user profile
+- `DELETE /api/v1/users/{user_id}` - Deactivate user (soft delete)
+- `GET /api/v1/users/{user_id}/preferences` - Get user preferences
+- `PUT /api/v1/users/{user_id}/preferences` - Update user preferences
 
-#### 4. Mock Data Usage
-- **Current:** Some screens use placeholder/mock data
-- **Issue:** Not integrated with real backend
-- **Required:** All screens must call real API endpoints
+#### Agents (`/api/v1/agents/*`)
+- `GET /api/v1/agents/profile` - Get current agent's profile
+- `PUT /api/v1/agents/profile` - Update agent profile
+- `PUT /api/v1/agents/settings` - Update agent settings
+- `POST /api/v1/agents/profile/photo` - Upload agent profile photo
+- `POST /api/v1/agents/verification/request` - Submit verification request
+- `POST /api/v1/agents/verification/{agent_id}/approve` - Approve agent verification (admin)
+- `GET /api/v1/agents/performance/metrics` - Get agent performance metrics
+- `GET /api/v1/agents/hierarchy` - Get agent hierarchy (parent/child agents)
+- `GET /api/v1/agents/search` - Search agents by name, code, or business name
+- `GET /api/v1/agents/{agent_id}` - Get agent profile by ID (admin/staff only)
 
-#### 5. Content Structure Mismatch
-- **Current:** Content organization doesn't match content-structure.md
-- **Issue:** Missing content hierarchy, wrong information architecture
-- **Required:** Exact content structure per discovery documents
+#### Policies (`/api/v1/policies/*`)
+- `GET /api/v1/policies/` - List policies with filtering (by policyholder, agent, status, type, etc.)
+- `GET /api/v1/policies/{policy_id}` - Get policy details
+- `GET /api/v1/policies/number/{policy_number}` - Get policy by policy number
+- `POST /api/v1/policies/` - Create new policy
+- `PUT /api/v1/policies/{policy_id}` - Update policy
+- `DELETE /api/v1/policies/{policy_id}` - Delete policy
+- `POST /api/v1/policies/{policy_id}/approve` - Approve policy
+- `POST /api/v1/policies/{policy_id}/activate` - Activate policy
+- `GET /api/v1/policies/{policy_id}/coverage` - Get policy coverage details
+- `GET /api/v1/policies/{policy_id}/premiums` - Get premium payment schedule
+- `GET /api/v1/policies/{policy_id}/claims` - Get claims history
 
-### React Config Portal Issues
+#### Dashboard (`/api/v1/dashboard/*`)
+- `GET /api/v1/dashboard/analytics` - Dashboard analytics summary (main router endpoint)
+- `GET /api/v1/dashboard/home` - Agent home dashboard (includes carousel, KPIs, feature tiles)
+- `GET /api/v1/dashboard/presentations/carousel` - Presentation carousel items
+- `GET /api/v1/dashboard/feature-tiles` - Feature tiles for dashboard
+- `GET /api/v1/dashboard/analytics/summary` - Analytics summary with period filter
+- `POST /api/v1/dashboard/activity/log` - Log user activity on dashboard
+- `GET /api/v1/dashboard/system-overview` - System overview (Super Admin)
+- `GET /api/v1/dashboard/provider-overview` - Provider overview (Provider Admin)
+- `GET /api/v1/dashboard/regional-overview` - Regional overview (Regional Manager)
+- `GET /api/v1/dashboard/senior-agent-overview` - Senior agent overview
 
-#### 1. Missing Data Import Flow
-- **Current:** Basic import screens exist
-- **Issue:** Doesn't match complete user journey from user-journey.md
-- **Required:** Full Excel import workflow with validation, progress tracking, error handling
+#### Presentations (`/api/v1/presentations/*`)
+- `GET /api/v1/presentations/agent/{agent_id}/active` - Get active presentation
+- `GET /api/v1/presentations/agent/{agent_id}` - Get all agent presentations
+- `POST /api/v1/presentations/agent/{agent_id}` - Create presentation
+- `PUT /api/v1/presentations/agent/{agent_id}/{presentation_id}` - Update presentation
+- `POST /api/v1/presentations/media/upload` - Upload media (image/video)
+- `GET /api/v1/presentations/templates` - Get presentation templates
 
-#### 2. Incomplete Integration
-- **Current:** Some screens may use mock data
-- **Issue:** Not fully integrated with backend APIs
-- **Required:** Real API integration for all operations
+#### Chat & Communication (`/api/v1/chat/*`, `/api/v1/external/*`)
+- `POST /api/v1/chat/sessions` - Create chat session
+- `POST /api/v1/chat/sessions/{session_id}/messages` - Send message in session
+- `PUT /api/v1/chat/sessions/{session_id}/end` - End chat session
+- `GET /api/v1/chat/sessions/{session_id}/analytics` - Get session analytics
+- `POST /api/v1/chat/knowledge-base/articles` - Create knowledge base article
+- `PUT /api/v1/chat/knowledge-base/articles/{article_id}` - Update article
+- `GET /api/v1/chat/knowledge-base/search` - Search knowledge base
+- `DELETE /api/v1/chat/knowledge-base/articles/{article_id}` - Delete article
+- `POST /api/v1/chat/intents` - Create chatbot intent
+- `GET /api/v1/chat/intents/stats` - Get intent statistics
+- `GET /api/v1/chat/analytics` - Get chatbot analytics
+- `GET /api/v1/chat/health` - Chat service health check
+- `POST /api/v1/chat/advanced/chat` - Advanced chat with AI
+- `GET /api/v1/chat/analytics/intent` - Intent analytics
+- `GET /api/v1/chat/analytics/quality` - Chat quality metrics
+- `POST /api/v1/chat/intents/train` - Train chatbot intents
+- `GET /api/v1/chat/suggestions/proactive` - Get proactive suggestions
+- `POST /api/v1/chat/escalate` - Escalate chat to human
+- `GET /api/v1/chat/conversation/quality/{session_id}` - Conversation quality score
+- `POST /api/v1/chat/language/detect` - Detect conversation language
+- `POST /api/v1/chat/escalation/callback` - Request callback
+- `GET /api/v1/chat/reports/callbacks` - Get callback reports
+- `PUT /api/v1/chat/reports/callbacks/{callback_id}/status` - Update callback status
+- `GET /api/v1/chat/reports/analytics` - Chat reports analytics
+
+#### External Services (`/api/v1/external/*`)
+- `POST /api/v1/external/sms/send` - Send SMS message
+- `POST /api/v1/external/sms/otp` - Send SMS OTP
+- `GET /api/v1/external/sms/status/{message_id}` - Get SMS status
+- `POST /api/v1/external/whatsapp/send` - Send WhatsApp message
+- `POST /api/v1/external/whatsapp/otp` - Send WhatsApp OTP
+- `POST /api/v1/external/whatsapp/template` - Send WhatsApp template message
+- `GET /api/v1/external/whatsapp/templates` - Get WhatsApp templates
+- `GET /api/v1/external/whatsapp/status/{message_id}` - Get WhatsApp status
+- `POST /api/v1/external/whatsapp/webhook` - WhatsApp webhook handler
+- `GET /api/v1/external/whatsapp/webhook` - Get webhook configuration
+- `POST /api/v1/external/ai/chat` - AI chat completion
+- `POST /api/v1/external/ai/intent` - AI intent classification
+- `POST /api/v1/external/ai/summarize` - AI text summarization
+- `POST /api/v1/external/ai/generate` - AI content generation
+- `POST /api/v1/external/ai/translate` - AI translation
+- `POST /api/v1/external/ai/sentiment` - AI sentiment analysis
+- `POST /api/v1/external/ai/moderate` - AI content moderation
+- `GET /api/v1/external/ai/usage` - Get AI service usage stats
+
+#### Analytics (`/api/v1/analytics/*`)
+- `GET /api/v1/analytics/roi/agent/{agent_id}` - ROI analytics for agent
+- `GET /api/v1/analytics/roi/dashboard/{agent_id}` - ROI dashboard data
+- `GET /api/v1/analytics/forecast/revenue/{agent_id}` - Revenue forecast
+- `GET /api/v1/analytics/forecast/dashboard/{agent_id}` - Forecast dashboard
+- `GET /api/v1/analytics/leads/hot/{agent_id}` - Get hot leads for agent
+- `GET /api/v1/analytics/leads/dashboard/{agent_id}` - Leads dashboard data
+- `GET /api/v1/analytics/leads/{lead_id}/details` - Get lead details
+- `GET /api/v1/analytics/customers/at-risk/{agent_id}` - Get at-risk customers
+- `GET /api/v1/analytics/customers/retention/dashboard/{agent_id}` - Retention dashboard
+- `GET /api/v1/analytics/customers/{customer_id}/retention-plan` - Customer retention plan
+- `GET /api/v1/analytics/comprehensive/dashboard` - Comprehensive analytics dashboard
+- `GET /api/v1/analytics/agents/performance/{agent_id}` - Agent performance metrics
+- `GET /api/v1/analytics/agents/performance` - All agents performance comparison
+- `GET /api/v1/analytics/policies/analytics` - Policy analytics
+- `GET /api/v1/analytics/payments/analytics` - Payment analytics
+- `GET /api/v1/analytics/users/engagement` - User engagement metrics
+- `POST /api/v1/analytics/reports/custom` - Generate custom analytics report
+- `GET /api/v1/analytics/export/{data_type}` - Export analytics data
+- `GET /api/v1/analytics/reports/performance-summary` - Performance summary report
+- `GET /api/v1/analytics/insights/business-intelligence` - Business intelligence insights
+- `GET /api/v1/analytics/dashboard/overview` - Dashboard overview KPIs
+- `GET /api/v1/analytics/dashboard/{agent_id}` - Agent-specific dashboard KPIs
+- `GET /api/v1/analytics/dashboard/charts/revenue-trends` - Revenue trend charts
+- `GET /api/v1/analytics/dashboard/charts/policy-trends` - Policy trend charts
+- `GET /api/v1/analytics/dashboard/top-agents` - Top performing agents
+- `GET /api/v1/analytics/agents/{agent_id}/performance` - Detailed agent performance
+- `GET /api/v1/analytics/agents/performance/comparison` - Agent performance comparison
+- `GET /api/v1/analytics/policies/analytics` - Policy analytics (duplicate endpoint)
+- `GET /api/v1/analytics/revenue/analytics` - Revenue analytics
+- `GET /api/v1/analytics/presentations/{presentation_id}/analytics` - Presentation analytics
+- `GET /api/v1/analytics/presentations/{presentation_id}/analytics/trends` - Presentation trends
+- `POST /api/v1/analytics/reports/generate` - Generate analytics report
+- `GET /api/v1/analytics/reports/summary` - Reports summary
+
+#### Campaigns (`/api/v1/campaigns/*`)
+- `POST /api/v1/campaigns` - Create campaign
+- `GET /api/v1/campaigns` - List campaigns
+- `GET /api/v1/campaigns/templates` - Get campaign templates
+- `GET /api/v1/campaigns/{campaign_id}` - Get campaign details
+- `PUT /api/v1/campaigns/{campaign_id}` - Update campaign
+- `POST /api/v1/campaigns/{campaign_id}/launch` - Launch campaign
+- `GET /api/v1/campaigns/{campaign_id}/analytics` - Campaign performance analytics
+- `POST /api/v1/campaigns/templates/{template_id}/create` - Create campaign from template
+- `GET /api/v1/campaigns/recommendations` - Get campaign recommendations
+
+#### Content (`/api/v1/content/*`)
+- `POST /api/v1/content/upload` - Upload content file
+- `GET /api/v1/content/` - List content files
+- `GET /api/v1/content/{content_id}` - Get content details
+- `GET /api/v1/content/{content_id}/download` - Download content file
+- `DELETE /api/v1/content/{content_id}` - Delete content
+- `POST /api/v1/content/{content_id}/share` - Share content
+- `GET /api/v1/content/shared/{share_token}` - Get shared content
+- `PUT /api/v1/content/{content_id}/tags` - Update content tags
+- `GET /api/v1/content/analytics/overview` - Content analytics overview
+- `GET /api/v1/content/categories` - Get content categories
+- `GET /api/v1/content/types` - Get content types
+- `POST /api/v1/content/videos/upload` - Upload video content
+- `GET /api/v1/content/videos` - Get video library with filters
+- `GET /api/v1/content/videos/{video_id}` - Get video details
+- `POST /api/v1/content/videos/{video_id}/progress` - Update video watch progress
+- `GET /api/v1/content/videos/recommendations` - Get video recommendations
+- `GET /api/v1/content/videos/categories` - Get video categories
+
+#### Customers (`/api/v1/customers/*` - via agents endpoint)
+- `GET /api/v1/agents/{agent_id}/customers` - List customers
+- Customer details via policies and policyholders tables
+
+#### CRM & Lead Management (`/api/v1/analytics/*`, `/api/v1/leads/*` - **MISSING CRUD APIs**)
+- `GET /api/v1/analytics/leads/hot/{agent_id}` - Get hot leads for agent
+- `GET /api/v1/analytics/leads/dashboard/{agent_id}` - Get leads dashboard data
+- `GET /api/v1/analytics/leads/{lead_id}/details` - Get lead details
+- `GET /api/v1/analytics/customers/at-risk/{agent_id}` - Get at-risk customers (retention)
+- `GET /api/v1/analytics/customers/retention/dashboard/{agent_id}` - Get retention dashboard
+- `GET /api/v1/analytics/customers/{customer_id}/retention-plan` - Get customer retention plan
+
+**⚠️ MISSING APIs - Implementation Required:**
+- `POST /api/v1/leads/` - Create new lead (NOT IMPLEMENTED)
+- `GET /api/v1/leads/` - List leads with filters (NOT IMPLEMENTED)
+- `GET /api/v1/leads/{lead_id}` - Get lead by ID (NOT IMPLEMENTED)
+- `PUT /api/v1/leads/{lead_id}` - Update lead (NOT IMPLEMENTED)
+- `DELETE /api/v1/leads/{lead_id}` - Delete lead (NOT IMPLEMENTED)
+- `POST /api/v1/leads/{lead_id}/interactions` - Add lead interaction (NOT IMPLEMENTED)
+- `GET /api/v1/leads/{lead_id}/interactions` - Get lead interactions (NOT IMPLEMENTED)
+- `PUT /api/v1/leads/{lead_id}/qualify` - Qualify/disqualify lead (NOT IMPLEMENTED)
+- `PUT /api/v1/leads/{lead_id}/convert` - Convert lead to policy (NOT IMPLEMENTED)
+
+**Note:** 
+- Leads are currently accessed via analytics endpoints only. Full CRUD endpoints for `/api/v1/leads/*` need to be implemented for direct lead management.
+- Customer segmentation data is available through analytics endpoints but may not have dedicated CRUD endpoints.
+- See **Section 2.2: Implementation Plan for Missing APIs** below for detailed implementation requirements.
+
+#### Notifications (`/api/v1/notifications/*`)
+- `GET /api/v1/notifications/` - Get notifications list
+- `GET /api/v1/notifications/statistics` - Get notification statistics
+- `GET /api/v1/notifications/{notification_id}` - Get notification details
+- `PATCH /api/v1/notifications/{notification_id}/read` - Mark notification as read
+- `PATCH /api/v1/notifications/read` - Mark multiple notifications as read
+- `DELETE /api/v1/notifications/{notification_id}` - Delete notification
+- `POST /api/v1/notifications/` - Create notification
+- `POST /api/v1/notifications/bulk` - Create bulk notifications
+- `POST /api/v1/notifications/test` - Send test notification
+- `GET /api/v1/notifications/settings` - Get notification settings
+- `PUT /api/v1/notifications/settings` - Update notification settings
+- `POST /api/v1/notifications/device-token` - Register device token for push notifications
+
+#### Data Import (`/api/v1/import/*`)
+- `GET /api/v1/import/templates` - Get all import templates
+- `POST /api/v1/import/templates` - Create new import template
+- `PUT /api/v1/import/templates/{template_id}` - Update import template
+- `DELETE /api/v1/import/templates/{template_id}` - Delete import template
+- `POST /api/v1/import/upload` - Upload Excel/CSV file for import
+- `POST /api/v1/import/validate/{file_id}` - Validate uploaded file
+- `POST /api/v1/import/data` - Import validated data
+- `GET /api/v1/import/status/{import_id}` - Get import job status
+- `GET /api/v1/import/history` - Get import history with pagination
+- `GET /api/v1/import/entity-fields/{entity_type}` - Get entity field definitions
+- `GET /api/v1/import/sample-data/{entity_type}` - Get sample data for entity type
+- `GET /api/v1/import/templates/{entity_type}/download` - Download template file
+- `GET /api/v1/import/results/{import_id}/download` - Download import results
+
+#### RBAC (`/api/v1/rbac/*`)
+- `GET /api/v1/rbac/roles` - List all roles
+- `GET /api/v1/rbac/users/{user_id}/roles` - Get user roles
+- `POST /api/v1/rbac/users/assign-role` - Assign role to user
+- `POST /api/v1/rbac/users/remove-role` - Remove role from user
+- `GET /api/v1/rbac/permissions` - List all permissions
+- `POST /api/v1/rbac/feature-flags` - Create feature flag
+- `GET /api/v1/rbac/feature-flags` - List feature flags
+- `GET /api/v1/rbac/check-permission` - Check user permission
+- `GET /api/v1/rbac/audit-log` - Get RBAC audit log
+
+#### System & Configuration (`/api/v1/tenants/*`, `/api/v1/feature-flags/*`)
+- `POST /api/v1/tenants/` - Create new tenant (multi-tenant configuration)
+- `GET /api/v1/tenants/` - List all tenants (Super Admin only)
+- `GET /api/v1/tenants/{tenant_id}` - Get tenant details
+- `PUT /api/v1/tenants/{tenant_id}/deactivate` - Deactivate tenant
+- `PUT /api/v1/tenants/{tenant_id}/reactivate` - Reactivate tenant
+- `POST /api/v1/tenants/{tenant_id}/config` - Update tenant configuration
+
+#### Feature Flags (`/api/v1/feature-flags/*`)
+- `GET /api/v1/feature-flags/user/{user_id}` - Get feature flags for user
+- `GET /api/v1/feature-flags/tenant/{tenant_id}` - Get feature flags for tenant
+- `GET /api/v1/feature-flags/all` - Get all feature flags
+- `PUT /api/v1/feature-flags/user/{user_id}/{flag_name}` - Update user feature flag override
+- `PUT /api/v1/feature-flags/tenant/{tenant_id}/{flag_name}` - Update tenant feature flag override
+- `POST /api/v1/feature-flags/create` - Create new feature flag
+- `DELETE /api/v1/feature-flags/override/user/{user_id}/{flag_name}` - Delete user override
+- `PUT /api/v1/feature-flags/update/{flag_name}` - Update feature flag
+- `GET /api/v1/feature-flags/api/flags` - Get flags via API
+- `POST /api/v1/feature-flags/flags` - Create feature flag
+- `PUT /api/v1/feature-flags/flags/{flag_id}` - Update feature flag
+- `DELETE /api/v1/feature-flags/flags/{flag_id}` - Delete feature flag
+- `GET /api/v1/feature-flags/check/{flag_name}` - Check feature flag status
+- `POST /api/v1/feature-flags/role-access` - Set role-based feature access
+- `POST /api/v1/feature-flags/broadcast/role/{role_name}` - Broadcast flag to role
+- `POST /api/v1/feature-flags/broadcast/tenant/{tenant_id}` - Broadcast flag to tenant
+- `GET /api/v1/feature-flags/websocket/stats` - WebSocket connection stats
+- `GET /api/v1/feature-flags/role-access/{role_name}` - Get role feature access
+- `GET /api/v1/feature-flags/access-control/rules` - Get access control rules
+
+#### Quotes (`/api/v1/quotes/*`)
+- `POST /api/v1/quotes/` - Create new quote
+- `GET /api/v1/quotes/` - List quotes with filters
+- `GET /api/v1/quotes/{quote_id}` - Get quote details
+- `PUT /api/v1/quotes/{quote_id}` - Update quote
+- `DELETE /api/v1/quotes/{quote_id}` - Delete quote
+- `POST /api/v1/quotes/{quote_id}/publish` - Publish quote
+- `POST /api/v1/quotes/{quote_id}/share` - Share quote
+- `POST /api/v1/quotes/{quote_id}/performance` - Track quote performance
+- `GET /api/v1/quotes/{quote_id}/analytics` - Get quote analytics
+- `GET /api/v1/quotes/analytics/summary` - Get quotes analytics summary
+- `GET /api/v1/quotes/categories/list` - Get quote categories
+
+#### Subscription (`/api/v1/subscription/*`)
+- `GET /api/v1/subscription/plans` - List all subscription plans
+- `GET /api/v1/subscription/plans/{plan_id}` - Get subscription plan details
+- `POST /api/v1/subscription/create` - Create subscription
+- `GET /api/v1/subscription/details` - Get current user subscription details
+- `POST /api/v1/subscription/upgrade` - Upgrade subscription plan
+- `POST /api/v1/subscription/downgrade` - Downgrade subscription plan
+- `POST /api/v1/subscription/cancel` - Cancel subscription
+- `GET /api/v1/subscription/billing-history` - Get billing history
+- `POST /api/v1/subscription/process-trial-expiration` - Process trial expiration
+- `GET /api/v1/subscription/available-upgrades` - Get available upgrade options
+- `GET /api/v1/subscription/compare-plans` - Compare subscription plans
+
+#### Trial (`/api/v1/trial/*`)
+- `POST /api/v1/trial/setup` - Setup trial for user
+- `GET /api/v1/trial/status/{user_id}` - Get trial status for user
+- `POST /api/v1/trial/extend/{user_id}` - Extend trial period
+- `POST /api/v1/trial/convert/{user_id}` - Convert trial to paid subscription
+- `POST /api/v1/trial/engagement/{user_id}` - Track trial engagement
+- `GET /api/v1/trial/analytics/overview` - Trial analytics overview
+- `GET /api/v1/trial/expiring-soon` - Get trials expiring soon
+- `POST /api/v1/trial/send-reminder/{user_id}` - Send trial expiration reminder
 
 ---
 
-## Target State Definition
+### 2.2 Implementation Plan for Missing APIs
 
-### Flutter App Target Structure
+#### Leads CRUD API Implementation (`/api/v1/leads/*`)
 
-#### Customer Portal (Policyholder)
-```
-📱 Customer Portal Navigation
-├── 🏠 Home Tab (Dashboard)
-│   ├── Quick Actions (Pay Premium, Contact Agent, Get Quote)
-│   ├── Policy Overview (Active policies, next payment, coverage)
-│   ├── Critical Notifications (Priority-based alerts)
-│   └── Quick Insights (Visual cards)
-├── 📄 Policies Tab
-│   ├── All Policies (Searchable, filterable list)
-│   ├── Policy Details (Comprehensive view)
-│   ├── Premium Payments (Payment history, upcoming)
-│   └── Policy Documents (Download center)
-├── 💬 Chat Tab
-│   ├── Messages (Agent communication)
-│   ├── Smart Assistant (AI chatbot)
-│   └── Quick Contact (WhatsApp, Call, Email)
-├── 📚 Learning Tab
-│   ├── Featured Content (Popular videos)
-│   ├── Categories (Organized learning)
-│   └── Recent Additions (New content)
-└── 👤 Profile Tab
-    ├── Personal Information
-    ├── App Settings
-    ├── Security & Privacy
-    └── Help & Support
-```
+**Priority:** High  
+**Estimated Effort:** 2-3 days  
+**Dependencies:** `lic_schema.leads` table (exists), `lic_schema.lead_interactions` table (exists)
 
-#### Agent Portal (Junior/Senior Agents)
-```
-📱 Agent Portal Navigation
-├── 📊 Dashboard Tab
-│   ├── Key Metrics (Revenue, Customers, Renewal Rate)
-│   ├── Trend Charts (6-month overview)
-│   ├── Action Items (Priority queue)
-│   └── Alerts & Notifications
-├── 👥 Customers Tab
-│   ├── Customer Overview (Summary cards)
-│   ├── Customer List (Advanced CRM)
-│   ├── Communication Tools (Bulk actions)
-│   └── Customer Segmentation
-├── 📈 Analytics Tab
-│   ├── Revenue Analytics
-│   ├── Performance Metrics
-│   ├── ROI Calculations
-│   └── Predictive Analytics
-├── 📢 Campaigns Tab
-│   ├── Campaign Overview
-│   ├── Campaign Builder
-│   ├── Campaign Performance
-│   └── Template Library
-└── 👤 Profile Tab
-    ├── Agent Information
-    ├── Business Settings
-    ├── Content Management
-    └── System Administration
-```
+**Required Endpoints:**
 
-#### Admin Portal (Super Admin, Provider Admin, Regional Manager)
-```
-📱 Admin Portal Navigation
-├── 📊 Overview Tab
-│   ├── Platform Metrics
-│   ├── User Statistics
-│   ├── System Health
-│   └── Recent Activity
-├── 👥 Management Tab
-│   ├── User Management (RBAC)
-│   ├── Agent Management
-│   ├── Customer Management
-│   └── Role Assignment
-├── ⚙️ Configuration Tab
-│   ├── Feature Flags
-│   ├── System Settings
-│   ├── Localization
-│   └── Security Settings
-└── 📊 Analytics Tab
-    ├── Platform Analytics
-    ├── Usage Metrics
-    ├── Performance Monitoring
-    └── Audit Logs
-```
+1. **`POST /api/v1/leads/`** - Create new lead
+   - **Request Body:** Lead creation request (customer_name, contact_number, email, location, lead_source, insurance_type, budget_range, coverage_required, agent_id)
+   - **Response:** Created lead object with lead_id
+   - **Database:** Insert into `lic_schema.leads` table
+   - **Validation:** Required fields, phone format, email format
 
-### React Config Portal Target Structure
+2. **`GET /api/v1/leads/`** - List leads with filters
+   - **Query Parameters:** agent_id, lead_status, priority, lead_source, insurance_type, limit, offset
+   - **Response:** Paginated list of leads
+   - **Database:** Query `lic_schema.leads` with filters
+   - **Permissions:** Agents can only see their own leads, admins can see all
 
-```
-🏗️ Agent Configuration Portal
-├── 📊 Import Dashboard
-│   ├── Import Statistics
-│   ├── Recent Activity
-│   └── Quick Actions
-├── 📤 Data Upload
-│   ├── File Selection (Drag & Drop)
-│   ├── File Validation
-│   └── Column Mapping
-├── 🔄 Import Processing
-│   ├── Real-time Progress
-│   ├── Live Statistics
-│   └── Error Handling
-├── ✅ Import Results
-│   ├── Success Summary
-│   ├── Data Quality Metrics
-│   └── Mobile Sync Status
-└── 📋 Template Management
-    ├── Download Templates
-    ├── Import Guidelines
-    └── FAQ & Troubleshooting
-```
+3. **`GET /api/v1/leads/{lead_id}`** - Get lead by ID
+   - **Response:** Complete lead object with all fields
+   - **Database:** Query `lic_schema.leads` by lead_id
+   - **Permissions:** Agent must own lead or be admin
+
+4. **`PUT /api/v1/leads/{lead_id}`** - Update lead
+   - **Request Body:** Partial lead update (any updatable fields)
+   - **Response:** Updated lead object
+   - **Database:** Update `lic_schema.leads` table
+   - **Validation:** Field-level validation
+   - **Auto-update:** Conversion score and priority based on updated fields
+
+5. **`DELETE /api/v1/leads/{lead_id}`** - Delete lead (soft delete)
+   - **Response:** Success message
+   - **Database:** Update `lic_schema.leads.status` to 'inactive' (soft delete)
+   - **Cascade:** Delete related `lead_interactions` records
+
+6. **`POST /api/v1/leads/{lead_id}/interactions`** - Add lead interaction
+   - **Request Body:** Interaction data (interaction_type, interaction_method, duration_minutes, outcome, notes, next_action, next_action_date)
+   - **Response:** Created interaction object
+   - **Database:** Insert into `lic_schema.lead_interactions` table
+   - **Auto-update:** Update lead's `last_contact_at`, `last_contact_method`, `followup_count`
+
+7. **`GET /api/v1/leads/{lead_id}/interactions`** - Get lead interactions
+   - **Response:** List of interactions for the lead
+   - **Database:** Query `lic_schema.lead_interactions` filtered by lead_id
+
+8. **`PUT /api/v1/leads/{lead_id}/qualify`** - Qualify/disqualify lead
+   - **Request Body:** is_qualified (boolean), qualification_notes, disqualification_reason
+   - **Response:** Updated lead object
+   - **Database:** Update `lic_schema.leads.is_qualified`, `qualification_notes`, `disqualification_reason`
+
+9. **`PUT /api/v1/leads/{lead_id}/convert`** - Convert lead to policy
+   - **Request Body:** converted_policy_id, conversion_value
+   - **Response:** Updated lead object with conversion details
+   - **Database:** Update `lic_schema.leads.converted_at`, `converted_policy_id`, `conversion_value`, `lead_status` to 'converted'
+
+**Implementation Steps:**
+
+1. **Create API Router File:** `backend/app/api/v1/leads.py`
+   - Import FastAPI router, dependencies, models
+   - Create Pydantic request/response models
+
+2. **Create Repository:** `backend/app/repositories/lead_repository.py`
+   - Implement CRUD operations for `lic_schema.leads` table
+   - Implement filtering and search methods
+   - Handle lead scoring calculations
+
+3. **Create Service Layer:** `backend/app/services/lead_service.py` (optional)
+   - Business logic for lead management
+   - Lead scoring calculations
+   - Conversion tracking
+
+4. **Register Router:** Add to `backend/app/api/v1/__init__.py`
+   ```python
+   from . import leads
+   api_router.include_router(leads.router, prefix="/leads", tags=["leads"])
+   ```
+
+5. **Add Permissions:** Update RBAC permissions for lead management
+   - `leads.create`, `leads.read`, `leads.update`, `leads.delete`
+
+6. **Testing:**
+   - Unit tests for repository methods
+   - Integration tests for API endpoints
+   - Test lead scoring calculations
+   - Test conversion tracking
+
+**Database Tables Used:**
+- `lic_schema.leads` - Main lead records (exists)
+- `lic_schema.lead_interactions` - Lead interaction history (exists)
+- `lic_schema.insurance_policies` - For conversion tracking (exists)
+- `lic_schema.agents` - For agent association (exists)
+
+**Acceptance Criteria:**
+- [ ] All 9 endpoints implemented and tested
+- [ ] Proper error handling and validation
+- [ ] Role-based access control implemented
+- [ ] Lead scoring automatically calculated
+- [ ] Conversion tracking works correctly
+- [ ] Integration with existing analytics endpoints maintained
 
 ---
 
-## Phase-by-Phase Implementation Plan
+## 3. Database Schema Reference
 
-### Phase 1: Navigation Architecture Foundation (Week 1, Days 1-2)
+### 3.1 Core Tables (88 Total Tables in `lic_schema` - Verified from Migration Files)
 
-#### Step 1.1: Create Navigation Container Components
+#### User & Authentication Tables
+- `users` - User accounts and profiles (multi-tenant)
+- `user_sessions` - Active user sessions with tokens
+- `agents` - Agent profiles and business information
+- `policyholders` - Policyholder/customer information
+- `user_roles` - User-role assignments
+- `tenant_users` - Tenant-specific user mappings
+
+#### Policy & Insurance Tables
+- `insurance_policies` - Insurance policy records
+- `premium_payments` - Premium payment records
+- `user_payment_methods` - User payment method storage
+- `insurance_providers` - Insurance provider information
+- `insurance_categories` - Insurance product categories
+
+#### Presentation & Content Tables
+- `presentations` - Presentation records (per agent)
+- `presentation_slides` - Individual slides within presentations
+- `presentation_templates` - Template library
+- `presentation_media` - Media files (images/videos) for presentations
+- `presentation_analytics` - Presentation performance analytics
+- `agent_presentation_preferences` - Agent presentation preferences
+- `video_content` - Video tutorial library
+- `video_analytics` - Video watch analytics
+
+#### Communication Tables
+- `chat_messages` - Chat message threads
+- `chatbot_sessions` - Chatbot conversation sessions
+- `chatbot_intents` - Chatbot intent definitions
+- `chatbot_analytics_summary` - Chatbot performance analytics
+- `whatsapp_messages` - WhatsApp message records
+- `whatsapp_templates` - WhatsApp template library
+- `notifications` - System notifications
+- `notification_settings` - User notification preferences
+- `device_tokens` - Push notification device tokens
+
+#### Analytics & Campaign Tables
+- `campaigns` - Marketing campaign records
+- `campaign_triggers` - Campaign trigger definitions
+- `campaign_executions` - Campaign execution logs
+- `campaign_templates` - Campaign template library
+- `campaign_responses` - Campaign response tracking
+- `callback_requests` - Callback request records
+- `callback_activities` - Callback activity logs
+- `agent_daily_metrics` - Daily agent performance metrics
+- `agent_monthly_summary` - Monthly agent performance summary
+- `revenue_forecasts` - Revenue forecasting data
+- `revenue_forecast_scenarios` - Revenue forecast scenarios
+- `policy_analytics_summary` - Policy analytics aggregations
+- `customer_behavior_metrics` - Customer behavior tracking
+- `analytics_query_log` - Analytics query logging
+- `data_export_log` - Data export logging
+
+#### CRM & Lead Management Tables
+- `leads` - Lead records (with scoring, conversion tracking, follow-up scheduling)
+- `lead_interactions` - Lead interaction history and follow-up tracking
+- `customer_retention_analytics` - Retention analytics and churn prediction data
+- `retention_actions` - Retention action planning and execution tracking
+- `predictive_insights` - AI-generated insights and recommendations
+
+#### System & Configuration Tables
+- `tenants` - Multi-tenant configuration (tenant provisioning, status, limits)
+- `tenant_config` - Tenant-specific configuration settings
+- `tenant_usage` - Tenant usage tracking and limits
+- `commissions` - Commission calculation and tracking
+- `feature_flags` - Feature flag configuration
+- `feature_flag_overrides` - User/tenant-specific feature flag overrides
+- `roles` - RBAC roles definition
+- `permissions` - RBAC permissions definition
+- `role_permissions` - Role-permission mappings
+- `rbac_audit_log` - RBAC audit trail
+
+#### Subscription & Billing Tables
+- `subscription_plans` - Available subscription plans
+- `user_subscriptions` - User subscription records
+- `subscription_billing_history` - Billing history
+- `subscription_changes` - Subscription change audit log
+- `trial_subscriptions` - Trial subscription records
+- `trial_engagement` - Trial user engagement tracking
+
+#### Knowledge Base & Learning Tables
+- `knowledge_base_articles` - Knowledge base article content
+- `knowledge_search_log` - Knowledge base search analytics
+- `daily_quotes` - Daily motivational quotes
+- `quote_sharing_analytics` - Quote sharing analytics
+- `quote_performance` - Quote performance metrics
+
+#### Customer Portal & Engagement Tables
+- `customer_portal_sessions` - Customer portal session tracking
+- `customer_engagement_metrics` - Customer engagement metrics
+- `customer_portal_preferences` - Customer portal preferences
+- `customer_feedback` - Customer feedback records
+- `customer_journey_events` - Customer journey event tracking
+- `customer_retention_metrics` - Customer retention metrics
+
+#### KYC & Document Management Tables
+- `kyc_documents` - KYC document storage references
+- `document_ocr_results` - OCR processing results
+- `kyc_manual_reviews` - KYC manual review records
+- `emergency_contacts` - Emergency contact information
+- `emergency_contact_verifications` - Emergency contact verification records
+
+#### Reference Data Tables
+- `countries` - Country reference data
+- `languages` - Language reference data
+- `insurance_categories` - Insurance category reference data
+- `insurance_providers` - Insurance provider reference data
+
+#### User Journey & Analytics Tables
+- `user_journeys` - User journey tracking and analytics
+
+#### Data Import Tables
+- `data_imports` - Import job records
+- `import_jobs` - Import job execution tracking
+- `customer_data_mapping` - Customer data field mappings
+- `data_sync_status` - Data synchronization status tracking
+
+---
+
+## 4. Phase 1: Navigation Architecture Foundation (Days 1-2)
+
+### Step 1.1: Create Navigation Container Components
 
 **Location:** `lib/navigation/`
 
 **Tasks:**
 1. Create `lib/navigation/customer_navigation.dart`
-   - Bottom tab bar with 5 tabs (Home, Policies, Chat, Learning, Profile)
+   - Bottom tab bar with 5 tabs: Home, Policies, Chat, Learning, Profile
    - Drawer menu for secondary navigation
-   - Tab state management
+   - Tab state management using Riverpod/Provider
    - Navigation between tabs
 
 2. Create `lib/navigation/agent_navigation.dart`
-   - Bottom tab bar with 5 tabs (Dashboard, Customers, Analytics, Campaigns, Profile)
-   - Hamburger menu for advanced tools
+   - Bottom tab bar with 5 tabs: Dashboard, Customers, Analytics, Campaigns, Profile
+   - Hamburger menu (side drawer) for advanced tools
    - Tab state management
 
 3. Create `lib/navigation/admin_navigation.dart`
-   - Contextual navigation based on admin role
+   - Contextual navigation based on admin role (Super Admin, Provider Admin, Regional Manager)
    - Tab-based or drawer-based navigation
    - Role-based content filtering
 
@@ -212,7 +614,9 @@ This plan provides step-by-step instructions for restructuring the Agent Mitra F
    - Protected route wrapper
    - Deep linking support
 
-**Reference:** `discovery/content/navigation-hierarchy.md` sections 2.1, 2.2, 3.1, 3.2
+**Wireframe Reference:** `discovery/content/wireframes.md` Section 3.0.1 (Agent Side Drawer), Section 4.1 (Customer Dashboard navigation)
+
+**API Integration:** None (pure navigation structure)
 
 **Acceptance Criteria:**
 - [ ] Customer navigation has 5 bottom tabs as specified
@@ -223,13 +627,13 @@ This plan provides step-by-step instructions for restructuring the Agent Mitra F
 
 ---
 
-#### Step 1.2: Update Main App Routing
+### Step 1.2: Update Main App Routing
 
 **Location:** `lib/main.dart`
 
 **Tasks:**
 1. Replace flat routing with navigation container routing
-2. Implement role-based initial route selection
+2. Implement role-based initial route selection using `AuthService`
 3. Update `_getInitialRoute()` to use navigation containers
 4. Remove individual screen routes, replace with tab-based navigation
 
@@ -242,7 +646,7 @@ This plan provides step-by-step instructions for restructuring the Agent Mitra F
 '/customer-portal': (context) => CustomerNavigationContainer(),
 ```
 
-**Reference:** `discovery/content/navigation-hierarchy.md` section 4
+**Wireframe Reference:** `discovery/content/navigation-hierarchy.md` Section 4
 
 **Acceptance Criteria:**
 - [ ] Main routing uses navigation containers
@@ -252,128 +656,172 @@ This plan provides step-by-step instructions for restructuring the Agent Mitra F
 
 ---
 
-### Phase 2: Customer Portal Restructuring (Week 1, Days 3-5)
+## 5. Phase 2: Customer Portal Restructuring (Days 3-5)
 
-#### Step 2.1: Create Unified Customer Dashboard
+### Step 2.1: Create Unified Customer Dashboard (Home Tab)
 
 **Location:** `lib/features/customer_dashboard/presentation/pages/customer_dashboard_page.dart`
 
-**Tasks:**
-1. Restructure `customer_dashboard.dart` to match wireframes exactly
-2. Implement content structure from `content-structure.md` section 2.1
-3. Integrate with real API: `GET /api/v1/dashboard/analytics`
-4. Remove all mock data, use `CustomerDashboardViewModel` with real API calls
-5. Implement Quick Actions section (Pay Premium, Contact Agent, Get Quote)
-6. Implement Policy Overview section (Active policies, next payment, coverage)
-7. Implement Critical Notifications (Priority-based, color-coded)
-8. Implement Quick Insights cards
+**Wireframe Reference:** `discovery/content/wireframes.md` Section 4.1 - "Customer Dashboard (Home Screen) - Clutter-Free Design"
+
+**Exact Wireframe Requirements:**
+- Red header bar with white text: "👋 Welcome back, {Name}!" + "📅 Today: DD MMM YYYY • 🌙 Dark Theme"
+- Smart Search (Global) - collapsible
+- Essential Quick Actions (Priority Section): 3 tiles - "💳 Pay Premium", "📞 Contact Agent", "❓ Get Quote"
+- Policy Overview (Key Metrics Only): Active Policies count, Next Payment amount & date, Total Coverage amount
+- Critical Notifications (Priority-Based): Color-coded alerts (🔴 Premium due, 🟡 Policy renewal reminder)
+- Theme Switcher (Top Right Corner): 🌙 Dark / ☀️ Light toggle
 
 **API Integration:**
-- Use `DashboardViewModel` from `lib/features/dashboard/presentation/viewmodels/dashboard_viewmodel.dart`
-- Call `GET /api/v1/dashboard/analytics` endpoint
-- Use `GET /api/v1/policies` for policy data
-- Use `GET /api/v1/notifications` for notifications
+- `GET /api/v1/dashboard/analytics` - Dashboard summary
+- `GET /api/v1/policies` - Policy list (for overview)
+- `GET /api/v1/notifications` - Notifications (priority-based)
+- `GET /api/v1/users/me` - User profile (for welcome message)
 
-**Reference:** 
-- `discovery/content/wireframes.md` section 4.1
-- `discovery/content/content-structure.md` section 2.1
-- `discovery/content/information-architecture.md` section 2.1
+**Database Tables:**
+- `lic_schema.users` - User profile
+- `lic_schema.insurance_policies` - Policy data
+- `lic_schema.notifications` - Notification records
+- `lic_schema.policy_payments` - Payment schedule
+
+**Tasks:**
+1. Restructure `customer_dashboard.dart` to match wireframe exactly
+2. Implement "Clutter-Free Design" with exact spacing and layout
+3. Remove all mock data, use `CustomerDashboardViewModel` with real API calls
+4. Implement Quick Actions section with exact icons and colors
+5. Implement Policy Overview with real metrics
+6. Implement Critical Notifications with priority-based color coding
+7. Implement Theme Switcher functionality
 
 **Acceptance Criteria:**
-- [ ] Dashboard matches wireframe exactly
+- [ ] Dashboard matches wireframe Section 4.1 exactly (layout, colors, spacing)
 - [ ] All data comes from real API endpoints
 - [ ] Quick Actions navigate correctly
-- [ ] Policy Overview shows real data
-- [ ] Notifications are priority-based
+- [ ] Policy Overview shows real data from `insurance_policies` table
+- [ ] Notifications are priority-based and color-coded
+- [ ] Theme switcher works and persists preference
 - [ ] No mock/placeholder data
 
 ---
 
-#### Step 2.2: Create Policies Tab Content
+### Step 2.2: Create Policies Tab Content
 
-**Location:** `lib/features/policies/presentation/pages/` (create if needed)
+**Location:** `lib/features/policies/presentation/pages/policies_tab_page.dart`
+
+**Wireframe Reference:** `discovery/content/wireframes.md` Section 4.2 - "Policy Details Screen"
+
+**Exact Wireframe Requirements:**
+- Policy list with searchable, filterable cards
+- Policy Details page with tabs: Overview, Coverage, Premium, Documents, Claims
+- Policy card shows: Policy No, Plan name, Start Date, Status
+- Premium & Payment section: Annual Premium, Next Due date, Payment Method, Payment History link
+- Coverage & Benefits section: Sum Assured, Bonus, Maturity date
+- Quick Actions: Pay Premium, Download Documents, Get Help
+
+**API Integration:**
+- `GET /api/v1/policies` - List all policies
+- `GET /api/v1/policies/{policy_id}` - Policy details
+- `GET /api/v1/policies/{policy_id}/payments` - Payment history
+- `GET /api/v1/policies/{policy_id}/documents` - Policy documents
+- `GET /api/v1/policies/{policy_id}/claims` - Claims history
+
+**Database Tables:**
+- `lic_schema.insurance_policies` - Policy records
+- `lic_schema.policy_payments` - Payment history
+- `lic_schema.policy_documents` - Document references
+- `lic_schema.policy_claims` - Claim records
+- `lic_schema.policy_premiums` - Premium schedule
 
 **Tasks:**
 1. Consolidate `my_policies_screen.dart`, `policy_details_screen.dart`, `premium_calendar_screen.dart` into single Policies tab
-2. Implement policy card structure from `content-structure.md` section 2.2
-3. Integrate with real APIs:
-   - `GET /api/v1/policies` - List all policies
-   - `GET /api/v1/policies/{policy_id}` - Policy details
-   - `GET /api/v1/policies/{policy_id}/payments` - Payment history
-   - `GET /api/v1/policies/{policy_id}/documents` - Policy documents
+2. Implement policy card structure matching wireframe exactly
+3. Implement policy detail page with all required tabs
 4. Implement search and filter functionality
-5. Implement policy detail page with tabs (Overview, Coverage, Premium, Documents, Claims)
-6. Remove mock data, use real API responses
+5. Remove mock data, use real API responses
 
-**Reference:**
-- `discovery/content/wireframes.md` section 4.2
-- `discovery/content/content-structure.md` section 2.2
-- `discovery/content/navigation-hierarchy.md` section 2.2
+**Note:** Premium Payment flow is **deferred** per wireframes (Section 4.3 note), but UI must exist with "Contact Agent" redirection.
 
 **Acceptance Criteria:**
 - [ ] Policies tab shows all policies from API
-- [ ] Policy cards match content structure specification
+- [ ] Policy cards match wireframe Section 4.2 exactly
 - [ ] Policy details page has all required tabs
 - [ ] Search and filter work correctly
 - [ ] Payment history shows real data
 - [ ] Documents download from real API
+- [ ] No mock data
 
 ---
 
-#### Step 2.3: Create Chat Tab Content
+### Step 2.3: Create Chat Tab Content
 
-**Location:** `lib/features/chat/presentation/pages/` (consolidate existing)
+**Location:** `lib/features/chat/presentation/pages/chat_tab_page.dart`
+
+**Wireframe Reference:** `discovery/content/wireframes.md` Sections 4.4 (WhatsApp Integration) and 4.5 (Smart Chatbot Interface)
+
+**Exact Wireframe Requirements:**
+- WhatsApp Integration Screen: Message thread, Quick message templates, Direct WhatsApp Chat button
+- Smart Assistant: Chat interface, Knowledge base integration, Video tutorial suggestions, Smart help options
+
+**API Integration:**
+- `GET /api/v1/chat/threads` - Get message threads
+- `GET /api/v1/chat/messages` - Get messages
+- `POST /api/v1/chat/messages` - Send message
+- `POST /api/v1/external/whatsapp/send` - Send WhatsApp message
+- `POST /api/v1/chatbot/query` - Submit chatbot query (if chatbot endpoint exists)
+
+**Database Tables:**
+- `lic_schema.chat_messages` - Message threads
+- `lic_schema.whatsapp_messages` - WhatsApp message records
+- `lic_schema.whatsapp_templates` - Quick message templates
 
 **Tasks:**
 1. Consolidate `whatsapp_integration_screen.dart`, `smart_chatbot_screen.dart`, `agent_chat_screen.dart` into Chat tab
-2. Implement message thread design from `content-structure.md` section 2.3
-3. Integrate with real APIs:
-   - `GET /api/v1/chat/messages` - Get messages
-   - `POST /api/v1/chat/messages` - Send message
-   - `GET /api/v1/chatbot/query` - Chatbot queries
-   - `POST /api/v1/chatbot/query` - Submit chatbot query
-4. Implement WhatsApp integration using real WhatsApp Business API
-5. Implement Smart Assistant with real chatbot backend
-6. Remove mock data
-
-**Reference:**
-- `discovery/content/wireframes.md` sections 4.4, 4.5
-- `discovery/content/content-structure.md` section 2.3, 2.4
-- `discovery/content/user-journey.md` section 2.4
+2. Implement message thread design matching wireframes
+3. Implement WhatsApp integration using real WhatsApp API
+4. Implement Smart Assistant UI (connect to chatbot backend if available)
+5. Remove mock data
 
 **Acceptance Criteria:**
 - [ ] Chat tab shows real messages from API
 - [ ] WhatsApp integration works with real API
-- [ ] Smart Assistant connects to real chatbot backend
+- [ ] Smart Assistant UI matches wireframe Section 4.5
 - [ ] Message threads display correctly
 - [ ] Quick templates work
 - [ ] No mock data
 
 ---
 
-#### Step 2.4: Create Learning Tab Content
+### Step 2.4: Create Learning Tab Content
 
-**Location:** `lib/features/learning/presentation/pages/` (restructure existing)
+**Location:** `lib/features/learning/presentation/pages/learning_tab_page.dart`
+
+**Wireframe Reference:** `discovery/content/wireframes.md` Section 4.6 - "Video Learning Center"
+
+**Exact Wireframe Requirements:**
+- Featured Content (YouTube Integration): Video cards with thumbnail, duration, views, rating
+- Categories: Insurance Basics, Money Management, Policy Management
+- Recent Additions: Agent-uploaded content with upload date and agent name
+- Learning Analytics: Videos Watched count, Total Time, Learning Streak, Next recommended video
+
+**API Integration:**
+- `GET /api/v1/content/videos` - Get video library
+- `GET /api/v1/content/categories` - Get content categories
+- `GET /api/v1/content/featured` - Get featured content
+
+**Database Tables:**
+- `lic_schema.content_videos` - Video library
+- `lic_schema.content_categories` - Content organization
+- `lic_schema.agents` - Agent information (for "Uploaded by" display)
 
 **Tasks:**
-1. Restructure `learning_center_screen.dart` to match wireframes
-2. Implement video tutorial structure from `content-structure.md` section 2.5
-3. Integrate with real APIs:
-   - `GET /api/v1/content/videos` - Get video library
-   - `GET /api/v1/content/categories` - Get content categories
-   - `GET /api/v1/content/featured` - Get featured content
-4. Implement YouTube integration if specified
-5. Implement learning analytics (views, watch time, progress)
-6. Remove mock data
-
-**Reference:**
-- `discovery/content/wireframes.md` section 4.6
-- `discovery/content/content-structure.md` section 2.5
-- `discovery/content/information-architecture.md` section 2.1
+1. Restructure `learning_center_screen.dart` to match wireframes exactly
+2. Implement video tutorial structure with YouTube integration
+3. Implement learning analytics (views, watch time, progress)
+4. Remove mock data
 
 **Acceptance Criteria:**
 - [ ] Learning tab shows real videos from API
-- [ ] Categories match content structure
+- [ ] Categories match wireframe Section 4.6
 - [ ] Featured content displays correctly
 - [ ] Video playback works (YouTube or direct)
 - [ ] Learning analytics show real data
@@ -381,27 +829,25 @@ This plan provides step-by-step instructions for restructuring the Agent Mitra F
 
 ---
 
-#### Step 2.5: Create Profile Tab Content
+### Step 2.5: Create Profile Tab Content
 
-**Location:** `lib/features/profile/presentation/pages/` (create if needed)
+**Location:** `lib/features/profile/presentation/pages/profile_tab_page.dart`
+
+**Wireframe Reference:** `discovery/content/wireframes.md` (Profile sections referenced in navigation)
+
+**API Integration:**
+- `GET /api/v1/users/me` - Get user profile
+- `PUT /api/v1/users/me` - Update profile
+- `POST /api/v1/auth/change-password` - Change password
+
+**Database Tables:**
+- `lic_schema.users` - User profile data
 
 **Tasks:**
 1. Create comprehensive profile page matching wireframes
-2. Implement profile sections:
-   - Personal Information (editable)
-   - App Settings (Theme, Language, Notifications)
-   - Security & Privacy (Password, Biometric, Data Export)
-   - Help & Support (FAQ, Contact, User Guide)
-3. Integrate with real APIs:
-   - `GET /api/v1/users/me` - Get user profile
-   - `PUT /api/v1/users/me` - Update profile
-   - `POST /api/v1/auth/change-password` - Change password
-4. Implement settings persistence
-5. Remove mock data
-
-**Reference:**
-- `discovery/content/navigation-hierarchy.md` section 2.2 (Tab 5)
-- `discovery/content/wireframes.md` (Profile sections)
+2. Implement profile sections: Personal Information, App Settings, Security & Privacy, Help & Support
+3. Implement settings persistence to backend
+4. Remove mock data
 
 **Acceptance Criteria:**
 - [ ] Profile tab shows real user data
@@ -413,105 +859,221 @@ This plan provides step-by-step instructions for restructuring the Agent Mitra F
 
 ---
 
-### Phase 3: Agent Portal Restructuring (Week 2, Days 1-4)
+## 6. Phase 3: Agent Portal Restructuring & Presentation Carousel (Days 6-9)
 
-#### Step 3.1: Create Unified Agent Dashboard
+### Step 3.1: Agent Dashboard with Presentation Carousel (NEW FEATURE)
 
-**Location:** `lib/features/agent_dashboard/presentation/pages/agent_dashboard_page.dart` (create new)
+**Location:** `lib/features/agent_dashboard/presentation/pages/agent_dashboard_page.dart`
+
+**Wireframe Reference:** `discovery/content/wireframes.md` Section 3.0 - "Agent App Home Dashboard"  
+**Feature Specification:** `discovery/design/presentation-carousel-homepage.md`
+
+**Exact Wireframe Requirements:**
+- Red header bar: "☰ Hamburger Menu │ 🏠 Home │ 🔔 Notification"
+- **Dynamic Presentation Carousel** (Height: 220px):
+  - Auto-playing carousel (4-5s per slide)
+  - Images, videos, and text overlays
+  - Dot indicators showing current slide
+  - Swipe navigation enabled
+  - Agent branding (logo, contact CTA)
+  - CTA buttons for actions
+  - ✏️ Edit button (top right)
+- Feature Tiles Grid (2 rows × 3 columns): Calendar, Chat, Reminders, Presentations, Daily Quotes, Profile
+- My Policies Section: Red horizontal bar with right arrow icon
+
+**API Integration:**
+- `GET /api/v1/dashboard/home` - Complete dashboard data (includes carousel)
+- `GET /api/v1/presentations/agent/{agent_id}/active` - Active presentation for carousel
+- `GET /api/v1/dashboard/presentations/carousel` - Carousel items
+- `GET /api/v1/dashboard/feature-tiles` - Feature tiles
+- `GET /api/v1/dashboard/analytics/summary` - Dashboard KPIs
+
+**Database Tables:**
+- `lic_schema.presentations` - Presentation records
+- `lic_schema.slides` - Slide data with media URLs
+- `lic_schema.presentation_media` - Media file references
+- `lic_schema.agents` - Agent information for branding
 
 **Tasks:**
-1. **Remove duplicate dashboards:**
-   - Delete `lib/screens/senior_agent_dashboard.dart`
-   - Delete `lib/screens/regional_manager_dashboard.dart`
-   - Keep only unified agent dashboard
+1. **Create PresentationCarousel Widget** (`lib/features/presentations/presentation/widgets/presentation_carousel.dart`):
+   - Auto-play functionality (4-5s per slide)
+   - Swipe navigation
+   - Dot indicators
+   - Support for `image` and `video` slide types
+   - Agent branding overlay
+   - CTA button handling
 
-2. **Create unified dashboard** that adapts to agent role (junior/senior/regional manager)
-3. Implement KPIs from `content-structure.md` section 3.1:
-   - Monthly Revenue
-   - Active Customers
-   - Renewal Rate
-   - New Policies Sold
-   - Customer Satisfaction
-4. Integrate with real APIs:
-   - `GET /api/v1/analytics/agent/{agent_id}` - Agent analytics
-   - `GET /api/v1/dashboard/analytics` - Dashboard KPIs
-   - `GET /api/v1/analytics/roi/agent/{agent_id}` - ROI data
-5. Implement trend charts (6-month overview)
-6. Implement action items (priority queue)
-7. Remove all mock data
+2. **Integrate Carousel into Dashboard**:
+   - Fetch active presentation from `GET /api/v1/presentations/agent/{agent_id}/active`
+   - Display carousel at top of dashboard (220px height)
+   - Handle empty state (no active presentation)
 
-**Reference:**
-- `discovery/content/wireframes.md` section 3.0
-- `discovery/content/content-structure.md` section 3.1
-- `discovery/content/information-architecture.md` section 3.2
+3. **Implement Feature Tiles Grid**:
+   - 2 rows × 3 columns layout
+   - Icons, labels, and badge indicators
+   - Navigation to respective screens
+
+4. **Implement My Policies Section**:
+   - Red horizontal bar with arrow
+   - Link to Policies tab
 
 **Acceptance Criteria:**
-- [ ] Single unified dashboard for all agent types
-- [ ] Role-based content filtering works
-- [ ] All KPIs come from real API
-- [ ] Trend charts show real data
-- [ ] Action items are real and actionable
-- [ ] No duplicate dashboards exist
+- [ ] Carousel matches wireframe Section 3.0 exactly (220px height, auto-play, dots, swipe)
+- [ ] Carousel displays slides from real API (`presentations` and `slides` tables)
+- [ ] Image and video slides render correctly
+- [ ] Agent branding displays on slides
+- [ ] Feature tiles grid matches wireframe layout
+- [ ] All data comes from real APIs
 - [ ] No mock data
 
 ---
 
-#### Step 3.2: Create Customers Tab Content
+### Step 3.2: Presentation Editor Module (NEW FEATURE)
 
-**Location:** `lib/features/customers/presentation/pages/customers_tab_page.dart` (restructure existing)
+**Location:** `lib/features/presentations/editor/pages/presentation_editor_page.dart`
+
+**Wireframe Reference:** `discovery/content/wireframes.md` Section 3.0.2.1 - "Presentation Editor Screen"  
+**Feature Specification:** `discovery/design/presentation-carousel-homepage.md` Section 5
+
+**Exact Wireframe Requirements:**
+- Red header: "← Back │ ✏️ Edit Presentation │ 💾 Save Draft"
+- Slide List (Reorderable): Shows slide title, type, layout, duration with Edit/Delete/Reorder controls
+- Add New Slide section: "➕ Add Slide │ 📋 Use Template │ 📤 Import"
+- Editor Panel (when slide selected):
+  - Title: Rich Text Editor
+  - Subtitle: Rich Text Editor
+  - Media: Image/Video Picker (Gallery │ Camera │ Video)
+  - Layout: Centered/Left/Grid selector
+  - Text Color: Color Picker
+  - Background: Color Picker
+  - Duration: Slider (2-10 seconds)
+  - CTA Button: Enable toggle, Text input, Action selector
+  - Agent Branding: Enable Logo toggle, Show Contact toggle
+- Preview Mode: Preview │ Play │ Pause │ Refresh buttons
+- Action Buttons: "💾 Save Draft │ 🚀 Publish │ ❌ Cancel"
+
+**API Integration:**
+- `GET /api/v1/presentations/agent/{agent_id}` - Get all presentations
+- `POST /api/v1/presentations/agent/{agent_id}` - Create/update presentation
+- `PUT /api/v1/presentations/agent/{agent_id}/{presentation_id}` - Update presentation
+- `POST /api/v1/presentations/media/upload` - Upload media (image/video)
+- `GET /api/v1/presentations/templates` - Get templates
+
+**Database Tables:**
+- `lic_schema.presentations` - Presentation records
+- `lic_schema.slides` - Slide records with JSONB fields for CTA and branding
+- `lic_schema.presentation_media` - Media file storage references
+- `lic_schema.presentation_templates` - Template library
+
+**Tasks:**
+1. **Create Presentation Editor Screen**:
+   - Slide list with reorderable items (drag & drop)
+   - Slide editor panel with all wireframe fields
+   - Rich text editor for title/subtitle
+   - Media picker (Gallery/Camera/Video)
+   - Color pickers for text and background
+   - Layout selector (Centered/Left/Grid)
+   - Duration slider
+   - CTA button configuration
+   - Agent branding toggles
+
+2. **Implement Media Upload**:
+   - Connect to `POST /api/v1/presentations/media/upload`
+   - Handle image and video uploads
+   - Display thumbnail previews
+
+3. **Implement Preview Mode**:
+   - Live carousel preview
+   - Auto-play simulation
+   - Full-screen preview option
+
+4. **Implement Save/Publish**:
+   - Save draft functionality
+   - Publish to make active (sets `is_active=true` in `presentations` table)
+
+**Acceptance Criteria:**
+- [ ] Editor matches wireframe Section 3.0.2.1 exactly
+- [ ] Slide list is reorderable
+- [ ] Media upload works with real API
+- [ ] Rich text editing functional
+- [ ] Preview mode works correctly
+- [ ] Save draft and publish work correctly
+- [ ] Data persists to `presentations` and `slides` tables
+- [ ] No mock data
+
+---
+
+### Step 3.3: Customers Tab Content
+
+**Location:** `lib/features/customers/presentation/pages/customers_tab_page.dart`
+
+**Wireframe Reference:** `discovery/content/wireframes.md` Section 5.2 - "Customer Management Screen"
+
+**Exact Wireframe Requirements:**
+- Customer Overview Cards: Total Customers, High Value Customers, At Risk Customers
+- Customer List (Advanced CRM View): Customer name, Policy count, Premium/year, Phone, Engagement score, Last Contact, Next Action
+- Customer Segmentation: High Value, Medium Value, Low Value filters
+- Communication Tools: Bulk Email, WhatsApp Campaign, Analyze Segments
+
+**API Integration:**
+- `GET /api/v1/agents/{agent_id}/customers` - List customers
+- Customer details via policies relationship
+
+**Database Tables:**
+- `lic_schema.policyholders` - Customer records
+- `lic_schema.insurance_policies` - Policy associations
+- `lic_schema.users` - User profile data
+- `lic_schema.customer_segments` - Segmentation data
 
 **Tasks:**
 1. Restructure `customers_screen.dart` to match wireframes
-2. Implement customer profile structure from `content-structure.md` section 3.2
-3. Integrate with real APIs:
-   - `GET /api/v1/customers` - List customers
-   - `GET /api/v1/customers/{customer_id}` - Customer details
-   - `GET /api/v1/customers/{customer_id}/analytics` - Customer analytics
-   - `GET /api/v1/customers/{customer_id}/communication` - Communication history
-4. Implement advanced CRM features:
-   - Customer segmentation
-   - Bulk messaging
-   - Communication tools
-   - Customer analytics
-5. Remove mock data
-
-**Reference:**
-- `discovery/content/wireframes.md` section 5.2
-- `discovery/content/content-structure.md` section 3.2
-- `discovery/content/information-architecture.md` section 3.2
+2. Implement customer profile structure
+3. Implement advanced CRM features: segmentation, bulk messaging
+4. Remove mock data
 
 **Acceptance Criteria:**
 - [ ] Customers tab shows real customer data
-- [ ] Customer profiles match content structure
+- [ ] Customer profiles match wireframe Section 5.2
 - [ ] Segmentation works correctly
 - [ ] Bulk messaging functional
-- [ ] Analytics show real data
 - [ ] No mock data
 
 ---
 
-#### Step 3.3: Create Analytics Tab Content
+### Step 3.4: Analytics Tab Content
 
-**Location:** `lib/features/analytics/presentation/pages/analytics_tab_page.dart` (restructure existing)
+**Location:** `lib/features/analytics/presentation/pages/analytics_tab_page.dart`
+
+**Wireframe Reference:** `discovery/content/wireframes.md` Section 5.3 - "ROI Analytics Dashboard"
+
+**Exact Wireframe Requirements:**
+- Revenue Analytics: Monthly Revenue, Growth %, Commission Rate
+- Performance Metrics: Conversion Rate, Retention Rate, Customer LTV
+- ROI Calculations: Marketing ROI, Time ROI, Customer Acquisition Cost
+- Predictive Analytics: Next Month Revenue prediction, Upsell opportunities, Churn risk
+- Interactive Charts: 6-Month Revenue Trend, Commission Breakdown, Customer LTV Analysis
+- Actionable Insights: Recommendations based on analytics
+
+**API Integration:**
+- `GET /api/v1/analytics/roi/agent/{agent_id}` - ROI analytics
+- `GET /api/v1/analytics/revenue` - Revenue analytics
+- `GET /api/v1/analytics/performance` - Performance metrics
+- `GET /api/v1/analytics/predictive` - Predictive analytics
+
+**Database Tables:**
+- `lic_schema.agent_analytics` - Agent performance metrics
+- `lic_schema.roi_analytics` - ROI calculations
+- `lic_schema.insurance_policies` - Revenue data
+- `lic_schema.campaign_analytics` - Marketing ROI data
 
 **Tasks:**
 1. Consolidate `roi_analytics_dashboard.dart` into Analytics tab
-2. Implement ROI dashboard structure from `content-structure.md` section 3.3
-3. Integrate with real APIs:
-   - `GET /api/v1/analytics/roi/agent/{agent_id}` - ROI analytics
-   - `GET /api/v1/analytics/revenue` - Revenue analytics
-   - `GET /api/v1/analytics/performance` - Performance metrics
-   - `GET /api/v1/analytics/predictive` - Predictive analytics
-4. Implement revenue analytics section
-5. Implement performance metrics section
-6. Implement ROI calculations section
-7. Implement predictive analytics section
-8. Remove mock data
-
-**Reference:**
-- `discovery/content/wireframes.md` section 5.3
-- `discovery/content/content-structure.md` section 3.3
-- `discovery/content/information-architecture.md` section 3.2
+2. Implement ROI dashboard structure matching wireframes exactly
+3. Implement revenue analytics section
+4. Implement performance metrics section
+5. Implement ROI calculations section
+6. Implement predictive analytics section
+7. Remove mock data
 
 **Acceptance Criteria:**
 - [ ] Analytics tab shows real ROI data
@@ -519,111 +1081,114 @@ This plan provides step-by-step instructions for restructuring the Agent Mitra F
 - [ ] Performance metrics accurate
 - [ ] ROI calculations correct
 - [ ] Predictive analytics working
+- [ ] Charts display real data
 - [ ] No mock data
 
 ---
 
-#### Step 3.4: Create Campaigns Tab Content
+### Step 3.5: Campaigns Tab Content
 
-**Location:** `lib/features/campaigns/presentation/pages/campaigns_tab_page.dart` (restructure existing)
+**Location:** `lib/features/campaigns/presentation/pages/campaigns_tab_page.dart`
+
+**Wireframe Reference:** `discovery/content/wireframes.md` Sections 5.4 (Campaign Builder) and 5.7 (Campaign Performance)
+
+**API Integration:**
+- `GET /api/v1/campaigns` - List campaigns
+- `POST /api/v1/campaigns` - Create campaign
+- `GET /api/v1/campaigns/{campaign_id}` - Campaign details
+- `GET /api/v1/campaigns/{campaign_id}/performance` - Campaign performance
+- `POST /api/v1/campaigns/{campaign_id}/launch` - Launch campaign
+
+**Database Tables:**
+- `lic_schema.campaigns` - Campaign records
+- `lic_schema.campaign_recipients` - Audience data
+- `lic_schema.campaign_analytics` - Performance metrics
 
 **Tasks:**
-1. Consolidate `marketing_campaign_builder.dart`, `campaign_performance_screen.dart` into Campaigns tab
-2. Implement campaign builder interface from `content-structure.md` section 3.4
-3. Integrate with real APIs:
-   - `GET /api/v1/campaigns` - List campaigns
-   - `POST /api/v1/campaigns` - Create campaign
-   - `GET /api/v1/campaigns/{campaign_id}` - Campaign details
-   - `GET /api/v1/campaigns/{campaign_id}/performance` - Campaign performance
-   - `POST /api/v1/campaigns/{campaign_id}/launch` - Launch campaign
-4. Implement campaign builder with:
-   - Campaign setup
-   - Message builder
-   - Audience segmentation
-   - Campaign scheduling
-   - Performance tracking
-5. Remove mock data
-
-**Reference:**
-- `discovery/content/wireframes.md` section 5.4, 5.7
-- `discovery/content/content-structure.md` section 3.4
-- `discovery/content/user-journey.md` section 2.5
+1. Consolidate campaign screens into Campaigns tab
+2. Implement campaign builder interface matching wireframes
+3. Connect audience segmentation to real customer data
+4. Remove mock data
 
 **Acceptance Criteria:**
 - [ ] Campaigns tab shows real campaigns
 - [ ] Campaign builder functional
 - [ ] Audience segmentation works
 - [ ] Campaign performance tracking accurate
-- [ ] Campaign launch works
 - [ ] No mock data
 
 ---
 
-#### Step 3.5: Create Agent Profile Tab Content
+### Step 3.6: Agent Profile Tab Content
 
-**Location:** `lib/features/agent/presentation/pages/agent_profile_tab_page.dart` (restructure existing)
+**Location:** `lib/features/agent/presentation/pages/agent_profile_tab_page.dart`
+
+**Wireframe Reference:** `discovery/content/wireframes.md` Section 3.0.4 - "Profile Summary Screen"
+
+**Exact Wireframe Requirements:**
+- Red header: "← Back Arrow │ 👤 Profile │ 📷 Camera Icon"
+- Profile Summary Card (White card, rounded corners):
+  - Name, Phone, Email (pre-filled)
+  - Gender, Date of Birth, Address, Address Type, Alternate Mobile, Profession, Marriage Date (editable fields)
+  - Yellow edit icon (circular, white pencil)
+- Action Button: "🔴 UPDATE" (Large red button, white capitalized text)
+- Profile Photo Upload: Camera icon in header
+
+**API Integration:**
+- `GET /api/v1/agents/{agent_id}` - Agent profile
+- `PUT /api/v1/agents/{agent_id}` - Update profile
+- `POST /api/v1/agents/{agent_id}/photo` - Upload photo
+- `GET /api/v1/content/videos` - Video library
+- `POST /api/v1/content/videos` - Upload video
+
+**Database Tables:**
+- `lic_schema.agents` - Agent profile data
+- `lic_schema.content_videos` - Video library
 
 **Tasks:**
-1. Restructure `agent_profile_page.dart` to match wireframes
-2. Implement agent profile structure from `content-structure.md` section 3.5
-3. Integrate with real APIs:
-   - `GET /api/v1/agents/{agent_id}` - Agent profile
-   - `PUT /api/v1/agents/{agent_id}` - Update profile
-   - `POST /api/v1/agents/{agent_id}/photo` - Upload photo
-   - `GET /api/v1/content/videos` - Video library
-   - `POST /api/v1/content/videos` - Upload video
-   - `GET /api/v1/chatbot/training` - Chatbot Q&A
-   - `POST /api/v1/chatbot/training` - Add Q&A
-4. Implement content management:
-   - Video library management
-   - Document management
-   - Content performance analytics
-   - Chatbot training interface
-5. Remove mock data
-
-**Reference:**
-- `discovery/content/wireframes.md` section 3.0.4, 5.5
-- `discovery/content/content-structure.md` section 3.5
-- `discovery/content/information-architecture.md` section 3.2
+1. Restructure `agent_profile_page.dart` to match wireframes exactly
+2. Implement profile editing with form validation
+3. Implement photo upload functionality
+4. Remove mock data
 
 **Acceptance Criteria:**
 - [ ] Agent profile shows real data
+- [ ] Profile matches wireframe Section 3.0.4 exactly
 - [ ] Photo upload works
-- [ ] Video library functional
-- [ ] Content management works
-- [ ] Chatbot training interface functional
+- [ ] Update functionality works
 - [ ] No mock data
 
 ---
 
-### Phase 4: Admin Portal Restructuring (Week 2, Days 5-7)
+## 7. Phase 4: Admin Portal Restructuring (Days 10-12)
 
-#### Step 4.1: Create Unified Admin Dashboard
+### Step 4.1: Create Unified Admin Dashboard
 
-**Location:** `lib/features/admin_dashboard/presentation/pages/admin_dashboard_page.dart` (create new)
+**Location:** `lib/features/admin_dashboard/presentation/pages/admin_dashboard_page.dart`
+
+**Wireframe Reference:** `discovery/content/wireframes.md` (Admin dashboard concepts)
+
+**API Integration:**
+- `GET /api/v1/dashboard/system-overview` - System overview (Super Admin)
+- `GET /api/v1/dashboard/provider-overview` - Provider overview (Provider Admin)
+- `GET /api/v1/dashboard/regional-overview` - Regional overview (Regional Manager)
+- `GET /api/v1/rbac/users` - User management
+- `GET /api/v1/rbac/roles` - Role management
+- `GET /api/v1/feature-flags` - Feature flags
+- `GET /api/v1/analytics/platform` - Platform analytics
+
+**Database Tables:**
+- `lic_schema.users` - User data
+- `lic_schema.agents` - Agent data
+- `lic_schema.insurance_policies` - Policy data
+- `lic_schema.roles` - RBAC roles
+- `lic_schema.feature_flags` - Feature flag configuration
 
 **Tasks:**
-1. **Remove duplicate admin dashboards:**
-   - Delete `lib/screens/super_admin_dashboard.dart`
-   - Delete `lib/screens/provider_admin_dashboard.dart`
-   - Keep only unified admin dashboard
-
-2. **Create unified admin dashboard** that adapts to admin role
-3. Implement admin sections based on role:
-   - Super Admin: Full system access
-   - Provider Admin: Provider management
-   - Regional Manager: Regional management
-4. Integrate with real APIs:
-   - `GET /api/v1/rbac/users` - User management
-   - `GET /api/v1/rbac/roles` - Role management
-   - `GET /api/v1/feature-flags` - Feature flags
-   - `GET /api/v1/analytics/platform` - Platform analytics
-5. Implement role-based content filtering
-6. Remove all mock data
-
-**Reference:**
-- `discovery/content/information-architecture.md` section 1.4, 2.4
-- `discovery/content/navigation-hierarchy.md` section 3 (Admin navigation)
+1. Remove duplicate admin dashboards
+2. Create unified admin dashboard that adapts to admin role
+3. Implement role-based content filtering
+4. Remove all mock data
 
 **Acceptance Criteria:**
 - [ ] Single unified admin dashboard
@@ -636,257 +1201,156 @@ This plan provides step-by-step instructions for restructuring the Agent Mitra F
 
 ---
 
-#### Step 4.2: Implement Admin Management Features
+## 8. Phase 5: Onboarding Flow Implementation (Days 13-14)
 
-**Location:** `lib/features/admin/presentation/pages/` (create if needed)
+### Step 5.1: Implement Complete Onboarding Flow
 
-**Tasks:**
-1. Implement user management with RBAC
-2. Implement system configuration
-3. Implement feature flag management
-4. Implement platform analytics
-5. Integrate with real APIs:
-   - `GET /api/v1/rbac/users` - List users
-   - `POST /api/v1/rbac/users` - Create user
-   - `PUT /api/v1/rbac/users/{user_id}` - Update user
-   - `POST /api/v1/rbac/users/{user_id}/roles` - Assign roles
-   - `GET /api/v1/feature-flags` - List flags
-   - `PUT /api/v1/feature-flags/{flag_id}` - Update flag
-6. Remove mock data
+**Location:** `lib/features/onboarding/presentation/pages/`
 
-**Reference:**
-- `discovery/content/information-architecture.md` section 2.4
-- `discovery/content/user-journey.md` section 3.1
+**Wireframe Reference:** `discovery/content/wireframes.md` Sections 2.1-2.4, 4.7-4.12
 
-**Acceptance Criteria:**
-- [ ] User management works with real API
-- [ ] RBAC assignment functional
-- [ ] Feature flag management works
-- [ ] System configuration saves to backend
-- [ ] Platform analytics accurate
-- [ ] No mock data
+**Exact Wireframe Requirements:**
+- Splash Screen (Section 2.1): Logo, "Friend of Agents", Loading animation
+- Welcome Screen (Section 2.2): "Welcome to LIC Agent App", "14-Day Free Trial", GET STARTED / LOGIN buttons
+- Agent Code Login (Section 2.3): Logo, Agent Code input, Password input, Forgot Password link, LOGIN button
+- Phone Verification (Section 2.3): Phone number input, "We'll send OTP" message, SEND OTP button
+- OTP Verification (Section 2.3): 6-digit code input, Resend OTP timer, VERIFY OTP button
+- Trial User Setup (Section 2.4): Basic profile form, START TRIAL button
+- Agent Discovery (Section 4.9): Search methods, Agent information form, VERIFY AGENT button
+- Document Upload (Section 4.10): Required documents list, Upload process, OCR results
+- KYC Verification (Section 4.11): Verification checklist, Status tracking
+- Emergency Contact Setup (Section 4.12): Contact details form, Relationship dropdown
 
----
+**API Integration:**
+- `POST /api/v1/auth/phone-verification` - Send OTP
+- `POST /api/v1/auth/verify-otp` - Verify OTP
+- `POST /api/v1/users/me` - Update profile
+- `GET /api/v1/agents/search` - Agent discovery
+- `POST /api/v1/users/kyc/documents` - Upload documents (if KYC endpoint exists)
+- `POST /api/v1/users/emergency-contact` - Add emergency contact (if endpoint exists)
 
-### Phase 5: Onboarding Flow Restructuring (Week 3, Days 1-2)
-
-#### Step 5.1: Implement Complete Onboarding Flow
-
-**Location:** `lib/features/onboarding/presentation/pages/` (restructure existing)
+**Database Tables:**
+- `lic_schema.users` - User profile
+- `lic_schema.agents` - Agent records (for discovery)
+- `lic_schema.policyholders` - Policyholder data
 
 **Tasks:**
-1. Implement complete onboarding flow from `user-journey.md` section 2.1
-2. Steps to implement:
-   - Welcome & Language Selection
-   - Phone Verification
-   - OTP Verification
-   - Basic Profile Setup
-   - Agent Discovery & Connection
-   - Document Upload & Verification
-   - KYC Verification
-   - Emergency Contact Setup
-3. Integrate with real APIs:
-   - `POST /api/v1/auth/phone-verification` - Send OTP
-   - `POST /api/v1/auth/verify-otp` - Verify OTP
-   - `POST /api/v1/users/me` - Update profile
-   - `POST /api/v1/agents/discover` - Agent discovery
-   - `POST /api/v1/users/kyc/documents` - Upload documents
-   - `POST /api/v1/users/kyc/verify` - KYC verification
-   - `POST /api/v1/users/emergency-contact` - Add emergency contact
-4. Implement data pending state handling
-5. Remove mock data
-
-**Reference:**
-- `discovery/content/user-journey.md` section 2.1
-- `discovery/content/navigation-hierarchy.md` section 2.1
-- `discovery/content/wireframes.md` sections 2.1-2.4, 4.7-4.12
+1. Implement complete onboarding flow matching wireframes exactly
+2. Implement all steps with real API integration
+3. Implement data pending state handling
+4. Remove mock data
 
 **Acceptance Criteria:**
-- [ ] Complete onboarding flow matches user journey
+- [ ] Complete onboarding flow matches wireframes exactly
 - [ ] All steps integrate with real APIs
 - [ ] Agent discovery works correctly
-- [ ] Document upload functional
-- [ ] KYC verification works
+- [ ] Document upload functional (if API exists)
+- [ ] KYC verification works (if API exists)
 - [ ] Data pending state handled properly
 - [ ] No mock data
 
 ---
 
-### Phase 6: React Config Portal Restructuring (Week 3, Days 3-5)
+## 9. Phase 6: React Config Portal Implementation (Days 15-17)
 
-#### Step 6.1: Implement Complete Data Import Flow
+### Step 6.1: Implement Complete Data Import Flow
 
 **Location:** `config-portal/src/pages/`
 
-**Tasks:**
-1. Implement complete import workflow from `user-journey.md` section 2.1 (Sub-Journey 1-5)
-2. Create/update screens:
-   - `DataImportDashboard.tsx` - Import dashboard with statistics
-   - `ExcelUpload.tsx` - File upload with validation
-   - `ImportProgress.tsx` - Real-time progress tracking
-   - `ImportErrors.tsx` - Error review and resolution
-   - `ImportSuccess.tsx` - Success confirmation
-3. Integrate with real APIs:
-   - `GET /api/v1/data-import/status` - Import status
-   - `POST /api/v1/data-import/upload` - Upload Excel file
-   - `GET /api/v1/data-import/{import_id}/progress` - Progress tracking
-   - `GET /api/v1/data-import/{import_id}/errors` - Import errors
-   - `POST /api/v1/data-import/{import_id}/retry` - Retry import
-4. Implement Excel template download
-5. Implement column mapping
-6. Implement real-time progress updates
-7. Remove mock data
+**Wireframe Reference:** `discovery/content/wireframes.md` Sections 4.13.1-4.13.5
 
-**Reference:**
-- `discovery/content/user-journey.md` section 2.1 (Sub-Journeys 1-5)
-- `discovery/content/wireframes.md` sections 4.13.1-4.13.5
-- `discovery/content/information-architecture.md` section 2.3
+**Exact Wireframe Requirements:**
+- Import Dashboard (Section 4.13.1): Import Statistics (Total, Successful, Failed), Recent Activity, Quick Actions
+- Excel Upload (Section 4.13.2): Drag & drop, File validation, Column mapping
+- Import Progress (Section 4.13.3): Real-time progress bar, Live statistics, Pause/Cancel controls
+- Import Errors (Section 4.13.4): Error summary, Error details list, Resolution options
+- Import Success (Section 4.13.5): Success summary, Data quality metrics, Mobile sync status
+
+**API Integration:**
+- `GET /api/v1/import/templates` - Get import templates
+- `POST /api/v1/import/upload` - Upload Excel file
+- `POST /api/v1/import/validate/{file_id}` - Validate file
+- `POST /api/v1/import/data` - Import validated data
+- `GET /api/v1/import/status/{import_id}` - Get import status
+- `GET /api/v1/import/history` - Get import history
+- `GET /api/v1/import/templates/{entity_type}/download` - Download template
+
+**Database Tables:**
+- `lic_schema.data_imports` - Import job records
+- `lic_schema.data_import_errors` - Import error logs
+- Target tables: `lic_schema.policyholders`, `lic_schema.insurance_policies`, etc.
+
+**Tasks:**
+1. Implement complete import workflow matching wireframes exactly
+2. Create/update screens: Dashboard, Upload, Progress, Errors, Success
+3. Implement Excel template download
+4. Implement column mapping
+5. Implement real-time progress updates
+6. Remove mock data
 
 **Acceptance Criteria:**
-- [ ] Complete import flow matches user journey
+- [ ] Complete import flow matches wireframes exactly
 - [ ] File upload works with real backend
 - [ ] Progress tracking shows real-time updates
 - [ ] Error handling functional
 - [ ] Template download works
 - [ ] Column mapping functional
+- [ ] Data imports to real database tables
 - [ ] No mock data
 
 ---
 
-#### Step 6.2: Implement Config Portal Dashboard
+## 10. Phase 7: Wireframe Conformance Verification (Days 18-19)
 
-**Location:** `config-portal/src/pages/Dashboard.tsx`
+### Step 7.1: Visual Audit Against Wireframes
 
 **Tasks:**
-1. Implement import dashboard from wireframes
-2. Integrate with real APIs:
-   - `GET /api/v1/data-import/statistics` - Import statistics
-   - `GET /api/v1/data-import/history` - Import history
-   - `GET /api/v1/data-import/quality-metrics` - Data quality metrics
-3. Display real import statistics
-4. Show recent import activity
-5. Implement quick actions
-6. Remove mock data
+1. Systematically compare every implemented screen against `discovery/content/wireframes.md`
+2. Verify exact match for:
+   - Typography (Font sizes, weights per wireframe)
+   - Colors (Primary Red #C62828, Secondary Blue/Green, White backgrounds)
+   - Spacing and Grid alignment
+   - Component layouts (exact positioning)
+   - Icons and imagery
+   - Component states (Loading, Empty, Error)
 
-**Reference:**
-- `discovery/content/wireframes.md` section 4.13.1
-- `discovery/content/information-architecture.md` section 2.3
+**Checklist per Screen:**
+- [ ] Header bar matches wireframe (red background, white text)
+- [ ] Component spacing matches wireframe exactly
+- [ ] Colors match wireframe color scheme
+- [ ] Typography matches wireframe font specifications
+- [ ] Icons match wireframe icon descriptions
+- [ ] Button styles match wireframe (red buttons, white text)
+- [ ] Empty states match wireframe empty state designs
+
+**Reference:** `discovery/content/wireframes.md` (entire document)
 
 **Acceptance Criteria:**
-- [ ] Dashboard shows real statistics
-- [ ] Recent activity displays correctly
-- [ ] Quick actions work
-- [ ] No mock data
+- [ ] 100% visual conformance with wireframes
+- [ ] All deviations documented and justified
+- [ ] Color scheme matches exactly
+- [ ] Typography matches exactly
+- [ ] Layout matches exactly
 
 ---
 
-### Phase 7: Content Structure Conformance (Week 3, Days 6-7)
+## 11. Phase 8: API & Database Integration Verification (Days 20-21)
 
-#### Step 7.1: Verify Content Structure Compliance
-
-**Tasks:**
-1. Review all screens against `content-structure.md`
-2. Ensure content hierarchy matches exactly
-3. Verify content types (Static, Dynamic, Interactive, Media, Social)
-4. Check content organization per user type
-5. Verify content templates match specifications
-6. Ensure visual content standards (icons, typography) match
-
-**Reference:** `discovery/content/content-structure.md`
-
-**Acceptance Criteria:**
-- [ ] All content matches content structure document
-- [ ] Content hierarchy correct
-- [ ] Content types properly categorized
-- [ ] Visual standards match specifications
-
----
-
-#### Step 7.2: Verify Information Architecture Compliance
-
-**Tasks:**
-1. Review all screens against `information-architecture.md`
-2. Verify user types and access levels match
-3. Check core information architecture
-4. Verify detailed content structure per portal
-5. Ensure navigation hierarchy matches
-6. Verify content organization principles
-
-**Reference:** `discovery/content/information-architecture.md`
-
-**Acceptance Criteria:**
-- [ ] User types and access levels correct
-- [ ] Information architecture matches document
-- [ ] Content structure per portal matches
-- [ ] Navigation hierarchy correct
-
----
-
-#### Step 7.3: Verify Navigation Hierarchy Compliance
-
-**Tasks:**
-1. Review navigation against `navigation-hierarchy.md`
-2. Verify customer navigation (5 tabs)
-3. Verify agent navigation (5 tabs)
-4. Verify admin navigation
-5. Check secondary navigation patterns
-6. Verify user flows match specifications
-
-**Reference:** `discovery/content/navigation-hierarchy.md`
-
-**Acceptance Criteria:**
-- [ ] Navigation matches hierarchy document
-- [ ] Tab counts correct
-- [ ] Secondary navigation functional
-- [ ] User flows match specifications
-
----
-
-#### Step 7.4: Verify Wireframe Compliance
-
-**Tasks:**
-1. Review all screens against `wireframes.md`
-2. Verify UI matches wireframes exactly
-3. Check component layouts
-4. Verify feature flag integration
-5. Check responsive design
-6. Verify accessibility features
-
-**Reference:** `discovery/content/wireframes.md`
-
-**Acceptance Criteria:**
-- [ ] All screens match wireframes
-- [ ] Component layouts correct
-- [ ] Feature flags integrated
-- [ ] Responsive design works
-- [ ] Accessibility features functional
-
----
-
-### Phase 8: API Integration Verification (Week 4, Days 1-2)
-
-#### Step 8.1: Remove All Mock Data
+### Step 8.1: Remove All Mock Data
 
 **Tasks:**
 1. Search codebase for mock data patterns:
-   - `mockData`, `MockData`, `MOCK_DATA`
-   - `fakeData`, `FakeData`, `FAKE_DATA`
-   - `sampleData`, `SampleData`, `SAMPLE_DATA`
-   - `placeholder`, `Placeholder`
-   - `TODO.*mock`, `TODO.*fake`
+   ```bash
+   grep -r "mockData\|MockData\|MOCK_DATA" lib/
+   grep -r "fakeData\|FakeData\|FAKE_DATA" lib/
+   grep -r "sampleData\|SampleData\|SAMPLE_DATA" lib/
+   grep -r "placeholder.*data\|Placeholder.*Data" lib/
+   grep -r "TODO.*mock\|TODO.*fake" lib/
+   ```
 2. Replace all mock data with real API calls
 3. Update ViewModels to use real repositories
-4. Update DataSources to call real APIs
+4. Update DataSources to call real endpoints
 5. Remove any hardcoded test data
-
-**Search Commands:**
-```bash
-# Search for mock data patterns
-grep -r "mockData\|MockData\|MOCK_DATA" lib/
-grep -r "fakeData\|FakeData\|FAKE_DATA" lib/
-grep -r "sampleData\|SampleData\|SAMPLE_DATA" lib/
-grep -r "placeholder.*data\|Placeholder.*Data" lib/
-```
 
 **Acceptance Criteria:**
 - [ ] No mock data found in codebase
@@ -896,30 +1360,30 @@ grep -r "placeholder.*data\|Placeholder.*Data" lib/
 
 ---
 
-#### Step 8.2: Verify API Integration
+### Step 8.2: Verify API Integration
 
 **Tasks:**
-1. Create API integration test checklist
+1. Create API integration test checklist for all 265 endpoints
 2. Test each screen's API calls
 3. Verify error handling
 4. Verify loading states
 5. Verify data refresh
 6. Document any missing APIs
 
-**API Endpoints to Verify:**
-- Authentication: `/api/v1/auth/*`
-- Users: `/api/v1/users/*`
-- Policies: `/api/v1/policies/*`
-- Agents: `/api/v1/agents/*`
-- Analytics: `/api/v1/analytics/*`
-- Campaigns: `/api/v1/campaigns/*`
-- Content: `/api/v1/content/*`
-- Chat: `/api/v1/chat/*`
-- Chatbot: `/api/v1/chatbot/*`
-- Notifications: `/api/v1/notifications/*`
-- Data Import: `/api/v1/data-import/*`
-- RBAC: `/api/v1/rbac/*`
-- Feature Flags: `/api/v1/feature-flags/*`
+**API Endpoint Verification Checklist:**
+- [ ] Authentication endpoints work
+- [ ] User endpoints work
+- [ ] Agent endpoints work
+- [ ] Policy endpoints work
+- [ ] Dashboard endpoints work
+- [ ] Presentation endpoints work (NEW)
+- [ ] Chat endpoints work
+- [ ] Analytics endpoints work
+- [ ] Campaign endpoints work
+- [ ] Content endpoints work
+- [ ] Import endpoints work
+- [ ] RBAC endpoints work
+- [ ] Feature flag endpoints work
 
 **Acceptance Criteria:**
 - [ ] All API calls work correctly
@@ -930,61 +1394,39 @@ grep -r "placeholder.*data\|Placeholder.*Data" lib/
 
 ---
 
-### Phase 9: Database Migration Verification (Week 4, Days 3-4)
-
-#### Step 9.1: Review Database Schema
+### Step 8.3: Verify Database Integration
 
 **Tasks:**
-1. Review existing Flyway migrations in `db/migration/`
-2. Verify database schema matches API requirements
-3. Document any missing tables/columns
-4. Create new Flyway migrations if needed (only if absolutely necessary)
-5. Test migrations on clean database
+1. Verify all data persistence flows correctly to 74 tables in `lic_schema`
+2. Verify Presentation feature correctly populates `presentations` and `slides` tables
+3. Verify import feature correctly populates target tables
+4. Check for any N+1 query problems
+5. Verify transaction handling
 
-**Location:** `db/migration/`
-
-**Acceptance Criteria:**
-- [ ] Database schema supports all API endpoints
-- [ ] All migrations tested
-- [ ] No manual database changes needed
-- [ ] Schema matches API models
-
----
-
-#### Step 9.2: Verify Data Access Patterns
-
-**Tasks:**
-1. Review repository implementations
-2. Verify all queries use proper SQLAlchemy models
-3. Check for any raw SQL that bypasses models
-4. Verify transaction handling
-5. Check for N+1 query problems
-
-**Location:** `backend/app/repositories/`
+**Database Table Verification Checklist:**
+- [ ] User data persists to `users` table
+- [ ] Agent data persists to `agents` table
+- [ ] Policy data persists to `insurance_policies` table
+- [ ] Presentation data persists to `presentations` and `slides` tables
+- [ ] Media uploads create records in `presentation_media` table
+- [ ] Import data persists to target tables
+- [ ] Analytics data reads from correct tables
 
 **Acceptance Criteria:**
-- [ ] All repositories use SQLAlchemy models
-- [ ] No raw SQL bypassing models
-- [ ] Transaction handling correct
+- [ ] All data persists to correct tables
 - [ ] No N+1 query problems
+- [ ] Transaction handling correct
+- [ ] Database schema supports all features
 
 ---
 
-### Phase 10: Testing & Validation (Week 4, Days 5-7)
+## 12. Phase 9: Testing & Final Validation (Days 22-24)
 
-#### Step 10.1: User Flow Testing
-
-**Tasks:**
-1. Test complete customer onboarding flow
-2. Test customer portal navigation
-3. Test agent portal navigation
-4. Test admin portal navigation
-5. Test config portal import flow
-6. Document any issues found
+### Step 9.1: End-to-End User Flow Testing
 
 **Test Scenarios:**
 - Customer: Onboarding → Dashboard → Policies → Chat → Learning → Profile
-- Agent: Login → Dashboard → Customers → Analytics → Campaigns → Profile
+- Agent: Login → Dashboard (with carousel) → Customers → Analytics → Campaigns → Profile → Create Presentation
 - Admin: Login → Overview → Management → Configuration → Analytics
 - Config Portal: Login → Dashboard → Upload → Progress → Results
 
@@ -996,41 +1438,25 @@ grep -r "placeholder.*data\|Placeholder.*Data" lib/
 
 ---
 
-#### Step 10.2: Content Conformance Testing
-
-**Tasks:**
-1. Verify content structure matches documents
-2. Verify information architecture matches
-3. Verify navigation hierarchy matches
-4. Verify wireframes match implementation
-5. Document any deviations
+### Step 9.2: Wireframe Conformance Testing
 
 **Checklist:**
-- [ ] Content structure 100% compliant
-- [ ] Information architecture 100% compliant
-- [ ] Navigation hierarchy 100% compliant
-- [ ] Wireframes 100% compliant
-- [ ] User journeys 100% compliant
+- [ ] All screens match wireframes 100%
+- [ ] Component layouts correct
+- [ ] Feature flags integrated
+- [ ] Responsive design works
+- [ ] Accessibility features functional
 
 **Acceptance Criteria:**
-- [ ] 100% conformance with all discovery documents
+- [ ] 100% conformance with wireframes.md
 - [ ] All deviations documented and justified
-- [ ] Content matches specifications exactly
 
 ---
 
-#### Step 10.3: API Integration Testing
-
-**Tasks:**
-1. Test all API endpoints used by Flutter app
-2. Test all API endpoints used by React portal
-3. Verify error handling
-4. Verify loading states
-5. Verify data refresh
-6. Document any API issues
+### Step 9.3: API Integration Testing
 
 **Acceptance Criteria:**
-- [ ] All APIs work correctly
+- [ ] All 265 API endpoints work correctly
 - [ ] Error handling proper
 - [ ] Loading states functional
 - [ ] Data refresh works
@@ -1038,14 +1464,7 @@ grep -r "placeholder.*data\|Placeholder.*Data" lib/
 
 ---
 
-#### Step 10.4: Performance Testing
-
-**Tasks:**
-1. Test app performance with real data
-2. Check loading times
-3. Verify smooth navigation
-4. Check memory usage
-5. Verify offline handling
+### Step 9.4: Performance Testing
 
 **Acceptance Criteria:**
 - [ ] App performs well with real data
@@ -1056,9 +1475,9 @@ grep -r "placeholder.*data\|Placeholder.*Data" lib/
 
 ---
 
-## Implementation Guidelines
+## 13. Implementation Guidelines
 
-### Code Quality Standards
+### 13.1 Code Quality Standards
 
 1. **No Mock Data**
    - All screens must use real API endpoints
@@ -1077,59 +1496,47 @@ grep -r "placeholder.*data\|Placeholder.*Data" lib/
    - Test migrations on clean database
    - Document schema changes
 
-4. **Navigation Structure**
+4. **Wireframe Conformance**
+   - Match wireframes exactly (layout, colors, spacing, typography)
+   - Use exact color codes from wireframes (#C62828 for red)
+   - Follow exact component positioning
+   - Match icon styles and sizes
+
+5. **Navigation Structure**
    - Use navigation containers, not individual screens
    - Implement proper tab-based navigation
    - Use drawer/hamburger menus for secondary navigation
    - Follow navigation hierarchy exactly
 
-5. **Content Structure**
-   - Match content structure document exactly
-   - Use proper content hierarchy
-   - Follow content organization principles
-   - Match wireframes precisely
-
-### File Organization
+### 13.2 File Organization
 
 #### Flutter App Structure
 ```
 lib/
-├── navigation/              # Navigation containers (NEW)
+├── navigation/              # Navigation containers
 │   ├── customer_navigation.dart
 │   ├── agent_navigation.dart
 │   ├── admin_navigation.dart
 │   └── navigation_router.dart
 ├── features/
-│   ├── customer_dashboard/  # Customer portal features
-│   ├── policies/            # Policies management
-│   ├── chat/                # Chat and communication
-│   ├── learning/            # Learning center
-│   ├── profile/             # User profile
-│   ├── agent_dashboard/     # Agent portal features (NEW)
-│   ├── customers/           # Customer management
-│   ├── analytics/           # Analytics and ROI
-│   ├── campaigns/           # Marketing campaigns
-│   ├── admin_dashboard/     # Admin portal features (NEW)
-│   └── onboarding/          # Onboarding flow
-└── screens/                  # Individual screens (CONSOLIDATE)
-    └── [Keep only screens that don't fit in features/]
+│   ├── customer_dashboard/  # Customer portal
+│   ├── policies/           # Policies management
+│   ├── chat/               # Chat and communication
+│   ├── learning/           # Learning center
+│   ├── profile/            # User profile
+│   ├── agent_dashboard/    # Agent portal
+│   ├── presentations/      # Presentation carousel (NEW)
+│   │   ├── presentation/   # Carousel widget
+│   │   └── editor/        # Editor module
+│   ├── customers/         # Customer management
+│   ├── analytics/         # Analytics and ROI
+│   ├── campaigns/         # Marketing campaigns
+│   ├── admin_dashboard/   # Admin portal
+│   └── onboarding/        # Onboarding flow
+└── screens/                # Individual screens (CONSOLIDATE)
 ```
 
-#### React Config Portal Structure
-```
-config-portal/src/
-├── pages/
-│   ├── Dashboard.tsx         # Import dashboard
-│   ├── DataImport.tsx        # Excel upload
-│   ├── ImportProgress.tsx    # Progress tracking
-│   ├── ImportErrors.tsx      # Error handling
-│   ├── ImportSuccess.tsx     # Success confirmation
-│   └── ExcelTemplate.tsx     # Template management
-└── services/
-    └── dataImportApi.ts      # API integration
-```
-
-### API Integration Patterns
+### 13.3 API Integration Patterns
 
 #### Flutter API Call Pattern
 ```dart
@@ -1165,78 +1572,20 @@ class CustomerDashboardRepository {
 }
 ```
 
-#### React API Call Pattern
-```typescript
-// Service
-export const dataImportApi = {
-  async uploadFile(file: File): Promise<ImportResponse> {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    const response = await apiClient.post('/api/v1/data-import/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    
-    return response.data;
-  },
-  
-  async getProgress(importId: string): Promise<ImportProgress> {
-    const response = await apiClient.get(`/api/v1/data-import/${importId}/progress`);
-    return response.data;
-  },
-};
-```
-
-### Error Handling Patterns
-
-#### Flutter Error Handling
-```dart
-try {
-  final data = await _repository.getData();
-  // Handle success
-} on ApiException catch (e) {
-  // Handle API errors
-  showError(e.message);
-} on NetworkException catch (e) {
-  // Handle network errors
-  showError('Network error. Please check your connection.');
-} catch (e) {
-  // Handle unexpected errors
-  showError('An unexpected error occurred.');
-}
-```
-
-#### React Error Handling
-```typescript
-try {
-  const data = await api.getData();
-  // Handle success
-} catch (error) {
-  if (error.response) {
-    // API error
-    showError(error.response.data.message);
-  } else if (error.request) {
-    // Network error
-    showError('Network error. Please check your connection.');
-  } else {
-    // Unexpected error
-    showError('An unexpected error occurred.');
-  }
-}
-```
-
 ---
 
 ## Success Criteria
 
 ### Functional Requirements
+- [ ] **100% Wireframe Conformance** - All UI matches wireframes.md exactly
 - [ ] **100% Navigation Conformance** - All navigation matches navigation-hierarchy.md
 - [ ] **100% Content Conformance** - All content matches content-structure.md
 - [ ] **100% IA Conformance** - All screens match information-architecture.md
-- [ ] **100% Wireframe Conformance** - All UI matches wireframes.md
 - [ ] **100% User Journey Conformance** - All flows match user-journey.md
 - [ ] **Zero Mock Data** - No mock/fake/sample data in codebase
-- [ ] **Real API Integration** - All screens use real backend APIs
+- [ ] **Real API Integration** - All screens use real backend APIs (265 endpoints)
+- [ ] **Database Integration** - All data persists to 74 tables in lic_schema
+- [ ] **Presentation Carousel** - Full implementation of new feature
 - [ ] **Proper Navigation** - Tab-based navigation with drawer menus
 - [ ] **Unified Dashboards** - Single dashboard per user type
 - [ ] **Complete Import Flow** - Full Excel import workflow in config portal
@@ -1251,39 +1600,6 @@ try {
 - [ ] **Accessibility** - Accessibility features work
 - [ ] **Responsive Design** - Works on all screen sizes
 
-### Quality Requirements
-- [ ] **No Broken Links** - All navigation works
-- [ ] **No Console Errors** - Clean console output
-- [ ] **Proper State Management** - State handled correctly
-- [ ] **Code Documentation** - Code is well documented
-- [ ] **Test Coverage** - Critical paths tested
-
----
-
-## Risk Mitigation
-
-### Potential Risks
-
-1. **Missing API Endpoints**
-   - **Risk:** Some features may require new API endpoints
-   - **Mitigation:** Document missing APIs, create tickets for backend team
-   - **Fallback:** Implement UI with proper error handling, add API later
-
-2. **Database Schema Gaps**
-   - **Risk:** Database may not support all required features
-   - **Mitigation:** Review schema early, create Flyway migrations if needed
-   - **Fallback:** Use existing schema, document limitations
-
-3. **Performance Issues**
-   - **Risk:** Real API calls may be slower than mocks
-   - **Mitigation:** Implement proper loading states, optimize API calls
-   - **Fallback:** Add caching where appropriate
-
-4. **Breaking Changes**
-   - **Risk:** Restructuring may break existing functionality
-   - **Mitigation:** Test thoroughly, maintain backward compatibility where possible
-   - **Fallback:** Keep old screens temporarily, migrate gradually
-
 ---
 
 ## Timeline Summary
@@ -1292,27 +1608,14 @@ try {
 |-------|----------|------------------|
 | Phase 1: Navigation Architecture | 2 days | Navigation containers, routing |
 | Phase 2: Customer Portal | 3 days | Customer dashboard, tabs, content |
-| Phase 3: Agent Portal | 4 days | Agent dashboard, tabs, content |
+| Phase 3: Agent Portal & Carousel | 4 days | Agent dashboard, carousel, editor, tabs |
 | Phase 4: Admin Portal | 3 days | Admin dashboard, management features |
 | Phase 5: Onboarding Flow | 2 days | Complete onboarding implementation |
 | Phase 6: Config Portal | 3 days | Data import flow, dashboard |
-| Phase 7: Content Conformance | 2 days | Content structure verification |
-| Phase 8: API Integration | 2 days | Mock data removal, API verification |
-| Phase 9: Database Verification | 2 days | Schema review, migrations |
-| Phase 10: Testing & Validation | 3 days | End-to-end testing, conformance verification |
-| **Total** | **26 days** | **Complete app restructuring** |
-
----
-
-## Next Steps
-
-1. **Review this plan** with the team
-2. **Set up development environment** if needed
-3. **Start with Phase 1** - Navigation Architecture Foundation
-4. **Follow steps sequentially** - Each phase builds on previous
-5. **Test as you go** - Don't wait until the end
-6. **Document issues** - Keep track of any problems
-7. **Update plan** - Adjust as needed based on findings
+| Phase 7: Wireframe Conformance | 2 days | Visual audit and verification |
+| Phase 8: API & DB Integration | 2 days | Mock data removal, API verification |
+| Phase 9: Testing & Validation | 3 days | End-to-end testing, conformance verification |
+| **Total** | **24 days** | **Complete app restructuring** |
 
 ---
 
@@ -1320,17 +1623,17 @@ try {
 
 When implementing this plan:
 
-1. **Read discovery documents first** - Understand the target state
+1. **Read discovery documents first** - Understand the target state, especially wireframes.md
 2. **Check existing code** - See what's already implemented
-3. **Use real APIs** - Never create mock data
-4. **Follow patterns** - Use existing code patterns
-5. **Test incrementally** - Test each step before moving on
-6. **Document changes** - Comment on why changes were made
-7. **Ask for clarification** - If something is unclear, ask
+3. **Use real APIs** - Never create mock data, use the 265 existing endpoints
+4. **Match wireframes exactly** - Colors, spacing, typography, layout must match 100%
+5. **Follow patterns** - Use existing code patterns
+6. **Test incrementally** - Test each step before moving on
+7. **Document changes** - Comment on why changes were made
+8. **Verify database** - Ensure data persists to correct tables in lic_schema
 
-**Remember:** The goal is 100% conformance with discovery documents. Every screen, every navigation pattern, every content structure must match the specifications exactly.
+**Remember:** The goal is 100% conformance with discovery documents, especially wireframes.md. Every screen, every navigation pattern, every content structure must match the specifications exactly. All data must come from real APIs and persist to real database tables.
 
 ---
 
 **End of Project Plan**
-

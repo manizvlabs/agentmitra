@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 6VVrYDdai7PonUP1wC4uJQGvSBNneKkR8GsgWYmzh2vKxYP97CFzv0gCPNaCE5G
+\restrict OOdvGQDIaEiZ9IDo1ePcWVk3dvf6PPQcKQ7StYCzwXf6fuTIzIIp4946tGmxMok
 
 -- Dumped from database version 16.10 (Homebrew)
 -- Dumped by pg_dump version 16.10 (Homebrew)
@@ -18,584 +18,24 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
-DROP POLICY IF EXISTS tenant_users_isolation ON lic_schema.tenant_users;
-DROP POLICY IF EXISTS tenant_tenant_users_isolation ON lic_schema.tenant_users;
-DROP POLICY IF EXISTS tenant_policyholders_isolation ON lic_schema.policyholders;
-DROP POLICY IF EXISTS tenant_policies_isolation ON lic_schema.insurance_policies;
-DROP POLICY IF EXISTS tenant_payments_isolation ON lic_schema.premium_payments;
-DROP POLICY IF EXISTS tenant_notifications_isolation ON lic_schema.notifications;
-DROP POLICY IF EXISTS tenant_commissions_isolation ON lic_schema.commissions;
-DROP POLICY IF EXISTS tenant_campaigns_isolation ON lic_schema.campaigns;
-DROP POLICY IF EXISTS tenant_agents_isolation ON lic_schema.agents;
-ALTER TABLE IF EXISTS ONLY lic_schema.whatsapp_messages DROP CONSTRAINT IF EXISTS whatsapp_messages_sender_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.whatsapp_messages DROP CONSTRAINT IF EXISTS whatsapp_messages_recipient_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.whatsapp_messages DROP CONSTRAINT IF EXISTS whatsapp_messages_agent_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.video_tutorials DROP CONSTRAINT IF EXISTS video_tutorials_content_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.video_recommendations DROP CONSTRAINT IF EXISTS video_recommendations_video_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.video_progress DROP CONSTRAINT IF EXISTS video_progress_video_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.video_content DROP CONSTRAINT IF EXISTS video_content_moderated_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.video_content DROP CONSTRAINT IF EXISTS video_content_agent_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.video_categories DROP CONSTRAINT IF EXISTS video_categories_parent_category_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.video_analytics DROP CONSTRAINT IF EXISTS video_analytics_video_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.video_analytics DROP CONSTRAINT IF EXISTS video_analytics_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.user_sessions DROP CONSTRAINT IF EXISTS user_sessions_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.user_roles DROP CONSTRAINT IF EXISTS user_roles_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.user_roles DROP CONSTRAINT IF EXISTS user_roles_role_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.user_roles DROP CONSTRAINT IF EXISTS user_roles_assigned_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.user_payment_methods DROP CONSTRAINT IF EXISTS user_payment_methods_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.user_journeys DROP CONSTRAINT IF EXISTS user_journeys_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.user_journeys DROP CONSTRAINT IF EXISTS user_journeys_session_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.trial_subscriptions DROP CONSTRAINT IF EXISTS trial_subscriptions_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.trial_engagement DROP CONSTRAINT IF EXISTS trial_engagement_trial_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.tenants DROP CONSTRAINT IF EXISTS tenants_parent_tenant_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.tenant_users DROP CONSTRAINT IF EXISTS tenant_users_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.tenant_users DROP CONSTRAINT IF EXISTS tenant_users_tenant_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.tenant_usage DROP CONSTRAINT IF EXISTS tenant_usage_tenant_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.tenant_config DROP CONSTRAINT IF EXISTS tenant_config_tenant_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.role_permissions DROP CONSTRAINT IF EXISTS role_permissions_role_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.role_permissions DROP CONSTRAINT IF EXISTS role_permissions_permission_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.revenue_forecasts DROP CONSTRAINT IF EXISTS revenue_forecasts_created_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.revenue_forecasts DROP CONSTRAINT IF EXISTS revenue_forecasts_agent_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.rbac_audit_log DROP CONSTRAINT IF EXISTS rbac_audit_log_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.rbac_audit_log DROP CONSTRAINT IF EXISTS rbac_audit_log_tenant_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.rbac_audit_log DROP CONSTRAINT IF EXISTS rbac_audit_log_target_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.rbac_audit_log DROP CONSTRAINT IF EXISTS rbac_audit_log_target_role_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.rbac_audit_log DROP CONSTRAINT IF EXISTS rbac_audit_log_target_permission_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.rbac_audit_log DROP CONSTRAINT IF EXISTS rbac_audit_log_target_flag_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.presentations DROP CONSTRAINT IF EXISTS presentations_tenant_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.presentations DROP CONSTRAINT IF EXISTS presentations_published_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.presentations DROP CONSTRAINT IF EXISTS presentations_parent_presentation_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.presentations DROP CONSTRAINT IF EXISTS presentations_created_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.presentations DROP CONSTRAINT IF EXISTS presentations_agent_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.presentation_templates DROP CONSTRAINT IF EXISTS presentation_templates_created_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.presentation_slides DROP CONSTRAINT IF EXISTS presentation_slides_presentation_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.presentation_media DROP CONSTRAINT IF EXISTS presentation_media_agent_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.presentation_analytics DROP CONSTRAINT IF EXISTS presentation_analytics_viewer_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.presentation_analytics DROP CONSTRAINT IF EXISTS presentation_analytics_slide_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.presentation_analytics DROP CONSTRAINT IF EXISTS presentation_analytics_presentation_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.presentation_analytics DROP CONSTRAINT IF EXISTS presentation_analytics_agent_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.premium_payments DROP CONSTRAINT IF EXISTS premium_payments_tenant_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.premium_payments DROP CONSTRAINT IF EXISTS premium_payments_reconciled_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.premium_payments DROP CONSTRAINT IF EXISTS premium_payments_policyholder_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.premium_payments DROP CONSTRAINT IF EXISTS premium_payments_policy_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.policyholders DROP CONSTRAINT IF EXISTS policyholders_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.policyholders DROP CONSTRAINT IF EXISTS policyholders_tenant_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.policyholders DROP CONSTRAINT IF EXISTS policyholders_agent_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.notifications DROP CONSTRAINT IF EXISTS notifications_tenant_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.kyc_manual_reviews DROP CONSTRAINT IF EXISTS kyc_manual_reviews_reviewer_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.kyc_manual_reviews DROP CONSTRAINT IF EXISTS kyc_manual_reviews_document_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.kyc_documents DROP CONSTRAINT IF EXISTS kyc_documents_verified_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.kyc_documents DROP CONSTRAINT IF EXISTS kyc_documents_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.knowledge_search_log DROP CONSTRAINT IF EXISTS knowledge_search_log_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.knowledge_search_log DROP CONSTRAINT IF EXISTS knowledge_search_log_session_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.knowledge_search_log DROP CONSTRAINT IF EXISTS knowledge_search_log_clicked_article_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.knowledge_base_articles DROP CONSTRAINT IF EXISTS knowledge_base_articles_moderated_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.knowledge_base_articles DROP CONSTRAINT IF EXISTS knowledge_base_articles_created_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.insurance_policies DROP CONSTRAINT IF EXISTS insurance_policies_tenant_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.insurance_policies DROP CONSTRAINT IF EXISTS insurance_policies_policyholder_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.insurance_policies DROP CONSTRAINT IF EXISTS insurance_policies_created_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.insurance_policies DROP CONSTRAINT IF EXISTS insurance_policies_approved_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.insurance_policies DROP CONSTRAINT IF EXISTS insurance_policies_agent_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.import_jobs DROP CONSTRAINT IF EXISTS import_jobs_import_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.video_tutorials DROP CONSTRAINT IF EXISTS fk_video_tutorials_content_id;
-ALTER TABLE IF EXISTS ONLY lic_schema.video_recommendations DROP CONSTRAINT IF EXISTS fk_video_recommendations_video_id;
-ALTER TABLE IF EXISTS ONLY lic_schema.video_progress DROP CONSTRAINT IF EXISTS fk_video_progress_video_id;
-ALTER TABLE IF EXISTS ONLY lic_schema.feature_flags DROP CONSTRAINT IF EXISTS feature_flags_updated_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.feature_flags DROP CONSTRAINT IF EXISTS feature_flags_tenant_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.feature_flags DROP CONSTRAINT IF EXISTS feature_flags_created_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.feature_flag_overrides DROP CONSTRAINT IF EXISTS feature_flag_overrides_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.feature_flag_overrides DROP CONSTRAINT IF EXISTS feature_flag_overrides_updated_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.feature_flag_overrides DROP CONSTRAINT IF EXISTS feature_flag_overrides_tenant_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.feature_flag_overrides DROP CONSTRAINT IF EXISTS feature_flag_overrides_role_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.feature_flag_overrides DROP CONSTRAINT IF EXISTS feature_flag_overrides_flag_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.emergency_contacts DROP CONSTRAINT IF EXISTS emergency_contacts_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.emergency_contact_verifications DROP CONSTRAINT IF EXISTS emergency_contact_verifications_contact_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.document_ocr_results DROP CONSTRAINT IF EXISTS document_ocr_results_document_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.data_export_log DROP CONSTRAINT IF EXISTS data_export_log_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.customer_data_mapping DROP CONSTRAINT IF EXISTS customer_data_mapping_import_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.customer_behavior_metrics DROP CONSTRAINT IF EXISTS customer_behavior_metrics_customer_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.commissions DROP CONSTRAINT IF EXISTS commissions_tenant_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.commissions DROP CONSTRAINT IF EXISTS commissions_policy_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.commissions DROP CONSTRAINT IF EXISTS commissions_payment_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.commissions DROP CONSTRAINT IF EXISTS commissions_agent_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.chatbot_sessions DROP CONSTRAINT IF EXISTS chatbot_sessions_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.chatbot_intents DROP CONSTRAINT IF EXISTS chatbot_intents_created_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.chat_messages DROP CONSTRAINT IF EXISTS chat_messages_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.chat_messages DROP CONSTRAINT IF EXISTS chat_messages_session_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.campaigns DROP CONSTRAINT IF EXISTS campaigns_updated_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.campaigns DROP CONSTRAINT IF EXISTS campaigns_tenant_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.campaigns DROP CONSTRAINT IF EXISTS campaigns_created_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.campaigns DROP CONSTRAINT IF EXISTS campaigns_agent_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.campaign_triggers DROP CONSTRAINT IF EXISTS campaign_triggers_campaign_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.campaign_templates DROP CONSTRAINT IF EXISTS campaign_templates_created_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.campaign_responses DROP CONSTRAINT IF EXISTS campaign_responses_policyholder_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.campaign_responses DROP CONSTRAINT IF EXISTS campaign_responses_execution_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.campaign_responses DROP CONSTRAINT IF EXISTS campaign_responses_campaign_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.campaign_executions DROP CONSTRAINT IF EXISTS campaign_executions_policyholder_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.campaign_executions DROP CONSTRAINT IF EXISTS campaign_executions_campaign_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.callback_requests DROP CONSTRAINT IF EXISTS callback_requests_policyholder_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.callback_requests DROP CONSTRAINT IF EXISTS callback_requests_last_updated_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.callback_requests DROP CONSTRAINT IF EXISTS callback_requests_created_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.callback_requests DROP CONSTRAINT IF EXISTS callback_requests_completed_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.callback_requests DROP CONSTRAINT IF EXISTS callback_requests_assigned_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.callback_requests DROP CONSTRAINT IF EXISTS callback_requests_agent_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.callback_activities DROP CONSTRAINT IF EXISTS callback_activities_tenant_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.callback_activities DROP CONSTRAINT IF EXISTS callback_activities_callback_request_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.callback_activities DROP CONSTRAINT IF EXISTS callback_activities_agent_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.analytics_query_log DROP CONSTRAINT IF EXISTS analytics_query_log_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.agents DROP CONSTRAINT IF EXISTS agents_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.agents DROP CONSTRAINT IF EXISTS agents_tenant_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.agents DROP CONSTRAINT IF EXISTS agents_provider_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.agents DROP CONSTRAINT IF EXISTS agents_parent_agent_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.agents DROP CONSTRAINT IF EXISTS agents_approved_by_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.agent_presentation_preferences DROP CONSTRAINT IF EXISTS agent_presentation_preferences_agent_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.agent_monthly_summary DROP CONSTRAINT IF EXISTS agent_monthly_summary_agent_id_fkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.agent_daily_metrics DROP CONSTRAINT IF EXISTS agent_daily_metrics_agent_id_fkey;
-DROP TRIGGER IF EXISTS update_video_tutorials_updated_at ON lic_schema.video_tutorials;
-DROP TRIGGER IF EXISTS update_video_recommendations_updated_at ON lic_schema.video_recommendations;
-DROP TRIGGER IF EXISTS update_video_progress_updated_at ON lic_schema.video_progress;
-DROP TRIGGER IF EXISTS update_video_categories_updated_at ON lic_schema.video_categories;
-DROP TRIGGER IF EXISTS update_learning_paths_updated_at ON lic_schema.learning_paths;
-DROP TRIGGER IF EXISTS update_agent_metrics_trigger ON lic_schema.insurance_policies;
-DROP TRIGGER IF EXISTS trigger_update_trial_status ON lic_schema.trial_subscriptions;
-DROP TRIGGER IF EXISTS trigger_update_notification_settings_updated_at ON lic_schema.notification_settings;
-DROP TRIGGER IF EXISTS trigger_update_kyc_documents_updated_at ON lic_schema.kyc_documents;
-DROP TRIGGER IF EXISTS trigger_update_emergency_contacts_updated_at ON lic_schema.emergency_contacts;
-DROP TRIGGER IF EXISTS trigger_update_device_tokens_last_used_at ON lic_schema.device_tokens;
-DROP TRIGGER IF EXISTS trigger_set_trial_end_date ON lic_schema.trial_subscriptions;
-DROP TRIGGER IF EXISTS slide_media_usage_trigger ON lic_schema.presentation_slides;
-DROP TRIGGER IF EXISTS presentation_analytics_summary_trigger ON lic_schema.presentation_analytics;
-DROP TRIGGER IF EXISTS audit_policies_changes ON lic_schema.insurance_policies;
-DROP TRIGGER IF EXISTS audit_agents_changes ON lic_schema.agents;
-DROP INDEX IF EXISTS lic_schema.idx_whatsapp_messages_agent;
-DROP INDEX IF EXISTS lic_schema.idx_video_tutorials_video_id;
-DROP INDEX IF EXISTS lic_schema.idx_video_tutorials_search_title;
-DROP INDEX IF EXISTS lic_schema.idx_video_tutorials_search_tags;
-DROP INDEX IF EXISTS lic_schema.idx_video_tutorials_search_description;
-DROP INDEX IF EXISTS lic_schema.idx_video_tutorials_processing_status;
-DROP INDEX IF EXISTS lic_schema.idx_video_tutorials_language;
-DROP INDEX IF EXISTS lic_schema.idx_video_tutorials_featured;
-DROP INDEX IF EXISTS lic_schema.idx_video_tutorials_created_at;
-DROP INDEX IF EXISTS lic_schema.idx_video_tutorials_category;
-DROP INDEX IF EXISTS lic_schema.idx_video_tutorials_agent_id;
-DROP INDEX IF EXISTS lic_schema.idx_video_recommendations_video_id;
-DROP INDEX IF EXISTS lic_schema.idx_video_recommendations_user_video;
-DROP INDEX IF EXISTS lic_schema.idx_video_recommendations_user_id;
-DROP INDEX IF EXISTS lic_schema.idx_video_recommendations_type;
-DROP INDEX IF EXISTS lic_schema.idx_video_recommendations_relevance;
-DROP INDEX IF EXISTS lic_schema.idx_video_progress_video_id;
-DROP INDEX IF EXISTS lic_schema.idx_video_progress_user_video;
-DROP INDEX IF EXISTS lic_schema.idx_video_progress_user_id;
-DROP INDEX IF EXISTS lic_schema.idx_video_progress_last_watched;
-DROP INDEX IF EXISTS lic_schema.idx_video_progress_completed;
-DROP INDEX IF EXISTS lic_schema.idx_video_content_agent;
-DROP INDEX IF EXISTS lic_schema.idx_video_categories_parent;
-DROP INDEX IF EXISTS lic_schema.idx_video_categories_category_id;
-DROP INDEX IF EXISTS lic_schema.idx_video_categories_active;
-DROP INDEX IF EXISTS lic_schema.idx_video_analytics_watch_session;
-DROP INDEX IF EXISTS lic_schema.idx_video_analytics_video_id;
-DROP INDEX IF EXISTS lic_schema.idx_video_analytics_user_id;
-DROP INDEX IF EXISTS lic_schema.idx_video_analytics_started_at;
-DROP INDEX IF EXISTS lic_schema.idx_video_analytics_completed;
-DROP INDEX IF EXISTS lic_schema.idx_users_tenant_status;
-DROP INDEX IF EXISTS lic_schema.idx_users_role_status;
-DROP INDEX IF EXISTS lic_schema.idx_users_phone_verified;
-DROP INDEX IF EXISTS lic_schema.idx_users_phone;
-DROP INDEX IF EXISTS lic_schema.idx_users_email;
-DROP INDEX IF EXISTS lic_schema.idx_users_created_at;
-DROP INDEX IF EXISTS lic_schema.idx_user_sessions_token;
-DROP INDEX IF EXISTS lic_schema.idx_user_sessions_active;
-DROP INDEX IF EXISTS lic_schema.idx_user_journeys_user_id;
-DROP INDEX IF EXISTS lic_schema.idx_user_journeys_type_status;
-DROP INDEX IF EXISTS lic_schema.idx_user_journeys_step_history;
-DROP INDEX IF EXISTS lic_schema.idx_user_journeys_status;
-DROP INDEX IF EXISTS lic_schema.idx_user_journeys_started_at;
-DROP INDEX IF EXISTS lic_schema.idx_user_journeys_journey_data;
-DROP INDEX IF EXISTS lic_schema.idx_user_journeys_converted;
-DROP INDEX IF EXISTS lic_schema.idx_trial_subscriptions_user_id;
-DROP INDEX IF EXISTS lic_schema.idx_trial_subscriptions_status;
-DROP INDEX IF EXISTS lic_schema.idx_trial_subscriptions_end_date;
-DROP INDEX IF EXISTS lic_schema.idx_trial_engagement_type;
-DROP INDEX IF EXISTS lic_schema.idx_trial_engagement_trial_id;
-DROP INDEX IF EXISTS lic_schema.idx_trial_engagement_timestamp;
-DROP INDEX IF EXISTS lic_schema.idx_trial_engagement_feature;
-DROP INDEX IF EXISTS lic_schema.idx_tenants_tenant_code;
-DROP INDEX IF EXISTS lic_schema.idx_tenants_status;
-DROP INDEX IF EXISTS lic_schema.idx_tenant_users_user_id;
-DROP INDEX IF EXISTS lic_schema.idx_tenant_users_tenant_id;
-DROP INDEX IF EXISTS lic_schema.idx_tenant_users_status;
-DROP INDEX IF EXISTS lic_schema.idx_tenant_usage_tenant_period;
-DROP INDEX IF EXISTS lic_schema.idx_tenant_usage_metric;
-DROP INDEX IF EXISTS lic_schema.idx_tenant_config_tenant_id;
-DROP INDEX IF EXISTS lic_schema.idx_templates_status;
-DROP INDEX IF EXISTS lic_schema.idx_templates_slides;
-DROP INDEX IF EXISTS lic_schema.idx_templates_category_public;
-DROP INDEX IF EXISTS lic_schema.idx_slides_type;
-DROP INDEX IF EXISTS lic_schema.idx_slides_presentation_order;
-DROP INDEX IF EXISTS lic_schema.idx_slides_cta_button;
-DROP INDEX IF EXISTS lic_schema.idx_slides_agent_branding;
-DROP INDEX IF EXISTS lic_schema.idx_revenue_forecast_date;
-DROP INDEX IF EXISTS lic_schema.idx_revenue_forecast_agent;
-DROP INDEX IF EXISTS lic_schema.idx_rbac_audit_user;
-DROP INDEX IF EXISTS lic_schema.idx_rbac_audit_tenant_timestamp;
-DROP INDEX IF EXISTS lic_schema.idx_rbac_audit_action;
-DROP INDEX IF EXISTS lic_schema.idx_presentations_tenant_id;
-DROP INDEX IF EXISTS lic_schema.idx_presentations_template;
-DROP INDEX IF EXISTS lic_schema.idx_presentations_published;
-DROP INDEX IF EXISTS lic_schema.idx_presentations_agent_status;
-DROP INDEX IF EXISTS lic_schema.idx_presentations_active;
-DROP INDEX IF EXISTS lic_schema.idx_policy_analytics_period;
-DROP INDEX IF EXISTS lic_schema.idx_policy_analytics_date;
-DROP INDEX IF EXISTS lic_schema.idx_policies_status_dates;
-DROP INDEX IF EXISTS lic_schema.idx_policies_policyholder_status;
-DROP INDEX IF EXISTS lic_schema.idx_policies_dates_status;
-DROP INDEX IF EXISTS lic_schema.idx_policies_agent_provider;
-DROP INDEX IF EXISTS lic_schema.idx_payments_status_date;
-DROP INDEX IF EXISTS lic_schema.idx_payments_policy_status;
-DROP INDEX IF EXISTS lic_schema.idx_payments_policy_date;
-DROP INDEX IF EXISTS lic_schema.idx_payments_date_amount;
-DROP INDEX IF EXISTS lic_schema.idx_ocr_results_status;
-DROP INDEX IF EXISTS lic_schema.idx_ocr_results_document_id;
-DROP INDEX IF EXISTS lic_schema.idx_notifications_user_read;
-DROP INDEX IF EXISTS lic_schema.idx_notifications_user_id;
-DROP INDEX IF EXISTS lic_schema.idx_notifications_type;
-DROP INDEX IF EXISTS lic_schema.idx_notifications_tenant_id;
-DROP INDEX IF EXISTS lic_schema.idx_notifications_is_read;
-DROP INDEX IF EXISTS lic_schema.idx_notifications_created_at;
-DROP INDEX IF EXISTS lic_schema.idx_notification_settings_user_id;
-DROP INDEX IF EXISTS lic_schema.idx_media_type;
-DROP INDEX IF EXISTS lic_schema.idx_media_hash;
-DROP INDEX IF EXISTS lic_schema.idx_media_agent_status;
-DROP INDEX IF EXISTS lic_schema.idx_manual_reviews_status;
-DROP INDEX IF EXISTS lic_schema.idx_manual_reviews_reviewer_id;
-DROP INDEX IF EXISTS lic_schema.idx_manual_reviews_document_id;
-DROP INDEX IF EXISTS lic_schema.idx_learning_paths_path_id;
-DROP INDEX IF EXISTS lic_schema.idx_learning_paths_agent;
-DROP INDEX IF EXISTS lic_schema.idx_learning_paths_active;
-DROP INDEX IF EXISTS lic_schema.idx_languages_language_code;
-DROP INDEX IF EXISTS lic_schema.idx_kyc_documents_user_id;
-DROP INDEX IF EXISTS lic_schema.idx_kyc_documents_type;
-DROP INDEX IF EXISTS lic_schema.idx_kyc_documents_status;
-DROP INDEX IF EXISTS lic_schema.idx_kb_search_user;
-DROP INDEX IF EXISTS lic_schema.idx_kb_search_query;
-DROP INDEX IF EXISTS lic_schema.idx_kb_articles_tags;
-DROP INDEX IF EXISTS lic_schema.idx_kb_articles_category;
-DROP INDEX IF EXISTS lic_schema.idx_insurance_providers_provider_code;
-DROP INDEX IF EXISTS lic_schema.idx_insurance_categories_category_code;
-DROP INDEX IF EXISTS lic_schema.idx_import_jobs_status;
-DROP INDEX IF EXISTS lic_schema.idx_feature_flags_tenant;
-DROP INDEX IF EXISTS lic_schema.idx_feature_flags_name;
-DROP INDEX IF EXISTS lic_schema.idx_feature_flag_overrides_user;
-DROP INDEX IF EXISTS lic_schema.idx_feature_flag_overrides_role;
-DROP INDEX IF EXISTS lic_schema.idx_feature_flag_overrides_flag;
-DROP INDEX IF EXISTS lic_schema.idx_emergency_verifications_verified;
-DROP INDEX IF EXISTS lic_schema.idx_emergency_verifications_contact_id;
-DROP INDEX IF EXISTS lic_schema.idx_emergency_contacts_verification_status;
-DROP INDEX IF EXISTS lic_schema.idx_emergency_contacts_user_id;
-DROP INDEX IF EXISTS lic_schema.idx_emergency_contacts_primary;
-DROP INDEX IF EXISTS lic_schema.idx_device_tokens_user_id;
-DROP INDEX IF EXISTS lic_schema.idx_device_tokens_token;
-DROP INDEX IF EXISTS lic_schema.idx_data_sync_status_agent;
-DROP INDEX IF EXISTS lic_schema.idx_data_imports_agent_status;
-DROP INDEX IF EXISTS lic_schema.idx_data_export_user;
-DROP INDEX IF EXISTS lic_schema.idx_daily_kpis_date;
-DROP INDEX IF EXISTS lic_schema.idx_customer_data_mapping_import;
-DROP INDEX IF EXISTS lic_schema.idx_customer_behavior_date;
-DROP INDEX IF EXISTS lic_schema.idx_customer_behavior_customer;
-DROP INDEX IF EXISTS lic_schema.idx_countries_country_code;
-DROP INDEX IF EXISTS lic_schema.idx_commissions_tenant_id;
-DROP INDEX IF EXISTS lic_schema.idx_commissions_status;
-DROP INDEX IF EXISTS lic_schema.idx_commissions_policy_id;
-DROP INDEX IF EXISTS lic_schema.idx_commissions_payment_id;
-DROP INDEX IF EXISTS lic_schema.idx_commissions_agent_id;
-DROP INDEX IF EXISTS lic_schema.idx_chatbot_sessions_user;
-DROP INDEX IF EXISTS lic_schema.idx_chatbot_intents_active;
-DROP INDEX IF EXISTS lic_schema.idx_chatbot_analytics_date;
-DROP INDEX IF EXISTS lic_schema.idx_campaigns_type_status;
-DROP INDEX IF EXISTS lic_schema.idx_campaigns_tenant_id;
-DROP INDEX IF EXISTS lic_schema.idx_campaigns_targeting_rules;
-DROP INDEX IF EXISTS lic_schema.idx_campaigns_scheduled;
-DROP INDEX IF EXISTS lic_schema.idx_campaigns_created_at;
-DROP INDEX IF EXISTS lic_schema.idx_campaigns_agent_status;
-DROP INDEX IF EXISTS lic_schema.idx_campaigns_active;
-DROP INDEX IF EXISTS lic_schema.idx_campaign_triggers_campaign;
-DROP INDEX IF EXISTS lic_schema.idx_campaign_triggers_active;
-DROP INDEX IF EXISTS lic_schema.idx_campaign_templates_public;
-DROP INDEX IF EXISTS lic_schema.idx_campaign_templates_category;
-DROP INDEX IF EXISTS lic_schema.idx_campaign_responses_type;
-DROP INDEX IF EXISTS lic_schema.idx_campaign_responses_execution;
-DROP INDEX IF EXISTS lic_schema.idx_campaign_responses_campaign;
-DROP INDEX IF EXISTS lic_schema.idx_campaign_executions_status;
-DROP INDEX IF EXISTS lic_schema.idx_campaign_executions_sent_at;
-DROP INDEX IF EXISTS lic_schema.idx_campaign_executions_policyholder;
-DROP INDEX IF EXISTS lic_schema.idx_campaign_executions_personalized_content;
-DROP INDEX IF EXISTS lic_schema.idx_campaign_executions_campaign;
-DROP INDEX IF EXISTS lic_schema.idx_callback_requests_tenant_id;
-DROP INDEX IF EXISTS lic_schema.idx_callback_requests_status;
-DROP INDEX IF EXISTS lic_schema.idx_callback_requests_priority;
-DROP INDEX IF EXISTS lic_schema.idx_callback_requests_policyholder;
-DROP INDEX IF EXISTS lic_schema.idx_callback_requests_pending;
-DROP INDEX IF EXISTS lic_schema.idx_callback_requests_high_priority;
-DROP INDEX IF EXISTS lic_schema.idx_callback_requests_due_at;
-DROP INDEX IF EXISTS lic_schema.idx_callback_requests_created_at;
-DROP INDEX IF EXISTS lic_schema.idx_callback_requests_agent;
-DROP INDEX IF EXISTS lic_schema.idx_callback_activities_tenant_id;
-DROP INDEX IF EXISTS lic_schema.idx_callback_activities_metadata;
-DROP INDEX IF EXISTS lic_schema.idx_callback_activities_created_at;
-DROP INDEX IF EXISTS lic_schema.idx_callback_activities_callback;
-DROP INDEX IF EXISTS lic_schema.idx_callback_activities_agent;
-DROP INDEX IF EXISTS lic_schema.idx_analytics_slide;
-DROP INDEX IF EXISTS lic_schema.idx_analytics_query_user;
-DROP INDEX IF EXISTS lic_schema.idx_analytics_query_type;
-DROP INDEX IF EXISTS lic_schema.idx_analytics_presentation;
-DROP INDEX IF EXISTS lic_schema.idx_analytics_event_type;
-DROP INDEX IF EXISTS lic_schema.idx_analytics_event_data;
-DROP INDEX IF EXISTS lic_schema.idx_analytics_agent;
-DROP INDEX IF EXISTS lic_schema.idx_agents_user_status;
-DROP INDEX IF EXISTS lic_schema.idx_agents_territory;
-DROP INDEX IF EXISTS lic_schema.idx_agents_provider;
-DROP INDEX IF EXISTS lic_schema.idx_agents_code_status;
-DROP INDEX IF EXISTS lic_schema.idx_agent_summary_month;
-DROP INDEX IF EXISTS lic_schema.idx_agent_summary_agent_month;
-DROP INDEX IF EXISTS lic_schema.idx_agent_metrics_date;
-DROP INDEX IF EXISTS lic_schema.idx_agent_metrics_agent_date;
-DROP INDEX IF EXISTS lic_schema.idx_agent_leaderboard_rank;
-DROP INDEX IF EXISTS lic_schema.flyway_schema_history_s_idx;
-ALTER TABLE IF EXISTS ONLY lic_schema.whatsapp_templates DROP CONSTRAINT IF EXISTS whatsapp_templates_template_name_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.whatsapp_templates DROP CONSTRAINT IF EXISTS whatsapp_templates_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.whatsapp_messages DROP CONSTRAINT IF EXISTS whatsapp_messages_whatsapp_message_id_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.whatsapp_messages DROP CONSTRAINT IF EXISTS whatsapp_messages_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.video_tutorials DROP CONSTRAINT IF EXISTS video_tutorials_video_id_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.video_tutorials DROP CONSTRAINT IF EXISTS video_tutorials_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.video_recommendations DROP CONSTRAINT IF EXISTS video_recommendations_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.video_progress DROP CONSTRAINT IF EXISTS video_progress_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.video_content DROP CONSTRAINT IF EXISTS video_content_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.video_categories DROP CONSTRAINT IF EXISTS video_categories_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.video_categories DROP CONSTRAINT IF EXISTS video_categories_category_id_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.video_analytics DROP CONSTRAINT IF EXISTS video_analytics_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.users DROP CONSTRAINT IF EXISTS users_username_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.users DROP CONSTRAINT IF EXISTS users_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.users DROP CONSTRAINT IF EXISTS users_phone_number_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.users DROP CONSTRAINT IF EXISTS users_email_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.user_sessions DROP CONSTRAINT IF EXISTS user_sessions_session_token_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.user_sessions DROP CONSTRAINT IF EXISTS user_sessions_refresh_token_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.user_sessions DROP CONSTRAINT IF EXISTS user_sessions_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.user_roles DROP CONSTRAINT IF EXISTS user_roles_user_id_role_id_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.user_roles DROP CONSTRAINT IF EXISTS user_roles_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.user_payment_methods DROP CONSTRAINT IF EXISTS user_payment_methods_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.user_journeys DROP CONSTRAINT IF EXISTS user_journeys_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.emergency_contacts DROP CONSTRAINT IF EXISTS unique_primary_contact_per_user;
-ALTER TABLE IF EXISTS ONLY lic_schema.trial_subscriptions DROP CONSTRAINT IF EXISTS trial_subscriptions_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.trial_engagement DROP CONSTRAINT IF EXISTS trial_engagement_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.tenants DROP CONSTRAINT IF EXISTS tenants_tenant_code_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.tenants DROP CONSTRAINT IF EXISTS tenants_schema_name_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.tenants DROP CONSTRAINT IF EXISTS tenants_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.tenant_users DROP CONSTRAINT IF EXISTS tenant_users_tenant_id_user_id_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.tenant_users DROP CONSTRAINT IF EXISTS tenant_users_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.tenant_usage DROP CONSTRAINT IF EXISTS tenant_usage_tenant_id_metric_type_period_start_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.tenant_usage DROP CONSTRAINT IF EXISTS tenant_usage_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.tenant_config DROP CONSTRAINT IF EXISTS tenant_config_tenant_id_config_key_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.tenant_config DROP CONSTRAINT IF EXISTS tenant_config_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.roles DROP CONSTRAINT IF EXISTS roles_role_name_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.roles DROP CONSTRAINT IF EXISTS roles_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.role_permissions DROP CONSTRAINT IF EXISTS role_permissions_role_id_permission_id_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.role_permissions DROP CONSTRAINT IF EXISTS role_permissions_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.revenue_forecasts DROP CONSTRAINT IF EXISTS revenue_forecasts_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.rbac_audit_log DROP CONSTRAINT IF EXISTS rbac_audit_log_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.presentations DROP CONSTRAINT IF EXISTS presentations_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.presentation_templates DROP CONSTRAINT IF EXISTS presentation_templates_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.presentation_slides DROP CONSTRAINT IF EXISTS presentation_slides_presentation_id_slide_order_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.presentation_slides DROP CONSTRAINT IF EXISTS presentation_slides_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.presentation_media DROP CONSTRAINT IF EXISTS presentation_media_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.presentation_analytics DROP CONSTRAINT IF EXISTS presentation_analytics_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.premium_payments DROP CONSTRAINT IF EXISTS premium_payments_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.policyholders DROP CONSTRAINT IF EXISTS policyholders_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.policy_analytics_summary DROP CONSTRAINT IF EXISTS policy_analytics_summary_summary_date_summary_period_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.policy_analytics_summary DROP CONSTRAINT IF EXISTS policy_analytics_summary_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.permissions DROP CONSTRAINT IF EXISTS permissions_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.permissions DROP CONSTRAINT IF EXISTS permissions_permission_name_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.notifications DROP CONSTRAINT IF EXISTS notifications_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.notification_settings DROP CONSTRAINT IF EXISTS notification_settings_user_id_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.notification_settings DROP CONSTRAINT IF EXISTS notification_settings_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.learning_paths DROP CONSTRAINT IF EXISTS learning_paths_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.learning_paths DROP CONSTRAINT IF EXISTS learning_paths_path_id_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.languages DROP CONSTRAINT IF EXISTS languages_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.languages DROP CONSTRAINT IF EXISTS languages_language_code_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.kyc_manual_reviews DROP CONSTRAINT IF EXISTS kyc_manual_reviews_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.kyc_documents DROP CONSTRAINT IF EXISTS kyc_documents_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.knowledge_search_log DROP CONSTRAINT IF EXISTS knowledge_search_log_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.knowledge_base_articles DROP CONSTRAINT IF EXISTS knowledge_base_articles_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.insurance_providers DROP CONSTRAINT IF EXISTS insurance_providers_provider_code_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.insurance_providers DROP CONSTRAINT IF EXISTS insurance_providers_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.insurance_policies DROP CONSTRAINT IF EXISTS insurance_policies_policy_number_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.insurance_policies DROP CONSTRAINT IF EXISTS insurance_policies_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.insurance_categories DROP CONSTRAINT IF EXISTS insurance_categories_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.insurance_categories DROP CONSTRAINT IF EXISTS insurance_categories_category_code_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.import_jobs DROP CONSTRAINT IF EXISTS import_jobs_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.flyway_schema_history DROP CONSTRAINT IF EXISTS flyway_schema_history_pk;
-ALTER TABLE IF EXISTS ONLY lic_schema.feature_flags DROP CONSTRAINT IF EXISTS feature_flags_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.feature_flags DROP CONSTRAINT IF EXISTS feature_flags_flag_name_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.feature_flag_overrides DROP CONSTRAINT IF EXISTS feature_flag_overrides_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.emergency_contacts DROP CONSTRAINT IF EXISTS emergency_contacts_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.emergency_contact_verifications DROP CONSTRAINT IF EXISTS emergency_contact_verifications_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.document_ocr_results DROP CONSTRAINT IF EXISTS document_ocr_results_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.device_tokens DROP CONSTRAINT IF EXISTS device_tokens_token_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.device_tokens DROP CONSTRAINT IF EXISTS device_tokens_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.data_sync_status DROP CONSTRAINT IF EXISTS data_sync_status_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.data_imports DROP CONSTRAINT IF EXISTS data_imports_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.data_export_log DROP CONSTRAINT IF EXISTS data_export_log_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.customer_data_mapping DROP CONSTRAINT IF EXISTS customer_data_mapping_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.customer_behavior_metrics DROP CONSTRAINT IF EXISTS customer_behavior_metrics_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.customer_behavior_metrics DROP CONSTRAINT IF EXISTS customer_behavior_metrics_customer_id_metric_date_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.countries DROP CONSTRAINT IF EXISTS countries_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.countries DROP CONSTRAINT IF EXISTS countries_country_code_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.commissions DROP CONSTRAINT IF EXISTS commissions_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.chatbot_sessions DROP CONSTRAINT IF EXISTS chatbot_sessions_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.chatbot_intents DROP CONSTRAINT IF EXISTS chatbot_intents_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.chatbot_intents DROP CONSTRAINT IF EXISTS chatbot_intents_intent_name_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.chatbot_analytics_summary DROP CONSTRAINT IF EXISTS chatbot_analytics_summary_summary_date_summary_period_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.chatbot_analytics_summary DROP CONSTRAINT IF EXISTS chatbot_analytics_summary_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.chat_messages DROP CONSTRAINT IF EXISTS chat_messages_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.campaigns DROP CONSTRAINT IF EXISTS campaigns_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.campaign_triggers DROP CONSTRAINT IF EXISTS campaign_triggers_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.campaign_templates DROP CONSTRAINT IF EXISTS campaign_templates_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.campaign_responses DROP CONSTRAINT IF EXISTS campaign_responses_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.campaign_executions DROP CONSTRAINT IF EXISTS campaign_executions_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.callback_requests DROP CONSTRAINT IF EXISTS callback_requests_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.callback_activities DROP CONSTRAINT IF EXISTS callback_activities_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.analytics_query_log DROP CONSTRAINT IF EXISTS analytics_query_log_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.agents DROP CONSTRAINT IF EXISTS agents_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.agents DROP CONSTRAINT IF EXISTS agents_license_number_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.agents DROP CONSTRAINT IF EXISTS agents_agent_code_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.agent_presentation_preferences DROP CONSTRAINT IF EXISTS agent_presentation_preferences_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.agent_presentation_preferences DROP CONSTRAINT IF EXISTS agent_presentation_preferences_agent_id_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.agent_monthly_summary DROP CONSTRAINT IF EXISTS agent_monthly_summary_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.agent_monthly_summary DROP CONSTRAINT IF EXISTS agent_monthly_summary_agent_id_summary_month_key;
-ALTER TABLE IF EXISTS ONLY lic_schema.agent_daily_metrics DROP CONSTRAINT IF EXISTS agent_daily_metrics_pkey;
-ALTER TABLE IF EXISTS ONLY lic_schema.agent_daily_metrics DROP CONSTRAINT IF EXISTS agent_daily_metrics_agent_id_metric_date_key;
-ALTER TABLE IF EXISTS lic_schema.notification_settings ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS lic_schema.device_tokens ALTER COLUMN id DROP DEFAULT;
-DROP TABLE IF EXISTS lic_schema.whatsapp_templates;
-DROP TABLE IF EXISTS lic_schema.whatsapp_messages;
-DROP TABLE IF EXISTS lic_schema.video_tutorials;
-DROP TABLE IF EXISTS lic_schema.video_recommendations;
-DROP TABLE IF EXISTS lic_schema.video_progress;
-DROP TABLE IF EXISTS lic_schema.video_content;
-DROP TABLE IF EXISTS lic_schema.video_categories;
-DROP TABLE IF EXISTS lic_schema.video_analytics;
-DROP TABLE IF EXISTS lic_schema.user_sessions;
-DROP TABLE IF EXISTS lic_schema.user_roles;
-DROP TABLE IF EXISTS lic_schema.user_payment_methods;
-DROP TABLE IF EXISTS lic_schema.user_journeys;
-DROP TABLE IF EXISTS lic_schema.trial_subscriptions;
-DROP TABLE IF EXISTS lic_schema.trial_engagement;
-DROP TABLE IF EXISTS lic_schema.tenants;
-DROP TABLE IF EXISTS lic_schema.tenant_users;
-DROP TABLE IF EXISTS lic_schema.tenant_usage;
-DROP TABLE IF EXISTS lic_schema.tenant_config;
-DROP TABLE IF EXISTS lic_schema.roles;
-DROP TABLE IF EXISTS lic_schema.role_permissions;
-DROP TABLE IF EXISTS lic_schema.revenue_forecasts;
-DROP TABLE IF EXISTS lic_schema.rbac_audit_log;
-DROP TABLE IF EXISTS lic_schema.presentations;
-DROP TABLE IF EXISTS lic_schema.presentation_templates;
-DROP TABLE IF EXISTS lic_schema.presentation_slides;
-DROP TABLE IF EXISTS lic_schema.presentation_media;
-DROP TABLE IF EXISTS lic_schema.presentation_analytics;
-DROP TABLE IF EXISTS lic_schema.premium_payments;
-DROP TABLE IF EXISTS lic_schema.policy_analytics_summary;
-DROP TABLE IF EXISTS lic_schema.permissions;
-DROP TABLE IF EXISTS lic_schema.notifications;
-DROP SEQUENCE IF EXISTS lic_schema.notification_settings_id_seq;
-DROP TABLE IF EXISTS lic_schema.notification_settings;
-DROP TABLE IF EXISTS lic_schema.learning_paths;
-DROP TABLE IF EXISTS lic_schema.languages;
-DROP TABLE IF EXISTS lic_schema.kyc_manual_reviews;
-DROP TABLE IF EXISTS lic_schema.kyc_documents;
-DROP TABLE IF EXISTS lic_schema.knowledge_search_log;
-DROP TABLE IF EXISTS lic_schema.knowledge_base_articles;
-DROP TABLE IF EXISTS lic_schema.insurance_providers;
-DROP TABLE IF EXISTS lic_schema.insurance_categories;
-DROP TABLE IF EXISTS lic_schema.import_jobs;
-DROP TABLE IF EXISTS lic_schema.flyway_schema_history;
-DROP TABLE IF EXISTS lic_schema.feature_flags;
-DROP TABLE IF EXISTS lic_schema.feature_flag_overrides;
-DROP TABLE IF EXISTS lic_schema.emergency_contacts;
-DROP TABLE IF EXISTS lic_schema.emergency_contact_verifications;
-DROP TABLE IF EXISTS lic_schema.document_ocr_results;
-DROP SEQUENCE IF EXISTS lic_schema.device_tokens_id_seq;
-DROP TABLE IF EXISTS lic_schema.device_tokens;
-DROP TABLE IF EXISTS lic_schema.data_sync_status;
-DROP TABLE IF EXISTS lic_schema.data_imports;
-DROP TABLE IF EXISTS lic_schema.data_export_log;
-DROP MATERIALIZED VIEW IF EXISTS lic_schema.daily_dashboard_kpis;
-DROP TABLE IF EXISTS lic_schema.customer_data_mapping;
-DROP TABLE IF EXISTS lic_schema.customer_behavior_metrics;
-DROP TABLE IF EXISTS lic_schema.countries;
-DROP TABLE IF EXISTS lic_schema.commissions;
-DROP TABLE IF EXISTS lic_schema.chatbot_sessions;
-DROP TABLE IF EXISTS lic_schema.chatbot_intents;
-DROP TABLE IF EXISTS lic_schema.chatbot_analytics_summary;
-DROP TABLE IF EXISTS lic_schema.chat_messages;
-DROP TABLE IF EXISTS lic_schema.campaigns;
-DROP TABLE IF EXISTS lic_schema.campaign_triggers;
-DROP TABLE IF EXISTS lic_schema.campaign_templates;
-DROP TABLE IF EXISTS lic_schema.campaign_responses;
-DROP TABLE IF EXISTS lic_schema.campaign_executions;
-DROP TABLE IF EXISTS lic_schema.callback_requests;
-DROP TABLE IF EXISTS lic_schema.callback_activities;
-DROP TABLE IF EXISTS lic_schema.analytics_query_log;
-DROP TABLE IF EXISTS lic_schema.agent_presentation_preferences;
-DROP TABLE IF EXISTS lic_schema.agent_monthly_summary;
-DROP MATERIALIZED VIEW IF EXISTS lic_schema.agent_leaderboard;
-DROP TABLE IF EXISTS lic_schema.users;
-DROP TABLE IF EXISTS lic_schema.policyholders;
-DROP TABLE IF EXISTS lic_schema.insurance_policies;
-DROP TABLE IF EXISTS lic_schema.agents;
-DROP TABLE IF EXISTS lic_schema.agent_daily_metrics;
-DROP FUNCTION IF EXISTS lic_schema.validate_tenant_access(user_uuid uuid, tenant_uuid uuid);
-DROP FUNCTION IF EXISTS lic_schema.update_updated_at_column();
-DROP FUNCTION IF EXISTS lic_schema.update_trial_status();
-DROP FUNCTION IF EXISTS lic_schema.update_presentation_analytics_summary();
-DROP FUNCTION IF EXISTS lic_schema.update_notification_settings_updated_at();
-DROP FUNCTION IF EXISTS lic_schema.update_kyc_documents_updated_at();
-DROP FUNCTION IF EXISTS lic_schema.update_emergency_contacts_updated_at();
-DROP FUNCTION IF EXISTS lic_schema.update_device_tokens_last_used_at();
-DROP FUNCTION IF EXISTS lic_schema.update_agent_daily_metrics();
-DROP FUNCTION IF EXISTS lic_schema.set_trial_end_date();
-DROP FUNCTION IF EXISTS lic_schema.set_tenant_context(tenant_uuid uuid);
-DROP FUNCTION IF EXISTS lic_schema.refresh_analytics_views();
-DROP FUNCTION IF EXISTS lic_schema.log_analytics_query(p_user_id uuid, p_query_type character varying, p_query_params jsonb, p_execution_time integer, p_records_returned integer, p_ip_address inet, p_user_agent text);
-DROP FUNCTION IF EXISTS lic_schema.increment_media_usage();
-DROP FUNCTION IF EXISTS lic_schema.current_tenant_id();
-DROP FUNCTION IF EXISTS lic_schema.audit_tenant_data_changes();
-DROP TYPE IF EXISTS lic_schema.user_status_enum;
-DROP TYPE IF EXISTS lic_schema.user_role_enum;
-DROP TYPE IF EXISTS lic_schema.policy_status_enum;
-DROP TYPE IF EXISTS lic_schema.payment_status_enum;
-DROP TYPE IF EXISTS lic_schema.campaign_type_enum;
-DROP TYPE IF EXISTS lic_schema.campaign_status_enum;
-DROP TYPE IF EXISTS lic_schema.campaign_channel_enum;
-DROP TYPE IF EXISTS lic_schema.callback_status;
-DROP TYPE IF EXISTS lic_schema.callback_priority;
-DROP TYPE IF EXISTS lic_schema.agent_status_enum;
-DROP SCHEMA IF EXISTS lic_schema;
 --
--- Name: lic_schema; Type: SCHEMA; Schema: -; Owner: -
+-- Name: lic_schema; Type: SCHEMA; Schema: -; Owner: agentmitra
 --
 
 CREATE SCHEMA lic_schema;
 
 
+ALTER SCHEMA lic_schema OWNER TO agentmitra;
+
 --
--- Name: SCHEMA lic_schema; Type: COMMENT; Schema: -; Owner: -
+-- Name: SCHEMA lic_schema; Type: COMMENT; Schema: -; Owner: agentmitra
 --
 
 COMMENT ON SCHEMA lic_schema IS 'LIC tenant-specific data and business entities';
 
 
 --
--- Name: agent_status_enum; Type: TYPE; Schema: lic_schema; Owner: -
+-- Name: agent_status_enum; Type: TYPE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TYPE lic_schema.agent_status_enum AS ENUM (
@@ -607,8 +47,10 @@ CREATE TYPE lic_schema.agent_status_enum AS ENUM (
 );
 
 
+ALTER TYPE lic_schema.agent_status_enum OWNER TO agentmitra;
+
 --
--- Name: callback_priority; Type: TYPE; Schema: lic_schema; Owner: -
+-- Name: callback_priority; Type: TYPE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TYPE lic_schema.callback_priority AS ENUM (
@@ -618,8 +60,10 @@ CREATE TYPE lic_schema.callback_priority AS ENUM (
 );
 
 
+ALTER TYPE lic_schema.callback_priority OWNER TO agentmitra;
+
 --
--- Name: callback_status; Type: TYPE; Schema: lic_schema; Owner: -
+-- Name: callback_status; Type: TYPE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TYPE lic_schema.callback_status AS ENUM (
@@ -632,8 +76,10 @@ CREATE TYPE lic_schema.callback_status AS ENUM (
 );
 
 
+ALTER TYPE lic_schema.callback_status OWNER TO agentmitra;
+
 --
--- Name: campaign_channel_enum; Type: TYPE; Schema: lic_schema; Owner: -
+-- Name: campaign_channel_enum; Type: TYPE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TYPE lic_schema.campaign_channel_enum AS ENUM (
@@ -645,8 +91,10 @@ CREATE TYPE lic_schema.campaign_channel_enum AS ENUM (
 );
 
 
+ALTER TYPE lic_schema.campaign_channel_enum OWNER TO agentmitra;
+
 --
--- Name: campaign_status_enum; Type: TYPE; Schema: lic_schema; Owner: -
+-- Name: campaign_status_enum; Type: TYPE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TYPE lic_schema.campaign_status_enum AS ENUM (
@@ -659,8 +107,10 @@ CREATE TYPE lic_schema.campaign_status_enum AS ENUM (
 );
 
 
+ALTER TYPE lic_schema.campaign_status_enum OWNER TO agentmitra;
+
 --
--- Name: campaign_type_enum; Type: TYPE; Schema: lic_schema; Owner: -
+-- Name: campaign_type_enum; Type: TYPE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TYPE lic_schema.campaign_type_enum AS ENUM (
@@ -671,8 +121,73 @@ CREATE TYPE lic_schema.campaign_type_enum AS ENUM (
 );
 
 
+ALTER TYPE lic_schema.campaign_type_enum OWNER TO agentmitra;
+
 --
--- Name: payment_status_enum; Type: TYPE; Schema: lic_schema; Owner: -
+-- Name: customer_risk_level_enum; Type: TYPE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TYPE lic_schema.customer_risk_level_enum AS ENUM (
+    'high',
+    'medium',
+    'low'
+);
+
+
+ALTER TYPE lic_schema.customer_risk_level_enum OWNER TO manish;
+
+--
+-- Name: lead_priority_enum; Type: TYPE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TYPE lic_schema.lead_priority_enum AS ENUM (
+    'high',
+    'medium',
+    'low'
+);
+
+
+ALTER TYPE lic_schema.lead_priority_enum OWNER TO manish;
+
+--
+-- Name: lead_source_enum; Type: TYPE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TYPE lic_schema.lead_source_enum AS ENUM (
+    'website',
+    'referral',
+    'cold_call',
+    'social_media',
+    'email_campaign',
+    'whatsapp_campaign',
+    'event',
+    'partner',
+    'walk_in',
+    'other'
+);
+
+
+ALTER TYPE lic_schema.lead_source_enum OWNER TO manish;
+
+--
+-- Name: lead_status_enum; Type: TYPE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TYPE lic_schema.lead_status_enum AS ENUM (
+    'new',
+    'contacted',
+    'qualified',
+    'quoted',
+    'converted',
+    'lost',
+    'inactive'
+);
+
+
+ALTER TYPE lic_schema.lead_status_enum OWNER TO manish;
+
+--
+-- Name: payment_status_enum; Type: TYPE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TYPE lic_schema.payment_status_enum AS ENUM (
@@ -685,8 +200,10 @@ CREATE TYPE lic_schema.payment_status_enum AS ENUM (
 );
 
 
+ALTER TYPE lic_schema.payment_status_enum OWNER TO agentmitra;
+
 --
--- Name: policy_status_enum; Type: TYPE; Schema: lic_schema; Owner: -
+-- Name: policy_status_enum; Type: TYPE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TYPE lic_schema.policy_status_enum AS ENUM (
@@ -703,8 +220,25 @@ CREATE TYPE lic_schema.policy_status_enum AS ENUM (
 );
 
 
+ALTER TYPE lic_schema.policy_status_enum OWNER TO agentmitra;
+
 --
--- Name: user_role_enum; Type: TYPE; Schema: lic_schema; Owner: -
+-- Name: retention_status_enum; Type: TYPE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TYPE lic_schema.retention_status_enum AS ENUM (
+    'active',
+    'at_risk',
+    'churned',
+    'recovered',
+    'lost'
+);
+
+
+ALTER TYPE lic_schema.retention_status_enum OWNER TO manish;
+
+--
+-- Name: user_role_enum; Type: TYPE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TYPE lic_schema.user_role_enum AS ENUM (
@@ -719,8 +253,10 @@ CREATE TYPE lic_schema.user_role_enum AS ENUM (
 );
 
 
+ALTER TYPE lic_schema.user_role_enum OWNER TO agentmitra;
+
 --
--- Name: user_status_enum; Type: TYPE; Schema: lic_schema; Owner: -
+-- Name: user_status_enum; Type: TYPE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TYPE lic_schema.user_status_enum AS ENUM (
@@ -732,8 +268,95 @@ CREATE TYPE lic_schema.user_status_enum AS ENUM (
 );
 
 
+ALTER TYPE lic_schema.user_status_enum OWNER TO agentmitra;
+
 --
--- Name: audit_tenant_data_changes(); Type: FUNCTION; Schema: lic_schema; Owner: -
+-- Name: assess_customer_risk(integer, numeric, integer, integer, integer, integer); Type: FUNCTION; Schema: lic_schema; Owner: manish
+--
+
+CREATE FUNCTION lic_schema.assess_customer_risk(p_days_since_payment integer, p_engagement_score numeric, p_complaints_count integer, p_missed_payments integer, p_days_since_contact integer, p_policy_age_months integer) RETURNS jsonb
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    payment_risk DECIMAL;
+    engagement_risk DECIMAL;
+    support_risk DECIMAL;
+    age_risk DECIMAL;
+    contact_risk DECIMAL;
+    overall_risk DECIMAL;
+    risk_level VARCHAR(20);
+    risk_factors TEXT[] := ARRAY[]::TEXT[];
+BEGIN
+    -- Calculate risk factors
+    payment_risk := LEAST(100, p_days_since_payment * 2);
+    engagement_risk := 100 - p_engagement_score;
+    support_risk := LEAST(100, (p_complaints_count * 10));
+    age_risk := GREATEST(0, 100 - (p_policy_age_months * 2));
+    contact_risk := LEAST(100, p_days_since_contact * 1.5);
+
+    -- Calculate overall risk score
+    overall_risk := (
+        payment_risk * 0.25 +
+        engagement_risk * 0.20 +
+        support_risk * 0.15 +
+        age_risk * 0.15 +
+        contact_risk * 0.10 +
+        (p_missed_payments * 25) * 0.15
+    );
+
+    overall_risk := LEAST(100, GREATEST(0, overall_risk));
+
+    -- Determine risk level
+    IF overall_risk >= 70 THEN
+        risk_level := 'high';
+    ELSIF overall_risk >= 40 THEN
+        risk_level := 'medium';
+    ELSE
+        risk_level := 'low';
+    END IF;
+
+    -- Build risk factors array
+    IF payment_risk > 50 THEN
+        risk_factors := risk_factors || ARRAY['Overdue payments'];
+    END IF;
+    IF engagement_risk > 60 THEN
+        risk_factors := risk_factors || ARRAY['Low engagement'];
+    END IF;
+    IF support_risk > 40 THEN
+        risk_factors := risk_factors || ARRAY['High support queries'];
+    END IF;
+    IF age_risk > 50 THEN
+        risk_factors := risk_factors || ARRAY['Recent policy holder'];
+    END IF;
+    IF p_missed_payments > 0 THEN
+        risk_factors := risk_factors || ARRAY['Payment history issues'];
+    END IF;
+    IF contact_risk > 40 THEN
+        risk_factors := risk_factors || ARRAY['Long time since contact'];
+    END IF;
+
+    IF array_length(risk_factors, 1) IS NULL OR array_length(risk_factors, 1) = 0 THEN
+        risk_factors := ARRAY['General monitoring'];
+    END IF;
+
+    RETURN jsonb_build_object(
+        'risk_score', ROUND(overall_risk, 1),
+        'risk_level', risk_level,
+        'risk_factors', risk_factors,
+        'payment_risk', ROUND(payment_risk, 1),
+        'engagement_risk', ROUND(engagement_risk, 1),
+        'support_risk', ROUND(support_risk, 1),
+        'age_risk', ROUND(age_risk, 1),
+        'contact_risk', ROUND(contact_risk, 1)
+    );
+END;
+$$;
+
+
+ALTER FUNCTION lic_schema.assess_customer_risk(p_days_since_payment integer, p_engagement_score numeric, p_complaints_count integer, p_missed_payments integer, p_days_since_contact integer, p_policy_age_months integer) OWNER TO manish;
+
+--
+-- Name: audit_tenant_data_changes(); Type: FUNCTION; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE FUNCTION lic_schema.audit_tenant_data_changes() RETURNS trigger
@@ -784,8 +407,44 @@ END;
 $$;
 
 
+ALTER FUNCTION lic_schema.audit_tenant_data_changes() OWNER TO agentmitra;
+
 --
--- Name: current_tenant_id(); Type: FUNCTION; Schema: lic_schema; Owner: -
+-- Name: calculate_lead_score(numeric, integer, numeric, integer, numeric); Type: FUNCTION; Schema: lic_schema; Owner: manish
+--
+
+CREATE FUNCTION lic_schema.calculate_lead_score(p_engagement_score numeric, p_lead_age_days integer, p_response_time_hours numeric, p_interaction_count integer, p_source_effectiveness numeric DEFAULT 1.0) RETURNS numeric
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    age_score DECIMAL;
+    response_score DECIMAL;
+    interaction_score DECIMAL;
+    conversion_score DECIMAL;
+BEGIN
+    -- Calculate individual scores (0-100 scale)
+    age_score := GREATEST(0, 100 - (p_lead_age_days * 3));
+    response_score := GREATEST(0, 100 - (p_response_time_hours * 2));
+    interaction_score := LEAST(100, p_interaction_count * 15);
+
+    -- Calculate overall conversion score
+    conversion_score := (
+        p_engagement_score * 0.25 +      -- 25% weight
+        age_score * 0.20 +               -- 20% weight
+        response_score * 0.15 +          -- 15% weight
+        interaction_score * 0.15 +       -- 15% weight
+        (p_source_effectiveness * 20)    -- 25% weight combined
+    );
+
+    RETURN LEAST(100, GREATEST(0, conversion_score));
+END;
+$$;
+
+
+ALTER FUNCTION lic_schema.calculate_lead_score(p_engagement_score numeric, p_lead_age_days integer, p_response_time_hours numeric, p_interaction_count integer, p_source_effectiveness numeric) OWNER TO manish;
+
+--
+-- Name: current_tenant_id(); Type: FUNCTION; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE FUNCTION lic_schema.current_tenant_id() RETURNS uuid
@@ -800,8 +459,10 @@ END;
 $$;
 
 
+ALTER FUNCTION lic_schema.current_tenant_id() OWNER TO agentmitra;
+
 --
--- Name: increment_media_usage(); Type: FUNCTION; Schema: lic_schema; Owner: -
+-- Name: increment_media_usage(); Type: FUNCTION; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE FUNCTION lic_schema.increment_media_usage() RETURNS trigger
@@ -819,8 +480,10 @@ END;
 $$;
 
 
+ALTER FUNCTION lic_schema.increment_media_usage() OWNER TO agentmitra;
+
 --
--- Name: log_analytics_query(uuid, character varying, jsonb, integer, integer, inet, text); Type: FUNCTION; Schema: lic_schema; Owner: -
+-- Name: log_analytics_query(uuid, character varying, jsonb, integer, integer, inet, text); Type: FUNCTION; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE FUNCTION lic_schema.log_analytics_query(p_user_id uuid, p_query_type character varying, p_query_params jsonb DEFAULT NULL::jsonb, p_execution_time integer DEFAULT NULL::integer, p_records_returned integer DEFAULT NULL::integer, p_ip_address inet DEFAULT NULL::inet, p_user_agent text DEFAULT NULL::text) RETURNS void
@@ -838,8 +501,10 @@ END;
 $$;
 
 
+ALTER FUNCTION lic_schema.log_analytics_query(p_user_id uuid, p_query_type character varying, p_query_params jsonb, p_execution_time integer, p_records_returned integer, p_ip_address inet, p_user_agent text) OWNER TO agentmitra;
+
 --
--- Name: refresh_analytics_views(); Type: FUNCTION; Schema: lic_schema; Owner: -
+-- Name: refresh_analytics_views(); Type: FUNCTION; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE FUNCTION lic_schema.refresh_analytics_views() RETURNS void
@@ -852,8 +517,10 @@ END;
 $$;
 
 
+ALTER FUNCTION lic_schema.refresh_analytics_views() OWNER TO agentmitra;
+
 --
--- Name: set_tenant_context(uuid); Type: FUNCTION; Schema: lic_schema; Owner: -
+-- Name: set_tenant_context(uuid); Type: FUNCTION; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE FUNCTION lic_schema.set_tenant_context(tenant_uuid uuid) RETURNS void
@@ -865,8 +532,10 @@ END;
 $$;
 
 
+ALTER FUNCTION lic_schema.set_tenant_context(tenant_uuid uuid) OWNER TO agentmitra;
+
 --
--- Name: set_trial_end_date(); Type: FUNCTION; Schema: lic_schema; Owner: -
+-- Name: set_trial_end_date(); Type: FUNCTION; Schema: lic_schema; Owner: manish
 --
 
 CREATE FUNCTION lic_schema.set_trial_end_date() RETURNS trigger
@@ -881,8 +550,10 @@ END;
 $$;
 
 
+ALTER FUNCTION lic_schema.set_trial_end_date() OWNER TO manish;
+
 --
--- Name: update_agent_daily_metrics(); Type: FUNCTION; Schema: lic_schema; Owner: -
+-- Name: update_agent_daily_metrics(); Type: FUNCTION; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE FUNCTION lic_schema.update_agent_daily_metrics() RETURNS trigger
@@ -919,8 +590,75 @@ END;
 $$;
 
 
+ALTER FUNCTION lic_schema.update_agent_daily_metrics() OWNER TO agentmitra;
+
 --
--- Name: update_device_tokens_last_used_at(); Type: FUNCTION; Schema: lic_schema; Owner: -
+-- Name: update_customer_preferences_updated_at(); Type: FUNCTION; Schema: lic_schema; Owner: manish
+--
+
+CREATE FUNCTION lic_schema.update_customer_preferences_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION lic_schema.update_customer_preferences_updated_at() OWNER TO manish;
+
+--
+-- Name: update_customer_retention_trigger(); Type: FUNCTION; Schema: lic_schema; Owner: manish
+--
+
+CREATE FUNCTION lic_schema.update_customer_retention_trigger() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    risk_assessment JSONB;
+BEGIN
+    -- Calculate risk assessment
+    risk_assessment := lic_schema.assess_customer_risk(
+        COALESCE(NEW.days_since_last_payment, 0),
+        COALESCE(NEW.engagement_score, 50),
+        COALESCE(NEW.complaints_count, 0),
+        COALESCE(NEW.missed_payments_count, 0),
+        COALESCE(NEW.days_since_last_contact, 30),
+        COALESCE(NEW.policy_age_months, 12)
+    );
+
+    -- Update risk fields
+    NEW.risk_score := (risk_assessment->>'risk_score')::DECIMAL;
+    NEW.risk_level := (risk_assessment->>'risk_level')::lic_schema.customer_risk_level_enum;
+    NEW.risk_factors := (risk_assessment->>'risk_factors')::JSONB;
+    NEW.churn_probability := NEW.risk_score; -- Simplified mapping
+
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION lic_schema.update_customer_retention_trigger() OWNER TO manish;
+
+--
+-- Name: update_daily_quotes_updated_at(); Type: FUNCTION; Schema: lic_schema; Owner: manish
+--
+
+CREATE FUNCTION lic_schema.update_daily_quotes_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION lic_schema.update_daily_quotes_updated_at() OWNER TO manish;
+
+--
+-- Name: update_device_tokens_last_used_at(); Type: FUNCTION; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE FUNCTION lic_schema.update_device_tokens_last_used_at() RETURNS trigger
@@ -933,8 +671,10 @@ END;
 $$;
 
 
+ALTER FUNCTION lic_schema.update_device_tokens_last_used_at() OWNER TO agentmitra;
+
 --
--- Name: update_emergency_contacts_updated_at(); Type: FUNCTION; Schema: lic_schema; Owner: -
+-- Name: update_emergency_contacts_updated_at(); Type: FUNCTION; Schema: lic_schema; Owner: manish
 --
 
 CREATE FUNCTION lic_schema.update_emergency_contacts_updated_at() RETURNS trigger
@@ -947,8 +687,10 @@ END;
 $$;
 
 
+ALTER FUNCTION lic_schema.update_emergency_contacts_updated_at() OWNER TO manish;
+
 --
--- Name: update_kyc_documents_updated_at(); Type: FUNCTION; Schema: lic_schema; Owner: -
+-- Name: update_kyc_documents_updated_at(); Type: FUNCTION; Schema: lic_schema; Owner: manish
 --
 
 CREATE FUNCTION lic_schema.update_kyc_documents_updated_at() RETURNS trigger
@@ -961,8 +703,51 @@ END;
 $$;
 
 
+ALTER FUNCTION lic_schema.update_kyc_documents_updated_at() OWNER TO manish;
+
 --
--- Name: update_notification_settings_updated_at(); Type: FUNCTION; Schema: lic_schema; Owner: -
+-- Name: update_lead_score_trigger(); Type: FUNCTION; Schema: lic_schema; Owner: manish
+--
+
+CREATE FUNCTION lic_schema.update_lead_score_trigger() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Calculate and update conversion score when lead data changes
+    IF NEW.engagement_score IS NOT NULL AND NEW.created_at IS NOT NULL THEN
+        NEW.conversion_score := lic_schema.calculate_lead_score(
+            COALESCE(NEW.engagement_score, 0),
+            EXTRACT(EPOCH FROM (NOW() - NEW.created_at))::INTEGER / 86400, -- days
+            COALESCE(NEW.response_time_hours, 24), -- default 24 hours
+            COALESCE(NEW.followup_count, 0),
+            CASE NEW.lead_source
+                WHEN 'referral' THEN 1.4
+                WHEN 'partner' THEN 1.3
+                WHEN 'website' THEN 1.2
+                WHEN 'whatsapp_campaign' THEN 1.1
+                WHEN 'email_campaign' THEN 1.0
+                WHEN 'social_media' THEN 0.9
+                ELSE 0.8
+            END
+        );
+
+        -- Update priority based on score
+        NEW.priority := CASE
+            WHEN NEW.conversion_score >= 80 THEN 'high'::lic_schema.lead_priority_enum
+            WHEN NEW.conversion_score >= 60 THEN 'medium'::lic_schema.lead_priority_enum
+            ELSE 'low'::lic_schema.lead_priority_enum
+        END;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION lic_schema.update_lead_score_trigger() OWNER TO manish;
+
+--
+-- Name: update_notification_settings_updated_at(); Type: FUNCTION; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE FUNCTION lic_schema.update_notification_settings_updated_at() RETURNS trigger
@@ -975,8 +760,10 @@ END;
 $$;
 
 
+ALTER FUNCTION lic_schema.update_notification_settings_updated_at() OWNER TO agentmitra;
+
 --
--- Name: update_presentation_analytics_summary(); Type: FUNCTION; Schema: lic_schema; Owner: -
+-- Name: update_presentation_analytics_summary(); Type: FUNCTION; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE FUNCTION lic_schema.update_presentation_analytics_summary() RETURNS trigger
@@ -1003,8 +790,26 @@ END;
 $$;
 
 
+ALTER FUNCTION lic_schema.update_presentation_analytics_summary() OWNER TO agentmitra;
+
 --
--- Name: update_trial_status(); Type: FUNCTION; Schema: lic_schema; Owner: -
+-- Name: update_subscription_plans_updated_at(); Type: FUNCTION; Schema: lic_schema; Owner: manish
+--
+
+CREATE FUNCTION lic_schema.update_subscription_plans_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION lic_schema.update_subscription_plans_updated_at() OWNER TO manish;
+
+--
+-- Name: update_trial_status(); Type: FUNCTION; Schema: lic_schema; Owner: manish
 --
 
 CREATE FUNCTION lic_schema.update_trial_status() RETURNS trigger
@@ -1026,8 +831,10 @@ END;
 $$;
 
 
+ALTER FUNCTION lic_schema.update_trial_status() OWNER TO manish;
+
 --
--- Name: update_updated_at_column(); Type: FUNCTION; Schema: lic_schema; Owner: -
+-- Name: update_updated_at_column(); Type: FUNCTION; Schema: lic_schema; Owner: manish
 --
 
 CREATE FUNCTION lic_schema.update_updated_at_column() RETURNS trigger
@@ -1040,8 +847,26 @@ END;
 $$;
 
 
+ALTER FUNCTION lic_schema.update_updated_at_column() OWNER TO manish;
+
 --
--- Name: validate_tenant_access(uuid, uuid); Type: FUNCTION; Schema: lic_schema; Owner: -
+-- Name: update_user_subscriptions_updated_at(); Type: FUNCTION; Schema: lic_schema; Owner: manish
+--
+
+CREATE FUNCTION lic_schema.update_user_subscriptions_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION lic_schema.update_user_subscriptions_updated_at() OWNER TO manish;
+
+--
+-- Name: validate_tenant_access(uuid, uuid); Type: FUNCTION; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE FUNCTION lic_schema.validate_tenant_access(user_uuid uuid, tenant_uuid uuid) RETURNS boolean
@@ -1077,12 +902,14 @@ END;
 $$;
 
 
+ALTER FUNCTION lic_schema.validate_tenant_access(user_uuid uuid, tenant_uuid uuid) OWNER TO agentmitra;
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: agent_daily_metrics; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: agent_daily_metrics; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.agent_daily_metrics (
@@ -1105,15 +932,17 @@ CREATE TABLE lic_schema.agent_daily_metrics (
 );
 
 
+ALTER TABLE lic_schema.agent_daily_metrics OWNER TO agentmitra;
+
 --
--- Name: TABLE agent_daily_metrics; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: TABLE agent_daily_metrics; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON TABLE lic_schema.agent_daily_metrics IS 'Daily aggregated performance metrics for agents';
 
 
 --
--- Name: agents; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: agents; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.agents (
@@ -1155,8 +984,10 @@ CREATE TABLE lic_schema.agents (
 );
 
 
+ALTER TABLE lic_schema.agents OWNER TO agentmitra;
+
 --
--- Name: insurance_policies; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: insurance_policies; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.insurance_policies (
@@ -1202,8 +1033,10 @@ CREATE TABLE lic_schema.insurance_policies (
 );
 
 
+ALTER TABLE lic_schema.insurance_policies OWNER TO agentmitra;
+
 --
--- Name: policyholders; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: policyholders; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.policyholders (
@@ -1238,8 +1071,10 @@ CREATE TABLE lic_schema.policyholders (
 );
 
 
+ALTER TABLE lic_schema.policyholders OWNER TO agentmitra;
+
 --
--- Name: users; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: users; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.users (
@@ -1289,8 +1124,10 @@ CREATE TABLE lic_schema.users (
 );
 
 
+ALTER TABLE lic_schema.users OWNER TO agentmitra;
+
 --
--- Name: agent_leaderboard; Type: MATERIALIZED VIEW; Schema: lic_schema; Owner: -
+-- Name: agent_leaderboard; Type: MATERIALIZED VIEW; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE MATERIALIZED VIEW lic_schema.agent_leaderboard AS
@@ -1312,15 +1149,17 @@ CREATE MATERIALIZED VIEW lic_schema.agent_leaderboard AS
   WITH NO DATA;
 
 
+ALTER MATERIALIZED VIEW lic_schema.agent_leaderboard OWNER TO agentmitra;
+
 --
--- Name: MATERIALIZED VIEW agent_leaderboard; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: MATERIALIZED VIEW agent_leaderboard; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON MATERIALIZED VIEW lic_schema.agent_leaderboard IS 'Real-time agent performance rankings';
 
 
 --
--- Name: agent_monthly_summary; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: agent_monthly_summary; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.agent_monthly_summary (
@@ -1339,8 +1178,10 @@ CREATE TABLE lic_schema.agent_monthly_summary (
 );
 
 
+ALTER TABLE lic_schema.agent_monthly_summary OWNER TO agentmitra;
+
 --
--- Name: agent_presentation_preferences; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: agent_presentation_preferences; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.agent_presentation_preferences (
@@ -1364,8 +1205,10 @@ CREATE TABLE lic_schema.agent_presentation_preferences (
 );
 
 
+ALTER TABLE lic_schema.agent_presentation_preferences OWNER TO agentmitra;
+
 --
--- Name: analytics_query_log; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: analytics_query_log; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.analytics_query_log (
@@ -1383,8 +1226,10 @@ CREATE TABLE lic_schema.analytics_query_log (
 );
 
 
+ALTER TABLE lic_schema.analytics_query_log OWNER TO agentmitra;
+
 --
--- Name: callback_activities; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: callback_activities; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.callback_activities (
@@ -1403,15 +1248,17 @@ CREATE TABLE lic_schema.callback_activities (
 );
 
 
+ALTER TABLE lic_schema.callback_activities OWNER TO agentmitra;
+
 --
--- Name: TABLE callback_activities; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: TABLE callback_activities; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON TABLE lic_schema.callback_activities IS 'Activity log for callback request interactions and status changes';
 
 
 --
--- Name: callback_requests; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: callback_requests; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.callback_requests (
@@ -1453,15 +1300,17 @@ CREATE TABLE lic_schema.callback_requests (
 );
 
 
+ALTER TABLE lic_schema.callback_requests OWNER TO agentmitra;
+
 --
--- Name: TABLE callback_requests; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: TABLE callback_requests; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON TABLE lic_schema.callback_requests IS 'Callback requests from customers requiring agent follow-up';
 
 
 --
--- Name: campaign_executions; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: campaign_executions; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.campaign_executions (
@@ -1486,15 +1335,17 @@ CREATE TABLE lic_schema.campaign_executions (
 );
 
 
+ALTER TABLE lic_schema.campaign_executions OWNER TO agentmitra;
+
 --
--- Name: TABLE campaign_executions; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: TABLE campaign_executions; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON TABLE lic_schema.campaign_executions IS 'Individual campaign message executions to customers';
 
 
 --
--- Name: campaign_responses; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: campaign_responses; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.campaign_responses (
@@ -1511,15 +1362,17 @@ CREATE TABLE lic_schema.campaign_responses (
 );
 
 
+ALTER TABLE lic_schema.campaign_responses OWNER TO agentmitra;
+
 --
--- Name: TABLE campaign_responses; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: TABLE campaign_responses; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON TABLE lic_schema.campaign_responses IS 'Customer responses and interactions with campaign messages';
 
 
 --
--- Name: campaign_templates; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: campaign_templates; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.campaign_templates (
@@ -1545,15 +1398,17 @@ CREATE TABLE lic_schema.campaign_templates (
 );
 
 
+ALTER TABLE lic_schema.campaign_templates OWNER TO agentmitra;
+
 --
--- Name: TABLE campaign_templates; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: TABLE campaign_templates; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON TABLE lic_schema.campaign_templates IS 'Pre-built campaign templates for quick campaign creation';
 
 
 --
--- Name: campaign_triggers; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: campaign_triggers; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.campaign_triggers (
@@ -1568,15 +1423,17 @@ CREATE TABLE lic_schema.campaign_triggers (
 );
 
 
+ALTER TABLE lic_schema.campaign_triggers OWNER TO agentmitra;
+
 --
--- Name: TABLE campaign_triggers; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: TABLE campaign_triggers; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON TABLE lic_schema.campaign_triggers IS 'Automation triggers for campaign execution based on customer events';
 
 
 --
--- Name: campaigns; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: campaigns; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.campaigns (
@@ -1627,15 +1484,17 @@ CREATE TABLE lic_schema.campaigns (
 );
 
 
+ALTER TABLE lic_schema.campaigns OWNER TO agentmitra;
+
 --
--- Name: TABLE campaigns; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: TABLE campaigns; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON TABLE lic_schema.campaigns IS 'Marketing campaigns for customer acquisition, retention, upselling, and behavioral engagement';
 
 
 --
--- Name: chat_messages; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: chat_messages; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.chat_messages (
@@ -1655,8 +1514,10 @@ CREATE TABLE lic_schema.chat_messages (
 );
 
 
+ALTER TABLE lic_schema.chat_messages OWNER TO agentmitra;
+
 --
--- Name: chatbot_analytics_summary; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: chatbot_analytics_summary; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.chatbot_analytics_summary (
@@ -1678,15 +1539,17 @@ CREATE TABLE lic_schema.chatbot_analytics_summary (
 );
 
 
+ALTER TABLE lic_schema.chatbot_analytics_summary OWNER TO agentmitra;
+
 --
--- Name: TABLE chatbot_analytics_summary; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: TABLE chatbot_analytics_summary; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON TABLE lic_schema.chatbot_analytics_summary IS 'Daily/weekly/monthly chatbot performance analytics';
 
 
 --
--- Name: chatbot_intents; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: chatbot_intents; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.chatbot_intents (
@@ -1706,8 +1569,10 @@ CREATE TABLE lic_schema.chatbot_intents (
 );
 
 
+ALTER TABLE lic_schema.chatbot_intents OWNER TO agentmitra;
+
 --
--- Name: chatbot_sessions; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: chatbot_sessions; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.chatbot_sessions (
@@ -1728,8 +1593,10 @@ CREATE TABLE lic_schema.chatbot_sessions (
 );
 
 
+ALTER TABLE lic_schema.chatbot_sessions OWNER TO agentmitra;
+
 --
--- Name: commissions; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: commissions; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.commissions (
@@ -1749,8 +1616,67 @@ CREATE TABLE lic_schema.commissions (
 );
 
 
+ALTER TABLE lic_schema.commissions OWNER TO agentmitra;
+
 --
--- Name: countries; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: content; Type: TABLE; Schema: lic_schema; Owner: agentmitra
+--
+
+CREATE TABLE lic_schema.content (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    content_id character varying(255) NOT NULL,
+    filename character varying(255) NOT NULL,
+    original_filename character varying(255) NOT NULL,
+    storage_key character varying(500) NOT NULL,
+    media_url character varying(1000) NOT NULL,
+    file_hash character varying(64) NOT NULL,
+    file_size bigint NOT NULL,
+    mime_type character varying(100) NOT NULL,
+    content_type character varying(50) NOT NULL,
+    category character varying(100) NOT NULL,
+    sub_category character varying(100),
+    tags json,
+    content_metadata json,
+    description text,
+    processing_status character varying(50) DEFAULT 'pending'::character varying NOT NULL,
+    processing_started_at timestamp with time zone,
+    processing_completed_at timestamp with time zone,
+    processing_error text,
+    video_duration double precision,
+    video_resolution character varying(20),
+    video_bitrate integer,
+    video_codec character varying(50),
+    page_count integer,
+    word_count integer,
+    text_content text,
+    document_language character varying(10),
+    image_width integer,
+    image_height integer,
+    image_color_depth integer,
+    image_format character varying(20),
+    uploader_id uuid NOT NULL,
+    owner_id uuid NOT NULL,
+    tenant_id uuid DEFAULT '00000000-0000-0000-0000-000000000000'::uuid NOT NULL,
+    is_public boolean DEFAULT false,
+    allowed_users json,
+    share_token character varying(255),
+    view_count integer DEFAULT 0 NOT NULL,
+    download_count integer DEFAULT 0 NOT NULL,
+    last_accessed_at timestamp with time zone,
+    status character varying(50) DEFAULT 'active'::character varying,
+    created_by uuid,
+    updated_by uuid,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    retention_policy character varying(50),
+    deletion_date timestamp with time zone
+);
+
+
+ALTER TABLE lic_schema.content OWNER TO agentmitra;
+
+--
+-- Name: countries; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.countries (
@@ -1764,8 +1690,10 @@ CREATE TABLE lic_schema.countries (
 );
 
 
+ALTER TABLE lic_schema.countries OWNER TO agentmitra;
+
 --
--- Name: customer_behavior_metrics; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: customer_behavior_metrics; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.customer_behavior_metrics (
@@ -1787,8 +1715,10 @@ CREATE TABLE lic_schema.customer_behavior_metrics (
 );
 
 
+ALTER TABLE lic_schema.customer_behavior_metrics OWNER TO agentmitra;
+
 --
--- Name: customer_data_mapping; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: customer_data_mapping; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.customer_data_mapping (
@@ -1809,8 +1739,183 @@ CREATE TABLE lic_schema.customer_data_mapping (
 );
 
 
+ALTER TABLE lic_schema.customer_data_mapping OWNER TO agentmitra;
+
 --
--- Name: daily_dashboard_kpis; Type: MATERIALIZED VIEW; Schema: lic_schema; Owner: -
+-- Name: customer_engagement_metrics; Type: TABLE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TABLE lic_schema.customer_engagement_metrics (
+    metric_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid,
+    metric_date date DEFAULT CURRENT_DATE,
+    login_count integer DEFAULT 0,
+    page_views integer DEFAULT 0,
+    feature_usage jsonb,
+    session_duration_avg numeric(8,2),
+    bounce_rate numeric(5,2),
+    conversion_actions integer DEFAULT 0,
+    support_requests integer DEFAULT 0,
+    feedback_score numeric(3,1),
+    created_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE lic_schema.customer_engagement_metrics OWNER TO manish;
+
+--
+-- Name: customer_feedback; Type: TABLE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TABLE lic_schema.customer_feedback (
+    feedback_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid,
+    session_id uuid,
+    feedback_type character varying(50),
+    rating integer,
+    feedback_text text,
+    category character varying(100),
+    page_context character varying(255),
+    user_mood character varying(50),
+    submitted_at timestamp without time zone DEFAULT now(),
+    resolved boolean DEFAULT false,
+    resolution_notes text,
+    resolved_at timestamp without time zone,
+    resolved_by uuid,
+    CONSTRAINT customer_feedback_rating_check CHECK (((rating >= 1) AND (rating <= 5)))
+);
+
+
+ALTER TABLE lic_schema.customer_feedback OWNER TO manish;
+
+--
+-- Name: customer_journey_events; Type: TABLE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TABLE lic_schema.customer_journey_events (
+    event_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid,
+    session_id uuid,
+    event_type character varying(100),
+    event_name character varying(255),
+    page_url character varying(500),
+    element_identifier character varying(255),
+    event_data jsonb,
+    "timestamp" timestamp without time zone DEFAULT now(),
+    user_journey_stage character varying(50)
+);
+
+
+ALTER TABLE lic_schema.customer_journey_events OWNER TO manish;
+
+--
+-- Name: customer_portal_preferences; Type: TABLE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TABLE lic_schema.customer_portal_preferences (
+    preference_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid,
+    theme_preference character varying(20) DEFAULT 'light'::character varying,
+    language_preference character varying(10) DEFAULT 'en'::character varying,
+    notification_preferences jsonb,
+    dashboard_layout jsonb,
+    quick_actions jsonb,
+    accessibility_settings jsonb,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE lic_schema.customer_portal_preferences OWNER TO manish;
+
+--
+-- Name: customer_portal_sessions; Type: TABLE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TABLE lic_schema.customer_portal_sessions (
+    session_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid,
+    session_start timestamp without time zone DEFAULT now(),
+    session_end timestamp without time zone,
+    duration_minutes integer,
+    device_info jsonb,
+    ip_address inet,
+    user_agent text,
+    pages_viewed jsonb,
+    actions_taken jsonb,
+    created_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE lic_schema.customer_portal_sessions OWNER TO manish;
+
+--
+-- Name: customer_retention_analytics; Type: TABLE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TABLE lic_schema.customer_retention_analytics (
+    retention_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    customer_id uuid,
+    risk_level lic_schema.customer_risk_level_enum DEFAULT 'low'::lic_schema.customer_risk_level_enum,
+    risk_score numeric(5,2) DEFAULT 0,
+    churn_probability numeric(5,2) DEFAULT 0,
+    risk_factors jsonb DEFAULT '[]'::jsonb,
+    engagement_score numeric(5,2) DEFAULT 0,
+    premium_value numeric(12,2),
+    lifetime_value numeric(15,2),
+    days_since_last_payment integer DEFAULT 0,
+    days_since_last_contact integer DEFAULT 0,
+    complaints_count integer DEFAULT 0,
+    support_queries_count integer DEFAULT 0,
+    missed_payments_count integer DEFAULT 0,
+    policy_age_months integer,
+    policy_count integer DEFAULT 1,
+    policy_type character varying(100),
+    last_retention_action_at timestamp without time zone,
+    retention_plan jsonb,
+    retention_success_probability numeric(5,2) DEFAULT 0,
+    status lic_schema.retention_status_enum DEFAULT 'active'::lic_schema.retention_status_enum,
+    status_changed_at timestamp without time zone DEFAULT now(),
+    assigned_agent_id uuid,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE lic_schema.customer_retention_analytics OWNER TO manish;
+
+--
+-- Name: TABLE customer_retention_analytics; Type: COMMENT; Schema: lic_schema; Owner: manish
+--
+
+COMMENT ON TABLE lic_schema.customer_retention_analytics IS 'Customer churn risk assessment and retention analytics';
+
+
+--
+-- Name: customer_retention_metrics; Type: TABLE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TABLE lic_schema.customer_retention_metrics (
+    retention_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid,
+    metric_date date DEFAULT CURRENT_DATE,
+    days_since_last_login integer,
+    login_frequency_score numeric(5,2),
+    engagement_score numeric(5,2),
+    feature_adoption_score numeric(5,2),
+    support_ticket_count integer DEFAULT 0,
+    negative_feedback_count integer DEFAULT 0,
+    churn_risk_score numeric(5,2),
+    predicted_churn_date date,
+    retention_actions_taken jsonb,
+    created_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE lic_schema.customer_retention_metrics OWNER TO manish;
+
+--
+-- Name: daily_dashboard_kpis; Type: MATERIALIZED VIEW; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE MATERIALIZED VIEW lic_schema.daily_dashboard_kpis AS
@@ -1843,15 +1948,42 @@ CREATE MATERIALIZED VIEW lic_schema.daily_dashboard_kpis AS
   WITH NO DATA;
 
 
+ALTER MATERIALIZED VIEW lic_schema.daily_dashboard_kpis OWNER TO agentmitra;
+
 --
--- Name: MATERIALIZED VIEW daily_dashboard_kpis; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: MATERIALIZED VIEW daily_dashboard_kpis; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON MATERIALIZED VIEW lic_schema.daily_dashboard_kpis IS 'Pre-computed dashboard KPIs for fast loading';
 
 
 --
--- Name: data_export_log; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: daily_quotes; Type: TABLE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TABLE lic_schema.daily_quotes (
+    quote_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    agent_id uuid,
+    quote_text text NOT NULL,
+    author character varying(255),
+    category character varying(100) DEFAULT 'motivation'::character varying,
+    tags jsonb,
+    branding_settings jsonb,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now(),
+    is_active boolean DEFAULT true,
+    scheduled_date date,
+    published_at timestamp without time zone,
+    is_global boolean DEFAULT false,
+    created_by uuid,
+    updated_by uuid
+);
+
+
+ALTER TABLE lic_schema.daily_quotes OWNER TO manish;
+
+--
+-- Name: data_export_log; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.data_export_log (
@@ -1873,8 +2005,10 @@ CREATE TABLE lic_schema.data_export_log (
 );
 
 
+ALTER TABLE lic_schema.data_export_log OWNER TO agentmitra;
+
 --
--- Name: data_imports; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: data_imports; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.data_imports (
@@ -1896,8 +2030,10 @@ CREATE TABLE lic_schema.data_imports (
 );
 
 
+ALTER TABLE lic_schema.data_imports OWNER TO agentmitra;
+
 --
--- Name: data_sync_status; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: data_sync_status; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.data_sync_status (
@@ -1915,8 +2051,10 @@ CREATE TABLE lic_schema.data_sync_status (
 );
 
 
+ALTER TABLE lic_schema.data_sync_status OWNER TO agentmitra;
+
 --
--- Name: device_tokens; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: device_tokens; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.device_tokens (
@@ -1929,8 +2067,10 @@ CREATE TABLE lic_schema.device_tokens (
 );
 
 
+ALTER TABLE lic_schema.device_tokens OWNER TO agentmitra;
+
 --
--- Name: device_tokens_id_seq; Type: SEQUENCE; Schema: lic_schema; Owner: -
+-- Name: device_tokens_id_seq; Type: SEQUENCE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE SEQUENCE lic_schema.device_tokens_id_seq
@@ -1942,15 +2082,17 @@ CREATE SEQUENCE lic_schema.device_tokens_id_seq
     CACHE 1;
 
 
+ALTER SEQUENCE lic_schema.device_tokens_id_seq OWNER TO agentmitra;
+
 --
--- Name: device_tokens_id_seq; Type: SEQUENCE OWNED BY; Schema: lic_schema; Owner: -
+-- Name: device_tokens_id_seq; Type: SEQUENCE OWNED BY; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER SEQUENCE lic_schema.device_tokens_id_seq OWNED BY lic_schema.device_tokens.id;
 
 
 --
--- Name: document_ocr_results; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: document_ocr_results; Type: TABLE; Schema: lic_schema; Owner: manish
 --
 
 CREATE TABLE lic_schema.document_ocr_results (
@@ -1966,8 +2108,10 @@ CREATE TABLE lic_schema.document_ocr_results (
 );
 
 
+ALTER TABLE lic_schema.document_ocr_results OWNER TO manish;
+
 --
--- Name: emergency_contact_verifications; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: emergency_contact_verifications; Type: TABLE; Schema: lic_schema; Owner: manish
 --
 
 CREATE TABLE lic_schema.emergency_contact_verifications (
@@ -1982,8 +2126,10 @@ CREATE TABLE lic_schema.emergency_contact_verifications (
 );
 
 
+ALTER TABLE lic_schema.emergency_contact_verifications OWNER TO manish;
+
 --
--- Name: emergency_contacts; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: emergency_contacts; Type: TABLE; Schema: lic_schema; Owner: manish
 --
 
 CREATE TABLE lic_schema.emergency_contacts (
@@ -2003,8 +2149,10 @@ CREATE TABLE lic_schema.emergency_contacts (
 );
 
 
+ALTER TABLE lic_schema.emergency_contacts OWNER TO manish;
+
 --
--- Name: feature_flag_overrides; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: feature_flag_overrides; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.feature_flag_overrides (
@@ -2019,8 +2167,10 @@ CREATE TABLE lic_schema.feature_flag_overrides (
 );
 
 
+ALTER TABLE lic_schema.feature_flag_overrides OWNER TO agentmitra;
+
 --
--- Name: feature_flags; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: feature_flags; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.feature_flags (
@@ -2038,8 +2188,10 @@ CREATE TABLE lic_schema.feature_flags (
 );
 
 
+ALTER TABLE lic_schema.feature_flags OWNER TO agentmitra;
+
 --
--- Name: flyway_schema_history; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: flyway_schema_history; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.flyway_schema_history (
@@ -2056,8 +2208,10 @@ CREATE TABLE lic_schema.flyway_schema_history (
 );
 
 
+ALTER TABLE lic_schema.flyway_schema_history OWNER TO agentmitra;
+
 --
--- Name: import_jobs; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: import_jobs; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.import_jobs (
@@ -2075,8 +2229,10 @@ CREATE TABLE lic_schema.import_jobs (
 );
 
 
+ALTER TABLE lic_schema.import_jobs OWNER TO agentmitra;
+
 --
--- Name: insurance_categories; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: insurance_categories; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.insurance_categories (
@@ -2089,8 +2245,10 @@ CREATE TABLE lic_schema.insurance_categories (
 );
 
 
+ALTER TABLE lic_schema.insurance_categories OWNER TO agentmitra;
+
 --
--- Name: insurance_providers; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: insurance_providers; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.insurance_providers (
@@ -2119,8 +2277,10 @@ CREATE TABLE lic_schema.insurance_providers (
 );
 
 
+ALTER TABLE lic_schema.insurance_providers OWNER TO agentmitra;
+
 --
--- Name: knowledge_base_articles; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: knowledge_base_articles; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.knowledge_base_articles (
@@ -2152,15 +2312,17 @@ CREATE TABLE lic_schema.knowledge_base_articles (
 );
 
 
+ALTER TABLE lic_schema.knowledge_base_articles OWNER TO agentmitra;
+
 --
--- Name: TABLE knowledge_base_articles; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: TABLE knowledge_base_articles; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON TABLE lic_schema.knowledge_base_articles IS 'AI-powered knowledge base for chatbot and user support';
 
 
 --
--- Name: knowledge_search_log; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: knowledge_search_log; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.knowledge_search_log (
@@ -2178,8 +2340,10 @@ CREATE TABLE lic_schema.knowledge_search_log (
 );
 
 
+ALTER TABLE lic_schema.knowledge_search_log OWNER TO agentmitra;
+
 --
--- Name: kyc_documents; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: kyc_documents; Type: TABLE; Schema: lic_schema; Owner: manish
 --
 
 CREATE TABLE lic_schema.kyc_documents (
@@ -2197,8 +2361,10 @@ CREATE TABLE lic_schema.kyc_documents (
 );
 
 
+ALTER TABLE lic_schema.kyc_documents OWNER TO manish;
+
 --
--- Name: kyc_manual_reviews; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: kyc_manual_reviews; Type: TABLE; Schema: lic_schema; Owner: manish
 --
 
 CREATE TABLE lic_schema.kyc_manual_reviews (
@@ -2212,8 +2378,10 @@ CREATE TABLE lic_schema.kyc_manual_reviews (
 );
 
 
+ALTER TABLE lic_schema.kyc_manual_reviews OWNER TO manish;
+
 --
--- Name: languages; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: languages; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.languages (
@@ -2226,8 +2394,86 @@ CREATE TABLE lic_schema.languages (
 );
 
 
+ALTER TABLE lic_schema.languages OWNER TO agentmitra;
+
 --
--- Name: learning_paths; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: lead_interactions; Type: TABLE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TABLE lic_schema.lead_interactions (
+    interaction_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    lead_id uuid,
+    interaction_type character varying(50) NOT NULL,
+    interaction_method character varying(50),
+    duration_minutes integer,
+    outcome character varying(100),
+    notes text,
+    next_action text,
+    next_action_date timestamp without time zone,
+    agent_id uuid,
+    created_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE lic_schema.lead_interactions OWNER TO manish;
+
+--
+-- Name: TABLE lead_interactions; Type: COMMENT; Schema: lic_schema; Owner: manish
+--
+
+COMMENT ON TABLE lic_schema.lead_interactions IS 'Detailed interaction log for lead follow-up and conversion tracking';
+
+
+--
+-- Name: leads; Type: TABLE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TABLE lic_schema.leads (
+    lead_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    agent_id uuid,
+    customer_name character varying(255) NOT NULL,
+    contact_number character varying(20) NOT NULL,
+    email character varying(255),
+    location character varying(255),
+    lead_source lic_schema.lead_source_enum NOT NULL,
+    lead_status lic_schema.lead_status_enum DEFAULT 'new'::lic_schema.lead_status_enum,
+    priority lic_schema.lead_priority_enum DEFAULT 'medium'::lic_schema.lead_priority_enum,
+    insurance_type character varying(100),
+    budget_range character varying(50),
+    coverage_required numeric(15,2),
+    conversion_score numeric(5,2) DEFAULT 0,
+    engagement_score numeric(5,2) DEFAULT 0,
+    potential_premium numeric(12,2) DEFAULT 0,
+    is_qualified boolean DEFAULT false,
+    qualification_notes text,
+    disqualification_reason text,
+    created_at timestamp without time zone DEFAULT now(),
+    first_contact_at timestamp without time zone,
+    last_contact_at timestamp without time zone,
+    last_contact_method character varying(50),
+    next_followup_at timestamp without time zone,
+    followup_count integer DEFAULT 0,
+    response_time_hours numeric(6,2),
+    converted_at timestamp without time zone,
+    converted_policy_id uuid,
+    conversion_value numeric(12,2),
+    created_by uuid,
+    updated_by uuid,
+    updated_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE lic_schema.leads OWNER TO manish;
+
+--
+-- Name: TABLE leads; Type: COMMENT; Schema: lic_schema; Owner: manish
+--
+
+COMMENT ON TABLE lic_schema.leads IS 'Lead management and scoring system for agent opportunities';
+
+
+--
+-- Name: learning_paths; Type: TABLE; Schema: lic_schema; Owner: manish
 --
 
 CREATE TABLE lic_schema.learning_paths (
@@ -2252,8 +2498,10 @@ CREATE TABLE lic_schema.learning_paths (
 );
 
 
+ALTER TABLE lic_schema.learning_paths OWNER TO manish;
+
 --
--- Name: notification_settings; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: notification_settings; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.notification_settings (
@@ -2277,8 +2525,10 @@ CREATE TABLE lic_schema.notification_settings (
 );
 
 
+ALTER TABLE lic_schema.notification_settings OWNER TO agentmitra;
+
 --
--- Name: notification_settings_id_seq; Type: SEQUENCE; Schema: lic_schema; Owner: -
+-- Name: notification_settings_id_seq; Type: SEQUENCE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE SEQUENCE lic_schema.notification_settings_id_seq
@@ -2290,15 +2540,17 @@ CREATE SEQUENCE lic_schema.notification_settings_id_seq
     CACHE 1;
 
 
+ALTER SEQUENCE lic_schema.notification_settings_id_seq OWNER TO agentmitra;
+
 --
--- Name: notification_settings_id_seq; Type: SEQUENCE OWNED BY; Schema: lic_schema; Owner: -
+-- Name: notification_settings_id_seq; Type: SEQUENCE OWNED BY; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER SEQUENCE lic_schema.notification_settings_id_seq OWNED BY lic_schema.notification_settings.id;
 
 
 --
--- Name: notifications; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: notifications; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.notifications (
@@ -2321,8 +2573,10 @@ CREATE TABLE lic_schema.notifications (
 );
 
 
+ALTER TABLE lic_schema.notifications OWNER TO agentmitra;
+
 --
--- Name: permissions; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: permissions; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.permissions (
@@ -2337,15 +2591,17 @@ CREATE TABLE lic_schema.permissions (
 );
 
 
+ALTER TABLE lic_schema.permissions OWNER TO agentmitra;
+
 --
--- Name: TABLE permissions; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: TABLE permissions; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON TABLE lic_schema.permissions IS 'RBAC permissions table with resource and action columns matching ORM model';
 
 
 --
--- Name: policy_analytics_summary; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: policy_analytics_summary; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.policy_analytics_summary (
@@ -2370,8 +2626,45 @@ CREATE TABLE lic_schema.policy_analytics_summary (
 );
 
 
+ALTER TABLE lic_schema.policy_analytics_summary OWNER TO agentmitra;
+
 --
--- Name: premium_payments; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: predictive_insights; Type: TABLE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TABLE lic_schema.predictive_insights (
+    insight_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    agent_id uuid,
+    customer_id uuid,
+    insight_type character varying(100) NOT NULL,
+    title character varying(500) NOT NULL,
+    description text,
+    confidence numeric(5,2),
+    impact_level character varying(20),
+    recommended_actions jsonb,
+    potential_value numeric(12,2),
+    deadline timestamp without time zone,
+    is_acknowledged boolean DEFAULT false,
+    acknowledged_at timestamp without time zone,
+    acknowledged_by uuid,
+    valid_from timestamp without time zone DEFAULT now(),
+    valid_until timestamp without time zone,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE lic_schema.predictive_insights OWNER TO manish;
+
+--
+-- Name: TABLE predictive_insights; Type: COMMENT; Schema: lic_schema; Owner: manish
+--
+
+COMMENT ON TABLE lic_schema.predictive_insights IS 'AI-generated insights and recommendations for agents';
+
+
+--
+-- Name: premium_payments; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.premium_payments (
@@ -2402,8 +2695,10 @@ CREATE TABLE lic_schema.premium_payments (
 );
 
 
+ALTER TABLE lic_schema.premium_payments OWNER TO agentmitra;
+
 --
--- Name: presentation_analytics; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: presentation_analytics; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.presentation_analytics (
@@ -2426,8 +2721,10 @@ CREATE TABLE lic_schema.presentation_analytics (
 );
 
 
+ALTER TABLE lic_schema.presentation_analytics OWNER TO agentmitra;
+
 --
--- Name: presentation_media; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: presentation_media; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.presentation_media (
@@ -2451,12 +2748,15 @@ CREATE TABLE lic_schema.presentation_media (
     is_optimized boolean DEFAULT false,
     uploaded_at timestamp without time zone DEFAULT now(),
     created_at timestamp without time zone DEFAULT now(),
-    updated_at timestamp without time zone DEFAULT now()
+    updated_at timestamp without time zone DEFAULT now(),
+    tenant_id uuid
 );
 
 
+ALTER TABLE lic_schema.presentation_media OWNER TO agentmitra;
+
 --
--- Name: presentation_slides; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: presentation_slides; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.presentation_slides (
@@ -2484,8 +2784,10 @@ CREATE TABLE lic_schema.presentation_slides (
 );
 
 
+ALTER TABLE lic_schema.presentation_slides OWNER TO agentmitra;
+
 --
--- Name: presentation_templates; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: presentation_templates; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.presentation_templates (
@@ -2511,8 +2813,10 @@ CREATE TABLE lic_schema.presentation_templates (
 );
 
 
+ALTER TABLE lic_schema.presentation_templates OWNER TO agentmitra;
+
 --
--- Name: presentations; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: presentations; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.presentations (
@@ -2542,8 +2846,51 @@ CREATE TABLE lic_schema.presentations (
 );
 
 
+ALTER TABLE lic_schema.presentations OWNER TO agentmitra;
+
 --
--- Name: rbac_audit_log; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: quote_performance; Type: TABLE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TABLE lic_schema.quote_performance (
+    performance_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    quote_id uuid,
+    agent_id uuid,
+    metric_date date DEFAULT CURRENT_DATE,
+    views_count integer DEFAULT 0,
+    shares_count integer DEFAULT 0,
+    likes_count integer DEFAULT 0,
+    responses_count integer DEFAULT 0,
+    conversion_count integer DEFAULT 0,
+    created_at timestamp without time zone DEFAULT now(),
+    created_by uuid,
+    updated_by uuid
+);
+
+
+ALTER TABLE lic_schema.quote_performance OWNER TO manish;
+
+--
+-- Name: quote_sharing_analytics; Type: TABLE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TABLE lic_schema.quote_sharing_analytics (
+    share_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    quote_id uuid,
+    agent_id uuid,
+    platform character varying(50),
+    recipient_count integer DEFAULT 1,
+    delivery_status character varying(50) DEFAULT 'sent'::character varying,
+    engagement_metrics jsonb,
+    shared_at timestamp without time zone DEFAULT now(),
+    created_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE lic_schema.quote_sharing_analytics OWNER TO manish;
+
+--
+-- Name: rbac_audit_log; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.rbac_audit_log (
@@ -2563,8 +2910,71 @@ CREATE TABLE lic_schema.rbac_audit_log (
 );
 
 
+ALTER TABLE lic_schema.rbac_audit_log OWNER TO agentmitra;
+
 --
--- Name: revenue_forecasts; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: retention_actions; Type: TABLE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TABLE lic_schema.retention_actions (
+    action_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    retention_id uuid,
+    action_type character varying(100) NOT NULL,
+    action_description text,
+    action_priority character varying(20) DEFAULT 'medium'::character varying,
+    scheduled_at timestamp without time zone,
+    completed_at timestamp without time zone,
+    due_at timestamp without time zone,
+    outcome character varying(100),
+    outcome_notes text,
+    retention_value numeric(12,2),
+    agent_id uuid,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE lic_schema.retention_actions OWNER TO manish;
+
+--
+-- Name: TABLE retention_actions; Type: COMMENT; Schema: lic_schema; Owner: manish
+--
+
+COMMENT ON TABLE lic_schema.retention_actions IS 'Retention action planning and execution tracking';
+
+
+--
+-- Name: revenue_forecast_scenarios; Type: TABLE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TABLE lic_schema.revenue_forecast_scenarios (
+    scenario_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    agent_id uuid,
+    scenario_name character varying(255) NOT NULL,
+    scenario_type character varying(50) NOT NULL,
+    forecast_period character varying(20) NOT NULL,
+    projected_revenue numeric(15,2) NOT NULL,
+    revenue_growth_rate numeric(5,2),
+    confidence_level numeric(5,2),
+    assumptions jsonb,
+    risk_factors jsonb,
+    mitigation_strategies jsonb,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE lic_schema.revenue_forecast_scenarios OWNER TO manish;
+
+--
+-- Name: TABLE revenue_forecast_scenarios; Type: COMMENT; Schema: lic_schema; Owner: manish
+--
+
+COMMENT ON TABLE lic_schema.revenue_forecast_scenarios IS 'Revenue forecasting scenarios with risk assessment';
+
+
+--
+-- Name: revenue_forecasts; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.revenue_forecasts (
@@ -2585,15 +2995,17 @@ CREATE TABLE lic_schema.revenue_forecasts (
 );
 
 
+ALTER TABLE lic_schema.revenue_forecasts OWNER TO agentmitra;
+
 --
--- Name: TABLE revenue_forecasts; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: TABLE revenue_forecasts; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON TABLE lic_schema.revenue_forecasts IS 'Revenue and commission forecasting data';
 
 
 --
--- Name: role_permissions; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: role_permissions; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.role_permissions (
@@ -2604,8 +3016,10 @@ CREATE TABLE lic_schema.role_permissions (
 );
 
 
+ALTER TABLE lic_schema.role_permissions OWNER TO agentmitra;
+
 --
--- Name: roles; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: roles; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.roles (
@@ -2618,8 +3032,96 @@ CREATE TABLE lic_schema.roles (
 );
 
 
+ALTER TABLE lic_schema.roles OWNER TO agentmitra;
+
 --
--- Name: tenant_config; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: subscription_billing_history; Type: TABLE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TABLE lic_schema.subscription_billing_history (
+    billing_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    subscription_id uuid,
+    user_id uuid,
+    amount numeric(10,2) NOT NULL,
+    currency character varying(3) DEFAULT 'INR'::character varying,
+    billing_date timestamp without time zone DEFAULT now(),
+    billing_period_start timestamp without time zone,
+    billing_period_end timestamp without time zone,
+    payment_gateway character varying(50),
+    gateway_transaction_id character varying(255),
+    status character varying(50) DEFAULT 'paid'::character varying,
+    invoice_url character varying(500),
+    receipt_url character varying(500),
+    failure_reason text,
+    metadata jsonb,
+    created_at timestamp without time zone DEFAULT now(),
+    created_by uuid,
+    updated_by uuid
+);
+
+
+ALTER TABLE lic_schema.subscription_billing_history OWNER TO manish;
+
+--
+-- Name: subscription_changes; Type: TABLE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TABLE lic_schema.subscription_changes (
+    change_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    subscription_id uuid,
+    user_id uuid,
+    from_plan_id uuid,
+    to_plan_id uuid,
+    change_type character varying(50),
+    effective_date timestamp without time zone DEFAULT now(),
+    proration_amount numeric(10,2),
+    billing_cycle_change boolean DEFAULT false,
+    initiated_by uuid,
+    reason text,
+    metadata jsonb,
+    created_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE lic_schema.subscription_changes OWNER TO manish;
+
+--
+-- Name: subscription_plans; Type: TABLE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TABLE lic_schema.subscription_plans (
+    plan_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    plan_name character varying(100) NOT NULL,
+    plan_type character varying(50) NOT NULL,
+    display_name character varying(255) NOT NULL,
+    description text,
+    price_monthly numeric(10,2),
+    price_yearly numeric(10,2),
+    currency character varying(3) DEFAULT 'INR'::character varying,
+    features jsonb,
+    limitations jsonb,
+    max_users integer,
+    max_storage_gb integer,
+    max_policies integer,
+    is_active boolean DEFAULT true,
+    is_popular boolean DEFAULT false,
+    sort_order integer DEFAULT 0,
+    trial_days integer DEFAULT 14,
+    stripe_price_id_monthly character varying(255),
+    stripe_price_id_yearly character varying(255),
+    razorpay_plan_id_monthly character varying(255),
+    razorpay_plan_id_yearly character varying(255),
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now(),
+    created_by uuid,
+    updated_by uuid
+);
+
+
+ALTER TABLE lic_schema.subscription_plans OWNER TO manish;
+
+--
+-- Name: tenant_config; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.tenant_config (
@@ -2634,8 +3136,10 @@ CREATE TABLE lic_schema.tenant_config (
 );
 
 
+ALTER TABLE lic_schema.tenant_config OWNER TO agentmitra;
+
 --
--- Name: tenant_usage; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: tenant_usage; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.tenant_usage (
@@ -2649,8 +3153,10 @@ CREATE TABLE lic_schema.tenant_usage (
 );
 
 
+ALTER TABLE lic_schema.tenant_usage OWNER TO agentmitra;
+
 --
--- Name: tenant_users; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: tenant_users; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.tenant_users (
@@ -2665,8 +3171,10 @@ CREATE TABLE lic_schema.tenant_users (
 );
 
 
+ALTER TABLE lic_schema.tenant_users OWNER TO agentmitra;
+
 --
--- Name: tenants; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: tenants; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.tenants (
@@ -2687,8 +3195,10 @@ CREATE TABLE lic_schema.tenants (
 );
 
 
+ALTER TABLE lic_schema.tenants OWNER TO agentmitra;
+
 --
--- Name: trial_engagement; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: trial_engagement; Type: TABLE; Schema: lic_schema; Owner: manish
 --
 
 CREATE TABLE lic_schema.trial_engagement (
@@ -2701,8 +3211,10 @@ CREATE TABLE lic_schema.trial_engagement (
 );
 
 
+ALTER TABLE lic_schema.trial_engagement OWNER TO manish;
+
 --
--- Name: trial_subscriptions; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: trial_subscriptions; Type: TABLE; Schema: lic_schema; Owner: manish
 --
 
 CREATE TABLE lic_schema.trial_subscriptions (
@@ -2720,8 +3232,10 @@ CREATE TABLE lic_schema.trial_subscriptions (
 );
 
 
+ALTER TABLE lic_schema.trial_subscriptions OWNER TO manish;
+
 --
--- Name: user_journeys; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: user_journeys; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.user_journeys (
@@ -2745,43 +3259,45 @@ CREATE TABLE lic_schema.user_journeys (
 );
 
 
+ALTER TABLE lic_schema.user_journeys OWNER TO agentmitra;
+
 --
--- Name: TABLE user_journeys; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: TABLE user_journeys; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON TABLE lic_schema.user_journeys IS 'Tracks user journeys through various processes like onboarding, policy purchase, etc.';
 
 
 --
--- Name: COLUMN user_journeys.journey_type; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: COLUMN user_journeys.journey_type; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON COLUMN lic_schema.user_journeys.journey_type IS 'Type of journey: onboarding, policy_purchase, claim_process, etc.';
 
 
 --
--- Name: COLUMN user_journeys.step_history; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: COLUMN user_journeys.step_history; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON COLUMN lic_schema.user_journeys.step_history IS 'JSONB array tracking each step with timestamp, action, and metadata';
 
 
 --
--- Name: COLUMN user_journeys.converted; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: COLUMN user_journeys.converted; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON COLUMN lic_schema.user_journeys.converted IS 'Whether the journey resulted in a conversion (e.g., policy purchase)';
 
 
 --
--- Name: COLUMN user_journeys.drop_off_step; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: COLUMN user_journeys.drop_off_step; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON COLUMN lic_schema.user_journeys.drop_off_step IS 'Step number where user abandoned the journey';
 
 
 --
--- Name: user_payment_methods; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: user_payment_methods; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.user_payment_methods (
@@ -2807,8 +3323,10 @@ CREATE TABLE lic_schema.user_payment_methods (
 );
 
 
+ALTER TABLE lic_schema.user_payment_methods OWNER TO agentmitra;
+
 --
--- Name: user_roles; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: user_roles; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.user_roles (
@@ -2821,8 +3339,10 @@ CREATE TABLE lic_schema.user_roles (
 );
 
 
+ALTER TABLE lic_schema.user_roles OWNER TO agentmitra;
+
 --
--- Name: user_sessions; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: user_sessions; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.user_sessions (
@@ -2840,22 +3360,59 @@ CREATE TABLE lic_schema.user_sessions (
 );
 
 
+ALTER TABLE lic_schema.user_sessions OWNER TO agentmitra;
+
 --
--- Name: COLUMN user_sessions.session_token; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: COLUMN user_sessions.session_token; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON COLUMN lic_schema.user_sessions.session_token IS 'JWT access token (stored as TEXT to accommodate full token length)';
 
 
 --
--- Name: COLUMN user_sessions.refresh_token; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: COLUMN user_sessions.refresh_token; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON COLUMN lic_schema.user_sessions.refresh_token IS 'JWT refresh token (stored as TEXT to accommodate full token length)';
 
 
 --
--- Name: video_analytics; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: user_subscriptions; Type: TABLE; Schema: lic_schema; Owner: manish
+--
+
+CREATE TABLE lic_schema.user_subscriptions (
+    subscription_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid,
+    plan_id uuid,
+    billing_cycle character varying(20) DEFAULT 'monthly'::character varying,
+    status character varying(50) DEFAULT 'active'::character varying,
+    current_period_start timestamp without time zone,
+    current_period_end timestamp without time zone,
+    trial_start timestamp without time zone,
+    trial_end timestamp without time zone,
+    cancel_at_period_end boolean DEFAULT false,
+    canceled_at timestamp without time zone,
+    stripe_subscription_id character varying(255),
+    razorpay_subscription_id character varying(255),
+    payment_method_id character varying(255),
+    last_payment_date timestamp without time zone,
+    next_payment_date timestamp without time zone,
+    amount numeric(10,2),
+    currency character varying(3) DEFAULT 'INR'::character varying,
+    discount_amount numeric(10,2) DEFAULT 0,
+    tax_amount numeric(10,2) DEFAULT 0,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now(),
+    created_by uuid,
+    updated_by uuid,
+    subscription_end_date timestamp without time zone
+);
+
+
+ALTER TABLE lic_schema.user_subscriptions OWNER TO manish;
+
+--
+-- Name: video_analytics; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.video_analytics (
@@ -2880,43 +3437,45 @@ CREATE TABLE lic_schema.video_analytics (
 );
 
 
+ALTER TABLE lic_schema.video_analytics OWNER TO agentmitra;
+
 --
--- Name: TABLE video_analytics; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: TABLE video_analytics; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON TABLE lic_schema.video_analytics IS 'Tracks individual video watch sessions and engagement metrics';
 
 
 --
--- Name: COLUMN video_analytics.watch_session_id; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: COLUMN video_analytics.watch_session_id; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON COLUMN lic_schema.video_analytics.watch_session_id IS 'Unique identifier for a watch session (can be used to group multiple analytics records)';
 
 
 --
--- Name: COLUMN video_analytics.completed; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: COLUMN video_analytics.completed; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON COLUMN lic_schema.video_analytics.completed IS 'Whether the user watched the video to completion';
 
 
 --
--- Name: COLUMN video_analytics.paused_count; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: COLUMN video_analytics.paused_count; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON COLUMN lic_schema.video_analytics.paused_count IS 'Number of times the video was paused';
 
 
 --
--- Name: COLUMN video_analytics.seek_count; Type: COMMENT; Schema: lic_schema; Owner: -
+-- Name: COLUMN video_analytics.seek_count; Type: COMMENT; Schema: lic_schema; Owner: agentmitra
 --
 
 COMMENT ON COLUMN lic_schema.video_analytics.seek_count IS 'Number of times the user seeked/jumped in the video';
 
 
 --
--- Name: video_categories; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: video_categories; Type: TABLE; Schema: lic_schema; Owner: manish
 --
 
 CREATE TABLE lic_schema.video_categories (
@@ -2937,8 +3496,10 @@ CREATE TABLE lic_schema.video_categories (
 );
 
 
+ALTER TABLE lic_schema.video_categories OWNER TO manish;
+
 --
--- Name: video_content; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: video_content; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.video_content (
@@ -2971,8 +3532,10 @@ CREATE TABLE lic_schema.video_content (
 );
 
 
+ALTER TABLE lic_schema.video_content OWNER TO agentmitra;
+
 --
--- Name: video_progress; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: video_progress; Type: TABLE; Schema: lic_schema; Owner: manish
 --
 
 CREATE TABLE lic_schema.video_progress (
@@ -2997,8 +3560,10 @@ CREATE TABLE lic_schema.video_progress (
 );
 
 
+ALTER TABLE lic_schema.video_progress OWNER TO manish;
+
 --
--- Name: video_recommendations; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: video_recommendations; Type: TABLE; Schema: lic_schema; Owner: manish
 --
 
 CREATE TABLE lic_schema.video_recommendations (
@@ -3028,8 +3593,10 @@ CREATE TABLE lic_schema.video_recommendations (
 );
 
 
+ALTER TABLE lic_schema.video_recommendations OWNER TO manish;
+
 --
--- Name: video_tutorials; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: video_tutorials; Type: TABLE; Schema: lic_schema; Owner: manish
 --
 
 CREATE TABLE lic_schema.video_tutorials (
@@ -3073,8 +3640,10 @@ CREATE TABLE lic_schema.video_tutorials (
 );
 
 
+ALTER TABLE lic_schema.video_tutorials OWNER TO manish;
+
 --
--- Name: whatsapp_messages; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: whatsapp_messages; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.whatsapp_messages (
@@ -3100,8 +3669,10 @@ CREATE TABLE lic_schema.whatsapp_messages (
 );
 
 
+ALTER TABLE lic_schema.whatsapp_messages OWNER TO agentmitra;
+
 --
--- Name: whatsapp_templates; Type: TABLE; Schema: lic_schema; Owner: -
+-- Name: whatsapp_templates; Type: TABLE; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TABLE lic_schema.whatsapp_templates (
@@ -3117,22 +3688,24 @@ CREATE TABLE lic_schema.whatsapp_templates (
 );
 
 
+ALTER TABLE lic_schema.whatsapp_templates OWNER TO agentmitra;
+
 --
--- Name: device_tokens id; Type: DEFAULT; Schema: lic_schema; Owner: -
+-- Name: device_tokens id; Type: DEFAULT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.device_tokens ALTER COLUMN id SET DEFAULT nextval('lic_schema.device_tokens_id_seq'::regclass);
 
 
 --
--- Name: notification_settings id; Type: DEFAULT; Schema: lic_schema; Owner: -
+-- Name: notification_settings id; Type: DEFAULT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.notification_settings ALTER COLUMN id SET DEFAULT nextval('lic_schema.notification_settings_id_seq'::regclass);
 
 
 --
--- Data for Name: agent_daily_metrics; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: agent_daily_metrics; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.agent_daily_metrics (metric_id, agent_id, metric_date, policies_sold, premium_collected, active_policyholders, new_customers, commission_earned, target_achievement, customer_satisfaction_score, conversion_rate, presentations_viewed, cta_clicks, whatsapp_messages_sent, created_at, updated_at) FROM stdin;
@@ -3161,7 +3734,7 @@ a890cf03-d2fa-425e-9c50-ef4c7c168f7d	e45c1148-56b7-4605-b183-68ea7aec4383	2025-1
 
 
 --
--- Data for Name: agent_monthly_summary; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: agent_monthly_summary; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.agent_monthly_summary (summary_id, agent_id, summary_month, total_policies, total_premium, total_commission, active_customers, growth_rate, retention_rate, rank_by_premium, rank_by_policies, created_at) FROM stdin;
@@ -3199,7 +3772,7 @@ ca39fae8-c897-4362-b1e8-b289b3e738d7	e2038ed1-cedc-4be8-9055-ef3a66bb1907	2025-0
 
 
 --
--- Data for Name: agent_presentation_preferences; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: agent_presentation_preferences; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.agent_presentation_preferences (preference_id, agent_id, default_text_color, default_background_color, default_layout, default_duration, logo_url, brand_colors, auto_add_logo, auto_add_contact_cta, contact_cta_text, editor_theme, show_preview_by_default, auto_save_enabled, auto_save_interval_seconds, created_at, updated_at) FROM stdin;
@@ -3217,7 +3790,7 @@ d30fcc55-9b87-49cc-9255-e0c7a01dc174	e45c1148-56b7-4605-b183-68ea7aec4383	#00000
 
 
 --
--- Data for Name: agents; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: agents; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.agents (agent_id, user_id, provider_id, agent_code, license_number, license_expiry_date, license_issuing_authority, business_name, business_address, gst_number, pan_number, territory, operating_regions, experience_years, specializations, commission_rate, commission_structure, performance_bonus_structure, whatsapp_business_number, business_email, website, total_policies_sold, total_premium_collected, active_policyholders, customer_satisfaction_score, parent_agent_id, hierarchy_level, sub_agents_count, status, verification_status, approved_at, approved_by, created_at, updated_at, tenant_id) FROM stdin;
@@ -3243,7 +3816,7 @@ f4ebeb1d-3102-4528-aceb-a5afcf7a8301	431432dc-823a-4a2e-8532-6c6b76c8c394	\N	AGT
 
 
 --
--- Data for Name: analytics_query_log; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: analytics_query_log; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.analytics_query_log (log_id, user_id, query_type, query_parameters, execution_time_ms, records_returned, ip_address, user_agent, data_classification, access_reason, created_at) FROM stdin;
@@ -3261,7 +3834,7 @@ ebcd8ac9-da51-4361-8f92-8f673126868e	c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a21	export
 
 
 --
--- Data for Name: callback_activities; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: callback_activities; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.callback_activities (callback_activity_id, callback_request_id, agent_id, activity_type, description, duration_minutes, contact_method, contact_outcome, notes, metadata, created_at, tenant_id) FROM stdin;
@@ -3276,7 +3849,7 @@ ff258fa4-1491-435d-8b28-45f5d385d97d	9fe1ae86-757a-4ba1-804b-d0391b980524	b0eebc
 
 
 --
--- Data for Name: callback_requests; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: callback_requests; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.callback_requests (callback_request_id, tenant_id, policyholder_id, agent_id, request_type, description, priority, priority_score, status, customer_name, customer_phone, customer_email, sla_hours, created_at, assigned_at, scheduled_at, due_at, started_at, completed_at, source, source_reference_id, tags, category, urgency_level, customer_value, resolution, resolution_category, satisfaction_rating, created_by, assigned_by, completed_by, last_updated_by, last_updated_at, updated_at) FROM stdin;
@@ -3288,7 +3861,7 @@ a92ba601-54cc-45c7-a48d-aa0d08973268	00000000-0000-0000-0000-000000000000	e0eebc
 
 
 --
--- Data for Name: campaign_executions; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: campaign_executions; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.campaign_executions (execution_id, campaign_id, policyholder_id, channel, personalized_content, sent_at, delivered_at, opened_at, clicked_at, status, failure_reason, converted, conversion_value, conversion_type, device_info, ip_address, user_agent, created_at) FROM stdin;
@@ -3296,7 +3869,7 @@ COPY lic_schema.campaign_executions (execution_id, campaign_id, policyholder_id,
 
 
 --
--- Data for Name: campaign_responses; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: campaign_responses; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.campaign_responses (response_id, execution_id, campaign_id, policyholder_id, response_type, response_text, response_channel, sentiment_score, requires_followup, created_at) FROM stdin;
@@ -3304,7 +3877,7 @@ COPY lic_schema.campaign_responses (response_id, execution_id, campaign_id, poli
 
 
 --
--- Data for Name: campaign_templates; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: campaign_templates; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.campaign_templates (template_id, template_name, description, category, subject_template, message_template, personalization_tags, suggested_channels, usage_count, average_roi, total_ratings, average_rating, preview_image_url, is_public, is_system_template, status, created_by, created_at, updated_at) FROM stdin;
@@ -3317,7 +3890,7 @@ d4c1e124-1dd6-43c3-86fb-d4f23a9113a5	Policy Renewal Reminder	Template for remind
 
 
 --
--- Data for Name: campaign_triggers; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: campaign_triggers; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.campaign_triggers (trigger_id, campaign_id, trigger_type, trigger_value, additional_conditions, is_active, created_at, updated_at) FROM stdin;
@@ -3325,7 +3898,7 @@ COPY lic_schema.campaign_triggers (trigger_id, campaign_id, trigger_type, trigge
 
 
 --
--- Data for Name: campaigns; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: campaigns; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.campaigns (campaign_id, agent_id, campaign_name, campaign_type, campaign_goal, description, subject, message, message_template_id, personalization_tags, attachments, primary_channel, channels, target_audience, selected_segments, targeting_rules, estimated_reach, schedule_type, scheduled_at, start_date, end_date, is_automated, automation_triggers, budget, estimated_cost, cost_per_recipient, ab_testing_enabled, ab_test_variants, status, launched_at, paused_at, completed_at, total_sent, total_delivered, total_opened, total_clicked, total_converted, total_revenue, roi_percentage, created_by, created_at, updated_by, updated_at, tenant_id) FROM stdin;
@@ -3335,7 +3908,7 @@ e173c23e-312d-445e-ba15-2ea9bc55524d	b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11	Q1 202
 
 
 --
--- Data for Name: chat_messages; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: chat_messages; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.chat_messages (message_id, session_id, user_id, message_type, content, is_from_user, intent_detected, confidence_score, entities_detected, response_generated, response_time_ms, suggested_actions, "timestamp") FROM stdin;
@@ -3400,7 +3973,7 @@ e6fc39df-256d-4121-a952-9f167a27f214	f914cf97-987c-4730-ba5e-cffb1ed26aa1	15f336
 
 
 --
--- Data for Name: chatbot_analytics_summary; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: chatbot_analytics_summary; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.chatbot_analytics_summary (analytics_id, summary_date, summary_period, total_sessions, completed_sessions, abandoned_sessions, total_messages, average_messages_per_session, average_response_time_ms, resolution_rate, escalation_rate, average_satisfaction, satisfaction_responses, top_intents, created_at) FROM stdin;
@@ -3418,7 +3991,7 @@ b7582d94-4e61-4a93-a55d-5eac4c416ab2	2025-11-15	daily	152	176	25	451	6.05	2030	8
 
 
 --
--- Data for Name: chatbot_intents; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: chatbot_intents; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.chatbot_intents (intent_id, intent_name, description, training_examples, response_templates, confidence_threshold, is_active, usage_count, success_rate, average_confidence, created_by, created_at, updated_at) FROM stdin;
@@ -3436,7 +4009,7 @@ fa0699a9-8fb6-4c0a-afdb-ca04827e5b54	payment_methods	Explain available payment o
 
 
 --
--- Data for Name: chatbot_sessions; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: chatbot_sessions; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.chatbot_sessions (session_id, user_id, conversation_id, started_at, ended_at, duration_seconds, message_count, resolution_status, average_response_time, user_satisfaction_score, escalation_reason, device_info, ip_address, user_agent) FROM stdin;
@@ -3454,7 +4027,7 @@ f914cf97-987c-4730-ba5e-cffb1ed26aa1	15f336f5-58a4-49a5-b1d5-26df0d6ed2a7	conv_1
 
 
 --
--- Data for Name: commissions; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: commissions; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.commissions (commission_id, tenant_id, agent_id, policy_id, payment_id, commission_amount, commission_rate, commission_type, status, paid_date, payment_reference, created_at, updated_at) FROM stdin;
@@ -3462,7 +4035,15 @@ COPY lic_schema.commissions (commission_id, tenant_id, agent_id, policy_id, paym
 
 
 --
--- Data for Name: countries; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: content; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
+--
+
+COPY lic_schema.content (id, content_id, filename, original_filename, storage_key, media_url, file_hash, file_size, mime_type, content_type, category, sub_category, tags, content_metadata, description, processing_status, processing_started_at, processing_completed_at, processing_error, video_duration, video_resolution, video_bitrate, video_codec, page_count, word_count, text_content, document_language, image_width, image_height, image_color_depth, image_format, uploader_id, owner_id, tenant_id, is_public, allowed_users, share_token, view_count, download_count, last_accessed_at, status, created_by, updated_by, created_at, updated_at, retention_policy, deletion_date) FROM stdin;
+\.
+
+
+--
+-- Data for Name: countries; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.countries (country_id, country_code, country_name, currency_code, phone_code, timezone, status) FROM stdin;
@@ -3483,7 +4064,7 @@ bb6e6907-f81e-4a9e-928a-f622d60ee93c	JP	Japan	JPY	+81	\N	active
 
 
 --
--- Data for Name: customer_behavior_metrics; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: customer_behavior_metrics; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.customer_behavior_metrics (metric_id, customer_id, metric_date, login_count, page_views, session_duration, policy_views, premium_payments, claims_submitted, email_opens, whatsapp_messages, support_tickets, churn_probability, upgrade_probability, created_at) FROM stdin;
@@ -3791,7 +4372,7 @@ b284893b-c1bb-48ed-a9b5-2b0220d9e320	89d41274-d39f-4733-a13c-db44381ddda7	2025-1
 
 
 --
--- Data for Name: customer_data_mapping; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: customer_data_mapping; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.customer_data_mapping (mapping_id, import_id, excel_row_number, customer_name, phone_number, email, policy_number, date_of_birth, address, raw_excel_data, mapping_status, validation_errors, created_customer_id, created_at) FROM stdin;
@@ -3809,7 +4390,77 @@ d0dbbb2e-57d7-4894-b3b9-482251a97943	9ab16351-a16f-4fd0-95d7-3d7896f7a0f5	477	Cu
 
 
 --
--- Data for Name: data_export_log; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: customer_engagement_metrics; Type: TABLE DATA; Schema: lic_schema; Owner: manish
+--
+
+COPY lic_schema.customer_engagement_metrics (metric_id, user_id, metric_date, login_count, page_views, feature_usage, session_duration_avg, bounce_rate, conversion_actions, support_requests, feedback_score, created_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: customer_feedback; Type: TABLE DATA; Schema: lic_schema; Owner: manish
+--
+
+COPY lic_schema.customer_feedback (feedback_id, user_id, session_id, feedback_type, rating, feedback_text, category, page_context, user_mood, submitted_at, resolved, resolution_notes, resolved_at, resolved_by) FROM stdin;
+\.
+
+
+--
+-- Data for Name: customer_journey_events; Type: TABLE DATA; Schema: lic_schema; Owner: manish
+--
+
+COPY lic_schema.customer_journey_events (event_id, user_id, session_id, event_type, event_name, page_url, element_identifier, event_data, "timestamp", user_journey_stage) FROM stdin;
+\.
+
+
+--
+-- Data for Name: customer_portal_preferences; Type: TABLE DATA; Schema: lic_schema; Owner: manish
+--
+
+COPY lic_schema.customer_portal_preferences (preference_id, user_id, theme_preference, language_preference, notification_preferences, dashboard_layout, quick_actions, accessibility_settings, created_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: customer_portal_sessions; Type: TABLE DATA; Schema: lic_schema; Owner: manish
+--
+
+COPY lic_schema.customer_portal_sessions (session_id, user_id, session_start, session_end, duration_minutes, device_info, ip_address, user_agent, pages_viewed, actions_taken, created_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: customer_retention_analytics; Type: TABLE DATA; Schema: lic_schema; Owner: manish
+--
+
+COPY lic_schema.customer_retention_analytics (retention_id, customer_id, risk_level, risk_score, churn_probability, risk_factors, engagement_score, premium_value, lifetime_value, days_since_last_payment, days_since_last_contact, complaints_count, support_queries_count, missed_payments_count, policy_age_months, policy_count, policy_type, last_retention_action_at, retention_plan, retention_success_probability, status, status_changed_at, assigned_agent_id, created_at, updated_at) FROM stdin;
+d5b99592-312f-4b1f-a484-de2be59c5cb9	e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a10	medium	62.60	62.60	["Overdue payments", "Low engagement", "Recent policy holder", "Payment history issues", "Long time since contact"]	25.00	25000.00	\N	45	35	3	8	2	24	1	term_life	\N	\N	0.00	at_risk	2025-11-28 20:11:27.740788	e591343a-67b7-47d9-9123-f336fd8eb260	2025-11-28 20:11:27.740788	2025-11-28 20:11:27.740788
+93d9833e-8c20-4436-be9a-0d753b673ae5	e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11	low	27.00	27.00	["Payment history issues"]	65.00	50000.00	\N	15	20	1	2	1	36	1	ulip	\N	\N	0.00	active	2025-11-28 20:11:27.740788	e591343a-67b7-47d9-9123-f336fd8eb260	2025-11-28 20:11:27.740788	2025-11-28 20:11:27.740788
+5acc0a77-2670-40ba-bd48-73227423e432	e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12	low	24.90	24.90	["Recent policy holder"]	75.00	12000.00	\N	10	15	0	1	0	8	1	health	\N	\N	0.00	active	2025-11-28 20:11:27.740788	e591343a-67b7-47d9-9123-f336fd8eb260	2025-11-28 20:11:27.740788	2025-11-28 20:11:27.740788
+\.
+
+
+--
+-- Data for Name: customer_retention_metrics; Type: TABLE DATA; Schema: lic_schema; Owner: manish
+--
+
+COPY lic_schema.customer_retention_metrics (retention_id, user_id, metric_date, days_since_last_login, login_frequency_score, engagement_score, feature_adoption_score, support_ticket_count, negative_feedback_count, churn_risk_score, predicted_churn_date, retention_actions_taken, created_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: daily_quotes; Type: TABLE DATA; Schema: lic_schema; Owner: manish
+--
+
+COPY lic_schema.daily_quotes (quote_id, agent_id, quote_text, author, category, tags, branding_settings, created_at, updated_at, is_active, scheduled_date, published_at, is_global, created_by, updated_by) FROM stdin;
+5dd2ae9e-4900-45cd-92fa-bdda50751287	\N	Success is not final, failure is not fatal: It is the courage to continue that counts.	Winston Churchill	motivation	["success", "failure", "courage"]	{"font_size": 18, "text_color": "#FFFFFF", "font_family": "Roboto", "logo_position": "bottom_right", "background_color": "#1E3A8A"}	2025-11-28 20:11:00.578323	2025-11-28 20:11:00.578323	t	\N	\N	t	\N	\N
+e6b30a3e-92ab-4cfc-add3-c5020dcc7dfc	\N	The only way to do great work is to love what you do.	Steve Jobs	work	["work", "passion", "excellence"]	{"font_size": 20, "text_color": "#000000", "font_family": "Poppins", "logo_position": "top_left", "background_gradient": ["#F59E0B", "#D97706"]}	2025-11-28 20:11:00.578323	2025-11-28 20:11:00.578323	t	\N	\N	t	\N	\N
+1775c6b0-614c-4dfd-b379-e22ee645d14d	\N	Your time is limited, so don't waste it living someone else's life.	Steve Jobs	life	["time", "life", "authenticity"]	{"font_size": 19, "text_color": "#FFFFFF", "font_family": "Inter", "logo_position": "center", "background_image": "inspirational_mountains.jpg"}	2025-11-28 20:11:00.578323	2025-11-28 20:11:00.578323	t	\N	\N	t	\N	\N
+\.
+
+
+--
+-- Data for Name: data_export_log; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.data_export_log (export_id, user_id, export_type, record_count, data_types, date_range, encryption_used, ip_address, purpose, retention_period_days, file_name, file_size_bytes, storage_location, created_at, expires_at) FROM stdin;
@@ -3827,7 +4478,7 @@ c7a65193-3ce9-444d-a457-a66120414989	045a6ed3-c48b-4d1c-ac86-8776bda0050f	excel	
 
 
 --
--- Data for Name: data_imports; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: data_imports; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.data_imports (import_id, agent_id, file_name, file_path, file_size_bytes, import_type, status, total_records, processed_records, error_records, error_details, processing_started_at, processing_completed_at, created_at, updated_at) FROM stdin;
@@ -3845,7 +4496,7 @@ e93df7d7-32d7-4dbe-abe7-3debd907c1b7	\N	import_7_1763960468.716097.csv	\N	\N	pay
 
 
 --
--- Data for Name: data_sync_status; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: data_sync_status; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.data_sync_status (sync_id, agent_id, customer_id, last_sync_at, sync_status, sync_type, error_message, retry_count, next_retry_at, created_at, updated_at) FROM stdin;
@@ -3863,7 +4514,7 @@ ce4270d9-bfad-4e36-ad9f-cc6e88ab074d	\N	\N	2025-11-23 13:31:08.716097	pending	cl
 
 
 --
--- Data for Name: device_tokens; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: device_tokens; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.device_tokens (id, user_id, token, device_type, created_at, last_used_at) FROM stdin;
@@ -3891,7 +4542,7 @@ COPY lic_schema.device_tokens (id, user_id, token, device_type, created_at, last
 
 
 --
--- Data for Name: document_ocr_results; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: document_ocr_results; Type: TABLE DATA; Schema: lic_schema; Owner: manish
 --
 
 COPY lic_schema.document_ocr_results (ocr_id, document_id, ocr_provider, confidence_score, extracted_fields, processing_status, processed_at, error_message, created_at) FROM stdin;
@@ -3899,7 +4550,7 @@ COPY lic_schema.document_ocr_results (ocr_id, document_id, ocr_provider, confide
 
 
 --
--- Data for Name: emergency_contact_verifications; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: emergency_contact_verifications; Type: TABLE DATA; Schema: lic_schema; Owner: manish
 --
 
 COPY lic_schema.emergency_contact_verifications (verification_id, contact_id, verification_method, verification_code, attempts, verified, verified_at, created_at) FROM stdin;
@@ -3907,7 +4558,7 @@ COPY lic_schema.emergency_contact_verifications (verification_id, contact_id, ve
 
 
 --
--- Data for Name: emergency_contacts; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: emergency_contacts; Type: TABLE DATA; Schema: lic_schema; Owner: manish
 --
 
 COPY lic_schema.emergency_contacts (contact_id, user_id, full_name, phone_number, email, relationship, address, is_primary, verification_status, verified_at, priority, created_at, updated_at) FROM stdin;
@@ -3915,7 +4566,7 @@ COPY lic_schema.emergency_contacts (contact_id, user_id, full_name, phone_number
 
 
 --
--- Data for Name: feature_flag_overrides; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: feature_flag_overrides; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.feature_flag_overrides (override_id, flag_id, user_id, role_id, tenant_id, override_value, created_at, updated_by) FROM stdin;
@@ -3923,7 +4574,7 @@ COPY lic_schema.feature_flag_overrides (override_id, flag_id, user_id, role_id, 
 
 
 --
--- Data for Name: feature_flags; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: feature_flags; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.feature_flags (flag_id, flag_name, flag_description, flag_type, default_value, is_enabled, tenant_id, created_at, updated_at, created_by, updated_by) FROM stdin;
@@ -3958,7 +4609,7 @@ b541e2ba-4f38-4444-919e-10cc744f2933	tenant_management_enabled	Enable tenant man
 
 
 --
--- Data for Name: flyway_schema_history; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: flyway_schema_history; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.flyway_schema_history (installed_rank, version, description, type, script, checksum, installed_by, installed_on, execution_time, success) FROM stdin;
@@ -3979,7 +4630,10 @@ COPY lic_schema.flyway_schema_history (installed_rank, version, description, typ
 41	40	Enhanced KYC Document Management	SQL	V40__Enhanced_KYC_Document_Management.sql	1433867592	manish	2025-11-28 18:45:59.378636	32	t
 42	41	Emergency Contact Management	SQL	V41__Emergency_Contact_Management.sql	-1378269658	manish	2025-11-28 18:45:59.424853	12	t
 43	42	Trial Subscription Analytics	SQL	V42__Trial_Subscription_Analytics.sql	-2055697550	manish	2025-11-28 18:45:59.443109	14	t
+37	35	Add test user	SQL	V35__Add_test_user.sql	-65082048	manish	2025-11-27 19:00:36.346278	7	t
 14	12	Migrate shared data to lic schema	SQL	V13__Migrate_shared_data_to_lic_schema.sql	-139071238	agentmitra	2025-11-23 22:35:15.664658	31	t
+44	43	Daily Motivational Quotes	SQL	V43__Daily_Motivational_Quotes.sql	1100418732	manish	2025-11-28 20:11:00.558086	54	t
+45	44	Customer Portal Analytics	SQL	V44__Customer_Portal_Analytics.sql	-1967600545	manish	2025-11-28 20:11:11.272071	64	t
 15	13	Fix schema foreign key constraints	SQL	V16__Ensure_minimum_seed_data.sql	-1673096031	agentmitra	2025-11-23 23:18:24.297012	24	t
 16	14	Add comprehensive seed data	SQL	V17__Ensure_minimum_seed_data.sql	-714245728	agentmitra	2025-11-23 23:19:48.499138	40	t
 17	15	Seed phase1 core auth data	SQL	V15__Seed_phase1_core_auth_data.sql	128485574	agentmitra	2025-11-24 10:28:21.241891	36	t
@@ -4003,13 +4657,22 @@ COPY lic_schema.flyway_schema_history (installed_rank, version, description, typ
 35	33	Fix test user passwords	SQL	V33__Fix_test_user_passwords.sql	1168155673	agentmitra	2025-11-25 23:57:35.562917	11	t
 36	34	Fix permissions table column names	SQL	V34__Fix_permissions_table_column_names.sql	1453163871	manish	2025-11-26 19:31:07.013142	22	t
 39	36	Fix super admin user	DELETE	V36__Fix_super_admin_user.sql	553652092	manish	2025-11-28 17:21:40.015314	0	t
-37	35	Create analytics leads retention tables	SQL	V35__Add_test_user.sql	-139287793	manish	2025-11-27 19:00:36.346278	7	t
+52	52	Add missing audit columns	SQL	V52__Add_missing_audit_columns.sql	-1509446678	manish	2025-11-30 10:23:48.894849	43	t
 40	36	Create video tutorial system	SQL	V36__Create_video_tutorial_system.sql	-764456789	manish	2025-11-28 18:45:13.860314	103	t
+46	45	Subscription Plans Management	SQL	V45__Subscription_Plans_Management.sql	1748116888	manish	2025-11-28 20:11:11.365119	44	t
+47	46	Create analytics leads retention tables	SQL	V46__Create_analytics_leads_retention_tables.sql	1357831094	manish	2025-11-28 20:11:27.716095	97	t
+48	47	Fix super admin user	SQL	V47__Fix_super_admin_user.sql	553652092	manish	2025-11-28 20:11:27.844677	5	t
+49	48	Fix relationship constraints	SQL	V48__Fix_relationship_constraints.sql	438798737	manish	2025-11-28 22:00:32.035088	41	t
+51	50	Fix quote relationships	SQL	V50__Fix_quote_relationships.sql	-805313429	manish	2025-11-28 22:05:51.746217	116	t
+50	49	Seed proper test users	SQL	V49__Seed_proper_test_users.sql	-58761657	manish	2025-11-28 22:05:11.312775	27	t
+53	54	Add subscription audit columns	SQL	V54__Add_subscription_audit_columns.sql	-848232038	manish	2025-11-30 10:23:57.713933	32	t
+54	55	Seed presentations with tenant data	SQL	V55__Seed_presentations_with_tenant_data.sql	-1508840195	manish	2025-11-30 10:24:16.790971	38	t
+55	56	Add tenant id to presentation media	SQL	V56__Add_tenant_id_to_presentation_media.sql	1586338509	manish	2025-11-30 10:26:20.652287	26	t
 \.
 
 
 --
--- Data for Name: import_jobs; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: import_jobs; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.import_jobs (job_id, import_id, job_type, priority, status, retry_count, max_retries, error_message, started_at, completed_at, created_at) FROM stdin;
@@ -4027,7 +4690,7 @@ aeb64a75-b181-4c18-80f4-64e3c4be8ba8	b659efb3-8b41-46bb-be3c-3f47fb71bfaf	proces
 
 
 --
--- Data for Name: insurance_categories; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: insurance_categories; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.insurance_categories (category_id, category_code, category_name, category_type, description, status) FROM stdin;
@@ -4045,7 +4708,7 @@ d29e06f9-61c6-4de3-8902-aa99658e847c	RETIREMENT	Retirement Plan	life	Pension and
 
 
 --
--- Data for Name: insurance_policies; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: insurance_policies; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.insurance_policies (policy_id, policy_number, provider_policy_id, policyholder_id, agent_id, provider_id, policy_type, plan_name, plan_code, category, sum_assured, premium_amount, premium_frequency, premium_mode, application_date, approval_date, start_date, maturity_date, renewal_date, status, sub_status, payment_status, coverage_details, exclusions, terms_and_conditions, policy_document_url, application_form_url, medical_reports, nominee_details, assignee_details, created_by, approved_by, last_payment_date, next_payment_date, total_payments, outstanding_amount, created_at, updated_at, tenant_id) FROM stdin;
@@ -4068,7 +4731,7 @@ bf42e11a-3a94-457e-a77b-aede73f42967	SEED_POL004	\N	2b99fc80-2a41-4e25-a130-67ff
 
 
 --
--- Data for Name: insurance_providers; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: insurance_providers; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.insurance_providers (provider_id, provider_code, provider_name, provider_type, description, api_endpoint, api_credentials, webhook_url, webhook_secret, license_number, regulatory_authority, established_year, headquarters, supported_languages, business_hours, service_regions, commission_structure, status, integration_status, last_sync_at, created_at, updated_at) FROM stdin;
@@ -4089,7 +4752,7 @@ bca25ad9-b8b1-49bb-ab2a-7438b087e97d	SEED_KOTAK	Seed Kotak Provider	life_insuran
 
 
 --
--- Data for Name: knowledge_base_articles; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: knowledge_base_articles; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.knowledge_base_articles (article_id, title, content, summary, category, sub_category, tags, content_type, language, difficulty_level, embedding_vector, keywords_extracted, related_articles, view_count, helpful_votes, total_votes, average_rating, is_active, is_featured, moderation_status, created_by, moderated_by, created_at, updated_at, published_at) FROM stdin;
@@ -4107,7 +4770,7 @@ b1502e8b-816b-4b94-9b4f-347c0eed46c1	Tax Benefits on Insurance	Complete guide to
 
 
 --
--- Data for Name: knowledge_search_log; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: knowledge_search_log; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.knowledge_search_log (search_id, user_id, session_id, search_query, search_filters, results_count, clicked_article_id, search_time_ms, search_source, ip_address, created_at) FROM stdin;
@@ -4125,7 +4788,7 @@ fe8a6190-e3c3-4c5e-bb7f-50a94373710a	ddeee6e1-757f-4220-ad26-649bd9fd2987	\N	tax
 
 
 --
--- Data for Name: kyc_documents; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: kyc_documents; Type: TABLE DATA; Schema: lic_schema; Owner: manish
 --
 
 COPY lic_schema.kyc_documents (document_id, user_id, document_type, file_path, ocr_extracted_data, verification_status, rejection_reason, verified_at, verified_by, created_at, updated_at) FROM stdin;
@@ -4133,7 +4796,7 @@ COPY lic_schema.kyc_documents (document_id, user_id, document_type, file_path, o
 
 
 --
--- Data for Name: kyc_manual_reviews; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: kyc_manual_reviews; Type: TABLE DATA; Schema: lic_schema; Owner: manish
 --
 
 COPY lic_schema.kyc_manual_reviews (review_id, document_id, reviewer_id, review_status, review_notes, reviewed_at, created_at) FROM stdin;
@@ -4141,7 +4804,7 @@ COPY lic_schema.kyc_manual_reviews (review_id, document_id, reviewer_id, review_
 
 
 --
--- Data for Name: languages; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: languages; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.languages (language_id, language_code, language_name, native_name, rtl, status) FROM stdin;
@@ -4159,7 +4822,26 @@ d69fa08a-e3a9-406c-8741-d89b34393deb	ml	Malayalam	മലയാളം	f	active
 
 
 --
--- Data for Name: learning_paths; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: lead_interactions; Type: TABLE DATA; Schema: lic_schema; Owner: manish
+--
+
+COPY lic_schema.lead_interactions (interaction_id, lead_id, interaction_type, interaction_method, duration_minutes, outcome, notes, next_action, next_action_date, agent_id, created_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: leads; Type: TABLE DATA; Schema: lic_schema; Owner: manish
+--
+
+COPY lic_schema.leads (lead_id, agent_id, customer_name, contact_number, email, location, lead_source, lead_status, priority, insurance_type, budget_range, coverage_required, conversion_score, engagement_score, potential_premium, is_qualified, qualification_notes, disqualification_reason, created_at, first_contact_at, last_contact_at, last_contact_method, next_followup_at, followup_count, response_time_hours, converted_at, converted_policy_id, conversion_value, created_by, updated_by, updated_at) FROM stdin;
+ae910e82-2fc0-4bef-9aed-465037962d07	e591343a-67b7-47d9-9123-f336fd8eb260	Rajesh Kumar	+91-9876543210	rajesh.kumar@email.com	Mumbai, Maharashtra	whatsapp_campaign	new	high	term_life	high	5000000.00	83.35	85.00	0.00	f	\N	\N	2025-11-26 20:11:27.740788	\N	2025-11-27 20:11:27.740788	\N	\N	3	1.50	\N	\N	\N	\N	\N	2025-11-28 20:11:27.740788
+860e2a04-c662-402d-950a-15619f33d238	e591343a-67b7-47d9-9123-f336fd8eb260	Priya Sharma	+91-9876543211	priya.sharma@email.com	Bangalore, Karnataka	website	new	medium	health	medium	300000.00	74.99	72.00	0.00	f	\N	\N	2025-11-23 20:11:27.740788	\N	2025-11-25 20:11:27.740788	\N	\N	1	4.20	\N	\N	\N	\N	\N	2025-11-28 20:11:27.740788
+436bb5b1-137c-4fc9-ac96-d4e6605b73d3	e591343a-67b7-47d9-9123-f336fd8eb260	Amit Patel	+91-9876543212	amit.patel@email.com	Ahmedabad, Gujarat	referral	new	high	ulip	high	1000000.00	95.91	90.00	0.00	f	\N	\N	2025-11-27 20:11:27.740788	\N	2025-11-28 08:11:27.740788	\N	\N	5	0.80	\N	\N	\N	\N	\N	2025-11-28 20:11:27.740788
+\.
+
+
+--
+-- Data for Name: learning_paths; Type: TABLE DATA; Schema: lic_schema; Owner: manish
 --
 
 COPY lic_schema.learning_paths (id, path_id, title, description, target_audience, policy_types, difficulty_level, estimated_duration_hours, video_sequence, prerequisites, is_active, total_enrollments, completion_rate, average_completion_days, created_by_agent_id, last_updated_by, created_at, updated_at) FROM stdin;
@@ -4167,7 +4849,7 @@ COPY lic_schema.learning_paths (id, path_id, title, description, target_audience
 
 
 --
--- Data for Name: notification_settings; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: notification_settings; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.notification_settings (id, user_id, enable_push_notifications, enable_policy_notifications, enable_payment_reminders, enable_claim_updates, enable_renewal_notices, enable_marketing_notifications, enable_sound, enable_vibration, show_badge, quiet_hours_enabled, quiet_hours_start, quiet_hours_end, enabled_topics, created_at, updated_at) FROM stdin;
@@ -4185,7 +4867,7 @@ COPY lic_schema.notification_settings (id, user_id, enable_push_notifications, e
 
 
 --
--- Data for Name: notifications; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: notifications; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.notifications (id, user_id, title, body, type, priority, is_read, read_at, action_url, action_route, action_text, image_url, data, created_at, scheduled_at, tenant_id) FROM stdin;
@@ -4223,7 +4905,7 @@ bf59e158-af1a-4802-868b-8281eff08e32	15f336f5-58a4-49a5-b1d5-26df0d6ed2a7	New Fe
 
 
 --
--- Data for Name: permissions; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: permissions; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.permissions (permission_id, permission_name, permission_description, resource, action, created_at, is_system_permission, updated_at) FROM stdin;
@@ -4290,7 +4972,7 @@ bb8a5462-88cd-4bdf-970b-4b933db6a117	feature_flags.admin	Administer feature flag
 
 
 --
--- Data for Name: policy_analytics_summary; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: policy_analytics_summary; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.policy_analytics_summary (summary_id, summary_date, summary_period, draft_policies, pending_policies, approved_policies, active_policies, lapsed_policies, cancelled_policies, life_policies, health_policies, general_policies, total_premium, average_premium, applications_received, applications_approved, conversion_rate, created_at) FROM stdin;
@@ -4308,7 +4990,7 @@ f4099dc2-9e24-455c-a8df-cea36e45279d	2025-11-18	daily	15	12	140	138	5	5	71	55	23
 
 
 --
--- Data for Name: policyholders; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: policyholders; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.policyholders (policyholder_id, user_id, agent_id, customer_id, salutation, marital_status, occupation, annual_income, education_level, risk_profile, investment_horizon, communication_preferences, marketing_consent, family_members, nominee_details, bank_details, investment_portfolio, preferred_contact_time, preferred_language, digital_literacy_score, engagement_score, onboarding_status, churn_risk_score, last_interaction_at, total_interactions, created_at, updated_at, tenant_id) FROM stdin;
@@ -4337,7 +5019,15 @@ f2541310-2def-4d20-99d5-40e14d567c2f	4a944faf-5b11-4676-b887-f903da323b80	c47a71
 
 
 --
--- Data for Name: premium_payments; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: predictive_insights; Type: TABLE DATA; Schema: lic_schema; Owner: manish
+--
+
+COPY lic_schema.predictive_insights (insight_id, agent_id, customer_id, insight_type, title, description, confidence, impact_level, recommended_actions, potential_value, deadline, is_acknowledged, acknowledged_at, acknowledged_by, valid_from, valid_until, created_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: premium_payments; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.premium_payments (payment_id, policy_id, policyholder_id, amount, currency, payment_date, due_date, grace_period_days, payment_method, payment_gateway, gateway_transaction_id, gateway_response, status, failure_reason, retry_count, reconciled, reconciled_at, reconciled_by, ip_address, user_agent, device_info, created_at, updated_at, tenant_id) FROM stdin;
@@ -4358,7 +5048,7 @@ cff481b1-e31a-450c-b11d-5732ccb338b4	1f8305fe-7cc4-42e6-8b90-5e504ae019a9	f25413
 
 
 --
--- Data for Name: presentation_analytics; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: presentation_analytics; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.presentation_analytics (analytics_id, presentation_id, slide_id, agent_id, event_type, event_category, viewer_id, viewer_type, event_data, cta_action, share_method, device_info, ip_address, user_agent, location_info, event_timestamp) FROM stdin;
@@ -4406,36 +5096,46 @@ c58b54b8-5ac1-493c-8a5b-12a7b874ee17	d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12	\N	b0e
 
 
 --
--- Data for Name: presentation_media; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: presentation_media; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
-COPY lic_schema.presentation_media (media_id, agent_id, media_type, mime_type, file_name, file_size_bytes, storage_provider, storage_key, media_url, thumbnail_url, width, height, duration_seconds, file_hash, usage_count, last_used_at, status, is_optimized, uploaded_at, created_at, updated_at) FROM stdin;
-68ec223b-33ca-49e2-b5f9-cf829ab4bb23	b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11	image	image/jpeg	media_b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11_1.jpg	3575531	s3	presentations/b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/media_1	https://cdn.agentmitra.com/presentations/b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/media_1	\N	1920	1080	\N	hash_b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11_1_1763960341.512119	7	\N	archived	f	2025-11-22 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119
-36c8b253-5b9d-47e4-9b8e-93e8d8b2053e	b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11	video	video/mp4	media_b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11_2.mp4	27160858	s3	presentations/b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/media_2	https://cdn.agentmitra.com/presentations/b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/media_2	https://cdn.agentmitra.com/thumbnails/b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/thumb_2.jpg	\N	\N	95	hash_b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11_2_1763960341.512119	0	\N	active	f	2025-10-27 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119
-7460b255-6c36-4865-a121-65d61881660f	1a4c8c40-d885-4c6d-b39a-8a42e3b4652d	image	image/jpeg	media_1a4c8c40-d885-4c6d-b39a-8a42e3b4652d_1.jpg	2637737	s3	presentations/1a4c8c40-d885-4c6d-b39a-8a42e3b4652d/media_1	https://cdn.agentmitra.com/presentations/1a4c8c40-d885-4c6d-b39a-8a42e3b4652d/media_1	\N	1920	1080	\N	hash_1a4c8c40-d885-4c6d-b39a-8a42e3b4652d_1_1763960341.512119	6	\N	archived	f	2025-11-09 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119
-af9429f9-dad4-46db-8aca-6dfb5db8664f	1a4c8c40-d885-4c6d-b39a-8a42e3b4652d	video	video/mp4	media_1a4c8c40-d885-4c6d-b39a-8a42e3b4652d_2.mp4	13805247	s3	presentations/1a4c8c40-d885-4c6d-b39a-8a42e3b4652d/media_2	https://cdn.agentmitra.com/presentations/1a4c8c40-d885-4c6d-b39a-8a42e3b4652d/media_2	https://cdn.agentmitra.com/thumbnails/1a4c8c40-d885-4c6d-b39a-8a42e3b4652d/thumb_2.jpg	\N	\N	239	hash_1a4c8c40-d885-4c6d-b39a-8a42e3b4652d_2_1763960341.512119	7	\N	processing	f	2025-11-21 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119
-ccd20081-0c8f-4246-856a-07f7e2f39c99	f580839c-4af3-4ebb-9935-bdb8c7acf7b6	image	image/jpeg	media_f580839c-4af3-4ebb-9935-bdb8c7acf7b6_1.jpg	2401838	s3	presentations/f580839c-4af3-4ebb-9935-bdb8c7acf7b6/media_1	https://cdn.agentmitra.com/presentations/f580839c-4af3-4ebb-9935-bdb8c7acf7b6/media_1	\N	1920	1080	\N	hash_f580839c-4af3-4ebb-9935-bdb8c7acf7b6_1_1763960341.512119	3	\N	archived	f	2025-11-07 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119
-4d4867e4-4c75-4e65-aaa9-41121bd26b5d	f580839c-4af3-4ebb-9935-bdb8c7acf7b6	video	video/mp4	media_f580839c-4af3-4ebb-9935-bdb8c7acf7b6_2.mp4	12823069	s3	presentations/f580839c-4af3-4ebb-9935-bdb8c7acf7b6/media_2	https://cdn.agentmitra.com/presentations/f580839c-4af3-4ebb-9935-bdb8c7acf7b6/media_2	https://cdn.agentmitra.com/thumbnails/f580839c-4af3-4ebb-9935-bdb8c7acf7b6/thumb_2.jpg	\N	\N	137	hash_f580839c-4af3-4ebb-9935-bdb8c7acf7b6_2_1763960341.512119	4	\N	archived	f	2025-11-19 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119
-d4592c6a-7d10-4d51-af88-251947c96f43	991e6172-dcd1-4ca7-9c82-85cbbd14f6b3	image	image/jpeg	media_991e6172-dcd1-4ca7-9c82-85cbbd14f6b3_1.jpg	3964006	s3	presentations/991e6172-dcd1-4ca7-9c82-85cbbd14f6b3/media_1	https://cdn.agentmitra.com/presentations/991e6172-dcd1-4ca7-9c82-85cbbd14f6b3/media_1	\N	1920	1080	\N	hash_991e6172-dcd1-4ca7-9c82-85cbbd14f6b3_1_1763960341.512119	9	\N	active	f	2025-10-28 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119
-82233cd5-6416-40fe-a0d9-c704f40bbdf8	991e6172-dcd1-4ca7-9c82-85cbbd14f6b3	video	video/mp4	media_991e6172-dcd1-4ca7-9c82-85cbbd14f6b3_2.mp4	28012900	s3	presentations/991e6172-dcd1-4ca7-9c82-85cbbd14f6b3/media_2	https://cdn.agentmitra.com/presentations/991e6172-dcd1-4ca7-9c82-85cbbd14f6b3/media_2	https://cdn.agentmitra.com/thumbnails/991e6172-dcd1-4ca7-9c82-85cbbd14f6b3/thumb_2.jpg	\N	\N	140	hash_991e6172-dcd1-4ca7-9c82-85cbbd14f6b3_2_1763960341.512119	3	\N	active	f	2025-10-29 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119
-9d78d8f8-d3eb-42b8-ad1a-c931f549143b	e2038ed1-cedc-4be8-9055-ef3a66bb1907	image	image/jpeg	media_e2038ed1-cedc-4be8-9055-ef3a66bb1907_1.jpg	3172815	s3	presentations/e2038ed1-cedc-4be8-9055-ef3a66bb1907/media_1	https://cdn.agentmitra.com/presentations/e2038ed1-cedc-4be8-9055-ef3a66bb1907/media_1	\N	1920	1080	\N	hash_e2038ed1-cedc-4be8-9055-ef3a66bb1907_1_1763960341.512119	6	\N	active	f	2025-11-12 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119
-9a06a25a-5065-42d6-b4e1-918afc083633	e2038ed1-cedc-4be8-9055-ef3a66bb1907	video	video/mp4	media_e2038ed1-cedc-4be8-9055-ef3a66bb1907_2.mp4	13535575	s3	presentations/e2038ed1-cedc-4be8-9055-ef3a66bb1907/media_2	https://cdn.agentmitra.com/presentations/e2038ed1-cedc-4be8-9055-ef3a66bb1907/media_2	https://cdn.agentmitra.com/thumbnails/e2038ed1-cedc-4be8-9055-ef3a66bb1907/thumb_2.jpg	\N	\N	265	hash_e2038ed1-cedc-4be8-9055-ef3a66bb1907_2_1763960341.512119	2	\N	archived	f	2025-11-16 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119
-02e9075a-180b-43b2-8ada-3fd388baa3fb	ff5e562b-9a46-4a04-81d1-ce54e425acbd	image	image/jpeg	media_ff5e562b-9a46-4a04-81d1-ce54e425acbd_1.jpg	3366269	s3	presentations/ff5e562b-9a46-4a04-81d1-ce54e425acbd/media_1	https://cdn.agentmitra.com/presentations/ff5e562b-9a46-4a04-81d1-ce54e425acbd/media_1	\N	1920	1080	\N	hash_ff5e562b-9a46-4a04-81d1-ce54e425acbd_1_1763960341.512119	2	\N	active	f	2025-10-30 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119
-16ca5c6f-778b-4d2a-ae1a-46e75853ac1a	ff5e562b-9a46-4a04-81d1-ce54e425acbd	video	video/mp4	media_ff5e562b-9a46-4a04-81d1-ce54e425acbd_2.mp4	28835826	s3	presentations/ff5e562b-9a46-4a04-81d1-ce54e425acbd/media_2	https://cdn.agentmitra.com/presentations/ff5e562b-9a46-4a04-81d1-ce54e425acbd/media_2	https://cdn.agentmitra.com/thumbnails/ff5e562b-9a46-4a04-81d1-ce54e425acbd/thumb_2.jpg	\N	\N	216	hash_ff5e562b-9a46-4a04-81d1-ce54e425acbd_2_1763960341.512119	9	\N	processing	f	2025-11-04 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119
-2d53cd69-63f4-4c1b-a314-8cbd1850a28c	bd40bf61-c2ad-4071-b868-ad54ab7cfa8d	image	image/jpeg	media_bd40bf61-c2ad-4071-b868-ad54ab7cfa8d_1.jpg	2848394	s3	presentations/bd40bf61-c2ad-4071-b868-ad54ab7cfa8d/media_1	https://cdn.agentmitra.com/presentations/bd40bf61-c2ad-4071-b868-ad54ab7cfa8d/media_1	\N	1920	1080	\N	hash_bd40bf61-c2ad-4071-b868-ad54ab7cfa8d_1_1763960341.512119	7	\N	archived	f	2025-11-08 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119
-a8507201-5fb4-414e-b57a-26fe3d490bf8	bd40bf61-c2ad-4071-b868-ad54ab7cfa8d	video	video/mp4	media_bd40bf61-c2ad-4071-b868-ad54ab7cfa8d_2.mp4	18859852	s3	presentations/bd40bf61-c2ad-4071-b868-ad54ab7cfa8d/media_2	https://cdn.agentmitra.com/presentations/bd40bf61-c2ad-4071-b868-ad54ab7cfa8d/media_2	https://cdn.agentmitra.com/thumbnails/bd40bf61-c2ad-4071-b868-ad54ab7cfa8d/thumb_2.jpg	\N	\N	151	hash_bd40bf61-c2ad-4071-b868-ad54ab7cfa8d_2_1763960341.512119	5	\N	active	f	2025-10-31 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119
-e8c83e1c-1bf9-4837-9d02-65d76854da7c	e45c1148-56b7-4605-b183-68ea7aec4383	image	image/jpeg	media_e45c1148-56b7-4605-b183-68ea7aec4383_1.jpg	3377604	s3	presentations/e45c1148-56b7-4605-b183-68ea7aec4383/media_1	https://cdn.agentmitra.com/presentations/e45c1148-56b7-4605-b183-68ea7aec4383/media_1	\N	1920	1080	\N	hash_e45c1148-56b7-4605-b183-68ea7aec4383_1_1763960341.512119	7	\N	active	f	2025-11-08 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119
-36e33675-3446-4832-9e76-bd7715d25cb4	e45c1148-56b7-4605-b183-68ea7aec4383	video	video/mp4	media_e45c1148-56b7-4605-b183-68ea7aec4383_2.mp4	13096242	s3	presentations/e45c1148-56b7-4605-b183-68ea7aec4383/media_2	https://cdn.agentmitra.com/presentations/e45c1148-56b7-4605-b183-68ea7aec4383/media_2	https://cdn.agentmitra.com/thumbnails/e45c1148-56b7-4605-b183-68ea7aec4383/thumb_2.jpg	\N	\N	307	hash_e45c1148-56b7-4605-b183-68ea7aec4383_2_1763960341.512119	8	\N	active	f	2025-10-31 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119
-8891e304-c798-46bb-a1d3-f0e801e40711	91ad72ed-42d2-46ad-8338-4d22d8f7c80f	image	image/jpeg	media_91ad72ed-42d2-46ad-8338-4d22d8f7c80f_1.jpg	3705521	s3	presentations/91ad72ed-42d2-46ad-8338-4d22d8f7c80f/media_1	https://cdn.agentmitra.com/presentations/91ad72ed-42d2-46ad-8338-4d22d8f7c80f/media_1	\N	1920	1080	\N	hash_91ad72ed-42d2-46ad-8338-4d22d8f7c80f_1_1763960341.512119	7	\N	archived	f	2025-10-28 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119
-c65391e2-d116-42e2-9733-876d9630c187	91ad72ed-42d2-46ad-8338-4d22d8f7c80f	video	video/mp4	media_91ad72ed-42d2-46ad-8338-4d22d8f7c80f_2.mp4	23529517	s3	presentations/91ad72ed-42d2-46ad-8338-4d22d8f7c80f/media_2	https://cdn.agentmitra.com/presentations/91ad72ed-42d2-46ad-8338-4d22d8f7c80f/media_2	https://cdn.agentmitra.com/thumbnails/91ad72ed-42d2-46ad-8338-4d22d8f7c80f/thumb_2.jpg	\N	\N	318	hash_91ad72ed-42d2-46ad-8338-4d22d8f7c80f_2_1763960341.512119	8	\N	archived	f	2025-10-28 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119
-fe737aae-a5fc-4232-bbf2-f32b390eea4d	da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec	image	image/jpeg	media_da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec_1.jpg	3061505	s3	presentations/da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec/media_1	https://cdn.agentmitra.com/presentations/da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec/media_1	\N	1920	1080	\N	hash_da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec_1_1763960341.512119	5	\N	archived	f	2025-10-28 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119
-06484f58-f0f0-472c-8296-721b9a686e7b	da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec	video	video/mp4	media_da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec_2.mp4	22059080	s3	presentations/da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec/media_2	https://cdn.agentmitra.com/presentations/da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec/media_2	https://cdn.agentmitra.com/thumbnails/da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec/thumb_2.jpg	\N	\N	82	hash_da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec_2_1763960341.512119	9	\N	archived	f	2025-11-17 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119
-2b3f30a3-971e-4cc1-a12b-ec3b9ad40ee4	7b501e0e-4393-4b5a-8de7-25fe384e91da	image	image/jpeg	Buy-Online-Page1.jpeg	41450	minio	presentations/7b501e0e-4393-4b5a-8de7-25fe384e91da/2025/11/b600120f-0ccb-4197-b288-2c876e05c0a0.jpeg	http://minio:9000/agentmitra-media/presentations/7b501e0e-4393-4b5a-8de7-25fe384e91da/2025/11/b600120f-0ccb-4197-b288-2c876e05c0a0.jpeg	http://minio:9000/agentmitra-media/presentations/7b501e0e-4393-4b5a-8de7-25fe384e91da/2025/11/b600120f-0ccb-4197-b288-2c876e05c0a0.jpeg	\N	\N	\N	228efe1ccbae1be1c636da385bcdb4c59170fd0d61527aef07968f661afff27e	0	\N	active	f	2025-11-26 12:47:52.660164	2025-11-26 18:17:52.652966	2025-11-26 18:17:52.652966
+COPY lic_schema.presentation_media (media_id, agent_id, media_type, mime_type, file_name, file_size_bytes, storage_provider, storage_key, media_url, thumbnail_url, width, height, duration_seconds, file_hash, usage_count, last_used_at, status, is_optimized, uploaded_at, created_at, updated_at, tenant_id) FROM stdin;
+68ec223b-33ca-49e2-b5f9-cf829ab4bb23	b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11	image	image/jpeg	media_b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11_1.jpg	3575531	s3	presentations/b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/media_1	https://cdn.agentmitra.com/presentations/b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/media_1	\N	1920	1080	\N	hash_b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11_1_1763960341.512119	7	\N	archived	f	2025-11-22 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119	00000000-0000-0000-0000-000000000000
+36c8b253-5b9d-47e4-9b8e-93e8d8b2053e	b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11	video	video/mp4	media_b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11_2.mp4	27160858	s3	presentations/b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/media_2	https://cdn.agentmitra.com/presentations/b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/media_2	https://cdn.agentmitra.com/thumbnails/b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/thumb_2.jpg	\N	\N	95	hash_b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11_2_1763960341.512119	0	\N	active	f	2025-10-27 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119	00000000-0000-0000-0000-000000000000
+7460b255-6c36-4865-a121-65d61881660f	1a4c8c40-d885-4c6d-b39a-8a42e3b4652d	image	image/jpeg	media_1a4c8c40-d885-4c6d-b39a-8a42e3b4652d_1.jpg	2637737	s3	presentations/1a4c8c40-d885-4c6d-b39a-8a42e3b4652d/media_1	https://cdn.agentmitra.com/presentations/1a4c8c40-d885-4c6d-b39a-8a42e3b4652d/media_1	\N	1920	1080	\N	hash_1a4c8c40-d885-4c6d-b39a-8a42e3b4652d_1_1763960341.512119	6	\N	archived	f	2025-11-09 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119	00000000-0000-0000-0000-000000000000
+af9429f9-dad4-46db-8aca-6dfb5db8664f	1a4c8c40-d885-4c6d-b39a-8a42e3b4652d	video	video/mp4	media_1a4c8c40-d885-4c6d-b39a-8a42e3b4652d_2.mp4	13805247	s3	presentations/1a4c8c40-d885-4c6d-b39a-8a42e3b4652d/media_2	https://cdn.agentmitra.com/presentations/1a4c8c40-d885-4c6d-b39a-8a42e3b4652d/media_2	https://cdn.agentmitra.com/thumbnails/1a4c8c40-d885-4c6d-b39a-8a42e3b4652d/thumb_2.jpg	\N	\N	239	hash_1a4c8c40-d885-4c6d-b39a-8a42e3b4652d_2_1763960341.512119	7	\N	processing	f	2025-11-21 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119	00000000-0000-0000-0000-000000000000
+ccd20081-0c8f-4246-856a-07f7e2f39c99	f580839c-4af3-4ebb-9935-bdb8c7acf7b6	image	image/jpeg	media_f580839c-4af3-4ebb-9935-bdb8c7acf7b6_1.jpg	2401838	s3	presentations/f580839c-4af3-4ebb-9935-bdb8c7acf7b6/media_1	https://cdn.agentmitra.com/presentations/f580839c-4af3-4ebb-9935-bdb8c7acf7b6/media_1	\N	1920	1080	\N	hash_f580839c-4af3-4ebb-9935-bdb8c7acf7b6_1_1763960341.512119	3	\N	archived	f	2025-11-07 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119	00000000-0000-0000-0000-000000000000
+4d4867e4-4c75-4e65-aaa9-41121bd26b5d	f580839c-4af3-4ebb-9935-bdb8c7acf7b6	video	video/mp4	media_f580839c-4af3-4ebb-9935-bdb8c7acf7b6_2.mp4	12823069	s3	presentations/f580839c-4af3-4ebb-9935-bdb8c7acf7b6/media_2	https://cdn.agentmitra.com/presentations/f580839c-4af3-4ebb-9935-bdb8c7acf7b6/media_2	https://cdn.agentmitra.com/thumbnails/f580839c-4af3-4ebb-9935-bdb8c7acf7b6/thumb_2.jpg	\N	\N	137	hash_f580839c-4af3-4ebb-9935-bdb8c7acf7b6_2_1763960341.512119	4	\N	archived	f	2025-11-19 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119	00000000-0000-0000-0000-000000000000
+d4592c6a-7d10-4d51-af88-251947c96f43	991e6172-dcd1-4ca7-9c82-85cbbd14f6b3	image	image/jpeg	media_991e6172-dcd1-4ca7-9c82-85cbbd14f6b3_1.jpg	3964006	s3	presentations/991e6172-dcd1-4ca7-9c82-85cbbd14f6b3/media_1	https://cdn.agentmitra.com/presentations/991e6172-dcd1-4ca7-9c82-85cbbd14f6b3/media_1	\N	1920	1080	\N	hash_991e6172-dcd1-4ca7-9c82-85cbbd14f6b3_1_1763960341.512119	9	\N	active	f	2025-10-28 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119	00000000-0000-0000-0000-000000000000
+82233cd5-6416-40fe-a0d9-c704f40bbdf8	991e6172-dcd1-4ca7-9c82-85cbbd14f6b3	video	video/mp4	media_991e6172-dcd1-4ca7-9c82-85cbbd14f6b3_2.mp4	28012900	s3	presentations/991e6172-dcd1-4ca7-9c82-85cbbd14f6b3/media_2	https://cdn.agentmitra.com/presentations/991e6172-dcd1-4ca7-9c82-85cbbd14f6b3/media_2	https://cdn.agentmitra.com/thumbnails/991e6172-dcd1-4ca7-9c82-85cbbd14f6b3/thumb_2.jpg	\N	\N	140	hash_991e6172-dcd1-4ca7-9c82-85cbbd14f6b3_2_1763960341.512119	3	\N	active	f	2025-10-29 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119	00000000-0000-0000-0000-000000000000
+9d78d8f8-d3eb-42b8-ad1a-c931f549143b	e2038ed1-cedc-4be8-9055-ef3a66bb1907	image	image/jpeg	media_e2038ed1-cedc-4be8-9055-ef3a66bb1907_1.jpg	3172815	s3	presentations/e2038ed1-cedc-4be8-9055-ef3a66bb1907/media_1	https://cdn.agentmitra.com/presentations/e2038ed1-cedc-4be8-9055-ef3a66bb1907/media_1	\N	1920	1080	\N	hash_e2038ed1-cedc-4be8-9055-ef3a66bb1907_1_1763960341.512119	6	\N	active	f	2025-11-12 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119	00000000-0000-0000-0000-000000000000
+9a06a25a-5065-42d6-b4e1-918afc083633	e2038ed1-cedc-4be8-9055-ef3a66bb1907	video	video/mp4	media_e2038ed1-cedc-4be8-9055-ef3a66bb1907_2.mp4	13535575	s3	presentations/e2038ed1-cedc-4be8-9055-ef3a66bb1907/media_2	https://cdn.agentmitra.com/presentations/e2038ed1-cedc-4be8-9055-ef3a66bb1907/media_2	https://cdn.agentmitra.com/thumbnails/e2038ed1-cedc-4be8-9055-ef3a66bb1907/thumb_2.jpg	\N	\N	265	hash_e2038ed1-cedc-4be8-9055-ef3a66bb1907_2_1763960341.512119	2	\N	archived	f	2025-11-16 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119	00000000-0000-0000-0000-000000000000
+02e9075a-180b-43b2-8ada-3fd388baa3fb	ff5e562b-9a46-4a04-81d1-ce54e425acbd	image	image/jpeg	media_ff5e562b-9a46-4a04-81d1-ce54e425acbd_1.jpg	3366269	s3	presentations/ff5e562b-9a46-4a04-81d1-ce54e425acbd/media_1	https://cdn.agentmitra.com/presentations/ff5e562b-9a46-4a04-81d1-ce54e425acbd/media_1	\N	1920	1080	\N	hash_ff5e562b-9a46-4a04-81d1-ce54e425acbd_1_1763960341.512119	2	\N	active	f	2025-10-30 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119	00000000-0000-0000-0000-000000000000
+16ca5c6f-778b-4d2a-ae1a-46e75853ac1a	ff5e562b-9a46-4a04-81d1-ce54e425acbd	video	video/mp4	media_ff5e562b-9a46-4a04-81d1-ce54e425acbd_2.mp4	28835826	s3	presentations/ff5e562b-9a46-4a04-81d1-ce54e425acbd/media_2	https://cdn.agentmitra.com/presentations/ff5e562b-9a46-4a04-81d1-ce54e425acbd/media_2	https://cdn.agentmitra.com/thumbnails/ff5e562b-9a46-4a04-81d1-ce54e425acbd/thumb_2.jpg	\N	\N	216	hash_ff5e562b-9a46-4a04-81d1-ce54e425acbd_2_1763960341.512119	9	\N	processing	f	2025-11-04 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119	00000000-0000-0000-0000-000000000000
+2d53cd69-63f4-4c1b-a314-8cbd1850a28c	bd40bf61-c2ad-4071-b868-ad54ab7cfa8d	image	image/jpeg	media_bd40bf61-c2ad-4071-b868-ad54ab7cfa8d_1.jpg	2848394	s3	presentations/bd40bf61-c2ad-4071-b868-ad54ab7cfa8d/media_1	https://cdn.agentmitra.com/presentations/bd40bf61-c2ad-4071-b868-ad54ab7cfa8d/media_1	\N	1920	1080	\N	hash_bd40bf61-c2ad-4071-b868-ad54ab7cfa8d_1_1763960341.512119	7	\N	archived	f	2025-11-08 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119	00000000-0000-0000-0000-000000000000
+a8507201-5fb4-414e-b57a-26fe3d490bf8	bd40bf61-c2ad-4071-b868-ad54ab7cfa8d	video	video/mp4	media_bd40bf61-c2ad-4071-b868-ad54ab7cfa8d_2.mp4	18859852	s3	presentations/bd40bf61-c2ad-4071-b868-ad54ab7cfa8d/media_2	https://cdn.agentmitra.com/presentations/bd40bf61-c2ad-4071-b868-ad54ab7cfa8d/media_2	https://cdn.agentmitra.com/thumbnails/bd40bf61-c2ad-4071-b868-ad54ab7cfa8d/thumb_2.jpg	\N	\N	151	hash_bd40bf61-c2ad-4071-b868-ad54ab7cfa8d_2_1763960341.512119	5	\N	active	f	2025-10-31 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119	00000000-0000-0000-0000-000000000000
+e8c83e1c-1bf9-4837-9d02-65d76854da7c	e45c1148-56b7-4605-b183-68ea7aec4383	image	image/jpeg	media_e45c1148-56b7-4605-b183-68ea7aec4383_1.jpg	3377604	s3	presentations/e45c1148-56b7-4605-b183-68ea7aec4383/media_1	https://cdn.agentmitra.com/presentations/e45c1148-56b7-4605-b183-68ea7aec4383/media_1	\N	1920	1080	\N	hash_e45c1148-56b7-4605-b183-68ea7aec4383_1_1763960341.512119	7	\N	active	f	2025-11-08 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119	00000000-0000-0000-0000-000000000000
+36e33675-3446-4832-9e76-bd7715d25cb4	e45c1148-56b7-4605-b183-68ea7aec4383	video	video/mp4	media_e45c1148-56b7-4605-b183-68ea7aec4383_2.mp4	13096242	s3	presentations/e45c1148-56b7-4605-b183-68ea7aec4383/media_2	https://cdn.agentmitra.com/presentations/e45c1148-56b7-4605-b183-68ea7aec4383/media_2	https://cdn.agentmitra.com/thumbnails/e45c1148-56b7-4605-b183-68ea7aec4383/thumb_2.jpg	\N	\N	307	hash_e45c1148-56b7-4605-b183-68ea7aec4383_2_1763960341.512119	8	\N	active	f	2025-10-31 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119	00000000-0000-0000-0000-000000000000
+8891e304-c798-46bb-a1d3-f0e801e40711	91ad72ed-42d2-46ad-8338-4d22d8f7c80f	image	image/jpeg	media_91ad72ed-42d2-46ad-8338-4d22d8f7c80f_1.jpg	3705521	s3	presentations/91ad72ed-42d2-46ad-8338-4d22d8f7c80f/media_1	https://cdn.agentmitra.com/presentations/91ad72ed-42d2-46ad-8338-4d22d8f7c80f/media_1	\N	1920	1080	\N	hash_91ad72ed-42d2-46ad-8338-4d22d8f7c80f_1_1763960341.512119	7	\N	archived	f	2025-10-28 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119	00000000-0000-0000-0000-000000000000
+c65391e2-d116-42e2-9733-876d9630c187	91ad72ed-42d2-46ad-8338-4d22d8f7c80f	video	video/mp4	media_91ad72ed-42d2-46ad-8338-4d22d8f7c80f_2.mp4	23529517	s3	presentations/91ad72ed-42d2-46ad-8338-4d22d8f7c80f/media_2	https://cdn.agentmitra.com/presentations/91ad72ed-42d2-46ad-8338-4d22d8f7c80f/media_2	https://cdn.agentmitra.com/thumbnails/91ad72ed-42d2-46ad-8338-4d22d8f7c80f/thumb_2.jpg	\N	\N	318	hash_91ad72ed-42d2-46ad-8338-4d22d8f7c80f_2_1763960341.512119	8	\N	archived	f	2025-10-28 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119	00000000-0000-0000-0000-000000000000
+fe737aae-a5fc-4232-bbf2-f32b390eea4d	da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec	image	image/jpeg	media_da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec_1.jpg	3061505	s3	presentations/da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec/media_1	https://cdn.agentmitra.com/presentations/da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec/media_1	\N	1920	1080	\N	hash_da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec_1_1763960341.512119	5	\N	archived	f	2025-10-28 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119	00000000-0000-0000-0000-000000000000
+06484f58-f0f0-472c-8296-721b9a686e7b	da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec	video	video/mp4	media_da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec_2.mp4	22059080	s3	presentations/da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec/media_2	https://cdn.agentmitra.com/presentations/da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec/media_2	https://cdn.agentmitra.com/thumbnails/da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec/thumb_2.jpg	\N	\N	82	hash_da8561ea-93c9-47c5-8bcd-fcf0e8fa6bec_2_1763960341.512119	9	\N	archived	f	2025-11-17 10:29:01.512119	2025-11-24 10:29:01.512119	2025-11-24 10:29:01.512119	00000000-0000-0000-0000-000000000000
+2b3f30a3-971e-4cc1-a12b-ec3b9ad40ee4	7b501e0e-4393-4b5a-8de7-25fe384e91da	image	image/jpeg	Buy-Online-Page1.jpeg	41450	minio	presentations/7b501e0e-4393-4b5a-8de7-25fe384e91da/2025/11/b600120f-0ccb-4197-b288-2c876e05c0a0.jpeg	http://minio:9000/agentmitra-media/presentations/7b501e0e-4393-4b5a-8de7-25fe384e91da/2025/11/b600120f-0ccb-4197-b288-2c876e05c0a0.jpeg	http://minio:9000/agentmitra-media/presentations/7b501e0e-4393-4b5a-8de7-25fe384e91da/2025/11/b600120f-0ccb-4197-b288-2c876e05c0a0.jpeg	\N	\N	\N	228efe1ccbae1be1c636da385bcdb4c59170fd0d61527aef07968f661afff27e	0	\N	active	f	2025-11-26 12:47:52.660164	2025-11-26 18:17:52.652966	2025-11-26 18:17:52.652966	00000000-0000-0000-0000-000000000000
+179fd2c3-08e6-41e8-bbb6-6fc25a090783	7b501e0e-4393-4b5a-8de7-25fe384e91da	image	image/jpeg	test_image.jpg	29	minio	presentations/7b501e0e-4393-4b5a-8de7-25fe384e91da/2025/11/9fcba5bc-c55d-40d1-b28b-2d8e58d6539a.jpg	http://localhost:9000/agentmitra-media/presentations/7b501e0e-4393-4b5a-8de7-25fe384e91da/2025/11/9fcba5bc-c55d-40d1-b28b-2d8e58d6539a.jpg	http://localhost:9000/agentmitra-media/presentations/7b501e0e-4393-4b5a-8de7-25fe384e91da/2025/11/9fcba5bc-c55d-40d1-b28b-2d8e58d6539a.jpg	\N	\N	\N	c4b1c53a55841c05da86a660a386e691b3504fb5724314d5fc377e2183c3966d	0	\N	active	f	2025-11-30 04:53:07.124479	2025-11-30 10:23:07.106698	2025-11-30 10:23:07.106698	00000000-0000-0000-0000-000000000000
+7c7fc506-eaff-4eec-9f7e-77efdca16512	d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a21	image	image/jpeg	insurance-hero-Regional.jpg	245760	minio	presentations/d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a21/insurance-hero.jpg	http://localhost:9000/agentmitra-media/presentations/d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a21/insurance-hero.jpg	http://localhost:9000/agentmitra-media/presentations/d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a21/insurance-hero-thumb.jpg	\N	\N	\N	abc123def456	0	\N	active	f	2025-11-30 10:24:16.837136	2025-11-30 10:24:16.837136	2025-11-30 10:24:16.837136	00000000-0000-0000-0000-000000000000
+45e2806e-3c8e-4ff7-8286-920b0645929b	d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a21	video	video/mp4	insurance-overview-Regional.mp4	5242880	minio	presentations/d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a21/insurance-overview.mp4	http://localhost:9000/agentmitra-media/presentations/d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a21/insurance-overview.mp4	\N	\N	\N	\N	def456ghi789	0	\N	active	f	2025-11-30 10:24:16.837136	2025-11-30 10:24:16.837136	2025-11-30 10:24:16.837136	00000000-0000-0000-0000-000000000000
+086ddd5c-8856-450e-b739-846990516124	ea596b26-025b-45c4-b8fc-3974ee1d6e07	image	image/jpeg	\N	245760	minio	presentations/ea596b26-025b-45c4-b8fc-3974ee1d6e07/insurance-hero.jpg	http://localhost:9000/agentmitra-media/presentations/ea596b26-025b-45c4-b8fc-3974ee1d6e07/insurance-hero.jpg	http://localhost:9000/agentmitra-media/presentations/ea596b26-025b-45c4-b8fc-3974ee1d6e07/insurance-hero-thumb.jpg	\N	\N	\N	abc123def456	0	\N	active	f	2025-11-30 10:24:16.837136	2025-11-30 10:24:16.837136	2025-11-30 10:24:16.837136	00000000-0000-0000-0000-000000000000
+62526b25-0f26-4a88-96b5-d3dab16ca731	ea596b26-025b-45c4-b8fc-3974ee1d6e07	video	video/mp4	\N	5242880	minio	presentations/ea596b26-025b-45c4-b8fc-3974ee1d6e07/insurance-overview.mp4	http://localhost:9000/agentmitra-media/presentations/ea596b26-025b-45c4-b8fc-3974ee1d6e07/insurance-overview.mp4	\N	\N	\N	\N	def456ghi789	0	\N	active	f	2025-11-30 10:24:16.837136	2025-11-30 10:24:16.837136	2025-11-30 10:24:16.837136	00000000-0000-0000-0000-000000000000
+e8214bd7-45bd-4040-ab20-6a6d09977a27	7b501e0e-4393-4b5a-8de7-25fe384e91da	image	image/jpeg	test_image.jpg	19	minio	presentations/7b501e0e-4393-4b5a-8de7-25fe384e91da/2025/11/f18a5090-1ac0-490f-bbab-9bcda09836d8.jpg	http://localhost:9000/agentmitra-media/presentations/7b501e0e-4393-4b5a-8de7-25fe384e91da/2025/11/f18a5090-1ac0-490f-bbab-9bcda09836d8.jpg	http://localhost:9000/agentmitra-media/presentations/7b501e0e-4393-4b5a-8de7-25fe384e91da/2025/11/f18a5090-1ac0-490f-bbab-9bcda09836d8.jpg	\N	\N	\N	cf314648eff92b3cb29006a7afa9acaa1119e4f9ab4f95ac5ad0163fb1f6e34b	0	\N	active	f	2025-11-30 04:56:37.795024	2025-11-30 10:26:37.781064	2025-11-30 10:26:37.781064	00000000-0000-0000-0000-000000000000
+721e5aaf-281d-402e-aa55-65c0ae3492ff	7b501e0e-4393-4b5a-8de7-25fe384e91da	video	text/plain	test_media.txt	13	minio	presentations/7b501e0e-4393-4b5a-8de7-25fe384e91da/2025/11/f7d16745-082a-477b-a7eb-cee2e8523612.txt	http://localhost:9000/agentmitra-media/presentations/7b501e0e-4393-4b5a-8de7-25fe384e91da/2025/11/f7d16745-082a-477b-a7eb-cee2e8523612.txt	\N	\N	\N	\N	d5ef9984be135ec74cbc5dee24825199ca433e1ffd7a2fb22db12a3c5324ea1d	0	\N	active	f	2025-11-30 04:57:10.584956	2025-11-30 10:27:10.565619	2025-11-30 10:27:10.565619	00000000-0000-0000-0000-000000000000
+5a6eed0b-622c-4823-a44c-804fecc90d10	7b501e0e-4393-4b5a-8de7-25fe384e91da	video	text/plain	test.txt	5	minio	presentations/7b501e0e-4393-4b5a-8de7-25fe384e91da/2025/11/16241ed3-8106-4223-b8ce-52a8cce58e5b.txt	http://minio:9000/agentmitra-media/presentations/7b501e0e-4393-4b5a-8de7-25fe384e91da/2025/11/16241ed3-8106-4223-b8ce-52a8cce58e5b.txt	\N	\N	\N	\N	f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2	0	\N	active	f	2025-11-30 05:00:40.972786	2025-11-30 10:30:40.963061	2025-11-30 10:30:40.963061	\N
+0f93714e-87e1-40df-86bb-3e205d2f9cfe	7b501e0e-4393-4b5a-8de7-25fe384e91da	video	text/plain	test_media.txt	5	minio	presentations/7b501e0e-4393-4b5a-8de7-25fe384e91da/2025/11/1aeb8e72-5679-4144-9801-b85ae8b32e95.txt	http://minio:9000/agentmitra-media/presentations/7b501e0e-4393-4b5a-8de7-25fe384e91da/2025/11/1aeb8e72-5679-4144-9801-b85ae8b32e95.txt	\N	\N	\N	\N	f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2	0	\N	active	f	2025-11-30 05:30:47.220982	2025-11-30 11:00:47.211662	2025-11-30 11:00:47.211662	\N
+c12d803f-8d3b-49d1-9a80-ad2db59f4438	7b501e0e-4393-4b5a-8de7-25fe384e91da	video	text/plain	test_media.txt	5	minio	presentations/7b501e0e-4393-4b5a-8de7-25fe384e91da/2025/11/0c76ea4e-ac93-4d28-9492-1dbe8ecee355.txt	http://localhost:9000/agentmitra-media/presentations/7b501e0e-4393-4b5a-8de7-25fe384e91da/2025/11/0c76ea4e-ac93-4d28-9492-1dbe8ecee355.txt	\N	\N	\N	\N	f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2	0	\N	active	f	2025-11-30 05:52:44.960002	2025-11-30 11:22:44.933951	2025-11-30 11:22:44.933951	00000000-0000-0000-0000-000000000000
 \.
 
 
 --
--- Data for Name: presentation_slides; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: presentation_slides; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.presentation_slides (slide_id, presentation_id, slide_order, slide_type, media_url, media_type, thumbnail_url, media_storage_key, title, subtitle, description, text_color, background_color, overlay_opacity, layout, duration, transition_effect, cta_button, agent_branding, created_at, updated_at) FROM stdin;
@@ -4450,11 +5150,21 @@ dc4336e0-2de2-4672-8c1e-51ce2f2a2195	d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11	5	vide
 0b6a311b-b14b-4af3-af5f-e742d1ff0a71	d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12	5	video	\N	\N	\N	\N	Risk Coverage	Complete Protection Plans	\N	#FFFFFF	#2d3748	0.50	centered	5	fade	{"text": "Learn More", "action": "contact_agent", "textColor": "#FFFFFF", "backgroundColor": "#3182ce"}	\N	2025-11-19 10:41:38.515958	2025-11-19 10:41:38.515958
 6bbad4e9-42bc-49ed-86f9-0061609a5497	d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12	6	image	\N	\N	\N	\N	Claim Process	Easy Claim Settlement	\N	#FFFFFF	#1a365d	0.50	centered	5	fade	{"text": "Learn More", "action": "contact_agent", "textColor": "#FFFFFF", "backgroundColor": "#3182ce"}	\N	2025-11-18 10:41:38.515958	2025-11-18 10:41:38.515958
 2d04fdaf-1885-46bb-a6dc-36c1c4f33392	d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12	7	text	\N	\N	\N	\N	Contact Information	Get Your Quote Today	\N	#FFFFFF	#2d3748	0.50	centered	5	fade	{"text": "Learn More", "action": "contact_agent", "textColor": "#FFFFFF", "backgroundColor": "#3182ce"}	\N	2025-11-17 10:41:38.515958	2025-11-17 10:41:38.515958
+bc2df7bc-e0d5-4ce5-95cc-85d3e564c708	6ed0906e-539f-440e-8528-758877821646	1	text	\N	\N	\N	\N	Welcome	\N	Welcome to our presentation	#FFFFFF	#000000	0.50	centered	4	fade	null	null	2025-11-30 10:20:37.783009	2025-11-30 10:20:37.783009
+590212c0-b58e-4d8a-a85d-3a2f7f334389	163e6030-1579-427a-b44e-b09a457dc704	1	text	\N	\N	\N	\N	Welcome to Regional Insurance Services	\N	Comprehensive coverage for all your insurance needs	#FFFFFF	#1a237e	0.50	centered	4	fade	\N	\N	2025-11-30 10:22:29.788074	2025-11-30 10:22:29.788074
+11a61843-d9cd-4739-bb06-1ef998998d1f	52bec486-531a-4a73-9901-089f5cadc816	1	text	\N	\N	\N	\N	Welcome to None Insurance Services	\N	Comprehensive coverage for all your insurance needs	#FFFFFF	#1a237e	0.50	centered	4	fade	\N	\N	2025-11-30 10:22:29.788074	2025-11-30 10:22:29.788074
+e1df0076-ee7d-48d3-835a-2892dc54b63c	5ae3af82-2f8d-4fd4-9abd-949e452b4e41	1	text	\N	\N	\N	\N	Test	\N	Test slide	#FFFFFF	#000000	0.50	centered	4	fade	null	null	2025-11-30 10:23:13.735032	2025-11-30 10:23:13.735032
+c35ace10-d03d-4d79-b4a0-d7cfe1f9eb53	9bcd3a4b-b4ae-4260-9dcd-c6d159bddc15	1	text	\N	\N	\N	\N	\N	\N	Professional insurance solutions tailored to your needs	#FFFFFF	#1a237e	0.50	centered	5	fade	\N	\N	2025-11-30 10:24:16.837136	2025-11-30 10:24:16.837136
+ada3a6e9-0e74-4186-8e99-997db4c66082	9bcd3a4b-b4ae-4260-9dcd-c6d159bddc15	2	text	\N	\N	\N	\N	Why Choose Our Insurance?	\N	Comprehensive coverage, competitive rates, and excellent customer service	#000000	#ffffff	0.50	split	6	fade	\N	\N	2025-11-30 10:24:16.837136	2025-11-30 10:24:16.837136
+be83071e-44e9-4105-895b-bcd82fcca8a4	a708494b-7492-4d61-aabd-d5fd4d03c95d	1	text	\N	\N	\N	\N	\N	\N	Professional insurance solutions tailored to your needs	#FFFFFF	#1a237e	0.50	centered	5	fade	\N	\N	2025-11-30 10:24:16.837136	2025-11-30 10:24:16.837136
+94888717-075b-4607-b9ef-d5f12be8a223	a708494b-7492-4d61-aabd-d5fd4d03c95d	2	text	\N	\N	\N	\N	Why Choose Our Insurance?	\N	Comprehensive coverage, competitive rates, and excellent customer service	#000000	#ffffff	0.50	split	6	fade	\N	\N	2025-11-30 10:24:16.837136	2025-11-30 10:24:16.837136
+d300f23c-621b-4d76-9b5f-97a599aacee2	445e2fc8-a90d-4b5f-b5c4-6ac4b422d0fc	1	text	\N	\N	\N	\N	Welcome to Junior's Insurance Services	\N	Professional insurance solutions tailored to your needs	#FFFFFF	#1a237e	0.50	centered	5	fade	\N	\N	2025-11-30 10:24:16.837136	2025-11-30 10:24:16.837136
+7a688c7b-64e0-44ee-82ea-035198a6be19	445e2fc8-a90d-4b5f-b5c4-6ac4b422d0fc	2	text	\N	\N	\N	\N	Why Choose Our Insurance?	\N	Comprehensive coverage, competitive rates, and excellent customer service	#000000	#ffffff	0.50	split	6	fade	\N	\N	2025-11-30 10:24:16.837136	2025-11-30 10:24:16.837136
 \.
 
 
 --
--- Data for Name: presentation_templates; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: presentation_templates; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.presentation_templates (template_id, name, description, category, slides, is_default, is_public, is_system_template, usage_count, average_rating, total_ratings, preview_image_url, preview_video_url, status, available_from, available_until, created_by, created_at, updated_at) FROM stdin;
@@ -4464,17 +5174,40 @@ c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12	Educational Template	Template for education
 
 
 --
--- Data for Name: presentations; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: presentations; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.presentations (presentation_id, agent_id, name, description, status, is_active, template_id, template_category, version, parent_presentation_id, created_at, updated_at, published_at, archived_at, tags, target_audience, language, total_views, total_shares, total_cta_clicks, created_by, published_by, tenant_id) FROM stdin;
 d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11	b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11	Daily Promotional	Daily promotional presentation	published	t	c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11	\N	1	\N	2025-11-23 22:34:55.683807	2025-11-23 22:34:55.683807	\N	\N	{promotional,daily}	\N	en	1	2	4	\N	\N	bf0b6627-c595-4fd8-93c2-cb0e9cdc86bc
 d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12	b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11	Weekly Update	Weekly update presentation	draft	f	\N	\N	1	\N	2025-11-23 22:34:55.683807	2025-11-23 22:34:55.683807	\N	\N	{update}	\N	en	1	3	0	\N	\N	bf0b6627-c595-4fd8-93c2-cb0e9cdc86bc
+6ed0906e-539f-440e-8528-758877821646	7b501e0e-4393-4b5a-8de7-25fe384e91da	Test Presentation	A test presentation with proper tenant_id	published	t	\N	\N	1	\N	2025-11-30 10:20:37.783009	2025-11-30 10:20:37.783009	\N	\N	{test}	\N	en	0	0	0	\N	\N	00000000-0000-0000-0000-000000000000
+163e6030-1579-427a-b44e-b09a457dc704	d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a21	Insurance Solutions - Regional	Professional presentation showcasing comprehensive insurance coverage	published	t	\N	\N	1	\N	2025-11-30 10:22:29.788074	2025-11-30 10:22:29.788074	\N	\N	\N	\N	en	0	0	0	\N	\N	00000000-0000-0000-0000-000000000000
+52bec486-531a-4a73-9901-089f5cadc816	ea596b26-025b-45c4-b8fc-3974ee1d6e07	Insurance Solutions - None	Professional presentation showcasing comprehensive insurance coverage	published	t	\N	\N	1	\N	2025-11-30 10:22:29.788074	2025-11-30 10:22:29.788074	\N	\N	\N	\N	en	0	0	0	\N	\N	00000000-0000-0000-0000-000000000000
+5ae3af82-2f8d-4fd4-9abd-949e452b4e41	7b501e0e-4393-4b5a-8de7-25fe384e91da	Final Test Presentation	Comprehensive API test	published	t	\N	\N	1	\N	2025-11-30 10:23:13.735032	2025-11-30 10:23:13.735032	\N	\N	{}	\N	en	0	0	0	\N	\N	00000000-0000-0000-0000-000000000000
+9bcd3a4b-b4ae-4260-9dcd-c6d159bddc15	190b4e18-bf74-41a7-83b3-3cfa89569c55	Welcome Presentation - Agent 	A professional presentation template showcasing insurance products and services	published	t	\N	\N	1	\N	2025-11-30 10:24:16.837136	2025-11-30 10:24:16.837136	\N	\N	\N	\N	en	0	0	0	\N	\N	00000000-0000-0000-0000-000000000000
+a708494b-7492-4d61-aabd-d5fd4d03c95d	f4ebeb1d-3102-4528-aceb-a5afcf7a8301	Welcome Presentation - Agent 	A professional presentation template showcasing insurance products and services	published	t	\N	\N	1	\N	2025-11-30 10:24:16.837136	2025-11-30 10:24:16.837136	\N	\N	\N	\N	en	0	0	0	\N	\N	00000000-0000-0000-0000-000000000000
+445e2fc8-a90d-4b5f-b5c4-6ac4b422d0fc	e591343a-67b7-47d9-9123-f336fd8eb260	Welcome Presentation - Junior Agent	A professional presentation template showcasing insurance products and services	published	t	\N	\N	1	\N	2025-11-30 10:24:16.837136	2025-11-30 10:24:16.837136	\N	\N	\N	\N	en	0	0	0	\N	\N	00000000-0000-0000-0000-000000000000
 \.
 
 
 --
--- Data for Name: rbac_audit_log; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: quote_performance; Type: TABLE DATA; Schema: lic_schema; Owner: manish
+--
+
+COPY lic_schema.quote_performance (performance_id, quote_id, agent_id, metric_date, views_count, shares_count, likes_count, responses_count, conversion_count, created_at, created_by, updated_by) FROM stdin;
+\.
+
+
+--
+-- Data for Name: quote_sharing_analytics; Type: TABLE DATA; Schema: lic_schema; Owner: manish
+--
+
+COPY lic_schema.quote_sharing_analytics (share_id, quote_id, agent_id, platform, recipient_count, delivery_status, engagement_metrics, shared_at, created_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: rbac_audit_log; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.rbac_audit_log (audit_id, tenant_id, user_id, action, target_user_id, target_role_id, target_permission_id, target_flag_id, details, success, ip_address, user_agent, "timestamp") FROM stdin;
@@ -4487,7 +5220,23 @@ c855baa5-ad7c-4fb8-9285-775d464cae02	\N	\N	data_created	45c49aba-9656-4a41-ba07-
 
 
 --
--- Data for Name: revenue_forecasts; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: retention_actions; Type: TABLE DATA; Schema: lic_schema; Owner: manish
+--
+
+COPY lic_schema.retention_actions (action_id, retention_id, action_type, action_description, action_priority, scheduled_at, completed_at, due_at, outcome, outcome_notes, retention_value, agent_id, created_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: revenue_forecast_scenarios; Type: TABLE DATA; Schema: lic_schema; Owner: manish
+--
+
+COPY lic_schema.revenue_forecast_scenarios (scenario_id, agent_id, scenario_name, scenario_type, forecast_period, projected_revenue, revenue_growth_rate, confidence_level, assumptions, risk_factors, mitigation_strategies, created_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: revenue_forecasts; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.revenue_forecasts (forecast_id, agent_id, forecast_period, forecast_date, target_date, predicted_revenue, predicted_commission, confidence_level, actual_revenue, actual_commission, forecast_accuracy, forecast_method, created_by, created_at) FROM stdin;
@@ -4525,10 +5274,11 @@ f7efa371-a47c-4261-a06d-c7e3a5cb37ca	91ad72ed-42d2-46ad-8338-4d22d8f7c80f	yearly
 
 
 --
--- Data for Name: role_permissions; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: role_permissions; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.role_permissions (assignment_id, role_id, permission_id, granted_at) FROM stdin;
+a60cb5bc-b954-4f6b-9ede-52804293eae0	1c28a1fa-635f-40fe-87ad-5c737a9dc002	7b3ccee0-2251-48e6-a8e4-fc8d0b8d2248	2025-11-29 18:42:10.967042
 d5cce1bb-39f2-45ec-93f3-4f49207782ff	7db127cb-2d62-4f07-8a77-3612b1472f88	e554300e-ce26-4c6e-936d-26780b0fa117	2025-11-25 15:00:48.011193
 466c21aa-d37e-4f37-a1de-9ad004240a89	7db127cb-2d62-4f07-8a77-3612b1472f88	7b3ccee0-2251-48e6-a8e4-fc8d0b8d2248	2025-11-25 15:00:48.011193
 6cf2e09e-1095-481d-858b-26a933f85c24	7db127cb-2d62-4f07-8a77-3612b1472f88	9c823a3d-91f8-4e30-994f-3a8c69a7f9e9	2025-11-25 15:00:48.011193
@@ -4693,7 +5443,7 @@ c2c43906-1a25-407d-badd-4bb5c492ad26	64584b83-2d85-44fc-a2c5-0f328e19f886	d12e44
 
 
 --
--- Data for Name: roles; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: roles; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.roles (role_id, role_name, role_description, is_system_role, permissions, created_at) FROM stdin;
@@ -4707,11 +5457,47 @@ f50be4d2-6e4b-4822-b637-daf9ce146a79	guest	Guest User	t	["policies.read"]	2025-1
 9de7c3a2-6a9e-4bd1-9c12-ffada76175c8	compliance_officer	Ensures regulatory compliance and audits	t	["compliance.read", "compliance.write", "audits.*", "reports.read"]	2025-11-24 10:33:20.011083
 64584b83-2d85-44fc-a2c5-0f328e19f886	customer_support_lead	Leads customer support team	t	["support.*", "customers.*", "reports.read", "tickets.manage"]	2025-11-24 10:33:20.011083
 7db127cb-2d62-4f07-8a77-3612b1472f88	super_admin	Super Administrator with full system access	t	["agents.approve", "agents.create", "agents.delete", "agents.read", "agents.update", "analytics.read", "audit.export", "audit.read", "campaigns.create", "campaigns.delete", "campaigns.read", "campaigns.update", "compliance.admin", "compliance.read", "compliance.write", "customers.create", "customers.delete", "customers.read", "customers.update", "feature_flags.admin", "feature_flags.read", "feature_flags.update", "notifications.manage", "notifications.send", "payments.create", "payments.process", "payments.read", "payments.update", "policies.approve", "policies.create", "policies.delete", "policies.read", "policies.update", "presentations.create", "presentations.publish", "presentations.read", "presentations.update", "reports.admin", "reports.create", "reports.read", "system.admin", "system.config", "tenants.create", "tenants.delete", "tenants.list", "tenants.manage_config", "tenants.manage_users", "tenants.read", "tenants.update", "tickets.close", "tickets.create", "tickets.manage", "tickets.read", "tickets.update", "users.create", "users.delete", "users.read", "users.search", "users.update"]	2025-11-23 22:34:55.877872
+660e8400-e29b-41d4-a716-446655440010	Super Admin	Full system access (59 permissions)	t	\N	2025-11-28 22:05:11.329831
+660e8400-e29b-41d4-a716-446655440011	Provider Admin	Insurance provider management	t	\N	2025-11-28 22:05:11.329831
+660e8400-e29b-41d4-a716-446655440012	Regional Manager	Regional operations (19 permissions)	t	\N	2025-11-28 22:05:11.329831
+660e8400-e29b-41d4-a716-446655440013	Senior Agent	Agent operations + inherited permissions (16 permissions)	t	\N	2025-11-28 22:05:11.329831
+660e8400-e29b-41d4-a716-446655440014	Junior Agent	Basic agent operations (7 permissions)	t	\N	2025-11-28 22:05:11.329831
+660e8400-e29b-41d4-a716-446655440015	Policyholder	Customer access (5 permissions)	t	\N	2025-11-28 22:05:11.329831
+660e8400-e29b-41d4-a716-446655440016	Support Staff	Support operations (8 permissions)	t	\N	2025-11-28 22:05:11.329831
 \.
 
 
 --
--- Data for Name: tenant_config; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: subscription_billing_history; Type: TABLE DATA; Schema: lic_schema; Owner: manish
+--
+
+COPY lic_schema.subscription_billing_history (billing_id, subscription_id, user_id, amount, currency, billing_date, billing_period_start, billing_period_end, payment_gateway, gateway_transaction_id, status, invoice_url, receipt_url, failure_reason, metadata, created_at, created_by, updated_by) FROM stdin;
+\.
+
+
+--
+-- Data for Name: subscription_changes; Type: TABLE DATA; Schema: lic_schema; Owner: manish
+--
+
+COPY lic_schema.subscription_changes (change_id, subscription_id, user_id, from_plan_id, to_plan_id, change_type, effective_date, proration_amount, billing_cycle_change, initiated_by, reason, metadata, created_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: subscription_plans; Type: TABLE DATA; Schema: lic_schema; Owner: manish
+--
+
+COPY lic_schema.subscription_plans (plan_id, plan_name, plan_type, display_name, description, price_monthly, price_yearly, currency, features, limitations, max_users, max_storage_gb, max_policies, is_active, is_popular, sort_order, trial_days, stripe_price_id_monthly, stripe_price_id_yearly, razorpay_plan_id_monthly, razorpay_plan_id_yearly, created_at, updated_at, created_by, updated_by) FROM stdin;
+c0e00d5a-6e8e-40e5-9098-e765f0c96a7e	agent_starter	agent	Agent Starter	Perfect for new insurance agents	999.00	9999.00	INR	["basic_dashboard", "policy_management", "customer_crm", "basic_analytics", "email_support"]	{"max_policies": 500, "max_customers": 100, "max_storage_gb": 5}	1	5	500	t	f	1	14	\N	\N	\N	\N	2025-11-28 20:11:11.373565	2025-11-28 20:11:11.373565	\N	\N
+9101dd4a-6326-4bb6-bb22-0132d2021298	agent_professional	agent	Agent Professional	For growing insurance agencies	2499.00	24999.00	INR	["advanced_dashboard", "policy_management", "customer_crm", "advanced_analytics", "presentation_tools", "video_tutorials", "priority_support"]	{"max_policies": 2000, "max_customers": 500, "max_storage_gb": 25}	3	25	2000	t	f	2	14	\N	\N	\N	\N	2025-11-28 20:11:11.373565	2025-11-28 20:11:11.373565	\N	\N
+81af382a-32d3-4fbe-8b75-c5375ebd8daa	agent_enterprise	agent	Agent Enterprise	Complete solution for large agencies	4999.00	49999.00	INR	["enterprise_dashboard", "policy_management", "customer_crm", "advanced_analytics", "presentation_tools", "video_tutorials", "api_access", "white_label", "dedicated_support"]	{"max_policies": 50000, "max_customers": 5000, "max_storage_gb": 100}	10	100	50000	t	f	3	30	\N	\N	\N	\N	2025-11-28 20:11:11.373565	2025-11-28 20:11:11.373565	\N	\N
+64971a4a-4557-4759-8fe7-f8de35cb7270	customer_basic	customer	Customer Basic	Essential policy management	99.00	999.00	INR	["policy_view", "claim_tracking", "document_storage", "basic_support"]	{"max_policies": 5, "max_storage_gb": 1}	1	1	5	t	f	1	7	\N	\N	\N	\N	2025-11-28 20:11:11.373565	2025-11-28 20:11:11.373565	\N	\N
+1ab822ae-74ba-4964-89c6-70cfeb66276a	customer_premium	customer	Customer Premium	Complete policy management suite	299.00	2999.00	INR	["policy_view", "claim_tracking", "document_storage", "advanced_analytics", "priority_support", "family_accounts"]	{"max_policies": 20, "max_storage_gb": 10}	5	10	20	t	f	2	14	\N	\N	\N	\N	2025-11-28 20:11:11.373565	2025-11-28 20:11:11.373565	\N	\N
+\.
+
+
+--
+-- Data for Name: tenant_config; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.tenant_config (config_id, tenant_id, config_key, config_value, config_type, is_encrypted, created_at, updated_at) FROM stdin;
@@ -4725,7 +5511,7 @@ a5af8214-474f-4a77-9d53-98883654f058	bf0b6627-c595-4fd8-93c2-cb0e9cdc86bc	email.
 
 
 --
--- Data for Name: tenant_usage; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: tenant_usage; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.tenant_usage (usage_id, tenant_id, metric_type, metric_value, period_start, period_end, recorded_at) FROM stdin;
@@ -4733,7 +5519,7 @@ COPY lic_schema.tenant_usage (usage_id, tenant_id, metric_type, metric_value, pe
 
 
 --
--- Data for Name: tenant_users; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: tenant_users; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.tenant_users (tenant_user_id, tenant_id, user_id, role, permissions, is_primary, joined_at, status) FROM stdin;
@@ -4759,16 +5545,17 @@ a0212a5e-2364-44ce-a059-d8690500174a	bf0b6627-c595-4fd8-93c2-cb0e9cdc86bc	8d0e9c
 
 
 --
--- Data for Name: tenants; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: tenants; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.tenants (tenant_id, tenant_code, tenant_name, tenant_type, schema_name, parent_tenant_id, status, subscription_plan, trial_end_date, max_users, storage_limit_gb, api_rate_limit, created_at, updated_at) FROM stdin;
 bf0b6627-c595-4fd8-93c2-cb0e9cdc86bc	LIC	Life Insurance Corporation of India	insurance_provider	lic_schema	\N	active	enterprise	\N	10000	1000	10000	2025-11-21 13:00:53.717908	2025-11-21 13:00:53.717908
+00000000-0000-0000-0000-000000000000	DEFAULT	Default Tenant	insurance_provider	\N	\N	active	\N	\N	1000	10	1000	2025-11-28 22:05:11.329831	2025-11-28 22:05:11.329831
 \.
 
 
 --
--- Data for Name: trial_engagement; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: trial_engagement; Type: TABLE DATA; Schema: lic_schema; Owner: manish
 --
 
 COPY lic_schema.trial_engagement (engagement_id, trial_id, feature_used, engagement_type, metadata, engaged_at) FROM stdin;
@@ -4776,7 +5563,7 @@ COPY lic_schema.trial_engagement (engagement_id, trial_id, feature_used, engagem
 
 
 --
--- Data for Name: trial_subscriptions; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: trial_subscriptions; Type: TABLE DATA; Schema: lic_schema; Owner: manish
 --
 
 COPY lic_schema.trial_subscriptions (trial_id, user_id, plan_type, trial_start_date, trial_end_date, actual_conversion_date, conversion_plan, trial_status, extension_days, reminder_sent, created_at) FROM stdin;
@@ -4784,7 +5571,7 @@ COPY lic_schema.trial_subscriptions (trial_id, user_id, plan_type, trial_start_d
 
 
 --
--- Data for Name: user_journeys; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: user_journeys; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.user_journeys (journey_id, user_id, journey_type, started_at, completed_at, status, current_step, total_steps, step_history, converted, conversion_value, drop_off_step, drop_off_reason, journey_data, session_id, created_at, updated_at) FROM stdin;
@@ -4792,7 +5579,7 @@ COPY lic_schema.user_journeys (journey_id, user_id, journey_type, started_at, co
 
 
 --
--- Data for Name: user_payment_methods; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: user_payment_methods; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.user_payment_methods (payment_method_id, user_id, method_type, method_name, is_default, card_number_encrypted, card_holder_name, expiry_month, expiry_year, cvv_encrypted, upi_id, bank_account_number_encrypted, bank_ifsc_code, bank_name, status, verification_status, last_used_at, created_at, updated_at) FROM stdin;
@@ -4820,7 +5607,7 @@ d9fa181e-6746-49c5-a2f8-ab61bcbe7d97	15f336f5-58a4-49a5-b1d5-26df0d6ed2a7	credit
 
 
 --
--- Data for Name: user_roles; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: user_roles; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.user_roles (assignment_id, user_id, role_id, assigned_by, assigned_at, expires_at) FROM stdin;
@@ -4841,11 +5628,18 @@ a6eaac5a-89d6-4253-b512-e03f52dec06d	b14731c5-e527-45e6-b947-4000996b2c11	6f1550
 ea6dfc6d-f83a-4133-a4b3-58c1f29de58c	2e2b0b55-cd69-4a03-b6fa-e8371b45abab	1c28a1fa-635f-40fe-87ad-5c737a9dc002	38ab082d-d602-40f3-b83d-a652f1425349	2025-11-25 17:06:34.808396	\N
 eeaa8414-28c1-4444-87ff-97efd3e97996	d095c266-111b-4b03-bd95-275baa93f577	a6ad4340-5e1d-453e-aedd-db4543167f6d	38ab082d-d602-40f3-b83d-a652f1425349	2025-11-25 17:06:34.808396	\N
 281e76ba-9d74-4139-9a39-f1547e4531e7	8d0e9cfb-34ce-4c92-a320-3846e99e3a1c	c2b9b93c-5aaf-41a2-95e9-a41cba7b404e	38ab082d-d602-40f3-b83d-a652f1425349	2025-11-25 17:06:34.808396	\N
+5f2f3787-605d-42de-9e14-4e971502b456	550e8400-e29b-41d4-a716-446655440000	660e8400-e29b-41d4-a716-446655440010	550e8400-e29b-41d4-a716-446655440000	2025-11-28 22:05:11.329831	\N
+50309f1d-629d-401e-a480-68feac1859a4	b14731c5-e527-45e6-b947-4000996b2c11	660e8400-e29b-41d4-a716-446655440011	550e8400-e29b-41d4-a716-446655440000	2025-11-28 22:05:11.329831	\N
+1f50aead-3104-487b-8061-f01dd3778115	2e2b0b55-cd69-4a03-b6fa-e8371b45abab	660e8400-e29b-41d4-a716-446655440012	550e8400-e29b-41d4-a716-446655440000	2025-11-28 22:05:11.329831	\N
+b951fe23-4222-4220-9761-fe6a97d14786	a473bf8a-32ce-41b9-8419-3400f1a1165b	660e8400-e29b-41d4-a716-446655440013	550e8400-e29b-41d4-a716-446655440000	2025-11-28 22:05:11.329831	\N
+41ea33b2-4b49-40fd-8650-169dc0bbbe7c	d095c266-111b-4b03-bd95-275baa93f577	660e8400-e29b-41d4-a716-446655440014	550e8400-e29b-41d4-a716-446655440000	2025-11-28 22:05:11.329831	\N
+6aca7e6c-dfee-455a-adc3-06abd4c7fa6a	df23ccb2-5fe1-47ed-95de-e00bd0aefaa1	660e8400-e29b-41d4-a716-446655440015	550e8400-e29b-41d4-a716-446655440000	2025-11-28 22:05:11.329831	\N
+de6070c5-43b2-45af-9572-287534f5794c	8d0e9cfb-34ce-4c92-a320-3846e99e3a1c	660e8400-e29b-41d4-a716-446655440016	550e8400-e29b-41d4-a716-446655440000	2025-11-28 22:05:11.329831	\N
 \.
 
 
 --
--- Data for Name: user_sessions; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: user_sessions; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.user_sessions (session_id, user_id, session_token, refresh_token, device_info, ip_address, user_agent, location_info, expires_at, last_activity_at, created_at) FROM stdin;
@@ -5093,7 +5887,15 @@ e918ee15-dfbb-4369-bd19-e1c6fb9eda7f	d095c266-111b-4b03-bd95-275baa93f577	eyJhbG
 
 
 --
--- Data for Name: users; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: user_subscriptions; Type: TABLE DATA; Schema: lic_schema; Owner: manish
+--
+
+COPY lic_schema.user_subscriptions (subscription_id, user_id, plan_id, billing_cycle, status, current_period_start, current_period_end, trial_start, trial_end, cancel_at_period_end, canceled_at, stripe_subscription_id, razorpay_subscription_id, payment_method_id, last_payment_date, next_payment_date, amount, currency, discount_amount, tax_amount, created_at, updated_at, created_by, updated_by, subscription_end_date) FROM stdin;
+\.
+
+
+--
+-- Data for Name: users; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.users (user_id, tenant_id, email, phone_number, username, password_hash, password_salt, password_changed_at, first_name, last_name, display_name, avatar_url, date_of_birth, gender, address, emergency_contact, language_preference, timezone, theme_preference, notification_preferences, email_verified, phone_verified, email_verification_token, email_verification_expires, password_reset_token, password_reset_expires, mfa_enabled, mfa_secret, biometric_enabled, last_login_at, login_attempts, locked_until, role, status, trial_end_date, subscription_plan, subscription_status, created_by, created_at, updated_by, updated_at, deactivated_at, deactivated_reason) FROM stdin;
@@ -5116,8 +5918,9 @@ bdda146a-61fa-49b7-b5ff-23f95778aee2	00000000-0000-0000-0000-000000000000	\N	+91
 5f5ac587-c1b4-4f28-aee4-3ba197efc4fe	00000000-0000-0000-0000-000000000000	manish@vyaptix.com	\N	\N		\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	en	Asia/Kolkata	light	\N	f	f	\N	\N	\N	\N	f	\N	f	\N	0	\N	policyholder	active	\N	\N	trial	\N	2025-11-24 19:25:04.912108	\N	2025-11-24 19:25:04.912108	\N	\N
 431432dc-823a-4a2e-8532-6c6b76c8c394	00000000-0000-0000-0000-000000000000	\N	+919555555555	\N	$2b$12$A9XvUb96iRvKU1gdSjR.QuQCrYnc5qupVNR/RweCliS9uqehFBBS6	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	en	Asia/Kolkata	light	\N	f	f	\N	\N	\N	\N	f	\N	f	\N	0	\N	junior_agent	active	\N	\N	trial	\N	2025-11-25 13:17:23.146763	\N	2025-11-25 13:17:23.146763	\N	\N
 a473bf8a-32ce-41b9-8419-3400f1a1165b	bf0b6627-c595-4fd8-93c2-cb0e9cdc86bc	senioragent@test.com	+919876543203	\N	$2b$12$5Gx2B73HnJgG96BDFcT9HeO/qBABldwv9LXQaviYJJp9jOQN6f0AW	\N	\N	Senior	Agent	\N	\N	\N	\N	\N	\N	en	Asia/Kolkata	light	\N	t	t	\N	\N	\N	\N	f	\N	f	2025-11-28 10:09:27.126394	0	\N	senior_agent	active	\N	\N	trial	\N	2025-11-25 17:06:34.808396	\N	2025-11-28 15:39:27.122764	\N	\N
+550e8400-e29b-41d4-a716-446655440000	00000000-0000-0000-0000-000000000000	superadmin@agentmitra.com	+919876543200	\N	$2b$12$1nDT9ZGP.Jl1v.Y0MrAJFev3C0cgBnIT6.Ut/8ENqp4FVyZU2J0BS	randomsalt123	\N	Super	Administrator	\N	\N	\N	\N	\N	\N	en	Asia/Kolkata	light	\N	t	t	\N	\N	\N	\N	f	\N	f	\N	0	\N	super_admin	active	\N	\N	trial	\N	2025-11-28 22:05:11.329831	\N	2025-11-28 22:05:11.329831	\N	\N
 d095c266-111b-4b03-bd95-275baa93f577	bf0b6627-c595-4fd8-93c2-cb0e9cdc86bc	junioragent@test.com	+919876543204	\N	$2b$12$5Gx2B73HnJgG96BDFcT9HeO/qBABldwv9LXQaviYJJp9jOQN6f0AW	\N	\N	Junior	Agent	\N	\N	\N	\N	\N	\N	en	Asia/Kolkata	light	\N	t	t	\N	\N	\N	\N	f	\N	f	2025-11-28 11:36:10.68385	0	\N	junior_agent	active	\N	\N	trial	\N	2025-11-25 17:06:34.808396	\N	2025-11-28 17:06:10.685071	\N	\N
-38ab082d-d602-40f3-b83d-a652f1425349	bf0b6627-c595-4fd8-93c2-cb0e9cdc86bc	superadmin@test.com	9876543200	\N	$2b$12$5Gx2B73HnJgG96BDFcT9HeO/qBABldwv9LXQaviYJJp9jOQN6f0AW	\N	\N	Super	Admin	\N	\N	\N	\N	\N	\N	en	Asia/Kolkata	light	\N	f	t	\N	\N	\N	\N	f	\N	f	2025-11-28 11:36:13.620514	0	\N	super_admin	active	\N	\N	trial	\N	2025-11-25 17:00:40.756426	\N	2025-11-28 17:06:13.622458	\N	\N
+38ab082d-d602-40f3-b83d-a652f1425349	bf0b6627-c595-4fd8-93c2-cb0e9cdc86bc	superadmin@test.com	9876543200	\N	$2b$12$5Gx2B73HnJgG96BDFcT9HeO/qBABldwv9LXQaviYJJp9jOQN6f0AW	\N	\N	Super	Admin	\N	\N	\N	\N	\N	\N	en	Asia/Kolkata	light	\N	f	t	\N	\N	\N	\N	f	\N	f	2025-11-28 11:36:13.620514	0	\N	super_admin	active	\N	\N	trial	\N	2025-11-25 17:00:40.756426	\N	2025-11-28 20:11:27.849	\N	\N
 c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a20	00000000-0000-0000-0000-000000000000	senior_agent@test.com	+919876543220	\N	$2b$12$L6OjHQp7n5fRKRvM9t3JeO3tJcKQZ3Z3Z3Z3Z3Z3Z3Z3Z3Z3Z3Z3	\N	\N	Senior	Agent	Senior Agent	\N	\N	\N	\N	\N	en	Asia/Kolkata	light	\N	f	t	\N	\N	\N	\N	f	\N	f	2025-11-24 14:44:44.439182	0	\N	senior_agent	active	\N	\N	trial	\N	2025-11-23 22:34:55.73505	\N	2025-11-24 20:14:44.437428	\N	\N
 a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11	00000000-0000-0000-0000-000000000000	agent1@test.com	+919876543210	\N	$2b$12$L6OjHQp7n5fRKRvM9t3JeO3tJcKQZ3Z3Z3Z3Z3Z3Z3Z3Z3Z3Z3Z3	\N	\N	Test	Agent	Test Agent One	\N	\N	\N	\N	\N	en	Asia/Kolkata	light	\N	f	t	\N	\N	\N	\N	f	\N	f	2025-11-25 08:19:33.218192	0	\N	junior_agent	active	\N	\N	trial	\N	2025-11-23 22:34:55.683807	\N	2025-11-25 13:49:33.215701	\N	\N
 3d2f74d8-0b15-4730-b583-011a2c895829	00000000-0000-0000-0000-000000000000	\N	+91987654322	\N	$2b$12$L6OjHQp7n5fRKRvM9t3JeO3tJcKQZ3Z3Z3Z3Z3Z3Z3Z3Z3Z3Z3Z3	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	en	Asia/Kolkata	light	\N	f	f	\N	\N	\N	\N	f	\N	f	\N	0	\N	policyholder	active	\N	\N	trial	\N	2025-11-24 11:43:39.062887	\N	2025-11-24 11:43:39.062887	\N	\N
@@ -5136,7 +5939,7 @@ ef9f8c57-26ea-4e55-a5fe-a08dbba3ee83	00000000-0000-0000-0000-000000000000	seed_u
 
 
 --
--- Data for Name: video_analytics; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: video_analytics; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.video_analytics (analytics_id, video_id, user_id, watch_session_id, started_at, ended_at, watch_duration_seconds, completed, paused_count, seek_count, quality_changes, device_info, network_type, playback_quality, ip_address, user_agent, location_info, created_at) FROM stdin;
@@ -5144,7 +5947,7 @@ COPY lic_schema.video_analytics (analytics_id, video_id, user_id, watch_session_
 
 
 --
--- Data for Name: video_categories; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: video_categories; Type: TABLE DATA; Schema: lic_schema; Owner: manish
 --
 
 COPY lic_schema.video_categories (id, category_id, name, description, parent_category_id, level, sort_order, is_active, video_count, total_views, icon_name, color_code, created_at, updated_at) FROM stdin;
@@ -5157,7 +5960,7 @@ COPY lic_schema.video_categories (id, category_id, name, description, parent_cat
 
 
 --
--- Data for Name: video_content; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: video_content; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.video_content (video_id, agent_id, title, description, video_url, thumbnail_url, duration_seconds, category, tags, language, difficulty_level, target_audience, view_count, unique_viewers, avg_watch_time, completion_rate, engagement_rate, average_rating, total_ratings, featured, status, moderation_status, moderated_at, moderated_by, created_at, updated_at) FROM stdin;
@@ -5175,7 +5978,7 @@ d6a4a86f-499b-4c7c-9afb-1becd4664353	991e6172-dcd1-4ca7-9c82-85cbbd14f6b3	Invest
 
 
 --
--- Data for Name: video_progress; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: video_progress; Type: TABLE DATA; Schema: lic_schema; Owner: manish
 --
 
 COPY lic_schema.video_progress (id, user_id, video_id, watch_time_seconds, completion_percentage, is_completed, completed_at, play_count, last_watched_at, watch_sessions, learning_path_id, next_recommended_video_id, user_rating, is_bookmarked, notes, created_at, updated_at) FROM stdin;
@@ -5183,7 +5986,7 @@ COPY lic_schema.video_progress (id, user_id, video_id, watch_time_seconds, compl
 
 
 --
--- Data for Name: video_recommendations; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: video_recommendations; Type: TABLE DATA; Schema: lic_schema; Owner: manish
 --
 
 COPY lic_schema.video_recommendations (id, user_id, video_id, recommendation_type, trigger_source, trigger_query, relevance_score, confidence_score, ranking_position, intent_match_score, learning_history_score, policy_context_score, agent_expertise_score, content_freshness_score, was_viewed, viewed_at, was_completed, completed_at, user_feedback, recommendation_context, expires_at, created_at, updated_at) FROM stdin;
@@ -5191,7 +5994,7 @@ COPY lic_schema.video_recommendations (id, user_id, video_id, recommendation_typ
 
 
 --
--- Data for Name: video_tutorials; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: video_tutorials; Type: TABLE DATA; Schema: lic_schema; Owner: manish
 --
 
 COPY lic_schema.video_tutorials (id, video_id, content_id, youtube_video_id, youtube_url, title, description, duration_seconds, language, category, sub_category, difficulty_level, target_audience, policy_types, agent_id, agent_name, processing_status, youtube_upload_status, transcription_status, view_count, completion_rate, average_watch_time, engagement_score, rating, rating_count, is_featured, learning_path_order, prerequisites, original_language, available_languages, translation_status, search_tags, keywords, created_at, updated_at, created_by, updated_by) FROM stdin;
@@ -5199,7 +6002,7 @@ COPY lic_schema.video_tutorials (id, video_id, content_id, youtube_video_id, you
 
 
 --
--- Data for Name: whatsapp_messages; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: whatsapp_messages; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.whatsapp_messages (message_id, whatsapp_message_id, sender_id, recipient_id, agent_id, message_type, content, media_url, media_type, whatsapp_template_id, whatsapp_template_name, whatsapp_status, conversation_id, message_sequence, is_from_customer, sent_at, delivered_at, read_at, created_at) FROM stdin;
@@ -5217,7 +6020,7 @@ f61a7d70-c31b-46a1-b942-28dd7f06a9ab	wa_1763960341.463858_8	15f336f5-58a4-49a5-b
 
 
 --
--- Data for Name: whatsapp_templates; Type: TABLE DATA; Schema: lic_schema; Owner: -
+-- Data for Name: whatsapp_templates; Type: TABLE DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 COPY lic_schema.whatsapp_templates (template_id, template_name, category, language, content, variables, approval_status, whatsapp_template_id, created_at) FROM stdin;
@@ -5231,21 +6034,21 @@ e2eb8dfd-f07a-47c7-91db-b92ea705b0e5	agent_callback_request	utility	en	Hi {{cust
 
 
 --
--- Name: device_tokens_id_seq; Type: SEQUENCE SET; Schema: lic_schema; Owner: -
+-- Name: device_tokens_id_seq; Type: SEQUENCE SET; Schema: lic_schema; Owner: agentmitra
 --
 
 SELECT pg_catalog.setval('lic_schema.device_tokens_id_seq', 20, true);
 
 
 --
--- Name: notification_settings_id_seq; Type: SEQUENCE SET; Schema: lic_schema; Owner: -
+-- Name: notification_settings_id_seq; Type: SEQUENCE SET; Schema: lic_schema; Owner: agentmitra
 --
 
 SELECT pg_catalog.setval('lic_schema.notification_settings_id_seq', 10, true);
 
 
 --
--- Name: agent_daily_metrics agent_daily_metrics_agent_id_metric_date_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: agent_daily_metrics agent_daily_metrics_agent_id_metric_date_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.agent_daily_metrics
@@ -5253,7 +6056,7 @@ ALTER TABLE ONLY lic_schema.agent_daily_metrics
 
 
 --
--- Name: agent_daily_metrics agent_daily_metrics_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: agent_daily_metrics agent_daily_metrics_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.agent_daily_metrics
@@ -5261,7 +6064,7 @@ ALTER TABLE ONLY lic_schema.agent_daily_metrics
 
 
 --
--- Name: agent_monthly_summary agent_monthly_summary_agent_id_summary_month_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: agent_monthly_summary agent_monthly_summary_agent_id_summary_month_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.agent_monthly_summary
@@ -5269,7 +6072,7 @@ ALTER TABLE ONLY lic_schema.agent_monthly_summary
 
 
 --
--- Name: agent_monthly_summary agent_monthly_summary_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: agent_monthly_summary agent_monthly_summary_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.agent_monthly_summary
@@ -5277,7 +6080,7 @@ ALTER TABLE ONLY lic_schema.agent_monthly_summary
 
 
 --
--- Name: agent_presentation_preferences agent_presentation_preferences_agent_id_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: agent_presentation_preferences agent_presentation_preferences_agent_id_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.agent_presentation_preferences
@@ -5285,7 +6088,7 @@ ALTER TABLE ONLY lic_schema.agent_presentation_preferences
 
 
 --
--- Name: agent_presentation_preferences agent_presentation_preferences_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: agent_presentation_preferences agent_presentation_preferences_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.agent_presentation_preferences
@@ -5293,7 +6096,7 @@ ALTER TABLE ONLY lic_schema.agent_presentation_preferences
 
 
 --
--- Name: agents agents_agent_code_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: agents agents_agent_code_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.agents
@@ -5301,7 +6104,7 @@ ALTER TABLE ONLY lic_schema.agents
 
 
 --
--- Name: agents agents_license_number_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: agents agents_license_number_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.agents
@@ -5309,7 +6112,7 @@ ALTER TABLE ONLY lic_schema.agents
 
 
 --
--- Name: agents agents_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: agents agents_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.agents
@@ -5317,7 +6120,7 @@ ALTER TABLE ONLY lic_schema.agents
 
 
 --
--- Name: analytics_query_log analytics_query_log_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: analytics_query_log analytics_query_log_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.analytics_query_log
@@ -5325,7 +6128,7 @@ ALTER TABLE ONLY lic_schema.analytics_query_log
 
 
 --
--- Name: callback_activities callback_activities_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: callback_activities callback_activities_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.callback_activities
@@ -5333,7 +6136,7 @@ ALTER TABLE ONLY lic_schema.callback_activities
 
 
 --
--- Name: callback_requests callback_requests_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: callback_requests callback_requests_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.callback_requests
@@ -5341,7 +6144,7 @@ ALTER TABLE ONLY lic_schema.callback_requests
 
 
 --
--- Name: campaign_executions campaign_executions_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: campaign_executions campaign_executions_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.campaign_executions
@@ -5349,7 +6152,7 @@ ALTER TABLE ONLY lic_schema.campaign_executions
 
 
 --
--- Name: campaign_responses campaign_responses_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: campaign_responses campaign_responses_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.campaign_responses
@@ -5357,7 +6160,7 @@ ALTER TABLE ONLY lic_schema.campaign_responses
 
 
 --
--- Name: campaign_templates campaign_templates_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: campaign_templates campaign_templates_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.campaign_templates
@@ -5365,7 +6168,7 @@ ALTER TABLE ONLY lic_schema.campaign_templates
 
 
 --
--- Name: campaign_triggers campaign_triggers_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: campaign_triggers campaign_triggers_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.campaign_triggers
@@ -5373,7 +6176,7 @@ ALTER TABLE ONLY lic_schema.campaign_triggers
 
 
 --
--- Name: campaigns campaigns_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: campaigns campaigns_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.campaigns
@@ -5381,7 +6184,7 @@ ALTER TABLE ONLY lic_schema.campaigns
 
 
 --
--- Name: chat_messages chat_messages_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: chat_messages chat_messages_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.chat_messages
@@ -5389,7 +6192,7 @@ ALTER TABLE ONLY lic_schema.chat_messages
 
 
 --
--- Name: chatbot_analytics_summary chatbot_analytics_summary_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: chatbot_analytics_summary chatbot_analytics_summary_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.chatbot_analytics_summary
@@ -5397,7 +6200,7 @@ ALTER TABLE ONLY lic_schema.chatbot_analytics_summary
 
 
 --
--- Name: chatbot_analytics_summary chatbot_analytics_summary_summary_date_summary_period_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: chatbot_analytics_summary chatbot_analytics_summary_summary_date_summary_period_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.chatbot_analytics_summary
@@ -5405,7 +6208,7 @@ ALTER TABLE ONLY lic_schema.chatbot_analytics_summary
 
 
 --
--- Name: chatbot_intents chatbot_intents_intent_name_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: chatbot_intents chatbot_intents_intent_name_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.chatbot_intents
@@ -5413,7 +6216,7 @@ ALTER TABLE ONLY lic_schema.chatbot_intents
 
 
 --
--- Name: chatbot_intents chatbot_intents_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: chatbot_intents chatbot_intents_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.chatbot_intents
@@ -5421,7 +6224,7 @@ ALTER TABLE ONLY lic_schema.chatbot_intents
 
 
 --
--- Name: chatbot_sessions chatbot_sessions_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: chatbot_sessions chatbot_sessions_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.chatbot_sessions
@@ -5429,7 +6232,7 @@ ALTER TABLE ONLY lic_schema.chatbot_sessions
 
 
 --
--- Name: commissions commissions_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: commissions commissions_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.commissions
@@ -5437,7 +6240,23 @@ ALTER TABLE ONLY lic_schema.commissions
 
 
 --
--- Name: countries countries_country_code_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: content content_content_id_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
+--
+
+ALTER TABLE ONLY lic_schema.content
+    ADD CONSTRAINT content_content_id_key UNIQUE (content_id);
+
+
+--
+-- Name: content content_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
+--
+
+ALTER TABLE ONLY lic_schema.content
+    ADD CONSTRAINT content_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: countries countries_country_code_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.countries
@@ -5445,7 +6264,7 @@ ALTER TABLE ONLY lic_schema.countries
 
 
 --
--- Name: countries countries_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: countries countries_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.countries
@@ -5453,7 +6272,7 @@ ALTER TABLE ONLY lic_schema.countries
 
 
 --
--- Name: customer_behavior_metrics customer_behavior_metrics_customer_id_metric_date_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: customer_behavior_metrics customer_behavior_metrics_customer_id_metric_date_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.customer_behavior_metrics
@@ -5461,7 +6280,7 @@ ALTER TABLE ONLY lic_schema.customer_behavior_metrics
 
 
 --
--- Name: customer_behavior_metrics customer_behavior_metrics_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: customer_behavior_metrics customer_behavior_metrics_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.customer_behavior_metrics
@@ -5469,7 +6288,7 @@ ALTER TABLE ONLY lic_schema.customer_behavior_metrics
 
 
 --
--- Name: customer_data_mapping customer_data_mapping_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: customer_data_mapping customer_data_mapping_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.customer_data_mapping
@@ -5477,7 +6296,71 @@ ALTER TABLE ONLY lic_schema.customer_data_mapping
 
 
 --
--- Name: data_export_log data_export_log_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: customer_engagement_metrics customer_engagement_metrics_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.customer_engagement_metrics
+    ADD CONSTRAINT customer_engagement_metrics_pkey PRIMARY KEY (metric_id);
+
+
+--
+-- Name: customer_feedback customer_feedback_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.customer_feedback
+    ADD CONSTRAINT customer_feedback_pkey PRIMARY KEY (feedback_id);
+
+
+--
+-- Name: customer_journey_events customer_journey_events_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.customer_journey_events
+    ADD CONSTRAINT customer_journey_events_pkey PRIMARY KEY (event_id);
+
+
+--
+-- Name: customer_portal_preferences customer_portal_preferences_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.customer_portal_preferences
+    ADD CONSTRAINT customer_portal_preferences_pkey PRIMARY KEY (preference_id);
+
+
+--
+-- Name: customer_portal_sessions customer_portal_sessions_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.customer_portal_sessions
+    ADD CONSTRAINT customer_portal_sessions_pkey PRIMARY KEY (session_id);
+
+
+--
+-- Name: customer_retention_analytics customer_retention_analytics_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.customer_retention_analytics
+    ADD CONSTRAINT customer_retention_analytics_pkey PRIMARY KEY (retention_id);
+
+
+--
+-- Name: customer_retention_metrics customer_retention_metrics_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.customer_retention_metrics
+    ADD CONSTRAINT customer_retention_metrics_pkey PRIMARY KEY (retention_id);
+
+
+--
+-- Name: daily_quotes daily_quotes_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.daily_quotes
+    ADD CONSTRAINT daily_quotes_pkey PRIMARY KEY (quote_id);
+
+
+--
+-- Name: data_export_log data_export_log_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.data_export_log
@@ -5485,7 +6368,7 @@ ALTER TABLE ONLY lic_schema.data_export_log
 
 
 --
--- Name: data_imports data_imports_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: data_imports data_imports_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.data_imports
@@ -5493,7 +6376,7 @@ ALTER TABLE ONLY lic_schema.data_imports
 
 
 --
--- Name: data_sync_status data_sync_status_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: data_sync_status data_sync_status_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.data_sync_status
@@ -5501,7 +6384,7 @@ ALTER TABLE ONLY lic_schema.data_sync_status
 
 
 --
--- Name: device_tokens device_tokens_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: device_tokens device_tokens_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.device_tokens
@@ -5509,7 +6392,7 @@ ALTER TABLE ONLY lic_schema.device_tokens
 
 
 --
--- Name: device_tokens device_tokens_token_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: device_tokens device_tokens_token_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.device_tokens
@@ -5517,7 +6400,7 @@ ALTER TABLE ONLY lic_schema.device_tokens
 
 
 --
--- Name: document_ocr_results document_ocr_results_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: document_ocr_results document_ocr_results_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.document_ocr_results
@@ -5525,7 +6408,7 @@ ALTER TABLE ONLY lic_schema.document_ocr_results
 
 
 --
--- Name: emergency_contact_verifications emergency_contact_verifications_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: emergency_contact_verifications emergency_contact_verifications_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.emergency_contact_verifications
@@ -5533,7 +6416,7 @@ ALTER TABLE ONLY lic_schema.emergency_contact_verifications
 
 
 --
--- Name: emergency_contacts emergency_contacts_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: emergency_contacts emergency_contacts_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.emergency_contacts
@@ -5541,7 +6424,7 @@ ALTER TABLE ONLY lic_schema.emergency_contacts
 
 
 --
--- Name: feature_flag_overrides feature_flag_overrides_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: feature_flag_overrides feature_flag_overrides_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.feature_flag_overrides
@@ -5549,7 +6432,7 @@ ALTER TABLE ONLY lic_schema.feature_flag_overrides
 
 
 --
--- Name: feature_flags feature_flags_flag_name_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: feature_flags feature_flags_flag_name_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.feature_flags
@@ -5557,7 +6440,7 @@ ALTER TABLE ONLY lic_schema.feature_flags
 
 
 --
--- Name: feature_flags feature_flags_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: feature_flags feature_flags_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.feature_flags
@@ -5565,7 +6448,7 @@ ALTER TABLE ONLY lic_schema.feature_flags
 
 
 --
--- Name: flyway_schema_history flyway_schema_history_pk; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: flyway_schema_history flyway_schema_history_pk; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.flyway_schema_history
@@ -5573,7 +6456,7 @@ ALTER TABLE ONLY lic_schema.flyway_schema_history
 
 
 --
--- Name: import_jobs import_jobs_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: import_jobs import_jobs_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.import_jobs
@@ -5581,7 +6464,7 @@ ALTER TABLE ONLY lic_schema.import_jobs
 
 
 --
--- Name: insurance_categories insurance_categories_category_code_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: insurance_categories insurance_categories_category_code_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.insurance_categories
@@ -5589,7 +6472,7 @@ ALTER TABLE ONLY lic_schema.insurance_categories
 
 
 --
--- Name: insurance_categories insurance_categories_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: insurance_categories insurance_categories_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.insurance_categories
@@ -5597,7 +6480,7 @@ ALTER TABLE ONLY lic_schema.insurance_categories
 
 
 --
--- Name: insurance_policies insurance_policies_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: insurance_policies insurance_policies_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.insurance_policies
@@ -5605,7 +6488,7 @@ ALTER TABLE ONLY lic_schema.insurance_policies
 
 
 --
--- Name: insurance_policies insurance_policies_policy_number_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: insurance_policies insurance_policies_policy_number_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.insurance_policies
@@ -5613,7 +6496,7 @@ ALTER TABLE ONLY lic_schema.insurance_policies
 
 
 --
--- Name: insurance_providers insurance_providers_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: insurance_providers insurance_providers_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.insurance_providers
@@ -5621,7 +6504,7 @@ ALTER TABLE ONLY lic_schema.insurance_providers
 
 
 --
--- Name: insurance_providers insurance_providers_provider_code_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: insurance_providers insurance_providers_provider_code_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.insurance_providers
@@ -5629,7 +6512,7 @@ ALTER TABLE ONLY lic_schema.insurance_providers
 
 
 --
--- Name: knowledge_base_articles knowledge_base_articles_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: knowledge_base_articles knowledge_base_articles_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.knowledge_base_articles
@@ -5637,7 +6520,7 @@ ALTER TABLE ONLY lic_schema.knowledge_base_articles
 
 
 --
--- Name: knowledge_search_log knowledge_search_log_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: knowledge_search_log knowledge_search_log_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.knowledge_search_log
@@ -5645,7 +6528,7 @@ ALTER TABLE ONLY lic_schema.knowledge_search_log
 
 
 --
--- Name: kyc_documents kyc_documents_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: kyc_documents kyc_documents_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.kyc_documents
@@ -5653,7 +6536,7 @@ ALTER TABLE ONLY lic_schema.kyc_documents
 
 
 --
--- Name: kyc_manual_reviews kyc_manual_reviews_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: kyc_manual_reviews kyc_manual_reviews_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.kyc_manual_reviews
@@ -5661,7 +6544,7 @@ ALTER TABLE ONLY lic_schema.kyc_manual_reviews
 
 
 --
--- Name: languages languages_language_code_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: languages languages_language_code_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.languages
@@ -5669,7 +6552,7 @@ ALTER TABLE ONLY lic_schema.languages
 
 
 --
--- Name: languages languages_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: languages languages_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.languages
@@ -5677,7 +6560,23 @@ ALTER TABLE ONLY lic_schema.languages
 
 
 --
--- Name: learning_paths learning_paths_path_id_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: lead_interactions lead_interactions_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.lead_interactions
+    ADD CONSTRAINT lead_interactions_pkey PRIMARY KEY (interaction_id);
+
+
+--
+-- Name: leads leads_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.leads
+    ADD CONSTRAINT leads_pkey PRIMARY KEY (lead_id);
+
+
+--
+-- Name: learning_paths learning_paths_path_id_key; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.learning_paths
@@ -5685,7 +6584,7 @@ ALTER TABLE ONLY lic_schema.learning_paths
 
 
 --
--- Name: learning_paths learning_paths_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: learning_paths learning_paths_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.learning_paths
@@ -5693,7 +6592,7 @@ ALTER TABLE ONLY lic_schema.learning_paths
 
 
 --
--- Name: notification_settings notification_settings_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: notification_settings notification_settings_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.notification_settings
@@ -5701,7 +6600,7 @@ ALTER TABLE ONLY lic_schema.notification_settings
 
 
 --
--- Name: notification_settings notification_settings_user_id_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: notification_settings notification_settings_user_id_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.notification_settings
@@ -5709,7 +6608,7 @@ ALTER TABLE ONLY lic_schema.notification_settings
 
 
 --
--- Name: notifications notifications_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: notifications notifications_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.notifications
@@ -5717,7 +6616,7 @@ ALTER TABLE ONLY lic_schema.notifications
 
 
 --
--- Name: permissions permissions_permission_name_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: permissions permissions_permission_name_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.permissions
@@ -5725,7 +6624,7 @@ ALTER TABLE ONLY lic_schema.permissions
 
 
 --
--- Name: permissions permissions_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: permissions permissions_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.permissions
@@ -5733,7 +6632,7 @@ ALTER TABLE ONLY lic_schema.permissions
 
 
 --
--- Name: policy_analytics_summary policy_analytics_summary_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: policy_analytics_summary policy_analytics_summary_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.policy_analytics_summary
@@ -5741,7 +6640,7 @@ ALTER TABLE ONLY lic_schema.policy_analytics_summary
 
 
 --
--- Name: policy_analytics_summary policy_analytics_summary_summary_date_summary_period_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: policy_analytics_summary policy_analytics_summary_summary_date_summary_period_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.policy_analytics_summary
@@ -5749,7 +6648,7 @@ ALTER TABLE ONLY lic_schema.policy_analytics_summary
 
 
 --
--- Name: policyholders policyholders_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: policyholders policyholders_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.policyholders
@@ -5757,7 +6656,15 @@ ALTER TABLE ONLY lic_schema.policyholders
 
 
 --
--- Name: premium_payments premium_payments_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: predictive_insights predictive_insights_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.predictive_insights
+    ADD CONSTRAINT predictive_insights_pkey PRIMARY KEY (insight_id);
+
+
+--
+-- Name: premium_payments premium_payments_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.premium_payments
@@ -5765,7 +6672,7 @@ ALTER TABLE ONLY lic_schema.premium_payments
 
 
 --
--- Name: presentation_analytics presentation_analytics_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: presentation_analytics presentation_analytics_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.presentation_analytics
@@ -5773,7 +6680,7 @@ ALTER TABLE ONLY lic_schema.presentation_analytics
 
 
 --
--- Name: presentation_media presentation_media_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: presentation_media presentation_media_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.presentation_media
@@ -5781,7 +6688,7 @@ ALTER TABLE ONLY lic_schema.presentation_media
 
 
 --
--- Name: presentation_slides presentation_slides_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: presentation_slides presentation_slides_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.presentation_slides
@@ -5789,7 +6696,7 @@ ALTER TABLE ONLY lic_schema.presentation_slides
 
 
 --
--- Name: presentation_slides presentation_slides_presentation_id_slide_order_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: presentation_slides presentation_slides_presentation_id_slide_order_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.presentation_slides
@@ -5797,7 +6704,7 @@ ALTER TABLE ONLY lic_schema.presentation_slides
 
 
 --
--- Name: presentation_templates presentation_templates_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: presentation_templates presentation_templates_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.presentation_templates
@@ -5805,7 +6712,7 @@ ALTER TABLE ONLY lic_schema.presentation_templates
 
 
 --
--- Name: presentations presentations_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: presentations presentations_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.presentations
@@ -5813,7 +6720,31 @@ ALTER TABLE ONLY lic_schema.presentations
 
 
 --
--- Name: rbac_audit_log rbac_audit_log_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: quote_performance quote_performance_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.quote_performance
+    ADD CONSTRAINT quote_performance_pkey PRIMARY KEY (performance_id);
+
+
+--
+-- Name: quote_performance quote_performance_quote_id_metric_date_key; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.quote_performance
+    ADD CONSTRAINT quote_performance_quote_id_metric_date_key UNIQUE (quote_id, metric_date);
+
+
+--
+-- Name: quote_sharing_analytics quote_sharing_analytics_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.quote_sharing_analytics
+    ADD CONSTRAINT quote_sharing_analytics_pkey PRIMARY KEY (share_id);
+
+
+--
+-- Name: rbac_audit_log rbac_audit_log_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.rbac_audit_log
@@ -5821,7 +6752,31 @@ ALTER TABLE ONLY lic_schema.rbac_audit_log
 
 
 --
--- Name: revenue_forecasts revenue_forecasts_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: retention_actions retention_actions_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.retention_actions
+    ADD CONSTRAINT retention_actions_pkey PRIMARY KEY (action_id);
+
+
+--
+-- Name: revenue_forecast_scenarios revenue_forecast_scenarios_agent_id_scenario_name_forecast__key; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.revenue_forecast_scenarios
+    ADD CONSTRAINT revenue_forecast_scenarios_agent_id_scenario_name_forecast__key UNIQUE (agent_id, scenario_name, forecast_period);
+
+
+--
+-- Name: revenue_forecast_scenarios revenue_forecast_scenarios_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.revenue_forecast_scenarios
+    ADD CONSTRAINT revenue_forecast_scenarios_pkey PRIMARY KEY (scenario_id);
+
+
+--
+-- Name: revenue_forecasts revenue_forecasts_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.revenue_forecasts
@@ -5829,7 +6784,7 @@ ALTER TABLE ONLY lic_schema.revenue_forecasts
 
 
 --
--- Name: role_permissions role_permissions_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: role_permissions role_permissions_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.role_permissions
@@ -5837,7 +6792,7 @@ ALTER TABLE ONLY lic_schema.role_permissions
 
 
 --
--- Name: role_permissions role_permissions_role_id_permission_id_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: role_permissions role_permissions_role_id_permission_id_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.role_permissions
@@ -5845,7 +6800,7 @@ ALTER TABLE ONLY lic_schema.role_permissions
 
 
 --
--- Name: roles roles_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: roles roles_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.roles
@@ -5853,7 +6808,7 @@ ALTER TABLE ONLY lic_schema.roles
 
 
 --
--- Name: roles roles_role_name_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: roles roles_role_name_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.roles
@@ -5861,7 +6816,39 @@ ALTER TABLE ONLY lic_schema.roles
 
 
 --
--- Name: tenant_config tenant_config_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: subscription_billing_history subscription_billing_history_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.subscription_billing_history
+    ADD CONSTRAINT subscription_billing_history_pkey PRIMARY KEY (billing_id);
+
+
+--
+-- Name: subscription_changes subscription_changes_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.subscription_changes
+    ADD CONSTRAINT subscription_changes_pkey PRIMARY KEY (change_id);
+
+
+--
+-- Name: subscription_plans subscription_plans_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.subscription_plans
+    ADD CONSTRAINT subscription_plans_pkey PRIMARY KEY (plan_id);
+
+
+--
+-- Name: subscription_plans subscription_plans_plan_name_key; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.subscription_plans
+    ADD CONSTRAINT subscription_plans_plan_name_key UNIQUE (plan_name);
+
+
+--
+-- Name: tenant_config tenant_config_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.tenant_config
@@ -5869,7 +6856,7 @@ ALTER TABLE ONLY lic_schema.tenant_config
 
 
 --
--- Name: tenant_config tenant_config_tenant_id_config_key_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: tenant_config tenant_config_tenant_id_config_key_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.tenant_config
@@ -5877,7 +6864,7 @@ ALTER TABLE ONLY lic_schema.tenant_config
 
 
 --
--- Name: tenant_usage tenant_usage_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: tenant_usage tenant_usage_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.tenant_usage
@@ -5885,7 +6872,7 @@ ALTER TABLE ONLY lic_schema.tenant_usage
 
 
 --
--- Name: tenant_usage tenant_usage_tenant_id_metric_type_period_start_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: tenant_usage tenant_usage_tenant_id_metric_type_period_start_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.tenant_usage
@@ -5893,7 +6880,7 @@ ALTER TABLE ONLY lic_schema.tenant_usage
 
 
 --
--- Name: tenant_users tenant_users_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: tenant_users tenant_users_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.tenant_users
@@ -5901,7 +6888,7 @@ ALTER TABLE ONLY lic_schema.tenant_users
 
 
 --
--- Name: tenant_users tenant_users_tenant_id_user_id_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: tenant_users tenant_users_tenant_id_user_id_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.tenant_users
@@ -5909,7 +6896,7 @@ ALTER TABLE ONLY lic_schema.tenant_users
 
 
 --
--- Name: tenants tenants_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: tenants tenants_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.tenants
@@ -5917,7 +6904,7 @@ ALTER TABLE ONLY lic_schema.tenants
 
 
 --
--- Name: tenants tenants_schema_name_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: tenants tenants_schema_name_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.tenants
@@ -5925,7 +6912,7 @@ ALTER TABLE ONLY lic_schema.tenants
 
 
 --
--- Name: tenants tenants_tenant_code_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: tenants tenants_tenant_code_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.tenants
@@ -5933,7 +6920,7 @@ ALTER TABLE ONLY lic_schema.tenants
 
 
 --
--- Name: trial_engagement trial_engagement_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: trial_engagement trial_engagement_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.trial_engagement
@@ -5941,7 +6928,7 @@ ALTER TABLE ONLY lic_schema.trial_engagement
 
 
 --
--- Name: trial_subscriptions trial_subscriptions_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: trial_subscriptions trial_subscriptions_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.trial_subscriptions
@@ -5949,7 +6936,7 @@ ALTER TABLE ONLY lic_schema.trial_subscriptions
 
 
 --
--- Name: emergency_contacts unique_primary_contact_per_user; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: emergency_contacts unique_primary_contact_per_user; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.emergency_contacts
@@ -5957,7 +6944,7 @@ ALTER TABLE ONLY lic_schema.emergency_contacts
 
 
 --
--- Name: user_journeys user_journeys_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: user_journeys user_journeys_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.user_journeys
@@ -5965,7 +6952,7 @@ ALTER TABLE ONLY lic_schema.user_journeys
 
 
 --
--- Name: user_payment_methods user_payment_methods_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: user_payment_methods user_payment_methods_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.user_payment_methods
@@ -5973,7 +6960,7 @@ ALTER TABLE ONLY lic_schema.user_payment_methods
 
 
 --
--- Name: user_roles user_roles_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: user_roles user_roles_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.user_roles
@@ -5981,7 +6968,7 @@ ALTER TABLE ONLY lic_schema.user_roles
 
 
 --
--- Name: user_roles user_roles_user_id_role_id_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: user_roles user_roles_user_id_role_id_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.user_roles
@@ -5989,7 +6976,7 @@ ALTER TABLE ONLY lic_schema.user_roles
 
 
 --
--- Name: user_sessions user_sessions_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: user_sessions user_sessions_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.user_sessions
@@ -5997,7 +6984,7 @@ ALTER TABLE ONLY lic_schema.user_sessions
 
 
 --
--- Name: user_sessions user_sessions_refresh_token_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: user_sessions user_sessions_refresh_token_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.user_sessions
@@ -6005,7 +6992,7 @@ ALTER TABLE ONLY lic_schema.user_sessions
 
 
 --
--- Name: user_sessions user_sessions_session_token_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: user_sessions user_sessions_session_token_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.user_sessions
@@ -6013,7 +7000,15 @@ ALTER TABLE ONLY lic_schema.user_sessions
 
 
 --
--- Name: users users_email_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: user_subscriptions user_subscriptions_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.user_subscriptions
+    ADD CONSTRAINT user_subscriptions_pkey PRIMARY KEY (subscription_id);
+
+
+--
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.users
@@ -6021,7 +7016,7 @@ ALTER TABLE ONLY lic_schema.users
 
 
 --
--- Name: users users_phone_number_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: users users_phone_number_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.users
@@ -6029,7 +7024,7 @@ ALTER TABLE ONLY lic_schema.users
 
 
 --
--- Name: users users_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.users
@@ -6037,7 +7032,7 @@ ALTER TABLE ONLY lic_schema.users
 
 
 --
--- Name: users users_username_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: users users_username_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.users
@@ -6045,7 +7040,7 @@ ALTER TABLE ONLY lic_schema.users
 
 
 --
--- Name: video_analytics video_analytics_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: video_analytics video_analytics_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.video_analytics
@@ -6053,7 +7048,7 @@ ALTER TABLE ONLY lic_schema.video_analytics
 
 
 --
--- Name: video_categories video_categories_category_id_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: video_categories video_categories_category_id_key; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.video_categories
@@ -6061,7 +7056,7 @@ ALTER TABLE ONLY lic_schema.video_categories
 
 
 --
--- Name: video_categories video_categories_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: video_categories video_categories_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.video_categories
@@ -6069,7 +7064,7 @@ ALTER TABLE ONLY lic_schema.video_categories
 
 
 --
--- Name: video_content video_content_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: video_content video_content_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.video_content
@@ -6077,7 +7072,7 @@ ALTER TABLE ONLY lic_schema.video_content
 
 
 --
--- Name: video_progress video_progress_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: video_progress video_progress_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.video_progress
@@ -6085,7 +7080,7 @@ ALTER TABLE ONLY lic_schema.video_progress
 
 
 --
--- Name: video_recommendations video_recommendations_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: video_recommendations video_recommendations_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.video_recommendations
@@ -6093,7 +7088,7 @@ ALTER TABLE ONLY lic_schema.video_recommendations
 
 
 --
--- Name: video_tutorials video_tutorials_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: video_tutorials video_tutorials_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.video_tutorials
@@ -6101,7 +7096,7 @@ ALTER TABLE ONLY lic_schema.video_tutorials
 
 
 --
--- Name: video_tutorials video_tutorials_video_id_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: video_tutorials video_tutorials_video_id_key; Type: CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.video_tutorials
@@ -6109,7 +7104,7 @@ ALTER TABLE ONLY lic_schema.video_tutorials
 
 
 --
--- Name: whatsapp_messages whatsapp_messages_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: whatsapp_messages whatsapp_messages_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.whatsapp_messages
@@ -6117,7 +7112,7 @@ ALTER TABLE ONLY lic_schema.whatsapp_messages
 
 
 --
--- Name: whatsapp_messages whatsapp_messages_whatsapp_message_id_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: whatsapp_messages whatsapp_messages_whatsapp_message_id_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.whatsapp_messages
@@ -6125,7 +7120,7 @@ ALTER TABLE ONLY lic_schema.whatsapp_messages
 
 
 --
--- Name: whatsapp_templates whatsapp_templates_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: whatsapp_templates whatsapp_templates_pkey; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.whatsapp_templates
@@ -6133,7 +7128,7 @@ ALTER TABLE ONLY lic_schema.whatsapp_templates
 
 
 --
--- Name: whatsapp_templates whatsapp_templates_template_name_key; Type: CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: whatsapp_templates whatsapp_templates_template_name_key; Type: CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.whatsapp_templates
@@ -6141,1477 +7136,2002 @@ ALTER TABLE ONLY lic_schema.whatsapp_templates
 
 
 --
--- Name: flyway_schema_history_s_idx; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: flyway_schema_history_s_idx; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX flyway_schema_history_s_idx ON lic_schema.flyway_schema_history USING btree (success);
 
 
 --
--- Name: idx_agent_leaderboard_rank; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_agent_leaderboard_rank; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_agent_leaderboard_rank ON lic_schema.agent_leaderboard USING btree (rank_by_premium);
 
 
 --
--- Name: idx_agent_metrics_agent_date; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_agent_metrics_agent_date; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_agent_metrics_agent_date ON lic_schema.agent_daily_metrics USING btree (agent_id, metric_date DESC);
 
 
 --
--- Name: idx_agent_metrics_date; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_agent_metrics_date; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_agent_metrics_date ON lic_schema.agent_daily_metrics USING btree (metric_date DESC);
 
 
 --
--- Name: idx_agent_summary_agent_month; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_agent_summary_agent_month; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_agent_summary_agent_month ON lic_schema.agent_monthly_summary USING btree (agent_id, summary_month DESC);
 
 
 --
--- Name: idx_agent_summary_month; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_agent_summary_month; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_agent_summary_month ON lic_schema.agent_monthly_summary USING btree (summary_month DESC);
 
 
 --
--- Name: idx_agents_code_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_agents_code_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_agents_code_status ON lic_schema.agents USING btree (agent_code, status) WHERE (status = 'active'::lic_schema.agent_status_enum);
 
 
 --
--- Name: idx_agents_provider; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_agents_provider; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_agents_provider ON lic_schema.agents USING btree (provider_id);
 
 
 --
--- Name: idx_agents_territory; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_agents_territory; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_agents_territory ON lic_schema.agents USING btree (territory);
 
 
 --
--- Name: idx_agents_user_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_agents_user_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_agents_user_status ON lic_schema.agents USING btree (user_id, status);
 
 
 --
--- Name: idx_analytics_agent; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_analytics_agent; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_analytics_agent ON lic_schema.presentation_analytics USING btree (agent_id, event_timestamp DESC);
 
 
 --
--- Name: idx_analytics_event_data; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_analytics_event_data; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_analytics_event_data ON lic_schema.presentation_analytics USING gin (event_data);
 
 
 --
--- Name: idx_analytics_event_type; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_analytics_event_type; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_analytics_event_type ON lic_schema.presentation_analytics USING btree (event_type, event_timestamp DESC);
 
 
 --
--- Name: idx_analytics_presentation; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_analytics_presentation; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_analytics_presentation ON lic_schema.presentation_analytics USING btree (presentation_id, event_timestamp DESC);
 
 
 --
--- Name: idx_analytics_query_type; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_analytics_query_type; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_analytics_query_type ON lic_schema.analytics_query_log USING btree (query_type, created_at DESC);
 
 
 --
--- Name: idx_analytics_query_user; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_analytics_query_user; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_analytics_query_user ON lic_schema.analytics_query_log USING btree (user_id, created_at DESC);
 
 
 --
--- Name: idx_analytics_slide; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_analytics_slide; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_analytics_slide ON lic_schema.presentation_analytics USING btree (slide_id, event_type) WHERE (slide_id IS NOT NULL);
 
 
 --
--- Name: idx_callback_activities_agent; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_billing_history_subscription; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_billing_history_subscription ON lic_schema.subscription_billing_history USING btree (subscription_id);
+
+
+--
+-- Name: idx_billing_history_user; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_billing_history_user ON lic_schema.subscription_billing_history USING btree (user_id);
+
+
+--
+-- Name: idx_callback_activities_agent; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_callback_activities_agent ON lic_schema.callback_activities USING btree (agent_id);
 
 
 --
--- Name: idx_callback_activities_callback; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_callback_activities_callback; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_callback_activities_callback ON lic_schema.callback_activities USING btree (callback_request_id);
 
 
 --
--- Name: idx_callback_activities_created_at; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_callback_activities_created_at; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_callback_activities_created_at ON lic_schema.callback_activities USING btree (created_at DESC);
 
 
 --
--- Name: idx_callback_activities_metadata; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_callback_activities_metadata; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_callback_activities_metadata ON lic_schema.callback_activities USING gin (metadata);
 
 
 --
--- Name: idx_callback_activities_tenant_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_callback_activities_tenant_id; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_callback_activities_tenant_id ON lic_schema.callback_activities USING btree (tenant_id);
 
 
 --
--- Name: idx_callback_requests_agent; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_callback_requests_agent; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_callback_requests_agent ON lic_schema.callback_requests USING btree (agent_id);
 
 
 --
--- Name: idx_callback_requests_created_at; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_callback_requests_created_at; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_callback_requests_created_at ON lic_schema.callback_requests USING btree (created_at DESC);
 
 
 --
--- Name: idx_callback_requests_due_at; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_callback_requests_due_at; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_callback_requests_due_at ON lic_schema.callback_requests USING btree (due_at);
 
 
 --
--- Name: idx_callback_requests_high_priority; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_callback_requests_high_priority; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_callback_requests_high_priority ON lic_schema.callback_requests USING btree (callback_request_id) WHERE ((priority = 'high'::lic_schema.callback_priority) AND (status <> ALL (ARRAY['completed'::lic_schema.callback_status, 'cancelled'::lic_schema.callback_status])));
 
 
 --
--- Name: idx_callback_requests_pending; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_callback_requests_pending; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_callback_requests_pending ON lic_schema.callback_requests USING btree (callback_request_id) WHERE (status = 'pending'::lic_schema.callback_status);
 
 
 --
--- Name: idx_callback_requests_policyholder; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_callback_requests_policyholder; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_callback_requests_policyholder ON lic_schema.callback_requests USING btree (policyholder_id);
 
 
 --
--- Name: idx_callback_requests_priority; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_callback_requests_priority; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_callback_requests_priority ON lic_schema.callback_requests USING btree (priority);
 
 
 --
--- Name: idx_callback_requests_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_callback_requests_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_callback_requests_status ON lic_schema.callback_requests USING btree (status);
 
 
 --
--- Name: idx_callback_requests_tenant_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_callback_requests_tenant_id; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_callback_requests_tenant_id ON lic_schema.callback_requests USING btree (tenant_id);
 
 
 --
--- Name: idx_campaign_executions_campaign; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_campaign_executions_campaign; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_campaign_executions_campaign ON lic_schema.campaign_executions USING btree (campaign_id);
 
 
 --
--- Name: idx_campaign_executions_personalized_content; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_campaign_executions_personalized_content; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_campaign_executions_personalized_content ON lic_schema.campaign_executions USING gin (personalized_content);
 
 
 --
--- Name: idx_campaign_executions_policyholder; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_campaign_executions_policyholder; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_campaign_executions_policyholder ON lic_schema.campaign_executions USING btree (policyholder_id);
 
 
 --
--- Name: idx_campaign_executions_sent_at; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_campaign_executions_sent_at; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_campaign_executions_sent_at ON lic_schema.campaign_executions USING btree (sent_at DESC);
 
 
 --
--- Name: idx_campaign_executions_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_campaign_executions_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_campaign_executions_status ON lic_schema.campaign_executions USING btree (status);
 
 
 --
--- Name: idx_campaign_responses_campaign; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_campaign_responses_campaign; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_campaign_responses_campaign ON lic_schema.campaign_responses USING btree (campaign_id);
 
 
 --
--- Name: idx_campaign_responses_execution; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_campaign_responses_execution; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_campaign_responses_execution ON lic_schema.campaign_responses USING btree (execution_id);
 
 
 --
--- Name: idx_campaign_responses_type; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_campaign_responses_type; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_campaign_responses_type ON lic_schema.campaign_responses USING btree (response_type);
 
 
 --
--- Name: idx_campaign_templates_category; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_campaign_templates_category; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_campaign_templates_category ON lic_schema.campaign_templates USING btree (category);
 
 
 --
--- Name: idx_campaign_templates_public; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_campaign_templates_public; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_campaign_templates_public ON lic_schema.campaign_templates USING btree (is_public) WHERE (is_public = true);
 
 
 --
--- Name: idx_campaign_triggers_active; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_campaign_triggers_active; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_campaign_triggers_active ON lic_schema.campaign_triggers USING btree (is_active) WHERE (is_active = true);
 
 
 --
--- Name: idx_campaign_triggers_campaign; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_campaign_triggers_campaign; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_campaign_triggers_campaign ON lic_schema.campaign_triggers USING btree (campaign_id);
 
 
 --
--- Name: idx_campaigns_active; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_campaigns_active; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_campaigns_active ON lic_schema.campaigns USING btree (campaign_id) WHERE (status = 'active'::lic_schema.campaign_status_enum);
 
 
 --
--- Name: idx_campaigns_agent_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_campaigns_agent_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_campaigns_agent_status ON lic_schema.campaigns USING btree (agent_id, status);
 
 
 --
--- Name: idx_campaigns_created_at; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_campaigns_created_at; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_campaigns_created_at ON lic_schema.campaigns USING btree (created_at DESC);
 
 
 --
--- Name: idx_campaigns_scheduled; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_campaigns_scheduled; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_campaigns_scheduled ON lic_schema.campaigns USING btree (scheduled_at) WHERE (scheduled_at IS NOT NULL);
 
 
 --
--- Name: idx_campaigns_targeting_rules; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_campaigns_targeting_rules; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_campaigns_targeting_rules ON lic_schema.campaigns USING gin (targeting_rules) WHERE (targeting_rules IS NOT NULL);
 
 
 --
--- Name: idx_campaigns_tenant_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_campaigns_tenant_id; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_campaigns_tenant_id ON lic_schema.campaigns USING btree (tenant_id);
 
 
 --
--- Name: idx_campaigns_type_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_campaigns_type_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_campaigns_type_status ON lic_schema.campaigns USING btree (campaign_type, status);
 
 
 --
--- Name: idx_chatbot_analytics_date; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_chatbot_analytics_date; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_chatbot_analytics_date ON lic_schema.chatbot_analytics_summary USING btree (summary_date DESC);
 
 
 --
--- Name: idx_chatbot_intents_active; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_chatbot_intents_active; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_chatbot_intents_active ON lic_schema.chatbot_intents USING btree (intent_name) WHERE (is_active = true);
 
 
 --
--- Name: idx_chatbot_sessions_user; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_chatbot_sessions_user; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_chatbot_sessions_user ON lic_schema.chatbot_sessions USING btree (user_id);
 
 
 --
--- Name: idx_commissions_agent_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_commissions_agent_id; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_commissions_agent_id ON lic_schema.commissions USING btree (agent_id);
 
 
 --
--- Name: idx_commissions_payment_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_commissions_payment_id; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_commissions_payment_id ON lic_schema.commissions USING btree (payment_id);
 
 
 --
--- Name: idx_commissions_policy_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_commissions_policy_id; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_commissions_policy_id ON lic_schema.commissions USING btree (policy_id);
 
 
 --
--- Name: idx_commissions_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_commissions_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_commissions_status ON lic_schema.commissions USING btree (status);
 
 
 --
--- Name: idx_commissions_tenant_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_commissions_tenant_id; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_commissions_tenant_id ON lic_schema.commissions USING btree (tenant_id);
 
 
 --
--- Name: idx_countries_country_code; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_countries_country_code; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_countries_country_code ON lic_schema.countries USING btree (country_code);
 
 
 --
--- Name: idx_customer_behavior_customer; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_customer_behavior_customer; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_customer_behavior_customer ON lic_schema.customer_behavior_metrics USING btree (customer_id, metric_date DESC);
 
 
 --
--- Name: idx_customer_behavior_date; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_customer_behavior_date; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_customer_behavior_date ON lic_schema.customer_behavior_metrics USING btree (metric_date DESC);
 
 
 --
--- Name: idx_customer_data_mapping_import; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_customer_data_mapping_import; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_customer_data_mapping_import ON lic_schema.customer_data_mapping USING btree (import_id);
 
 
 --
--- Name: idx_daily_kpis_date; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_customer_feedback_rating; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_customer_feedback_rating ON lic_schema.customer_feedback USING btree (rating);
+
+
+--
+-- Name: idx_customer_feedback_resolved; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_customer_feedback_resolved ON lic_schema.customer_feedback USING btree (resolved);
+
+
+--
+-- Name: idx_customer_feedback_type; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_customer_feedback_type ON lic_schema.customer_feedback USING btree (feedback_type);
+
+
+--
+-- Name: idx_customer_feedback_user_id; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_customer_feedback_user_id ON lic_schema.customer_feedback USING btree (user_id);
+
+
+--
+-- Name: idx_customer_preferences_user_id; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_customer_preferences_user_id ON lic_schema.customer_portal_preferences USING btree (user_id);
+
+
+--
+-- Name: idx_customer_retention_agent; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_customer_retention_agent ON lic_schema.customer_retention_analytics USING btree (assigned_agent_id);
+
+
+--
+-- Name: idx_customer_retention_customer; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_customer_retention_customer ON lic_schema.customer_retention_analytics USING btree (customer_id);
+
+
+--
+-- Name: idx_customer_retention_customer_id; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_customer_retention_customer_id ON lic_schema.customer_retention_analytics USING btree (customer_id);
+
+
+--
+-- Name: idx_customer_retention_risk; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_customer_retention_risk ON lic_schema.customer_retention_analytics USING btree (risk_level, risk_score DESC);
+
+
+--
+-- Name: idx_customer_retention_status; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_customer_retention_status ON lic_schema.customer_retention_analytics USING btree (status);
+
+
+--
+-- Name: idx_customer_retention_updated; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_customer_retention_updated ON lic_schema.customer_retention_analytics USING btree (updated_at DESC);
+
+
+--
+-- Name: idx_customer_sessions_end; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_customer_sessions_end ON lic_schema.customer_portal_sessions USING btree (session_end);
+
+
+--
+-- Name: idx_customer_sessions_start; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_customer_sessions_start ON lic_schema.customer_portal_sessions USING btree (session_start DESC);
+
+
+--
+-- Name: idx_customer_sessions_user_id; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_customer_sessions_user_id ON lic_schema.customer_portal_sessions USING btree (user_id);
+
+
+--
+-- Name: idx_daily_kpis_date; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_daily_kpis_date ON lic_schema.daily_dashboard_kpis USING btree (report_date);
 
 
 --
--- Name: idx_data_export_user; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_daily_quotes_active; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_daily_quotes_active ON lic_schema.daily_quotes USING btree (is_active) WHERE (is_active = true);
+
+
+--
+-- Name: idx_daily_quotes_agent_id; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_daily_quotes_agent_id ON lic_schema.daily_quotes USING btree (agent_id);
+
+
+--
+-- Name: idx_daily_quotes_category; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_daily_quotes_category ON lic_schema.daily_quotes USING btree (category);
+
+
+--
+-- Name: idx_daily_quotes_scheduled; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_daily_quotes_scheduled ON lic_schema.daily_quotes USING btree (scheduled_date);
+
+
+--
+-- Name: idx_data_export_user; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_data_export_user ON lic_schema.data_export_log USING btree (user_id, created_at DESC);
 
 
 --
--- Name: idx_data_imports_agent_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_data_imports_agent_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_data_imports_agent_status ON lic_schema.data_imports USING btree (agent_id, status);
 
 
 --
--- Name: idx_data_sync_status_agent; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_data_sync_status_agent; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_data_sync_status_agent ON lic_schema.data_sync_status USING btree (agent_id);
 
 
 --
--- Name: idx_device_tokens_token; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_device_tokens_token; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_device_tokens_token ON lic_schema.device_tokens USING btree (token);
 
 
 --
--- Name: idx_device_tokens_user_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_device_tokens_user_id; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_device_tokens_user_id ON lic_schema.device_tokens USING btree (user_id);
 
 
 --
--- Name: idx_emergency_contacts_primary; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_emergency_contacts_primary; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_emergency_contacts_primary ON lic_schema.emergency_contacts USING btree (user_id, is_primary);
 
 
 --
--- Name: idx_emergency_contacts_user_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_emergency_contacts_user_id; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_emergency_contacts_user_id ON lic_schema.emergency_contacts USING btree (user_id);
 
 
 --
--- Name: idx_emergency_contacts_verification_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_emergency_contacts_verification_status; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_emergency_contacts_verification_status ON lic_schema.emergency_contacts USING btree (verification_status);
 
 
 --
--- Name: idx_emergency_verifications_contact_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_emergency_verifications_contact_id; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_emergency_verifications_contact_id ON lic_schema.emergency_contact_verifications USING btree (contact_id);
 
 
 --
--- Name: idx_emergency_verifications_verified; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_emergency_verifications_verified; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_emergency_verifications_verified ON lic_schema.emergency_contact_verifications USING btree (verified);
 
 
 --
--- Name: idx_feature_flag_overrides_flag; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_engagement_metrics_date; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_engagement_metrics_date ON lic_schema.customer_engagement_metrics USING btree (metric_date DESC);
+
+
+--
+-- Name: idx_engagement_metrics_user_id; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_engagement_metrics_user_id ON lic_schema.customer_engagement_metrics USING btree (user_id);
+
+
+--
+-- Name: idx_feature_flag_overrides_flag; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_feature_flag_overrides_flag ON lic_schema.feature_flag_overrides USING btree (flag_id);
 
 
 --
--- Name: idx_feature_flag_overrides_role; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_feature_flag_overrides_role; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_feature_flag_overrides_role ON lic_schema.feature_flag_overrides USING btree (role_id);
 
 
 --
--- Name: idx_feature_flag_overrides_user; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_feature_flag_overrides_user; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_feature_flag_overrides_user ON lic_schema.feature_flag_overrides USING btree (user_id);
 
 
 --
--- Name: idx_feature_flags_name; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_feature_flags_name; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_feature_flags_name ON lic_schema.feature_flags USING btree (flag_name);
 
 
 --
--- Name: idx_feature_flags_tenant; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_feature_flags_tenant; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_feature_flags_tenant ON lic_schema.feature_flags USING btree (tenant_id);
 
 
 --
--- Name: idx_import_jobs_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_forecast_assumptions; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_forecast_assumptions ON lic_schema.revenue_forecast_scenarios USING gin (assumptions);
+
+
+--
+-- Name: idx_forecast_scenarios_agent; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_forecast_scenarios_agent ON lic_schema.revenue_forecast_scenarios USING btree (agent_id);
+
+
+--
+-- Name: idx_forecast_scenarios_type; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_forecast_scenarios_type ON lic_schema.revenue_forecast_scenarios USING btree (scenario_type, forecast_period);
+
+
+--
+-- Name: idx_import_jobs_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_import_jobs_status ON lic_schema.import_jobs USING btree (status);
 
 
 --
--- Name: idx_insurance_categories_category_code; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_insights_actions; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_insights_actions ON lic_schema.predictive_insights USING gin (recommended_actions);
+
+
+--
+-- Name: idx_insurance_categories_category_code; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_insurance_categories_category_code ON lic_schema.insurance_categories USING btree (category_code);
 
 
 --
--- Name: idx_insurance_providers_provider_code; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_insurance_providers_provider_code; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_insurance_providers_provider_code ON lic_schema.insurance_providers USING btree (provider_code);
 
 
 --
--- Name: idx_kb_articles_category; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_journey_events_session_id; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_journey_events_session_id ON lic_schema.customer_journey_events USING btree (session_id);
+
+
+--
+-- Name: idx_journey_events_timestamp; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_journey_events_timestamp ON lic_schema.customer_journey_events USING btree ("timestamp" DESC);
+
+
+--
+-- Name: idx_journey_events_type; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_journey_events_type ON lic_schema.customer_journey_events USING btree (event_type);
+
+
+--
+-- Name: idx_journey_events_user_id; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_journey_events_user_id ON lic_schema.customer_journey_events USING btree (user_id);
+
+
+--
+-- Name: idx_kb_articles_category; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_kb_articles_category ON lic_schema.knowledge_base_articles USING btree (category, is_active);
 
 
 --
--- Name: idx_kb_articles_tags; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_kb_articles_tags; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_kb_articles_tags ON lic_schema.knowledge_base_articles USING gin (tags);
 
 
 --
--- Name: idx_kb_search_query; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_kb_search_query; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_kb_search_query ON lic_schema.knowledge_search_log USING gin (to_tsvector('english'::regconfig, search_query));
 
 
 --
--- Name: idx_kb_search_user; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_kb_search_user; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_kb_search_user ON lic_schema.knowledge_search_log USING btree (user_id, created_at DESC);
 
 
 --
--- Name: idx_kyc_documents_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_kyc_documents_status; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_kyc_documents_status ON lic_schema.kyc_documents USING btree (verification_status);
 
 
 --
--- Name: idx_kyc_documents_type; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_kyc_documents_type; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_kyc_documents_type ON lic_schema.kyc_documents USING btree (document_type);
 
 
 --
--- Name: idx_kyc_documents_user_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_kyc_documents_user_id; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_kyc_documents_user_id ON lic_schema.kyc_documents USING btree (user_id);
 
 
 --
--- Name: idx_languages_language_code; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_languages_language_code; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_languages_language_code ON lic_schema.languages USING btree (language_code);
 
 
 --
--- Name: idx_learning_paths_active; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_lead_interactions_agent; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_lead_interactions_agent ON lic_schema.lead_interactions USING btree (agent_id);
+
+
+--
+-- Name: idx_lead_interactions_created; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_lead_interactions_created ON lic_schema.lead_interactions USING btree (created_at DESC);
+
+
+--
+-- Name: idx_lead_interactions_lead; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_lead_interactions_lead ON lic_schema.lead_interactions USING btree (lead_id);
+
+
+--
+-- Name: idx_leads_agent_status; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_leads_agent_status ON lic_schema.leads USING btree (agent_id, lead_status);
+
+
+--
+-- Name: idx_leads_converted_policy_id; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_leads_converted_policy_id ON lic_schema.leads USING btree (converted_policy_id);
+
+
+--
+-- Name: idx_leads_created_at; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_leads_created_at ON lic_schema.leads USING btree (created_at DESC);
+
+
+--
+-- Name: idx_leads_next_followup; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_leads_next_followup ON lic_schema.leads USING btree (next_followup_at) WHERE (next_followup_at IS NOT NULL);
+
+
+--
+-- Name: idx_leads_priority_score; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_leads_priority_score ON lic_schema.leads USING btree (priority, conversion_score DESC);
+
+
+--
+-- Name: idx_leads_risk_factors; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_leads_risk_factors ON lic_schema.customer_retention_analytics USING gin (risk_factors);
+
+
+--
+-- Name: idx_leads_source_type; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_leads_source_type ON lic_schema.leads USING btree (lead_source, insurance_type);
+
+
+--
+-- Name: idx_learning_paths_active; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_learning_paths_active ON lic_schema.learning_paths USING btree (is_active) WHERE (is_active = true);
 
 
 --
--- Name: idx_learning_paths_agent; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_learning_paths_agent; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_learning_paths_agent ON lic_schema.learning_paths USING btree (created_by_agent_id);
 
 
 --
--- Name: idx_learning_paths_path_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_learning_paths_path_id; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_learning_paths_path_id ON lic_schema.learning_paths USING btree (path_id);
 
 
 --
--- Name: idx_manual_reviews_document_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_manual_reviews_document_id; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_manual_reviews_document_id ON lic_schema.kyc_manual_reviews USING btree (document_id);
 
 
 --
--- Name: idx_manual_reviews_reviewer_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_manual_reviews_reviewer_id; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_manual_reviews_reviewer_id ON lic_schema.kyc_manual_reviews USING btree (reviewer_id);
 
 
 --
--- Name: idx_manual_reviews_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_manual_reviews_status; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_manual_reviews_status ON lic_schema.kyc_manual_reviews USING btree (review_status);
 
 
 --
--- Name: idx_media_agent_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_media_agent_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_media_agent_status ON lic_schema.presentation_media USING btree (agent_id, status);
 
 
 --
--- Name: idx_media_hash; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_media_hash; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_media_hash ON lic_schema.presentation_media USING btree (file_hash) WHERE (file_hash IS NOT NULL);
 
 
 --
--- Name: idx_media_type; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_media_type; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_media_type ON lic_schema.presentation_media USING btree (media_type);
 
 
 --
--- Name: idx_notification_settings_user_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_notification_settings_user_id; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_notification_settings_user_id ON lic_schema.notification_settings USING btree (user_id);
 
 
 --
--- Name: idx_notifications_created_at; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_notifications_created_at; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_notifications_created_at ON lic_schema.notifications USING btree (created_at DESC);
 
 
 --
--- Name: idx_notifications_is_read; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_notifications_is_read; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_notifications_is_read ON lic_schema.notifications USING btree (is_read);
 
 
 --
--- Name: idx_notifications_tenant_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_notifications_tenant_id; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_notifications_tenant_id ON lic_schema.notifications USING btree (tenant_id);
 
 
 --
--- Name: idx_notifications_type; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_notifications_type; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_notifications_type ON lic_schema.notifications USING btree (type);
 
 
 --
--- Name: idx_notifications_user_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_notifications_user_id; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_notifications_user_id ON lic_schema.notifications USING btree (user_id);
 
 
 --
--- Name: idx_notifications_user_read; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_notifications_user_read; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_notifications_user_read ON lic_schema.notifications USING btree (user_id, is_read);
 
 
 --
--- Name: idx_ocr_results_document_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_ocr_results_document_id; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_ocr_results_document_id ON lic_schema.document_ocr_results USING btree (document_id);
 
 
 --
--- Name: idx_ocr_results_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_ocr_results_status; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_ocr_results_status ON lic_schema.document_ocr_results USING btree (processing_status);
 
 
 --
--- Name: idx_payments_date_amount; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_payments_date_amount; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_payments_date_amount ON lic_schema.premium_payments USING btree (payment_date DESC, amount);
 
 
 --
--- Name: idx_payments_policy_date; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_payments_policy_date; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_payments_policy_date ON lic_schema.premium_payments USING btree (policy_id, payment_date DESC);
 
 
 --
--- Name: idx_payments_policy_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_payments_policy_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_payments_policy_status ON lic_schema.premium_payments USING btree (policy_id, status);
 
 
 --
--- Name: idx_payments_status_date; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_payments_status_date; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_payments_status_date ON lic_schema.premium_payments USING btree (status, payment_date DESC) WHERE (status = 'completed'::lic_schema.payment_status_enum);
 
 
 --
--- Name: idx_policies_agent_provider; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_policies_agent_provider; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_policies_agent_provider ON lic_schema.insurance_policies USING btree (agent_id, provider_id);
 
 
 --
--- Name: idx_policies_dates_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_policies_dates_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_policies_dates_status ON lic_schema.insurance_policies USING btree (start_date, maturity_date, status) WHERE (status = ANY (ARRAY['active'::lic_schema.policy_status_enum, 'pending_approval'::lic_schema.policy_status_enum]));
 
 
 --
--- Name: idx_policies_policyholder_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_policies_policyholder_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_policies_policyholder_status ON lic_schema.insurance_policies USING btree (policyholder_id, status);
 
 
 --
--- Name: idx_policies_status_dates; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_policies_status_dates; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_policies_status_dates ON lic_schema.insurance_policies USING btree (status, start_date, maturity_date);
 
 
 --
--- Name: idx_policy_analytics_date; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_policy_analytics_date; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_policy_analytics_date ON lic_schema.policy_analytics_summary USING btree (summary_date DESC);
 
 
 --
--- Name: idx_policy_analytics_period; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_policy_analytics_period; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_policy_analytics_period ON lic_schema.policy_analytics_summary USING btree (summary_period, summary_date DESC);
 
 
 --
--- Name: idx_presentations_active; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_predictive_insights_agent; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_predictive_insights_agent ON lic_schema.predictive_insights USING btree (agent_id);
+
+
+--
+-- Name: idx_predictive_insights_customer; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_predictive_insights_customer ON lic_schema.predictive_insights USING btree (customer_id);
+
+
+--
+-- Name: idx_predictive_insights_type; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_predictive_insights_type ON lic_schema.predictive_insights USING btree (insight_type);
+
+
+--
+-- Name: idx_predictive_insights_valid; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_predictive_insights_valid ON lic_schema.predictive_insights USING btree (valid_until) WHERE (valid_until IS NOT NULL);
+
+
+--
+-- Name: idx_presentation_media_tenant_id; Type: INDEX; Schema: lic_schema; Owner: agentmitra
+--
+
+CREATE INDEX idx_presentation_media_tenant_id ON lic_schema.presentation_media USING btree (tenant_id);
+
+
+--
+-- Name: idx_presentations_active; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_presentations_active ON lic_schema.presentations USING btree (agent_id, is_active) WHERE (is_active = true);
 
 
 --
--- Name: idx_presentations_agent_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_presentations_agent_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_presentations_agent_status ON lic_schema.presentations USING btree (agent_id, status);
 
 
 --
--- Name: idx_presentations_published; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_presentations_published; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_presentations_published ON lic_schema.presentations USING btree (published_at DESC) WHERE ((status)::text = 'published'::text);
 
 
 --
--- Name: idx_presentations_template; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_presentations_template; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_presentations_template ON lic_schema.presentations USING btree (template_id) WHERE (template_id IS NOT NULL);
 
 
 --
--- Name: idx_presentations_tenant_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_presentations_tenant_id; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_presentations_tenant_id ON lic_schema.presentations USING btree (tenant_id);
 
 
 --
--- Name: idx_rbac_audit_action; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_quote_performance_agent_id; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_quote_performance_agent_id ON lic_schema.quote_performance USING btree (agent_id);
+
+
+--
+-- Name: idx_quote_performance_date; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_quote_performance_date ON lic_schema.quote_performance USING btree (metric_date);
+
+
+--
+-- Name: idx_quote_performance_quote_id; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_quote_performance_quote_id ON lic_schema.quote_performance USING btree (quote_id);
+
+
+--
+-- Name: idx_quote_sharing_agent_id; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_quote_sharing_agent_id ON lic_schema.quote_sharing_analytics USING btree (agent_id);
+
+
+--
+-- Name: idx_quote_sharing_analytics_agent_id; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_quote_sharing_analytics_agent_id ON lic_schema.quote_sharing_analytics USING btree (agent_id);
+
+
+--
+-- Name: idx_quote_sharing_analytics_quote_id; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_quote_sharing_analytics_quote_id ON lic_schema.quote_sharing_analytics USING btree (quote_id);
+
+
+--
+-- Name: idx_quote_sharing_platform; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_quote_sharing_platform ON lic_schema.quote_sharing_analytics USING btree (platform);
+
+
+--
+-- Name: idx_quote_sharing_quote_id; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_quote_sharing_quote_id ON lic_schema.quote_sharing_analytics USING btree (quote_id);
+
+
+--
+-- Name: idx_rbac_audit_action; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_rbac_audit_action ON lic_schema.rbac_audit_log USING btree (action);
 
 
 --
--- Name: idx_rbac_audit_tenant_timestamp; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_rbac_audit_tenant_timestamp; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_rbac_audit_tenant_timestamp ON lic_schema.rbac_audit_log USING btree (tenant_id, "timestamp");
 
 
 --
--- Name: idx_rbac_audit_user; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_rbac_audit_user; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_rbac_audit_user ON lic_schema.rbac_audit_log USING btree (user_id);
 
 
 --
--- Name: idx_revenue_forecast_agent; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_retention_actions_agent; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_retention_actions_agent ON lic_schema.retention_actions USING btree (agent_id);
+
+
+--
+-- Name: idx_retention_actions_due; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_retention_actions_due ON lic_schema.retention_actions USING btree (due_at);
+
+
+--
+-- Name: idx_retention_actions_retention; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_retention_actions_retention ON lic_schema.retention_actions USING btree (retention_id);
+
+
+--
+-- Name: idx_retention_actions_scheduled; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_retention_actions_scheduled ON lic_schema.retention_actions USING btree (scheduled_at);
+
+
+--
+-- Name: idx_retention_metrics_churn_risk; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_retention_metrics_churn_risk ON lic_schema.customer_retention_metrics USING btree (churn_risk_score DESC);
+
+
+--
+-- Name: idx_retention_metrics_date; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_retention_metrics_date ON lic_schema.customer_retention_metrics USING btree (metric_date DESC);
+
+
+--
+-- Name: idx_retention_metrics_user_id; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_retention_metrics_user_id ON lic_schema.customer_retention_metrics USING btree (user_id);
+
+
+--
+-- Name: idx_retention_plan; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_retention_plan ON lic_schema.customer_retention_analytics USING gin (retention_plan);
+
+
+--
+-- Name: idx_revenue_forecast_agent; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_revenue_forecast_agent ON lic_schema.revenue_forecasts USING btree (agent_id, forecast_date DESC);
 
 
 --
--- Name: idx_revenue_forecast_date; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_revenue_forecast_date; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_revenue_forecast_date ON lic_schema.revenue_forecasts USING btree (forecast_date DESC);
 
 
 --
--- Name: idx_slides_agent_branding; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_slides_agent_branding; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_slides_agent_branding ON lic_schema.presentation_slides USING gin (agent_branding) WHERE (agent_branding IS NOT NULL);
 
 
 --
--- Name: idx_slides_cta_button; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_slides_cta_button; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_slides_cta_button ON lic_schema.presentation_slides USING gin (cta_button) WHERE (cta_button IS NOT NULL);
 
 
 --
--- Name: idx_slides_presentation_order; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_slides_presentation_order; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_slides_presentation_order ON lic_schema.presentation_slides USING btree (presentation_id, slide_order);
 
 
 --
--- Name: idx_slides_type; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_slides_type; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_slides_type ON lic_schema.presentation_slides USING btree (slide_type);
 
 
 --
--- Name: idx_templates_category_public; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_subscription_changes_subscription; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_subscription_changes_subscription ON lic_schema.subscription_changes USING btree (subscription_id);
+
+
+--
+-- Name: idx_subscription_changes_subscription_id; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_subscription_changes_subscription_id ON lic_schema.subscription_changes USING btree (subscription_id);
+
+
+--
+-- Name: idx_subscription_changes_user_id; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_subscription_changes_user_id ON lic_schema.subscription_changes USING btree (user_id);
+
+
+--
+-- Name: idx_subscription_plans_active; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_subscription_plans_active ON lic_schema.subscription_plans USING btree (is_active) WHERE (is_active = true);
+
+
+--
+-- Name: idx_subscription_plans_type; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_subscription_plans_type ON lic_schema.subscription_plans USING btree (plan_type);
+
+
+--
+-- Name: idx_templates_category_public; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_templates_category_public ON lic_schema.presentation_templates USING btree (category, is_public) WHERE (is_public = true);
 
 
 --
--- Name: idx_templates_slides; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_templates_slides; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_templates_slides ON lic_schema.presentation_templates USING gin (slides);
 
 
 --
--- Name: idx_templates_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_templates_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_templates_status ON lic_schema.presentation_templates USING btree (status) WHERE ((status)::text = 'active'::text);
 
 
 --
--- Name: idx_tenant_config_tenant_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_tenant_config_tenant_id; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_tenant_config_tenant_id ON lic_schema.tenant_config USING btree (tenant_id);
 
 
 --
--- Name: idx_tenant_usage_metric; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_tenant_usage_metric; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_tenant_usage_metric ON lic_schema.tenant_usage USING btree (metric_type, period_start);
 
 
 --
--- Name: idx_tenant_usage_tenant_period; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_tenant_usage_tenant_period; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_tenant_usage_tenant_period ON lic_schema.tenant_usage USING btree (tenant_id, period_start, period_end);
 
 
 --
--- Name: idx_tenant_users_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_tenant_users_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_tenant_users_status ON lic_schema.tenant_users USING btree (status);
 
 
 --
--- Name: idx_tenant_users_tenant_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_tenant_users_tenant_id; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_tenant_users_tenant_id ON lic_schema.tenant_users USING btree (tenant_id);
 
 
 --
--- Name: idx_tenant_users_user_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_tenant_users_user_id; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_tenant_users_user_id ON lic_schema.tenant_users USING btree (user_id);
 
 
 --
--- Name: idx_tenants_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_tenants_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_tenants_status ON lic_schema.tenants USING btree (status);
 
 
 --
--- Name: idx_tenants_tenant_code; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_tenants_tenant_code; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_tenants_tenant_code ON lic_schema.tenants USING btree (tenant_code);
 
 
 --
--- Name: idx_trial_engagement_feature; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_trial_engagement_feature; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_trial_engagement_feature ON lic_schema.trial_engagement USING btree (feature_used);
 
 
 --
--- Name: idx_trial_engagement_timestamp; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_trial_engagement_timestamp; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_trial_engagement_timestamp ON lic_schema.trial_engagement USING btree (engaged_at);
 
 
 --
--- Name: idx_trial_engagement_trial_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_trial_engagement_trial_id; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_trial_engagement_trial_id ON lic_schema.trial_engagement USING btree (trial_id);
 
 
 --
--- Name: idx_trial_engagement_type; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_trial_engagement_type; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_trial_engagement_type ON lic_schema.trial_engagement USING btree (engagement_type);
 
 
 --
--- Name: idx_trial_subscriptions_end_date; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_trial_subscriptions_end_date; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_trial_subscriptions_end_date ON lic_schema.trial_subscriptions USING btree (trial_end_date);
 
 
 --
--- Name: idx_trial_subscriptions_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_trial_subscriptions_status; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_trial_subscriptions_status ON lic_schema.trial_subscriptions USING btree (trial_status);
 
 
 --
--- Name: idx_trial_subscriptions_user_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_trial_subscriptions_user_id; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_trial_subscriptions_user_id ON lic_schema.trial_subscriptions USING btree (user_id);
 
 
 --
--- Name: idx_user_journeys_converted; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_user_journeys_converted; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_user_journeys_converted ON lic_schema.user_journeys USING btree (converted, journey_type) WHERE (converted = true);
 
 
 --
--- Name: idx_user_journeys_journey_data; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_user_journeys_journey_data; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_user_journeys_journey_data ON lic_schema.user_journeys USING gin (journey_data) WHERE (journey_data IS NOT NULL);
 
 
 --
--- Name: idx_user_journeys_started_at; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_user_journeys_started_at; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_user_journeys_started_at ON lic_schema.user_journeys USING btree (started_at DESC);
 
 
 --
--- Name: idx_user_journeys_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_user_journeys_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_user_journeys_status ON lic_schema.user_journeys USING btree (status) WHERE ((status)::text = 'active'::text);
 
 
 --
--- Name: idx_user_journeys_step_history; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_user_journeys_step_history; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_user_journeys_step_history ON lic_schema.user_journeys USING gin (step_history) WHERE (step_history IS NOT NULL);
 
 
 --
--- Name: idx_user_journeys_type_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_user_journeys_type_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_user_journeys_type_status ON lic_schema.user_journeys USING btree (journey_type, status);
 
 
 --
--- Name: idx_user_journeys_user_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_user_journeys_user_id; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_user_journeys_user_id ON lic_schema.user_journeys USING btree (user_id);
 
 
 --
--- Name: idx_user_sessions_active; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_user_sessions_active; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_user_sessions_active ON lic_schema.user_sessions USING btree (user_id, expires_at DESC);
 
 
 --
--- Name: idx_user_sessions_token; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_user_sessions_token; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_user_sessions_token ON lic_schema.user_sessions USING btree (session_token);
 
 
 --
--- Name: idx_users_created_at; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_user_subscriptions_end; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_user_subscriptions_end ON lic_schema.user_subscriptions USING btree (current_period_end);
+
+
+--
+-- Name: idx_user_subscriptions_status; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_user_subscriptions_status ON lic_schema.user_subscriptions USING btree (status);
+
+
+--
+-- Name: idx_user_subscriptions_user_id; Type: INDEX; Schema: lic_schema; Owner: manish
+--
+
+CREATE INDEX idx_user_subscriptions_user_id ON lic_schema.user_subscriptions USING btree (user_id);
+
+
+--
+-- Name: idx_users_created_at; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_users_created_at ON lic_schema.users USING btree (created_at DESC);
 
 
 --
--- Name: idx_users_email; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_users_email; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_users_email ON lic_schema.users USING btree (email) WHERE (email IS NOT NULL);
 
 
 --
--- Name: idx_users_phone; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_users_phone; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_users_phone ON lic_schema.users USING btree (phone_number) WHERE (phone_number IS NOT NULL);
 
 
 --
--- Name: idx_users_phone_verified; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_users_phone_verified; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_users_phone_verified ON lic_schema.users USING btree (phone_number, phone_verified) WHERE (phone_verified = true);
 
 
 --
--- Name: idx_users_role_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_users_role_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_users_role_status ON lic_schema.users USING btree (role, status) WHERE (status = 'active'::lic_schema.user_status_enum);
 
 
 --
--- Name: idx_users_tenant_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_users_tenant_status; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_users_tenant_status ON lic_schema.users USING btree (tenant_id, status);
 
 
 --
--- Name: idx_video_analytics_completed; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_analytics_completed; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_video_analytics_completed ON lic_schema.video_analytics USING btree (completed, video_id);
 
 
 --
--- Name: idx_video_analytics_started_at; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_analytics_started_at; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_video_analytics_started_at ON lic_schema.video_analytics USING btree (started_at DESC);
 
 
 --
--- Name: idx_video_analytics_user_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_analytics_user_id; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_video_analytics_user_id ON lic_schema.video_analytics USING btree (user_id);
 
 
 --
--- Name: idx_video_analytics_video_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_analytics_video_id; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_video_analytics_video_id ON lic_schema.video_analytics USING btree (video_id);
 
 
 --
--- Name: idx_video_analytics_watch_session; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_analytics_watch_session; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_video_analytics_watch_session ON lic_schema.video_analytics USING btree (watch_session_id) WHERE (watch_session_id IS NOT NULL);
 
 
 --
--- Name: idx_video_categories_active; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_categories_active; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_categories_active ON lic_schema.video_categories USING btree (is_active) WHERE (is_active = true);
 
 
 --
--- Name: idx_video_categories_category_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_categories_category_id; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_categories_category_id ON lic_schema.video_categories USING btree (category_id);
 
 
 --
--- Name: idx_video_categories_parent; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_categories_parent; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_categories_parent ON lic_schema.video_categories USING btree (parent_category_id);
 
 
 --
--- Name: idx_video_content_agent; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_content_agent; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_video_content_agent ON lic_schema.video_content USING btree (agent_id);
 
 
 --
--- Name: idx_video_progress_completed; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_progress_completed; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_progress_completed ON lic_schema.video_progress USING btree (is_completed) WHERE (is_completed = true);
 
 
 --
--- Name: idx_video_progress_last_watched; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_progress_last_watched; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_progress_last_watched ON lic_schema.video_progress USING btree (last_watched_at DESC);
 
 
 --
--- Name: idx_video_progress_user_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_progress_user_id; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_progress_user_id ON lic_schema.video_progress USING btree (user_id);
 
 
 --
--- Name: idx_video_progress_user_video; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_progress_user_video; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_progress_user_video ON lic_schema.video_progress USING btree (user_id, video_id);
 
 
 --
--- Name: idx_video_progress_video_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_progress_video_id; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_progress_video_id ON lic_schema.video_progress USING btree (video_id);
 
 
 --
--- Name: idx_video_recommendations_relevance; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_recommendations_relevance; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_recommendations_relevance ON lic_schema.video_recommendations USING btree (relevance_score DESC);
 
 
 --
--- Name: idx_video_recommendations_type; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_recommendations_type; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_recommendations_type ON lic_schema.video_recommendations USING btree (recommendation_type);
 
 
 --
--- Name: idx_video_recommendations_user_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_recommendations_user_id; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_recommendations_user_id ON lic_schema.video_recommendations USING btree (user_id);
 
 
 --
--- Name: idx_video_recommendations_user_video; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_recommendations_user_video; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_recommendations_user_video ON lic_schema.video_recommendations USING btree (user_id, video_id);
 
 
 --
--- Name: idx_video_recommendations_video_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_recommendations_video_id; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_recommendations_video_id ON lic_schema.video_recommendations USING btree (video_id);
 
 
 --
--- Name: idx_video_tutorials_agent_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_tutorials_agent_id; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_tutorials_agent_id ON lic_schema.video_tutorials USING btree (agent_id);
 
 
 --
--- Name: idx_video_tutorials_category; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_tutorials_category; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_tutorials_category ON lic_schema.video_tutorials USING btree (category);
 
 
 --
--- Name: idx_video_tutorials_created_at; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_tutorials_created_at; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_tutorials_created_at ON lic_schema.video_tutorials USING btree (created_at DESC);
 
 
 --
--- Name: idx_video_tutorials_featured; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_tutorials_featured; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_tutorials_featured ON lic_schema.video_tutorials USING btree (is_featured) WHERE (is_featured = true);
 
 
 --
--- Name: idx_video_tutorials_language; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_tutorials_language; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_tutorials_language ON lic_schema.video_tutorials USING btree (language);
 
 
 --
--- Name: idx_video_tutorials_processing_status; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_tutorials_processing_status; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_tutorials_processing_status ON lic_schema.video_tutorials USING btree (processing_status);
 
 
 --
--- Name: idx_video_tutorials_search_description; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_tutorials_search_description; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_tutorials_search_description ON lic_schema.video_tutorials USING gin (to_tsvector('english'::regconfig, description));
 
 
 --
--- Name: idx_video_tutorials_search_tags; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_tutorials_search_tags; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_tutorials_search_tags ON lic_schema.video_tutorials USING gin (search_tags);
 
 
 --
--- Name: idx_video_tutorials_search_title; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_tutorials_search_title; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_tutorials_search_title ON lic_schema.video_tutorials USING gin (to_tsvector('english'::regconfig, (title)::text));
 
 
 --
--- Name: idx_video_tutorials_video_id; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_video_tutorials_video_id; Type: INDEX; Schema: lic_schema; Owner: manish
 --
 
 CREATE INDEX idx_video_tutorials_video_id ON lic_schema.video_tutorials USING btree (video_id);
 
 
 --
--- Name: idx_whatsapp_messages_agent; Type: INDEX; Schema: lic_schema; Owner: -
+-- Name: idx_whatsapp_messages_agent; Type: INDEX; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE INDEX idx_whatsapp_messages_agent ON lic_schema.whatsapp_messages USING btree (agent_id);
 
 
 --
--- Name: agents audit_agents_changes; Type: TRIGGER; Schema: lic_schema; Owner: -
+-- Name: agents audit_agents_changes; Type: TRIGGER; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TRIGGER audit_agents_changes AFTER INSERT OR DELETE OR UPDATE ON lic_schema.agents FOR EACH ROW EXECUTE FUNCTION lic_schema.audit_tenant_data_changes();
 
 
 --
--- Name: insurance_policies audit_policies_changes; Type: TRIGGER; Schema: lic_schema; Owner: -
+-- Name: insurance_policies audit_policies_changes; Type: TRIGGER; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TRIGGER audit_policies_changes AFTER INSERT OR DELETE OR UPDATE ON lic_schema.insurance_policies FOR EACH ROW EXECUTE FUNCTION lic_schema.audit_tenant_data_changes();
 
 
 --
--- Name: presentation_analytics presentation_analytics_summary_trigger; Type: TRIGGER; Schema: lic_schema; Owner: -
+-- Name: presentation_analytics presentation_analytics_summary_trigger; Type: TRIGGER; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TRIGGER presentation_analytics_summary_trigger AFTER INSERT ON lic_schema.presentation_analytics FOR EACH ROW EXECUTE FUNCTION lic_schema.update_presentation_analytics_summary();
 
 
 --
--- Name: presentation_slides slide_media_usage_trigger; Type: TRIGGER; Schema: lic_schema; Owner: -
+-- Name: presentation_slides slide_media_usage_trigger; Type: TRIGGER; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TRIGGER slide_media_usage_trigger AFTER INSERT OR UPDATE ON lic_schema.presentation_slides FOR EACH ROW EXECUTE FUNCTION lic_schema.increment_media_usage();
 
 
 --
--- Name: trial_subscriptions trigger_set_trial_end_date; Type: TRIGGER; Schema: lic_schema; Owner: -
+-- Name: trial_subscriptions trigger_set_trial_end_date; Type: TRIGGER; Schema: lic_schema; Owner: manish
 --
 
 CREATE TRIGGER trigger_set_trial_end_date BEFORE INSERT ON lic_schema.trial_subscriptions FOR EACH ROW EXECUTE FUNCTION lic_schema.set_trial_end_date();
 
 
 --
--- Name: device_tokens trigger_update_device_tokens_last_used_at; Type: TRIGGER; Schema: lic_schema; Owner: -
+-- Name: customer_portal_preferences trigger_update_customer_preferences_updated_at; Type: TRIGGER; Schema: lic_schema; Owner: manish
+--
+
+CREATE TRIGGER trigger_update_customer_preferences_updated_at BEFORE UPDATE ON lic_schema.customer_portal_preferences FOR EACH ROW EXECUTE FUNCTION lic_schema.update_customer_preferences_updated_at();
+
+
+--
+-- Name: daily_quotes trigger_update_daily_quotes_updated_at; Type: TRIGGER; Schema: lic_schema; Owner: manish
+--
+
+CREATE TRIGGER trigger_update_daily_quotes_updated_at BEFORE UPDATE ON lic_schema.daily_quotes FOR EACH ROW EXECUTE FUNCTION lic_schema.update_daily_quotes_updated_at();
+
+
+--
+-- Name: device_tokens trigger_update_device_tokens_last_used_at; Type: TRIGGER; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TRIGGER trigger_update_device_tokens_last_used_at BEFORE UPDATE ON lic_schema.device_tokens FOR EACH ROW EXECUTE FUNCTION lic_schema.update_device_tokens_last_used_at();
 
 
 --
--- Name: emergency_contacts trigger_update_emergency_contacts_updated_at; Type: TRIGGER; Schema: lic_schema; Owner: -
+-- Name: emergency_contacts trigger_update_emergency_contacts_updated_at; Type: TRIGGER; Schema: lic_schema; Owner: manish
 --
 
 CREATE TRIGGER trigger_update_emergency_contacts_updated_at BEFORE UPDATE ON lic_schema.emergency_contacts FOR EACH ROW EXECUTE FUNCTION lic_schema.update_emergency_contacts_updated_at();
 
 
 --
--- Name: kyc_documents trigger_update_kyc_documents_updated_at; Type: TRIGGER; Schema: lic_schema; Owner: -
+-- Name: kyc_documents trigger_update_kyc_documents_updated_at; Type: TRIGGER; Schema: lic_schema; Owner: manish
 --
 
 CREATE TRIGGER trigger_update_kyc_documents_updated_at BEFORE UPDATE ON lic_schema.kyc_documents FOR EACH ROW EXECUTE FUNCTION lic_schema.update_kyc_documents_updated_at();
 
 
 --
--- Name: notification_settings trigger_update_notification_settings_updated_at; Type: TRIGGER; Schema: lic_schema; Owner: -
+-- Name: notification_settings trigger_update_notification_settings_updated_at; Type: TRIGGER; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TRIGGER trigger_update_notification_settings_updated_at BEFORE UPDATE ON lic_schema.notification_settings FOR EACH ROW EXECUTE FUNCTION lic_schema.update_notification_settings_updated_at();
 
 
 --
--- Name: trial_subscriptions trigger_update_trial_status; Type: TRIGGER; Schema: lic_schema; Owner: -
+-- Name: subscription_plans trigger_update_subscription_plans_updated_at; Type: TRIGGER; Schema: lic_schema; Owner: manish
+--
+
+CREATE TRIGGER trigger_update_subscription_plans_updated_at BEFORE UPDATE ON lic_schema.subscription_plans FOR EACH ROW EXECUTE FUNCTION lic_schema.update_subscription_plans_updated_at();
+
+
+--
+-- Name: trial_subscriptions trigger_update_trial_status; Type: TRIGGER; Schema: lic_schema; Owner: manish
 --
 
 CREATE TRIGGER trigger_update_trial_status BEFORE UPDATE ON lic_schema.trial_subscriptions FOR EACH ROW EXECUTE FUNCTION lic_schema.update_trial_status();
 
 
 --
--- Name: insurance_policies update_agent_metrics_trigger; Type: TRIGGER; Schema: lic_schema; Owner: -
+-- Name: user_subscriptions trigger_update_user_subscriptions_updated_at; Type: TRIGGER; Schema: lic_schema; Owner: manish
+--
+
+CREATE TRIGGER trigger_update_user_subscriptions_updated_at BEFORE UPDATE ON lic_schema.user_subscriptions FOR EACH ROW EXECUTE FUNCTION lic_schema.update_user_subscriptions_updated_at();
+
+
+--
+-- Name: insurance_policies update_agent_metrics_trigger; Type: TRIGGER; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE TRIGGER update_agent_metrics_trigger AFTER INSERT OR DELETE OR UPDATE ON lic_schema.insurance_policies FOR EACH ROW EXECUTE FUNCTION lic_schema.update_agent_daily_metrics();
 
 
 --
--- Name: learning_paths update_learning_paths_updated_at; Type: TRIGGER; Schema: lic_schema; Owner: -
+-- Name: customer_retention_analytics update_customer_risk_on_change; Type: TRIGGER; Schema: lic_schema; Owner: manish
+--
+
+CREATE TRIGGER update_customer_risk_on_change BEFORE INSERT OR UPDATE ON lic_schema.customer_retention_analytics FOR EACH ROW EXECUTE FUNCTION lic_schema.update_customer_retention_trigger();
+
+
+--
+-- Name: leads update_lead_score_on_change; Type: TRIGGER; Schema: lic_schema; Owner: manish
+--
+
+CREATE TRIGGER update_lead_score_on_change BEFORE INSERT OR UPDATE ON lic_schema.leads FOR EACH ROW EXECUTE FUNCTION lic_schema.update_lead_score_trigger();
+
+
+--
+-- Name: learning_paths update_learning_paths_updated_at; Type: TRIGGER; Schema: lic_schema; Owner: manish
 --
 
 CREATE TRIGGER update_learning_paths_updated_at BEFORE UPDATE ON lic_schema.learning_paths FOR EACH ROW EXECUTE FUNCTION lic_schema.update_updated_at_column();
 
 
 --
--- Name: video_categories update_video_categories_updated_at; Type: TRIGGER; Schema: lic_schema; Owner: -
+-- Name: video_categories update_video_categories_updated_at; Type: TRIGGER; Schema: lic_schema; Owner: manish
 --
 
 CREATE TRIGGER update_video_categories_updated_at BEFORE UPDATE ON lic_schema.video_categories FOR EACH ROW EXECUTE FUNCTION lic_schema.update_updated_at_column();
 
 
 --
--- Name: video_progress update_video_progress_updated_at; Type: TRIGGER; Schema: lic_schema; Owner: -
+-- Name: video_progress update_video_progress_updated_at; Type: TRIGGER; Schema: lic_schema; Owner: manish
 --
 
 CREATE TRIGGER update_video_progress_updated_at BEFORE UPDATE ON lic_schema.video_progress FOR EACH ROW EXECUTE FUNCTION lic_schema.update_updated_at_column();
 
 
 --
--- Name: video_recommendations update_video_recommendations_updated_at; Type: TRIGGER; Schema: lic_schema; Owner: -
+-- Name: video_recommendations update_video_recommendations_updated_at; Type: TRIGGER; Schema: lic_schema; Owner: manish
 --
 
 CREATE TRIGGER update_video_recommendations_updated_at BEFORE UPDATE ON lic_schema.video_recommendations FOR EACH ROW EXECUTE FUNCTION lic_schema.update_updated_at_column();
 
 
 --
--- Name: video_tutorials update_video_tutorials_updated_at; Type: TRIGGER; Schema: lic_schema; Owner: -
+-- Name: video_tutorials update_video_tutorials_updated_at; Type: TRIGGER; Schema: lic_schema; Owner: manish
 --
 
 CREATE TRIGGER update_video_tutorials_updated_at BEFORE UPDATE ON lic_schema.video_tutorials FOR EACH ROW EXECUTE FUNCTION lic_schema.update_updated_at_column();
 
 
 --
--- Name: agent_daily_metrics agent_daily_metrics_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: agent_daily_metrics agent_daily_metrics_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.agent_daily_metrics
@@ -7619,7 +9139,7 @@ ALTER TABLE ONLY lic_schema.agent_daily_metrics
 
 
 --
--- Name: agent_monthly_summary agent_monthly_summary_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: agent_monthly_summary agent_monthly_summary_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.agent_monthly_summary
@@ -7627,7 +9147,7 @@ ALTER TABLE ONLY lic_schema.agent_monthly_summary
 
 
 --
--- Name: agent_presentation_preferences agent_presentation_preferences_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: agent_presentation_preferences agent_presentation_preferences_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.agent_presentation_preferences
@@ -7635,7 +9155,7 @@ ALTER TABLE ONLY lic_schema.agent_presentation_preferences
 
 
 --
--- Name: agents agents_approved_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: agents agents_approved_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.agents
@@ -7643,7 +9163,7 @@ ALTER TABLE ONLY lic_schema.agents
 
 
 --
--- Name: agents agents_parent_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: agents agents_parent_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.agents
@@ -7651,7 +9171,7 @@ ALTER TABLE ONLY lic_schema.agents
 
 
 --
--- Name: agents agents_provider_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: agents agents_provider_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.agents
@@ -7659,7 +9179,7 @@ ALTER TABLE ONLY lic_schema.agents
 
 
 --
--- Name: agents agents_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: agents agents_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.agents
@@ -7667,7 +9187,7 @@ ALTER TABLE ONLY lic_schema.agents
 
 
 --
--- Name: agents agents_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: agents agents_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.agents
@@ -7675,7 +9195,7 @@ ALTER TABLE ONLY lic_schema.agents
 
 
 --
--- Name: analytics_query_log analytics_query_log_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: analytics_query_log analytics_query_log_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.analytics_query_log
@@ -7683,7 +9203,7 @@ ALTER TABLE ONLY lic_schema.analytics_query_log
 
 
 --
--- Name: callback_activities callback_activities_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: callback_activities callback_activities_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.callback_activities
@@ -7691,7 +9211,7 @@ ALTER TABLE ONLY lic_schema.callback_activities
 
 
 --
--- Name: callback_activities callback_activities_callback_request_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: callback_activities callback_activities_callback_request_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.callback_activities
@@ -7699,7 +9219,7 @@ ALTER TABLE ONLY lic_schema.callback_activities
 
 
 --
--- Name: callback_activities callback_activities_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: callback_activities callback_activities_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.callback_activities
@@ -7707,7 +9227,7 @@ ALTER TABLE ONLY lic_schema.callback_activities
 
 
 --
--- Name: callback_requests callback_requests_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: callback_requests callback_requests_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.callback_requests
@@ -7715,7 +9235,7 @@ ALTER TABLE ONLY lic_schema.callback_requests
 
 
 --
--- Name: callback_requests callback_requests_assigned_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: callback_requests callback_requests_assigned_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.callback_requests
@@ -7723,7 +9243,7 @@ ALTER TABLE ONLY lic_schema.callback_requests
 
 
 --
--- Name: callback_requests callback_requests_completed_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: callback_requests callback_requests_completed_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.callback_requests
@@ -7731,7 +9251,7 @@ ALTER TABLE ONLY lic_schema.callback_requests
 
 
 --
--- Name: callback_requests callback_requests_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: callback_requests callback_requests_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.callback_requests
@@ -7739,7 +9259,7 @@ ALTER TABLE ONLY lic_schema.callback_requests
 
 
 --
--- Name: callback_requests callback_requests_last_updated_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: callback_requests callback_requests_last_updated_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.callback_requests
@@ -7747,7 +9267,7 @@ ALTER TABLE ONLY lic_schema.callback_requests
 
 
 --
--- Name: callback_requests callback_requests_policyholder_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: callback_requests callback_requests_policyholder_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.callback_requests
@@ -7755,7 +9275,7 @@ ALTER TABLE ONLY lic_schema.callback_requests
 
 
 --
--- Name: campaign_executions campaign_executions_campaign_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: campaign_executions campaign_executions_campaign_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.campaign_executions
@@ -7763,7 +9283,7 @@ ALTER TABLE ONLY lic_schema.campaign_executions
 
 
 --
--- Name: campaign_executions campaign_executions_policyholder_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: campaign_executions campaign_executions_policyholder_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.campaign_executions
@@ -7771,7 +9291,7 @@ ALTER TABLE ONLY lic_schema.campaign_executions
 
 
 --
--- Name: campaign_responses campaign_responses_campaign_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: campaign_responses campaign_responses_campaign_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.campaign_responses
@@ -7779,7 +9299,7 @@ ALTER TABLE ONLY lic_schema.campaign_responses
 
 
 --
--- Name: campaign_responses campaign_responses_execution_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: campaign_responses campaign_responses_execution_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.campaign_responses
@@ -7787,7 +9307,7 @@ ALTER TABLE ONLY lic_schema.campaign_responses
 
 
 --
--- Name: campaign_responses campaign_responses_policyholder_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: campaign_responses campaign_responses_policyholder_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.campaign_responses
@@ -7795,7 +9315,7 @@ ALTER TABLE ONLY lic_schema.campaign_responses
 
 
 --
--- Name: campaign_templates campaign_templates_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: campaign_templates campaign_templates_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.campaign_templates
@@ -7803,7 +9323,7 @@ ALTER TABLE ONLY lic_schema.campaign_templates
 
 
 --
--- Name: campaign_triggers campaign_triggers_campaign_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: campaign_triggers campaign_triggers_campaign_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.campaign_triggers
@@ -7811,7 +9331,7 @@ ALTER TABLE ONLY lic_schema.campaign_triggers
 
 
 --
--- Name: campaigns campaigns_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: campaigns campaigns_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.campaigns
@@ -7819,7 +9339,7 @@ ALTER TABLE ONLY lic_schema.campaigns
 
 
 --
--- Name: campaigns campaigns_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: campaigns campaigns_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.campaigns
@@ -7827,7 +9347,7 @@ ALTER TABLE ONLY lic_schema.campaigns
 
 
 --
--- Name: campaigns campaigns_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: campaigns campaigns_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.campaigns
@@ -7835,7 +9355,7 @@ ALTER TABLE ONLY lic_schema.campaigns
 
 
 --
--- Name: campaigns campaigns_updated_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: campaigns campaigns_updated_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.campaigns
@@ -7843,7 +9363,7 @@ ALTER TABLE ONLY lic_schema.campaigns
 
 
 --
--- Name: chat_messages chat_messages_session_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: chat_messages chat_messages_session_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.chat_messages
@@ -7851,7 +9371,7 @@ ALTER TABLE ONLY lic_schema.chat_messages
 
 
 --
--- Name: chat_messages chat_messages_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: chat_messages chat_messages_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.chat_messages
@@ -7859,7 +9379,7 @@ ALTER TABLE ONLY lic_schema.chat_messages
 
 
 --
--- Name: chatbot_intents chatbot_intents_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: chatbot_intents chatbot_intents_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.chatbot_intents
@@ -7867,7 +9387,7 @@ ALTER TABLE ONLY lic_schema.chatbot_intents
 
 
 --
--- Name: chatbot_sessions chatbot_sessions_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: chatbot_sessions chatbot_sessions_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.chatbot_sessions
@@ -7875,7 +9395,7 @@ ALTER TABLE ONLY lic_schema.chatbot_sessions
 
 
 --
--- Name: commissions commissions_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: commissions commissions_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.commissions
@@ -7883,7 +9403,7 @@ ALTER TABLE ONLY lic_schema.commissions
 
 
 --
--- Name: commissions commissions_payment_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: commissions commissions_payment_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.commissions
@@ -7891,7 +9411,7 @@ ALTER TABLE ONLY lic_schema.commissions
 
 
 --
--- Name: commissions commissions_policy_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: commissions commissions_policy_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.commissions
@@ -7899,7 +9419,7 @@ ALTER TABLE ONLY lic_schema.commissions
 
 
 --
--- Name: commissions commissions_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: commissions commissions_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.commissions
@@ -7907,7 +9427,39 @@ ALTER TABLE ONLY lic_schema.commissions
 
 
 --
--- Name: customer_behavior_metrics customer_behavior_metrics_customer_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: content content_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
+--
+
+ALTER TABLE ONLY lic_schema.content
+    ADD CONSTRAINT content_created_by_fkey FOREIGN KEY (created_by) REFERENCES lic_schema.users(user_id);
+
+
+--
+-- Name: content content_owner_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
+--
+
+ALTER TABLE ONLY lic_schema.content
+    ADD CONSTRAINT content_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES lic_schema.users(user_id);
+
+
+--
+-- Name: content content_updated_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
+--
+
+ALTER TABLE ONLY lic_schema.content
+    ADD CONSTRAINT content_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES lic_schema.users(user_id);
+
+
+--
+-- Name: content content_uploader_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
+--
+
+ALTER TABLE ONLY lic_schema.content
+    ADD CONSTRAINT content_uploader_id_fkey FOREIGN KEY (uploader_id) REFERENCES lic_schema.users(user_id);
+
+
+--
+-- Name: customer_behavior_metrics customer_behavior_metrics_customer_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.customer_behavior_metrics
@@ -7915,7 +9467,7 @@ ALTER TABLE ONLY lic_schema.customer_behavior_metrics
 
 
 --
--- Name: customer_data_mapping customer_data_mapping_import_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: customer_data_mapping customer_data_mapping_import_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.customer_data_mapping
@@ -7923,7 +9475,111 @@ ALTER TABLE ONLY lic_schema.customer_data_mapping
 
 
 --
--- Name: data_export_log data_export_log_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: customer_engagement_metrics customer_engagement_metrics_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.customer_engagement_metrics
+    ADD CONSTRAINT customer_engagement_metrics_user_id_fkey FOREIGN KEY (user_id) REFERENCES lic_schema.users(user_id) ON DELETE CASCADE;
+
+
+--
+-- Name: customer_feedback customer_feedback_resolved_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.customer_feedback
+    ADD CONSTRAINT customer_feedback_resolved_by_fkey FOREIGN KEY (resolved_by) REFERENCES lic_schema.users(user_id);
+
+
+--
+-- Name: customer_feedback customer_feedback_session_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.customer_feedback
+    ADD CONSTRAINT customer_feedback_session_id_fkey FOREIGN KEY (session_id) REFERENCES lic_schema.customer_portal_sessions(session_id);
+
+
+--
+-- Name: customer_feedback customer_feedback_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.customer_feedback
+    ADD CONSTRAINT customer_feedback_user_id_fkey FOREIGN KEY (user_id) REFERENCES lic_schema.users(user_id) ON DELETE CASCADE;
+
+
+--
+-- Name: customer_journey_events customer_journey_events_session_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.customer_journey_events
+    ADD CONSTRAINT customer_journey_events_session_id_fkey FOREIGN KEY (session_id) REFERENCES lic_schema.customer_portal_sessions(session_id);
+
+
+--
+-- Name: customer_journey_events customer_journey_events_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.customer_journey_events
+    ADD CONSTRAINT customer_journey_events_user_id_fkey FOREIGN KEY (user_id) REFERENCES lic_schema.users(user_id) ON DELETE CASCADE;
+
+
+--
+-- Name: customer_portal_preferences customer_portal_preferences_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.customer_portal_preferences
+    ADD CONSTRAINT customer_portal_preferences_user_id_fkey FOREIGN KEY (user_id) REFERENCES lic_schema.users(user_id) ON DELETE CASCADE;
+
+
+--
+-- Name: customer_portal_sessions customer_portal_sessions_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.customer_portal_sessions
+    ADD CONSTRAINT customer_portal_sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES lic_schema.users(user_id) ON DELETE CASCADE;
+
+
+--
+-- Name: customer_retention_analytics customer_retention_analytics_assigned_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.customer_retention_analytics
+    ADD CONSTRAINT customer_retention_analytics_assigned_agent_id_fkey FOREIGN KEY (assigned_agent_id) REFERENCES lic_schema.agents(agent_id);
+
+
+--
+-- Name: customer_retention_analytics customer_retention_analytics_customer_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.customer_retention_analytics
+    ADD CONSTRAINT customer_retention_analytics_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES lic_schema.policyholders(policyholder_id);
+
+
+--
+-- Name: customer_retention_metrics customer_retention_metrics_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.customer_retention_metrics
+    ADD CONSTRAINT customer_retention_metrics_user_id_fkey FOREIGN KEY (user_id) REFERENCES lic_schema.users(user_id) ON DELETE CASCADE;
+
+
+--
+-- Name: daily_quotes daily_quotes_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.daily_quotes
+    ADD CONSTRAINT daily_quotes_created_by_fkey FOREIGN KEY (created_by) REFERENCES lic_schema.users(user_id);
+
+
+--
+-- Name: daily_quotes daily_quotes_updated_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.daily_quotes
+    ADD CONSTRAINT daily_quotes_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES lic_schema.users(user_id);
+
+
+--
+-- Name: data_export_log data_export_log_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.data_export_log
@@ -7931,7 +9587,7 @@ ALTER TABLE ONLY lic_schema.data_export_log
 
 
 --
--- Name: document_ocr_results document_ocr_results_document_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: document_ocr_results document_ocr_results_document_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.document_ocr_results
@@ -7939,7 +9595,7 @@ ALTER TABLE ONLY lic_schema.document_ocr_results
 
 
 --
--- Name: emergency_contact_verifications emergency_contact_verifications_contact_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: emergency_contact_verifications emergency_contact_verifications_contact_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.emergency_contact_verifications
@@ -7947,7 +9603,7 @@ ALTER TABLE ONLY lic_schema.emergency_contact_verifications
 
 
 --
--- Name: emergency_contacts emergency_contacts_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: emergency_contacts emergency_contacts_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.emergency_contacts
@@ -7955,7 +9611,7 @@ ALTER TABLE ONLY lic_schema.emergency_contacts
 
 
 --
--- Name: feature_flag_overrides feature_flag_overrides_flag_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: feature_flag_overrides feature_flag_overrides_flag_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.feature_flag_overrides
@@ -7963,7 +9619,7 @@ ALTER TABLE ONLY lic_schema.feature_flag_overrides
 
 
 --
--- Name: feature_flag_overrides feature_flag_overrides_role_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: feature_flag_overrides feature_flag_overrides_role_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.feature_flag_overrides
@@ -7971,7 +9627,7 @@ ALTER TABLE ONLY lic_schema.feature_flag_overrides
 
 
 --
--- Name: feature_flag_overrides feature_flag_overrides_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: feature_flag_overrides feature_flag_overrides_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.feature_flag_overrides
@@ -7979,7 +9635,7 @@ ALTER TABLE ONLY lic_schema.feature_flag_overrides
 
 
 --
--- Name: feature_flag_overrides feature_flag_overrides_updated_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: feature_flag_overrides feature_flag_overrides_updated_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.feature_flag_overrides
@@ -7987,7 +9643,7 @@ ALTER TABLE ONLY lic_schema.feature_flag_overrides
 
 
 --
--- Name: feature_flag_overrides feature_flag_overrides_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: feature_flag_overrides feature_flag_overrides_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.feature_flag_overrides
@@ -7995,7 +9651,7 @@ ALTER TABLE ONLY lic_schema.feature_flag_overrides
 
 
 --
--- Name: feature_flags feature_flags_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: feature_flags feature_flags_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.feature_flags
@@ -8003,7 +9659,7 @@ ALTER TABLE ONLY lic_schema.feature_flags
 
 
 --
--- Name: feature_flags feature_flags_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: feature_flags feature_flags_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.feature_flags
@@ -8011,7 +9667,7 @@ ALTER TABLE ONLY lic_schema.feature_flags
 
 
 --
--- Name: feature_flags feature_flags_updated_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: feature_flags feature_flags_updated_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.feature_flags
@@ -8019,7 +9675,71 @@ ALTER TABLE ONLY lic_schema.feature_flags
 
 
 --
--- Name: video_progress fk_video_progress_video_id; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: customer_retention_analytics fk_customer_retention_customer; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.customer_retention_analytics
+    ADD CONSTRAINT fk_customer_retention_customer FOREIGN KEY (customer_id) REFERENCES lic_schema.policyholders(policyholder_id) ON DELETE CASCADE;
+
+
+--
+-- Name: daily_quotes fk_daily_quotes_agent; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.daily_quotes
+    ADD CONSTRAINT fk_daily_quotes_agent FOREIGN KEY (agent_id) REFERENCES lic_schema.users(user_id) ON DELETE CASCADE;
+
+
+--
+-- Name: leads fk_leads_converted_policy; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.leads
+    ADD CONSTRAINT fk_leads_converted_policy FOREIGN KEY (converted_policy_id) REFERENCES lic_schema.insurance_policies(policy_id) ON DELETE SET NULL;
+
+
+--
+-- Name: quote_performance fk_quote_performance_quote; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.quote_performance
+    ADD CONSTRAINT fk_quote_performance_quote FOREIGN KEY (quote_id) REFERENCES lic_schema.daily_quotes(quote_id) ON DELETE CASCADE;
+
+
+--
+-- Name: quote_sharing_analytics fk_quote_sharing_analytics_agent; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.quote_sharing_analytics
+    ADD CONSTRAINT fk_quote_sharing_analytics_agent FOREIGN KEY (agent_id) REFERENCES lic_schema.users(user_id) ON DELETE CASCADE;
+
+
+--
+-- Name: quote_sharing_analytics fk_quote_sharing_analytics_quote; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.quote_sharing_analytics
+    ADD CONSTRAINT fk_quote_sharing_analytics_quote FOREIGN KEY (quote_id) REFERENCES lic_schema.daily_quotes(quote_id) ON DELETE CASCADE;
+
+
+--
+-- Name: subscription_changes fk_subscription_changes_initiated_by; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.subscription_changes
+    ADD CONSTRAINT fk_subscription_changes_initiated_by FOREIGN KEY (initiated_by) REFERENCES lic_schema.users(user_id) ON DELETE SET NULL;
+
+
+--
+-- Name: subscription_changes fk_subscription_changes_user; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.subscription_changes
+    ADD CONSTRAINT fk_subscription_changes_user FOREIGN KEY (user_id) REFERENCES lic_schema.users(user_id) ON DELETE CASCADE;
+
+
+--
+-- Name: video_progress fk_video_progress_video_id; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.video_progress
@@ -8027,7 +9747,7 @@ ALTER TABLE ONLY lic_schema.video_progress
 
 
 --
--- Name: video_recommendations fk_video_recommendations_video_id; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: video_recommendations fk_video_recommendations_video_id; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.video_recommendations
@@ -8035,7 +9755,7 @@ ALTER TABLE ONLY lic_schema.video_recommendations
 
 
 --
--- Name: video_tutorials fk_video_tutorials_content_id; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: video_tutorials fk_video_tutorials_content_id; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.video_tutorials
@@ -8043,7 +9763,7 @@ ALTER TABLE ONLY lic_schema.video_tutorials
 
 
 --
--- Name: import_jobs import_jobs_import_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: import_jobs import_jobs_import_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.import_jobs
@@ -8051,7 +9771,7 @@ ALTER TABLE ONLY lic_schema.import_jobs
 
 
 --
--- Name: insurance_policies insurance_policies_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: insurance_policies insurance_policies_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.insurance_policies
@@ -8059,7 +9779,7 @@ ALTER TABLE ONLY lic_schema.insurance_policies
 
 
 --
--- Name: insurance_policies insurance_policies_approved_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: insurance_policies insurance_policies_approved_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.insurance_policies
@@ -8067,7 +9787,7 @@ ALTER TABLE ONLY lic_schema.insurance_policies
 
 
 --
--- Name: insurance_policies insurance_policies_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: insurance_policies insurance_policies_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.insurance_policies
@@ -8075,7 +9795,7 @@ ALTER TABLE ONLY lic_schema.insurance_policies
 
 
 --
--- Name: insurance_policies insurance_policies_policyholder_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: insurance_policies insurance_policies_policyholder_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.insurance_policies
@@ -8083,7 +9803,7 @@ ALTER TABLE ONLY lic_schema.insurance_policies
 
 
 --
--- Name: insurance_policies insurance_policies_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: insurance_policies insurance_policies_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.insurance_policies
@@ -8091,7 +9811,7 @@ ALTER TABLE ONLY lic_schema.insurance_policies
 
 
 --
--- Name: knowledge_base_articles knowledge_base_articles_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: knowledge_base_articles knowledge_base_articles_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.knowledge_base_articles
@@ -8099,7 +9819,7 @@ ALTER TABLE ONLY lic_schema.knowledge_base_articles
 
 
 --
--- Name: knowledge_base_articles knowledge_base_articles_moderated_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: knowledge_base_articles knowledge_base_articles_moderated_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.knowledge_base_articles
@@ -8107,7 +9827,7 @@ ALTER TABLE ONLY lic_schema.knowledge_base_articles
 
 
 --
--- Name: knowledge_search_log knowledge_search_log_clicked_article_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: knowledge_search_log knowledge_search_log_clicked_article_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.knowledge_search_log
@@ -8115,7 +9835,7 @@ ALTER TABLE ONLY lic_schema.knowledge_search_log
 
 
 --
--- Name: knowledge_search_log knowledge_search_log_session_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: knowledge_search_log knowledge_search_log_session_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.knowledge_search_log
@@ -8123,7 +9843,7 @@ ALTER TABLE ONLY lic_schema.knowledge_search_log
 
 
 --
--- Name: knowledge_search_log knowledge_search_log_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: knowledge_search_log knowledge_search_log_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.knowledge_search_log
@@ -8131,7 +9851,7 @@ ALTER TABLE ONLY lic_schema.knowledge_search_log
 
 
 --
--- Name: kyc_documents kyc_documents_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: kyc_documents kyc_documents_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.kyc_documents
@@ -8139,7 +9859,7 @@ ALTER TABLE ONLY lic_schema.kyc_documents
 
 
 --
--- Name: kyc_documents kyc_documents_verified_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: kyc_documents kyc_documents_verified_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.kyc_documents
@@ -8147,7 +9867,7 @@ ALTER TABLE ONLY lic_schema.kyc_documents
 
 
 --
--- Name: kyc_manual_reviews kyc_manual_reviews_document_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: kyc_manual_reviews kyc_manual_reviews_document_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.kyc_manual_reviews
@@ -8155,7 +9875,7 @@ ALTER TABLE ONLY lic_schema.kyc_manual_reviews
 
 
 --
--- Name: kyc_manual_reviews kyc_manual_reviews_reviewer_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: kyc_manual_reviews kyc_manual_reviews_reviewer_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.kyc_manual_reviews
@@ -8163,7 +9883,55 @@ ALTER TABLE ONLY lic_schema.kyc_manual_reviews
 
 
 --
--- Name: notifications notifications_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: lead_interactions lead_interactions_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.lead_interactions
+    ADD CONSTRAINT lead_interactions_agent_id_fkey FOREIGN KEY (agent_id) REFERENCES lic_schema.agents(agent_id);
+
+
+--
+-- Name: lead_interactions lead_interactions_lead_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.lead_interactions
+    ADD CONSTRAINT lead_interactions_lead_id_fkey FOREIGN KEY (lead_id) REFERENCES lic_schema.leads(lead_id) ON DELETE CASCADE;
+
+
+--
+-- Name: leads leads_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.leads
+    ADD CONSTRAINT leads_agent_id_fkey FOREIGN KEY (agent_id) REFERENCES lic_schema.agents(agent_id);
+
+
+--
+-- Name: leads leads_converted_policy_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.leads
+    ADD CONSTRAINT leads_converted_policy_id_fkey FOREIGN KEY (converted_policy_id) REFERENCES lic_schema.insurance_policies(policy_id);
+
+
+--
+-- Name: leads leads_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.leads
+    ADD CONSTRAINT leads_created_by_fkey FOREIGN KEY (created_by) REFERENCES lic_schema.users(user_id);
+
+
+--
+-- Name: leads leads_updated_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.leads
+    ADD CONSTRAINT leads_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES lic_schema.users(user_id);
+
+
+--
+-- Name: notifications notifications_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.notifications
@@ -8171,7 +9939,7 @@ ALTER TABLE ONLY lic_schema.notifications
 
 
 --
--- Name: policyholders policyholders_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: policyholders policyholders_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.policyholders
@@ -8179,7 +9947,7 @@ ALTER TABLE ONLY lic_schema.policyholders
 
 
 --
--- Name: policyholders policyholders_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: policyholders policyholders_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.policyholders
@@ -8187,7 +9955,7 @@ ALTER TABLE ONLY lic_schema.policyholders
 
 
 --
--- Name: policyholders policyholders_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: policyholders policyholders_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.policyholders
@@ -8195,7 +9963,31 @@ ALTER TABLE ONLY lic_schema.policyholders
 
 
 --
--- Name: premium_payments premium_payments_policy_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: predictive_insights predictive_insights_acknowledged_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.predictive_insights
+    ADD CONSTRAINT predictive_insights_acknowledged_by_fkey FOREIGN KEY (acknowledged_by) REFERENCES lic_schema.users(user_id);
+
+
+--
+-- Name: predictive_insights predictive_insights_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.predictive_insights
+    ADD CONSTRAINT predictive_insights_agent_id_fkey FOREIGN KEY (agent_id) REFERENCES lic_schema.agents(agent_id);
+
+
+--
+-- Name: predictive_insights predictive_insights_customer_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.predictive_insights
+    ADD CONSTRAINT predictive_insights_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES lic_schema.policyholders(policyholder_id);
+
+
+--
+-- Name: premium_payments premium_payments_policy_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.premium_payments
@@ -8203,7 +9995,7 @@ ALTER TABLE ONLY lic_schema.premium_payments
 
 
 --
--- Name: premium_payments premium_payments_policyholder_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: premium_payments premium_payments_policyholder_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.premium_payments
@@ -8211,7 +10003,7 @@ ALTER TABLE ONLY lic_schema.premium_payments
 
 
 --
--- Name: premium_payments premium_payments_reconciled_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: premium_payments premium_payments_reconciled_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.premium_payments
@@ -8219,7 +10011,7 @@ ALTER TABLE ONLY lic_schema.premium_payments
 
 
 --
--- Name: premium_payments premium_payments_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: premium_payments premium_payments_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.premium_payments
@@ -8227,7 +10019,7 @@ ALTER TABLE ONLY lic_schema.premium_payments
 
 
 --
--- Name: presentation_analytics presentation_analytics_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: presentation_analytics presentation_analytics_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.presentation_analytics
@@ -8235,7 +10027,7 @@ ALTER TABLE ONLY lic_schema.presentation_analytics
 
 
 --
--- Name: presentation_analytics presentation_analytics_presentation_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: presentation_analytics presentation_analytics_presentation_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.presentation_analytics
@@ -8243,7 +10035,7 @@ ALTER TABLE ONLY lic_schema.presentation_analytics
 
 
 --
--- Name: presentation_analytics presentation_analytics_slide_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: presentation_analytics presentation_analytics_slide_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.presentation_analytics
@@ -8251,7 +10043,7 @@ ALTER TABLE ONLY lic_schema.presentation_analytics
 
 
 --
--- Name: presentation_analytics presentation_analytics_viewer_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: presentation_analytics presentation_analytics_viewer_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.presentation_analytics
@@ -8259,7 +10051,7 @@ ALTER TABLE ONLY lic_schema.presentation_analytics
 
 
 --
--- Name: presentation_media presentation_media_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: presentation_media presentation_media_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.presentation_media
@@ -8267,7 +10059,7 @@ ALTER TABLE ONLY lic_schema.presentation_media
 
 
 --
--- Name: presentation_slides presentation_slides_presentation_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: presentation_slides presentation_slides_presentation_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.presentation_slides
@@ -8275,7 +10067,7 @@ ALTER TABLE ONLY lic_schema.presentation_slides
 
 
 --
--- Name: presentation_templates presentation_templates_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: presentation_templates presentation_templates_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.presentation_templates
@@ -8283,7 +10075,7 @@ ALTER TABLE ONLY lic_schema.presentation_templates
 
 
 --
--- Name: presentations presentations_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: presentations presentations_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.presentations
@@ -8291,7 +10083,7 @@ ALTER TABLE ONLY lic_schema.presentations
 
 
 --
--- Name: presentations presentations_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: presentations presentations_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.presentations
@@ -8299,7 +10091,7 @@ ALTER TABLE ONLY lic_schema.presentations
 
 
 --
--- Name: presentations presentations_parent_presentation_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: presentations presentations_parent_presentation_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.presentations
@@ -8307,7 +10099,7 @@ ALTER TABLE ONLY lic_schema.presentations
 
 
 --
--- Name: presentations presentations_published_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: presentations presentations_published_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.presentations
@@ -8315,7 +10107,7 @@ ALTER TABLE ONLY lic_schema.presentations
 
 
 --
--- Name: presentations presentations_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: presentations presentations_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.presentations
@@ -8323,7 +10115,31 @@ ALTER TABLE ONLY lic_schema.presentations
 
 
 --
--- Name: rbac_audit_log rbac_audit_log_target_flag_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: quote_performance quote_performance_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.quote_performance
+    ADD CONSTRAINT quote_performance_agent_id_fkey FOREIGN KEY (agent_id) REFERENCES lic_schema.users(user_id) ON DELETE CASCADE;
+
+
+--
+-- Name: quote_performance quote_performance_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.quote_performance
+    ADD CONSTRAINT quote_performance_created_by_fkey FOREIGN KEY (created_by) REFERENCES lic_schema.users(user_id);
+
+
+--
+-- Name: quote_performance quote_performance_updated_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.quote_performance
+    ADD CONSTRAINT quote_performance_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES lic_schema.users(user_id);
+
+
+--
+-- Name: rbac_audit_log rbac_audit_log_target_flag_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.rbac_audit_log
@@ -8331,7 +10147,7 @@ ALTER TABLE ONLY lic_schema.rbac_audit_log
 
 
 --
--- Name: rbac_audit_log rbac_audit_log_target_permission_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: rbac_audit_log rbac_audit_log_target_permission_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.rbac_audit_log
@@ -8339,7 +10155,7 @@ ALTER TABLE ONLY lic_schema.rbac_audit_log
 
 
 --
--- Name: rbac_audit_log rbac_audit_log_target_role_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: rbac_audit_log rbac_audit_log_target_role_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.rbac_audit_log
@@ -8347,7 +10163,7 @@ ALTER TABLE ONLY lic_schema.rbac_audit_log
 
 
 --
--- Name: rbac_audit_log rbac_audit_log_target_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: rbac_audit_log rbac_audit_log_target_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.rbac_audit_log
@@ -8355,7 +10171,7 @@ ALTER TABLE ONLY lic_schema.rbac_audit_log
 
 
 --
--- Name: rbac_audit_log rbac_audit_log_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: rbac_audit_log rbac_audit_log_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.rbac_audit_log
@@ -8363,7 +10179,7 @@ ALTER TABLE ONLY lic_schema.rbac_audit_log
 
 
 --
--- Name: rbac_audit_log rbac_audit_log_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: rbac_audit_log rbac_audit_log_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.rbac_audit_log
@@ -8371,7 +10187,31 @@ ALTER TABLE ONLY lic_schema.rbac_audit_log
 
 
 --
--- Name: revenue_forecasts revenue_forecasts_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: retention_actions retention_actions_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.retention_actions
+    ADD CONSTRAINT retention_actions_agent_id_fkey FOREIGN KEY (agent_id) REFERENCES lic_schema.agents(agent_id);
+
+
+--
+-- Name: retention_actions retention_actions_retention_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.retention_actions
+    ADD CONSTRAINT retention_actions_retention_id_fkey FOREIGN KEY (retention_id) REFERENCES lic_schema.customer_retention_analytics(retention_id) ON DELETE CASCADE;
+
+
+--
+-- Name: revenue_forecast_scenarios revenue_forecast_scenarios_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.revenue_forecast_scenarios
+    ADD CONSTRAINT revenue_forecast_scenarios_agent_id_fkey FOREIGN KEY (agent_id) REFERENCES lic_schema.agents(agent_id);
+
+
+--
+-- Name: revenue_forecasts revenue_forecasts_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.revenue_forecasts
@@ -8379,7 +10219,7 @@ ALTER TABLE ONLY lic_schema.revenue_forecasts
 
 
 --
--- Name: revenue_forecasts revenue_forecasts_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: revenue_forecasts revenue_forecasts_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.revenue_forecasts
@@ -8387,7 +10227,7 @@ ALTER TABLE ONLY lic_schema.revenue_forecasts
 
 
 --
--- Name: role_permissions role_permissions_permission_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: role_permissions role_permissions_permission_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.role_permissions
@@ -8395,7 +10235,7 @@ ALTER TABLE ONLY lic_schema.role_permissions
 
 
 --
--- Name: role_permissions role_permissions_role_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: role_permissions role_permissions_role_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.role_permissions
@@ -8403,7 +10243,95 @@ ALTER TABLE ONLY lic_schema.role_permissions
 
 
 --
--- Name: tenant_config tenant_config_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: subscription_billing_history subscription_billing_history_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.subscription_billing_history
+    ADD CONSTRAINT subscription_billing_history_created_by_fkey FOREIGN KEY (created_by) REFERENCES lic_schema.users(user_id);
+
+
+--
+-- Name: subscription_billing_history subscription_billing_history_subscription_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.subscription_billing_history
+    ADD CONSTRAINT subscription_billing_history_subscription_id_fkey FOREIGN KEY (subscription_id) REFERENCES lic_schema.user_subscriptions(subscription_id) ON DELETE CASCADE;
+
+
+--
+-- Name: subscription_billing_history subscription_billing_history_updated_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.subscription_billing_history
+    ADD CONSTRAINT subscription_billing_history_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES lic_schema.users(user_id);
+
+
+--
+-- Name: subscription_billing_history subscription_billing_history_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.subscription_billing_history
+    ADD CONSTRAINT subscription_billing_history_user_id_fkey FOREIGN KEY (user_id) REFERENCES lic_schema.users(user_id) ON DELETE CASCADE;
+
+
+--
+-- Name: subscription_changes subscription_changes_from_plan_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.subscription_changes
+    ADD CONSTRAINT subscription_changes_from_plan_id_fkey FOREIGN KEY (from_plan_id) REFERENCES lic_schema.subscription_plans(plan_id);
+
+
+--
+-- Name: subscription_changes subscription_changes_initiated_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.subscription_changes
+    ADD CONSTRAINT subscription_changes_initiated_by_fkey FOREIGN KEY (initiated_by) REFERENCES lic_schema.users(user_id);
+
+
+--
+-- Name: subscription_changes subscription_changes_subscription_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.subscription_changes
+    ADD CONSTRAINT subscription_changes_subscription_id_fkey FOREIGN KEY (subscription_id) REFERENCES lic_schema.user_subscriptions(subscription_id) ON DELETE CASCADE;
+
+
+--
+-- Name: subscription_changes subscription_changes_to_plan_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.subscription_changes
+    ADD CONSTRAINT subscription_changes_to_plan_id_fkey FOREIGN KEY (to_plan_id) REFERENCES lic_schema.subscription_plans(plan_id);
+
+
+--
+-- Name: subscription_changes subscription_changes_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.subscription_changes
+    ADD CONSTRAINT subscription_changes_user_id_fkey FOREIGN KEY (user_id) REFERENCES lic_schema.users(user_id) ON DELETE CASCADE;
+
+
+--
+-- Name: subscription_plans subscription_plans_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.subscription_plans
+    ADD CONSTRAINT subscription_plans_created_by_fkey FOREIGN KEY (created_by) REFERENCES lic_schema.users(user_id);
+
+
+--
+-- Name: subscription_plans subscription_plans_updated_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.subscription_plans
+    ADD CONSTRAINT subscription_plans_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES lic_schema.users(user_id);
+
+
+--
+-- Name: tenant_config tenant_config_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.tenant_config
@@ -8411,7 +10339,7 @@ ALTER TABLE ONLY lic_schema.tenant_config
 
 
 --
--- Name: tenant_usage tenant_usage_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: tenant_usage tenant_usage_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.tenant_usage
@@ -8419,7 +10347,7 @@ ALTER TABLE ONLY lic_schema.tenant_usage
 
 
 --
--- Name: tenant_users tenant_users_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: tenant_users tenant_users_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.tenant_users
@@ -8427,7 +10355,7 @@ ALTER TABLE ONLY lic_schema.tenant_users
 
 
 --
--- Name: tenant_users tenant_users_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: tenant_users tenant_users_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.tenant_users
@@ -8435,7 +10363,7 @@ ALTER TABLE ONLY lic_schema.tenant_users
 
 
 --
--- Name: tenants tenants_parent_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: tenants tenants_parent_tenant_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.tenants
@@ -8443,7 +10371,7 @@ ALTER TABLE ONLY lic_schema.tenants
 
 
 --
--- Name: trial_engagement trial_engagement_trial_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: trial_engagement trial_engagement_trial_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.trial_engagement
@@ -8451,7 +10379,7 @@ ALTER TABLE ONLY lic_schema.trial_engagement
 
 
 --
--- Name: trial_subscriptions trial_subscriptions_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: trial_subscriptions trial_subscriptions_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.trial_subscriptions
@@ -8459,7 +10387,7 @@ ALTER TABLE ONLY lic_schema.trial_subscriptions
 
 
 --
--- Name: user_journeys user_journeys_session_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: user_journeys user_journeys_session_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.user_journeys
@@ -8467,7 +10395,7 @@ ALTER TABLE ONLY lic_schema.user_journeys
 
 
 --
--- Name: user_journeys user_journeys_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: user_journeys user_journeys_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.user_journeys
@@ -8475,7 +10403,7 @@ ALTER TABLE ONLY lic_schema.user_journeys
 
 
 --
--- Name: user_payment_methods user_payment_methods_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: user_payment_methods user_payment_methods_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.user_payment_methods
@@ -8483,7 +10411,7 @@ ALTER TABLE ONLY lic_schema.user_payment_methods
 
 
 --
--- Name: user_roles user_roles_assigned_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: user_roles user_roles_assigned_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.user_roles
@@ -8491,7 +10419,7 @@ ALTER TABLE ONLY lic_schema.user_roles
 
 
 --
--- Name: user_roles user_roles_role_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: user_roles user_roles_role_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.user_roles
@@ -8499,7 +10427,7 @@ ALTER TABLE ONLY lic_schema.user_roles
 
 
 --
--- Name: user_roles user_roles_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: user_roles user_roles_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.user_roles
@@ -8507,7 +10435,7 @@ ALTER TABLE ONLY lic_schema.user_roles
 
 
 --
--- Name: user_sessions user_sessions_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: user_sessions user_sessions_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.user_sessions
@@ -8515,7 +10443,39 @@ ALTER TABLE ONLY lic_schema.user_sessions
 
 
 --
--- Name: video_analytics video_analytics_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: user_subscriptions user_subscriptions_created_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.user_subscriptions
+    ADD CONSTRAINT user_subscriptions_created_by_fkey FOREIGN KEY (created_by) REFERENCES lic_schema.users(user_id);
+
+
+--
+-- Name: user_subscriptions user_subscriptions_plan_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.user_subscriptions
+    ADD CONSTRAINT user_subscriptions_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES lic_schema.subscription_plans(plan_id);
+
+
+--
+-- Name: user_subscriptions user_subscriptions_updated_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.user_subscriptions
+    ADD CONSTRAINT user_subscriptions_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES lic_schema.users(user_id);
+
+
+--
+-- Name: user_subscriptions user_subscriptions_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
+--
+
+ALTER TABLE ONLY lic_schema.user_subscriptions
+    ADD CONSTRAINT user_subscriptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES lic_schema.users(user_id) ON DELETE CASCADE;
+
+
+--
+-- Name: video_analytics video_analytics_user_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.video_analytics
@@ -8523,7 +10483,7 @@ ALTER TABLE ONLY lic_schema.video_analytics
 
 
 --
--- Name: video_analytics video_analytics_video_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: video_analytics video_analytics_video_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.video_analytics
@@ -8531,7 +10491,7 @@ ALTER TABLE ONLY lic_schema.video_analytics
 
 
 --
--- Name: video_categories video_categories_parent_category_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: video_categories video_categories_parent_category_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.video_categories
@@ -8539,7 +10499,7 @@ ALTER TABLE ONLY lic_schema.video_categories
 
 
 --
--- Name: video_content video_content_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: video_content video_content_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.video_content
@@ -8547,7 +10507,7 @@ ALTER TABLE ONLY lic_schema.video_content
 
 
 --
--- Name: video_content video_content_moderated_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: video_content video_content_moderated_by_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.video_content
@@ -8555,7 +10515,7 @@ ALTER TABLE ONLY lic_schema.video_content
 
 
 --
--- Name: video_progress video_progress_video_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: video_progress video_progress_video_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.video_progress
@@ -8563,7 +10523,7 @@ ALTER TABLE ONLY lic_schema.video_progress
 
 
 --
--- Name: video_recommendations video_recommendations_video_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: video_recommendations video_recommendations_video_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.video_recommendations
@@ -8571,7 +10531,7 @@ ALTER TABLE ONLY lic_schema.video_recommendations
 
 
 --
--- Name: video_tutorials video_tutorials_content_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: video_tutorials video_tutorials_content_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: manish
 --
 
 ALTER TABLE ONLY lic_schema.video_tutorials
@@ -8579,7 +10539,7 @@ ALTER TABLE ONLY lic_schema.video_tutorials
 
 
 --
--- Name: whatsapp_messages whatsapp_messages_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: whatsapp_messages whatsapp_messages_agent_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.whatsapp_messages
@@ -8587,7 +10547,7 @@ ALTER TABLE ONLY lic_schema.whatsapp_messages
 
 
 --
--- Name: whatsapp_messages whatsapp_messages_recipient_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: whatsapp_messages whatsapp_messages_recipient_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.whatsapp_messages
@@ -8595,7 +10555,7 @@ ALTER TABLE ONLY lic_schema.whatsapp_messages
 
 
 --
--- Name: whatsapp_messages whatsapp_messages_sender_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: -
+-- Name: whatsapp_messages whatsapp_messages_sender_id_fkey; Type: FK CONSTRAINT; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE ONLY lic_schema.whatsapp_messages
@@ -8603,125 +10563,132 @@ ALTER TABLE ONLY lic_schema.whatsapp_messages
 
 
 --
--- Name: agents; Type: ROW SECURITY; Schema: lic_schema; Owner: -
+-- Name: agents; Type: ROW SECURITY; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE lic_schema.agents ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: campaigns; Type: ROW SECURITY; Schema: lic_schema; Owner: -
+-- Name: campaigns; Type: ROW SECURITY; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE lic_schema.campaigns ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: commissions; Type: ROW SECURITY; Schema: lic_schema; Owner: -
+-- Name: commissions; Type: ROW SECURITY; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE lic_schema.commissions ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: insurance_policies; Type: ROW SECURITY; Schema: lic_schema; Owner: -
+-- Name: insurance_policies; Type: ROW SECURITY; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE lic_schema.insurance_policies ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: notifications; Type: ROW SECURITY; Schema: lic_schema; Owner: -
+-- Name: notifications; Type: ROW SECURITY; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE lic_schema.notifications ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: policyholders; Type: ROW SECURITY; Schema: lic_schema; Owner: -
+-- Name: policyholders; Type: ROW SECURITY; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE lic_schema.policyholders ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: premium_payments; Type: ROW SECURITY; Schema: lic_schema; Owner: -
+-- Name: premium_payments; Type: ROW SECURITY; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE lic_schema.premium_payments ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: agents tenant_agents_isolation; Type: POLICY; Schema: lic_schema; Owner: -
+-- Name: agents tenant_agents_isolation; Type: POLICY; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE POLICY tenant_agents_isolation ON lic_schema.agents USING (((tenant_id = lic_schema.current_tenant_id()) OR (lic_schema.current_tenant_id() IS NULL)));
 
 
 --
--- Name: campaigns tenant_campaigns_isolation; Type: POLICY; Schema: lic_schema; Owner: -
+-- Name: campaigns tenant_campaigns_isolation; Type: POLICY; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE POLICY tenant_campaigns_isolation ON lic_schema.campaigns USING (((tenant_id = lic_schema.current_tenant_id()) OR (lic_schema.current_tenant_id() IS NULL)));
 
 
 --
--- Name: commissions tenant_commissions_isolation; Type: POLICY; Schema: lic_schema; Owner: -
+-- Name: commissions tenant_commissions_isolation; Type: POLICY; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE POLICY tenant_commissions_isolation ON lic_schema.commissions USING (((tenant_id = lic_schema.current_tenant_id()) OR (lic_schema.current_tenant_id() IS NULL)));
 
 
 --
--- Name: notifications tenant_notifications_isolation; Type: POLICY; Schema: lic_schema; Owner: -
+-- Name: notifications tenant_notifications_isolation; Type: POLICY; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE POLICY tenant_notifications_isolation ON lic_schema.notifications USING (((tenant_id = lic_schema.current_tenant_id()) OR (lic_schema.current_tenant_id() IS NULL)));
 
 
 --
--- Name: premium_payments tenant_payments_isolation; Type: POLICY; Schema: lic_schema; Owner: -
+-- Name: premium_payments tenant_payments_isolation; Type: POLICY; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE POLICY tenant_payments_isolation ON lic_schema.premium_payments USING (((tenant_id = lic_schema.current_tenant_id()) OR (lic_schema.current_tenant_id() IS NULL)));
 
 
 --
--- Name: insurance_policies tenant_policies_isolation; Type: POLICY; Schema: lic_schema; Owner: -
+-- Name: insurance_policies tenant_policies_isolation; Type: POLICY; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE POLICY tenant_policies_isolation ON lic_schema.insurance_policies USING (((tenant_id = lic_schema.current_tenant_id()) OR (lic_schema.current_tenant_id() IS NULL)));
 
 
 --
--- Name: policyholders tenant_policyholders_isolation; Type: POLICY; Schema: lic_schema; Owner: -
+-- Name: policyholders tenant_policyholders_isolation; Type: POLICY; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE POLICY tenant_policyholders_isolation ON lic_schema.policyholders USING (((tenant_id = lic_schema.current_tenant_id()) OR (lic_schema.current_tenant_id() IS NULL)));
 
 
 --
--- Name: tenant_users tenant_tenant_users_isolation; Type: POLICY; Schema: lic_schema; Owner: -
+-- Name: tenant_users tenant_tenant_users_isolation; Type: POLICY; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE POLICY tenant_tenant_users_isolation ON lic_schema.tenant_users USING (((tenant_id = lic_schema.current_tenant_id()) OR (lic_schema.current_tenant_id() IS NULL)));
 
 
 --
--- Name: tenant_users; Type: ROW SECURITY; Schema: lic_schema; Owner: -
+-- Name: tenant_users; Type: ROW SECURITY; Schema: lic_schema; Owner: agentmitra
 --
 
 ALTER TABLE lic_schema.tenant_users ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: tenant_users tenant_users_isolation; Type: POLICY; Schema: lic_schema; Owner: -
+-- Name: tenant_users tenant_users_isolation; Type: POLICY; Schema: lic_schema; Owner: agentmitra
 --
 
 CREATE POLICY tenant_users_isolation ON lic_schema.tenant_users USING ((tenant_id = lic_schema.current_tenant_id()));
 
 
 --
--- Name: agent_leaderboard; Type: MATERIALIZED VIEW DATA; Schema: lic_schema; Owner: -
+-- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: lic_schema; Owner: agentmitra
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE agentmitra IN SCHEMA lic_schema GRANT ALL ON TABLES TO agentmitra;
+
+
+--
+-- Name: agent_leaderboard; Type: MATERIALIZED VIEW DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 REFRESH MATERIALIZED VIEW lic_schema.agent_leaderboard;
 
 
 --
--- Name: daily_dashboard_kpis; Type: MATERIALIZED VIEW DATA; Schema: lic_schema; Owner: -
+-- Name: daily_dashboard_kpis; Type: MATERIALIZED VIEW DATA; Schema: lic_schema; Owner: agentmitra
 --
 
 REFRESH MATERIALIZED VIEW lic_schema.daily_dashboard_kpis;
@@ -8731,5 +10698,5 @@ REFRESH MATERIALIZED VIEW lic_schema.daily_dashboard_kpis;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 6VVrYDdai7PonUP1wC4uJQGvSBNneKkR8GsgWYmzh2vKxYP97CFzv0gCPNaCE5G
+\unrestrict OOdvGQDIaEiZ9IDo1ePcWVk3dvf6PPQcKQ7StYCzwXf6fuTIzIIp4946tGmxMok
 
