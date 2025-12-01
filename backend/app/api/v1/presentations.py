@@ -154,6 +154,35 @@ async def get_agent_presentations(
     }
 
 
+@router.get("/agent/{agent_id}/{presentation_id}")
+async def get_presentation(
+    agent_id: str,
+    presentation_id: str,
+    current_user: User = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """Get a specific presentation by ID"""
+    presentation_repo = PresentationRepository(db)
+
+    # Convert agent_id to UUID for proper comparison
+    agent_uuid = presentation_repo._to_uuid(agent_id)
+    if not agent_uuid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid agent ID format"
+        )
+
+    # Get presentation and verify ownership
+    presentation = presentation_repo.get_by_id(presentation_id)
+    if not presentation or presentation.agent_id != agent_uuid:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Presentation not found"
+        )
+
+    return _presentation_to_dict(presentation)
+
+
 @router.post("/agent/{agent_id}")
 async def create_presentation(
     request: Request,
@@ -230,10 +259,18 @@ async def update_presentation(
 ):
     """Update an existing presentation"""
     presentation_repo = PresentationRepository(db)
-    
+
+    # Convert agent_id to UUID for proper comparison
+    agent_uuid = presentation_repo._to_uuid(agent_id)
+    if not agent_uuid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid agent ID format"
+        )
+
     # Verify presentation exists and belongs to agent
     existing = presentation_repo.get_by_id(presentation_id)
-    if not existing or existing.agent_id != agent_id:
+    if not existing or existing.agent_id != agent_uuid:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Presentation not found"

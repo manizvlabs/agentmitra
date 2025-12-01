@@ -252,6 +252,25 @@ async def auth_middleware(request: Request, call_next):
     if not path.startswith("/api/"):
         return await call_next(request)
 
+    # Skip detailed processing for multipart/form-data requests to avoid serialization issues
+    content_type = request.headers.get('content-type', '').lower()
+    if 'multipart/form-data' in content_type:
+        logger.debug(f"Skipping auth middleware processing for multipart request: {path}")
+        try:
+            response = await call_next(request)
+            return response
+        except Exception as e:
+            # Be very careful with exception logging for multipart requests
+            try:
+                error_str = str(type(e).__name__)  # Just log the exception type
+                logger.error(f"Error in multipart request processing: {error_str}")
+            except Exception:
+                logger.error("Error in multipart request processing: [unable to serialize exception]")
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content={"detail": "Internal server error"}
+            )
+
     # For API endpoints, authentication is required
     # The actual authentication check happens in the endpoint dependencies
     # This middleware just ensures we don't bypass auth for API routes
@@ -263,11 +282,24 @@ async def auth_middleware(request: Request, call_next):
         # Re-raise HTTP exceptions as-is
         raise e
     except Exception as e:
-        logger.error(f"Request processing error: {e}")
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"detail": "Internal server error"}
-        )
+        # Handle cases where exception contains non-serializable objects
+        try:
+            error_msg = str(e)
+        except Exception:
+            error_msg = "Request processing error (non-serializable exception)"
+        logger.error(f"Request processing error: {error_msg}")
+        # For multipart requests, don't try to return detailed error info
+        content_type = request.headers.get('content-type', '').lower()
+        if 'multipart/form-data' in content_type:
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content={"detail": "Internal server error"}
+            )
+        else:
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content={"detail": "Internal server error"}
+            )
 
 
 def check_tenant_access(tenant_id: Optional[str] = None):

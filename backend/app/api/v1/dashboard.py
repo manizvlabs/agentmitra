@@ -256,20 +256,35 @@ async def _get_dashboard_kpis(user_id: str, db: Session) -> DashboardKPIs:
     try:
         analytics_service = AnalyticsService(db)
 
-        # Get KPIs from analytics service
-        kpis_data = await analytics_service.get_dashboard_kpis(user_id)
+        # Get agent-specific dashboard summary
+        summary = await analytics_service.get_agent_dashboard_summary(user_id, "30d")
 
-        return DashboardKPIs(
-            total_policies=kpis_data.get("total_policies", 0),
-            total_premium=kpis_data.get("total_premium", 0.0),
-            active_customers=kpis_data.get("active_customers", 0),
-            conversion_rate=kpis_data.get("conversion_rate", 0.0),
-            monthly_growth=kpis_data.get("monthly_growth", 0.0),
-            pending_tasks=kpis_data.get("pending_tasks", 0),
-            recent_activity=kpis_data.get("recent_activity", 0)
-        )
+        if "performance" in summary:
+            performance = summary["performance"]
+            return DashboardKPIs(
+                total_policies=performance.get("policies_sold", 0),
+                total_premium=performance.get("premium_collected", 0.0),
+                active_customers=performance.get("customers_acquired", 0),
+                conversion_rate=performance.get("conversion_rate", 0.0),
+                monthly_growth=0.0,  # Would need to calculate this
+                pending_tasks=0,  # Would need to implement this
+                recent_activity=0  # Would need to implement this
+            )
+        else:
+            # Fallback to basic agent metrics
+            agent_metrics = await analytics_service._get_single_agent_metrics(user_id, None, None)
+            return DashboardKPIs(
+                total_policies=agent_metrics.get("policies_sold", 0),
+                total_premium=agent_metrics.get("premium_collected", 0.0),
+                active_customers=agent_metrics.get("customers_acquired", 0),
+                conversion_rate=agent_metrics.get("conversion_rate", 0.0),
+                monthly_growth=0.0,
+                pending_tasks=0,
+                recent_activity=0
+            )
 
-    except Exception:
+    except Exception as e:
+        print(f"Error getting dashboard KPIs: {e}")
         # Return default KPIs if service fails
         return DashboardKPIs(
             total_policies=0,
@@ -520,46 +535,72 @@ async def _get_video_recommendations(user_id: str, db: Session) -> List[VideoRec
 async def _get_recent_activity(user_id: str, db: Session) -> List[Dict[str, Any]]:
     """Get recent user activity"""
     try:
-        # This would query recent user activities from an activity log table
-        # For now, return sample data
-        return [
-            {
-                "activity_id": "1",
-                "type": "policy_created",
-                "description": "Created new policy for customer",
-                "timestamp": datetime.utcnow().isoformat(),
-                "metadata": {"customer_name": "John Doe"}
-            },
-            {
-                "activity_id": "2",
-                "type": "presentation_viewed",
-                "description": "Viewed sales presentation",
-                "timestamp": (datetime.utcnow() - timedelta(hours=2)).isoformat(),
-                "metadata": {"presentation_title": "Term Life Insurance"}
-            }
-        ]
+        # First check if user has an agent record
+        agent_result = db.execute(text("""
+            SELECT agent_id FROM lic_schema.agents WHERE user_id = :user_id
+        """), {"user_id": user_id}).first()
 
-    except Exception:
+        if agent_result:
+            agent_id = agent_result[0]
+
+            # Query recent policies created by this agent
+            result = db.execute(text("""
+                SELECT p.policy_id, p.policy_number, p.created_at,
+                       CONCAT(ph.first_name, ' ', ph.last_name) as customer_name
+                FROM lic_schema.insurance_policies p
+                JOIN lic_schema.policyholders ph ON p.policyholder_id = ph.policyholder_id
+                WHERE p.agent_id = :agent_id
+                ORDER BY p.created_at DESC
+                LIMIT 5
+            """), {"agent_id": agent_id}).fetchall()
+
+            activities = []
+            for i, row in enumerate(result):
+                activities.append({
+                    "activity_id": str(i + 1),
+                    "type": "policy_created",
+                    "description": f"Created policy {row[1]} for customer",
+                    "timestamp": row[2].isoformat() if row[2] else datetime.utcnow().isoformat(),
+                    "metadata": {"customer_name": row[3] or "Customer"}
+                })
+
+            return activities
+        else:
+            # User doesn't have an agent record, return empty list
+            return []
+
+    except Exception as e:
+        print(f"Error getting recent activity: {e}")
         return []
 
 
 async def _get_dashboard_notifications(user_id: str, db: Session) -> List[Dict[str, Any]]:
     """Get dashboard notifications"""
     try:
-        # This would query user notifications
-        # For now, return sample notifications
-        return [
-            {
-                "notification_id": "1",
-                "title": "Trial expires soon",
-                "message": "Your trial period expires in 3 days",
-                "type": "warning",
-                "is_read": False,
-                "created_at": datetime.utcnow().isoformat()
-            }
-        ]
+        # Query real notifications from database
+        from app.models.notification import Notification
+        notifications = db.query(Notification)\
+            .filter(Notification.user_id == user_id)\
+            .filter(Notification.is_read == False)\
+            .order_by(Notification.created_at.desc())\
+            .limit(5)\
+            .all()
 
-    except Exception:
+        result = []
+        for notification in notifications:
+            result.append({
+                "notification_id": str(notification.id),
+                "title": notification.title,
+                "message": notification.body,
+                "type": notification.type or "info",
+                "is_read": notification.is_read,
+                "created_at": notification.created_at.isoformat() if notification.created_at else datetime.utcnow().isoformat()
+            })
+
+        return result
+
+    except Exception as e:
+        print(f"Error getting dashboard notifications: {e}")
         return []
 
 

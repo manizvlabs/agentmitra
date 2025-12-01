@@ -10,8 +10,9 @@ API endpoints for:
 - Performance metrics and analytics
 """
 
+import logging
 from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File, Form, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
 from datetime import datetime
@@ -23,6 +24,9 @@ from app.repositories.agent_repository import AgentRepository
 from app.services.content_management_service import ContentManagementService
 from app.models.user import User
 from app.models.agent import Agent
+
+logger = logging.getLogger(__name__)
+
 
 router = APIRouter(prefix="/agents", tags=["agents"])
 
@@ -280,7 +284,7 @@ async def update_agent_settings(
 
 @router.post("/profile/photo")
 async def upload_profile_photo(
-    file: UploadFile = File(...),
+    request: Request,
     current_user: User = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
@@ -290,32 +294,82 @@ async def upload_profile_photo(
     - **file**: Profile photo file (JPEG, PNG, max 5MB)
     """
     try:
+        # Parse multipart data manually to avoid FastAPI UploadFile issues
+        import multipart
+        from multipart import MultipartParser
+        from io import BytesIO
+
+        body = await request.body()
+        content_type = request.headers.get('content-type', '')
+
+        if not content_type.startswith('multipart/form-data'):
+            raise HTTPException(status_code=400, detail="Content-Type must be multipart/form-data")
+
+        # Parse multipart data
+        boundary = content_type.split('boundary=')[1] if 'boundary=' in content_type else None
+        if not boundary:
+            raise HTTPException(status_code=400, detail="Invalid multipart boundary")
+
+        # Simple multipart parsing
+        parts = body.split(f'--{boundary}'.encode())
+        file_data = None
+        filename = None
+        file_content_type = None
+
+        for part in parts:
+            if b'Content-Disposition: form-data; name="photo"' in part:
+                # Extract filename
+                if b'filename="' in part:
+                    filename_part = part.split(b'filename="')[1].split(b'"')[0]
+                    filename = filename_part.decode('utf-8', errors='ignore')
+
+                # Extract content type
+                if b'Content-Type: ' in part:
+                    content_type_part = part.split(b'Content-Type: ')[1].split(b'\r\n')[0]
+                    file_content_type = content_type_part.decode('utf-8', errors='ignore')
+
+                # Extract file content (skip headers)
+                content_start = part.find(b'\r\n\r\n')
+                if content_start != -1:
+                    file_data = part[content_start + 4:].rstrip(b'\r\n')
+                break
+
+        if not file_data:
+            raise HTTPException(status_code=400, detail="No file data found")
+
         # Validate file type
         allowed_types = ['image/jpeg', 'image/png', 'image/jpg']
-        if file.content_type not in allowed_types:
+        if file_content_type not in allowed_types:
             raise HTTPException(
                 status_code=400,
                 detail="Invalid file type. Only JPEG and PNG files are allowed."
             )
 
         # Validate file size (5MB max)
-        file_size = 0
-        content = await file.read()
-        file_size = len(content)
-
+        file_size = len(file_data)
         if file_size > 5 * 1024 * 1024:  # 5MB
             raise HTTPException(
                 status_code=400,
                 detail="File too large. Maximum size is 5MB."
             )
 
-        # Reset file pointer
-        await file.seek(0)
+        # Create UploadFile-like object for ContentManagementService
+        from fastapi import UploadFile
+        from io import BytesIO
+        from starlette.datastructures import Headers
+
+        file_obj = BytesIO(file_data)
+        headers = Headers({'content-type': file_content_type or 'application/octet-stream'})
+        upload_file = UploadFile(
+            filename=filename or "uploaded_file",
+            file=file_obj,
+            headers=headers
+        )
 
         # Upload to content management service
         content_service = ContentManagementService(db)
         upload_result = await content_service.upload_content(
-            file=file,
+            file=upload_file,
             uploader_id=str(current_user.user_id),
             content_type="image",
             category="profile_photos",
@@ -329,14 +383,14 @@ async def upload_profile_photo(
         from app.repositories.user_repository import UserRepository
         user_repo = UserRepository(db)
         user_repo.update(current_user.user_id, {
-            'avatar_url': upload_result['file_url'] or upload_result['content_id']
+            'avatar_url': upload_result.get('media_url') or upload_result['content_id']
         })
 
         return {
             "success": True,
             "message": "Profile photo uploaded successfully",
             "data": {
-                "photo_url": upload_result.get('file_url'),
+                "photo_url": upload_result.get('media_url'),
                 "content_id": upload_result.get('content_id')
             }
         }
@@ -344,6 +398,7 @@ async def upload_profile_photo(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Unexpected error in photo upload: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to upload profile photo: {str(e)}")
 
 
@@ -453,7 +508,7 @@ async def get_agent_performance_metrics(
         analytics_service = AnalyticsService(db)
 
         # Get agent performance data
-        performance_data = await analytics_service.get_agent_performance_metrics(
+        performance_data = await analytics_service.get_agent_performance_analytics(
             agent_id=str(current_user.user_id),
             period=period
         )

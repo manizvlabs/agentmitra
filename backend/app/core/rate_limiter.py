@@ -154,6 +154,20 @@ default_rate_limiter = RateLimiter(
 
 async def rate_limit_middleware(request: Request, call_next):
     """Rate limiting middleware"""
+    # Skip rate limiting for multipart form-data requests to avoid serialization issues
+    content_type = request.headers.get('content-type', '').lower()
+    if 'multipart/form-data' in content_type:
+        try:
+            return await call_next(request)
+        except Exception as e:
+            logger.error(f"Error in multipart request processing: {type(e).__name__}")
+            from fastapi.responses import JSONResponse
+            import status
+            return JSONResponse(
+                status_code=500,
+                content={"detail": "Internal server error"}
+            )
+
     if not settings.rate_limiting_enabled:
         return await call_next(request)
     

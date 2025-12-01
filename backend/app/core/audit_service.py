@@ -26,13 +26,23 @@ class AuditService:
                           user_agent: str = None) -> None:
         """Log activity for audit and compliance"""
         try:
+            # Convert non-serializable objects to strings
+            def make_serializable(obj):
+                try:
+                    json.dumps(obj)
+                    return obj
+                except TypeError:
+                    return str(obj)
+
+            serializable_details = {k: make_serializable(v) for k, v in details.items()}
+
             audit_entry = {
                 'tenant_id': tenant_id,
                 'user_id': user_id,
                 'action': action,
                 'resource_type': resource_type,
                 'resource_id': resource_id,
-                'details': json.dumps(details),
+                'details': json.dumps(serializable_details),
                 'ip_address': ip_address,
                 'user_agent': user_agent,
                 'timestamp': datetime.utcnow().isoformat(),

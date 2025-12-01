@@ -192,6 +192,51 @@ class AnalyticsService:
             logger.error(f"Error getting payment analytics: {e}")
             return {"error": "Failed to generate payment analytics"}
 
+    async def get_agent_dashboard_summary(
+        self,
+        agent_id: str,
+        period: str = "30d"
+    ) -> Dict[str, Any]:
+        """Get dashboard summary for a specific agent"""
+
+        try:
+            # Set date range
+            end_date = datetime.utcnow()
+            if period == "7d":
+                start_date = end_date - timedelta(days=7)
+            elif period == "30d":
+                start_date = end_date - timedelta(days=30)
+            elif period == "90d":
+                start_date = end_date - timedelta(days=90)
+            else:  # 1y
+                start_date = end_date - timedelta(days=365)
+
+            # Get agent performance metrics
+            agent_metrics = await self._get_single_agent_metrics(agent_id, start_date, end_date)
+
+            # Get policy distribution
+            policy_distribution = await self._get_policy_distribution(agent_id, start_date, end_date)
+
+            # Get revenue trends
+            revenue_trends = await self._get_premium_trends(start_date, end_date, agent_id)
+
+            # Get customer acquisition metrics
+            customer_metrics = await self._get_customer_metrics(agent_id, start_date, end_date)
+
+            return {
+                "agent_id": agent_id,
+                "period": {"start": start_date.isoformat(), "end": end_date.isoformat()},
+                "performance": agent_metrics,
+                "policy_distribution": policy_distribution,
+                "revenue_trends": revenue_trends,
+                "customer_metrics": customer_metrics,
+                "generated_at": datetime.utcnow().isoformat()
+            }
+
+        except Exception as e:
+            logger.error(f"Error getting agent dashboard summary: {e}")
+            return {"error": "Failed to generate dashboard summary"}
+
     async def get_user_engagement_analytics(
         self,
         start_date: Optional[datetime] = None,
@@ -296,7 +341,7 @@ class AnalyticsService:
         try:
             # Query users table for agents
             result = self.db.execute(
-                "SELECT COUNT(*) FROM users WHERE role IN ('agent', 'senior_agent')"
+                "SELECT COUNT(*) FROM lic_schema.users WHERE role IN ('agent', 'senior_agent')"
             )
             return result.scalar() or 0
         except Exception as e:
@@ -309,7 +354,7 @@ class AnalyticsService:
             # Query agents with recent login activity (last 30 days)
             thirty_days_ago = datetime.utcnow() - timedelta(days=30)
             result = self.db.execute(
-                "SELECT COUNT(*) FROM users WHERE role IN ('agent', 'senior_agent') AND last_login_at >= :thirty_days_ago",
+                "SELECT COUNT(*) FROM lic_schema.users WHERE role IN ('agent', 'senior_agent') AND last_login_at >= :thirty_days_ago",
                 {"thirty_days_ago": thirty_days_ago}
             )
             return result.scalar() or 0
@@ -321,7 +366,7 @@ class AnalyticsService:
         """Get total policies sold"""
         try:
             # Query policies table
-            result = self.db.execute("SELECT COUNT(*) FROM policies")
+            result = self.db.execute("SELECT COUNT(*) FROM lic_schema.insurance_policies")
             return result.scalar() or 0
         except Exception as e:
             logger.error(f"Error getting total policies: {e}")
@@ -331,7 +376,7 @@ class AnalyticsService:
         """Get total premium collected"""
         try:
             # Query premium payments table
-            result = self.db.execute("SELECT COALESCE(SUM(amount), 0) FROM premium_payments WHERE status = 'completed'")
+            result = self.db.execute("SELECT COALESCE(SUM(amount), 0) FROM lic_schema.premium_payments WHERE status = 'completed'")
             return float(result.scalar() or 0)
         except Exception as e:
             logger.error(f"Error getting total premium: {e}")
@@ -351,25 +396,25 @@ class AnalyticsService:
             # Query agents with their performance metrics
             result = self.db.execute("""
                 SELECT
-                    u.id as agent_id,
+                    u.user_id as agent_id,
                     u.first_name || ' ' || u.last_name as name,
                     COALESCE(p.policy_count, 0) as policies_sold,
                     COALESCE(pm.premium_total, 0) as premium_collected
-                FROM users u
+                FROM lic_schema.users u
                 LEFT JOIN (
                     SELECT agent_id, COUNT(*) as policy_count
-                    FROM policies
+                    FROM lic_schema.insurance_policies
                     WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
                     GROUP BY agent_id
-                ) p ON u.id = p.agent_id::text
+                ) p ON u.user_id = p.agent_id
                 LEFT JOIN (
-                    SELECT p.agent_id, SUM(pm.amount) as premium_total
-                    FROM policies p
-                    JOIN premium_payments pm ON p.id = pm.policy_id
-                    WHERE pm.status = 'completed' AND pm.created_at >= CURRENT_DATE - INTERVAL '30 days'
+                    SELECT p.agent_id, SUM(pp.amount) as premium_total
+                    FROM lic_schema.insurance_policies p
+                    JOIN lic_schema.premium_payments pp ON p.policy_id = pp.policy_id
+                    WHERE pp.status = 'completed' AND pp.created_at >= CURRENT_DATE - INTERVAL '30 days'
                     GROUP BY p.agent_id
-                ) pm ON u.id = pm.agent_id::text
-                WHERE u.role IN ('agent', 'senior_agent')
+                ) pm ON u.user_id = pm.agent_id
+                WHERE u.role IN ('agent', 'senior_agent', 'junior_agent')
                 ORDER BY COALESCE(p.policy_count, 0) DESC, COALESCE(pm.premium_total, 0) DESC
                 LIMIT :limit
             """, {"limit": limit})
@@ -638,3 +683,40 @@ class AnalyticsService:
         """Export payment data"""
         # Implementation for payment data export
         return []
+
+    async def _get_customer_metrics(self, agent_id: str, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
+        """Get customer-related metrics for agent"""
+        try:
+            # Get customer acquisition
+            result = self.db.execute("""
+                SELECT COUNT(DISTINCT c.policyholder_id) as customers_acquired
+                FROM lic_schema.policyholders c
+                JOIN lic_schema.insurance_policies p ON c.policyholder_id = p.policyholder_id
+                WHERE p.agent_id = :agent_id AND p.created_at BETWEEN :start_date AND :end_date
+            """, {"agent_id": agent_id, "start_date": start_date, "end_date": end_date})
+
+            customers_acquired = result.scalar() or 0
+
+            # Get active customers
+            result = self.db.execute("""
+                SELECT COUNT(DISTINCT c.policyholder_id) as active_customers
+                FROM lic_schema.policyholders c
+                JOIN lic_schema.insurance_policies p ON c.policyholder_id = p.policyholder_id
+                WHERE p.agent_id = :agent_id AND p.status = 'active'
+            """, {"agent_id": agent_id})
+
+            active_customers = result.scalar() or 0
+
+            return {
+                "customers_acquired": customers_acquired,
+                "active_customers": active_customers,
+                "customer_retention_rate": 0.0  # Would need historical data
+            }
+
+        except Exception as e:
+            logger.error(f"Error getting customer metrics: {e}")
+            return {
+                "customers_acquired": 0,
+                "active_customers": 0,
+                "customer_retention_rate": 0.0
+            }

@@ -32,6 +32,7 @@ class PresentationRepository:
             return None
         return (
             self.db.query(Presentation)
+            .options(selectinload(Presentation.slides))
             .filter(Presentation.presentation_id == presentation_id)
             .first()
         )

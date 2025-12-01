@@ -23,6 +23,20 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
         """Process each request with tenant context"""
+        # Skip tenant processing for multipart form-data requests to avoid serialization issues
+        content_type = request.headers.get('content-type', '').lower()
+        if 'multipart/form-data' in content_type:
+            logger.debug(f"Skipping tenant middleware processing for multipart request: {request.url.path}")
+            try:
+                response = await call_next(request)
+                return response
+            except Exception as e:
+                logger.error(f"Error in multipart request processing: {type(e).__name__}")
+                return JSONResponse(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    content={"detail": "Internal server error"}
+                )
+
         # Skip tenant validation for certain endpoints
         logger.info(f"Checking path: {request.url.path}")
         if self._should_skip_tenant_validation(request):
@@ -312,6 +326,13 @@ class TenantMiddleware(BaseHTTPMiddleware):
         try:
             user_id = getattr(request.state, 'user_id', None) if hasattr(request, 'state') else None
             tenant_id = tenant_context['tenant_id']
+
+            # Skip audit logging for multipart/form-data requests to avoid FormData serialization issues
+            content_type = request.headers.get('content-type', '').lower()
+            logger.debug(f"Request content-type for {request.url.path}: {content_type}")
+            if 'multipart/form-data' in content_type:
+                logger.info(f"Skipping audit logging for multipart form-data request: {request.url.path}")
+                return
 
             # Only log significant operations
             if request.method in ['POST', 'PUT', 'DELETE'] or status_code >= 400:
