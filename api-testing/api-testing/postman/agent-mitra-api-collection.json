@@ -1,0 +1,507 @@
+{
+  "info": {
+    "name": "Agent Mitra API Collection",
+    "description": "Comprehensive API collection for Agent Mitra backend with feature flags",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "agent-mitra"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8015",
+      "type": "string"
+    },
+    {
+      "key": "super_admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "provider_admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "super_admin_user_id",
+      "value": "550e8400-e29b-41d4-a716-446655440000",
+      "type": "string"
+    },
+    {
+      "key": "provider_admin_user_id",
+      "value": "660e8400-e29b-41d4-a716-446655440000",
+      "type": "string"
+    },
+    {
+      "key": "test_flag_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Super Admin Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"phone_number\": \"+919876543200\", \"password\": \"testpassword\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has access token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('access_token');",
+                  "    pm.environment.set('super_admin_token', jsonData.access_token);",
+                  "});",
+                  "",
+                  "pm.test(\"User is super admin\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.user.role).to.eql('super_admin');",
+                  "});",
+                  "",
+                  "pm.test(\"Has system.admin permission\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.permissions).to.include('system.admin');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Provider Admin Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"phone_number\": \"+919876543201\", \"password\": \"testpassword\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has access token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('provider_admin_token', jsonData.access_token);",
+                  "});",
+                  "",
+                  "pm.test(\"User is provider admin\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.user.role).to.eql('insurance_provider_admin');",
+                  "});",
+                  "",
+                  "pm.test(\"Does NOT have system.admin permission\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.permissions).to.not.include('system.admin');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "System Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has status healthy\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('healthy');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Feature Flags",
+      "item": [
+        {
+          "name": "Check Feature Flag Status (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/feature-flags/check/dashboard_enabled",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "feature-flags", "check", "dashboard_enabled"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has flag status\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('flag_name');",
+                  "    pm.expect(jsonData).to.have.property('enabled');",
+                  "    pm.expect(jsonData.flag_name).to.eql('dashboard_enabled');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Check Another Feature Flag (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/feature-flags/check/is_test",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "feature-flags", "check", "is_test"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Flag is enabled\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.enabled).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get User Feature Flags (Super Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/feature-flags/user/{{super_admin_user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "feature-flags", "user", "{{super_admin_user_id}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains feature flags\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('dashboard_enabled');",
+                  "    pm.expect(jsonData).to.have.property('is_test');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Feature Flags (Super Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/feature-flags/all",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "feature-flags", "all"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Pioneer Feature Flag (Super Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"flag\": {\"title\": \"postman_test_flag\", \"description\": \"Created via Postman test\", \"is_active\": true, \"rollout\": 50}}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/feature-flags/flags",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "feature-flags", "flags"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Flag created successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData.title).to.eql('postman_test_flag');",
+                  "    pm.environment.set('test_flag_id', jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Pioneer Feature Flag (Super Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"flag\": {\"description\": \"Updated via Postman\", \"is_active\": false, \"rollout\": 25}}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/feature-flags/flags/{{test_flag_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "feature-flags", "flags", "{{test_flag_id}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Flag updated successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.description).to.eql('Updated via Postman');",
+                  "    pm.expect(jsonData.is_active).to.be.false;",
+                  "    pm.expect(jsonData.rollout).to.eql(25);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Pioneer Feature Flag (Super Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/feature-flags/flags/{{test_flag_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "feature-flags", "flags", "{{test_flag_id}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Flag deleted successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Provider Admin Access Denied (403)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{provider_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/feature-flags/all",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "feature-flags", "all"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "pm.test(\"Access denied message\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.detail).to.include('system.admin required');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script",
+          "pm.globals.set('timestamp', new Date().toISOString());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script",
+          "pm.test('Response time is less than 2000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+          "});",
+          "",
+          "pm.test('Response has proper headers', function () {",
+          "    pm.response.to.have.header('Content-Type');",
+          "});"
+        ]
+      }
+    }
+  ]
+}
