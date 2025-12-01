@@ -339,25 +339,31 @@ This plan provides step-by-step instructions for restructuring the Agent Mitra F
 - `POST /api/v1/tenants/{tenant_id}/config` - Update tenant configuration
 
 #### Feature Flags (`/api/v1/feature-flags/*`)
-- `GET /api/v1/feature-flags/user/{user_id}` - Get feature flags for user
-- `GET /api/v1/feature-flags/tenant/{tenant_id}` - Get feature flags for tenant
-- `GET /api/v1/feature-flags/all` - Get all feature flags
-- `PUT /api/v1/feature-flags/user/{user_id}/{flag_name}` - Update user feature flag override
-- `PUT /api/v1/feature-flags/tenant/{tenant_id}/{flag_name}` - Update tenant feature flag override
-- `POST /api/v1/feature-flags/create` - Create new feature flag
-- `DELETE /api/v1/feature-flags/override/user/{user_id}/{flag_name}` - Delete user override
-- `PUT /api/v1/feature-flags/update/{flag_name}` - Update feature flag
-- `GET /api/v1/feature-flags/api/flags` - Get flags via API
-- `POST /api/v1/feature-flags/flags` - Create feature flag
-- `PUT /api/v1/feature-flags/flags/{flag_id}` - Update feature flag
-- `DELETE /api/v1/feature-flags/flags/{flag_id}` - Delete feature flag
-- `GET /api/v1/feature-flags/check/{flag_name}` - Check feature flag status
-- `POST /api/v1/feature-flags/role-access` - Set role-based feature access
-- `POST /api/v1/feature-flags/broadcast/role/{role_name}` - Broadcast flag to role
-- `POST /api/v1/feature-flags/broadcast/tenant/{tenant_id}` - Broadcast flag to tenant
-- `GET /api/v1/feature-flags/websocket/stats` - WebSocket connection stats
-- `GET /api/v1/feature-flags/role-access/{role_name}` - Get role feature access
-- `GET /api/v1/feature-flags/access-control/rules` - Get access control rules
+**⚠️ REDUCED from 17 to 6 essential endpoints - Pioneer integration has connectivity issues and async bugs**
+
+- `GET /api/v1/feature-flags/user/{user_id}` - Get feature flags for user (ESSENTIAL)
+- `GET /api/v1/feature-flags/check/{flag_name}` - Check if feature flag is enabled (ESSENTIAL)
+- `GET /api/v1/feature-flags/all` - Get all feature flags (ADMIN)
+- `POST /api/v1/feature-flags/create` - Create new feature flag (ADMIN)
+- `PUT /api/v1/feature-flags/flags/{flag_id}` - Update feature flag (ADMIN)
+- `DELETE /api/v1/feature-flags/flags/{flag_id}` - Delete feature flag (ADMIN)
+
+**REMOVED APIs (redundant/overkill - 11 endpoints eliminated):**
+- `GET /api/v1/feature-flags/tenant/{tenant_id}` - Redundant with user endpoint
+- `PUT /api/v1/feature-flags/user/{user_id}/{flag_name}` - User overrides too complex
+- `PUT /api/v1/feature-flags/tenant/{tenant_id}/{flag_name}` - Tenant overrides too complex
+- `DELETE /api/v1/feature-flags/override/user/{user_id}/{flag_name}` - Override management overkill
+- `PUT /api/v1/feature-flags/update/{flag_name}` - Redundant with flags/{id}
+- `GET /api/v1/feature-flags/api/flags` - Pioneer-specific, not needed
+- `POST /api/v1/feature-flags/flags` - Redundant with /create
+- `POST /api/v1/feature-flags/role-access` - Role-based access too complex
+- `POST /api/v1/feature-flags/broadcast/role/{role_name}` - Real-time broadcasting overkill
+- `POST /api/v1/feature-flags/broadcast/tenant/{tenant_id}` - Real-time broadcasting overkill
+- `GET /api/v1/feature-flags/websocket/stats` - Monitoring feature not needed
+- `GET /api/v1/feature-flags/role-access/{role_name}` - Role access checking unnecessary
+- `GET /api/v1/feature-flags/access-control/rules` - Access control rules overkill
+
+**Note:** Pioneer services are running but have connectivity issues. Feature flags currently use database fallbacks with hardcoded defaults. Real-time updates and complex role-based access removed as overkill for current requirements.
 
 #### Quotes (`/api/v1/quotes/*`)
 - `POST /api/v1/quotes/` - Create new quote

@@ -23,7 +23,7 @@ async def get_user_feature_flags(
     user_id: str,
     tenant_id: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user = Depends(require_permission("feature_flags.read"))
+    current_user = Depends(require_permission("system.admin"))
 ) -> Dict[str, bool]:
     """Get feature flags for a specific user"""
     try:
@@ -42,7 +42,7 @@ async def get_user_feature_flags(
 async def get_tenant_feature_flags(
     tenant_id: str,
     db: Session = Depends(get_db),
-    current_user = Depends(require_permission("feature_flags.read"))
+    current_user = Depends(require_permission("system.admin"))
 ) -> Dict[str, bool]:
     """Get feature flags for a specific tenant"""
     try:
@@ -60,7 +60,7 @@ async def get_tenant_feature_flags(
 @router.get("/all")
 async def get_all_feature_flags(
     db: Session = Depends(get_db),
-    current_user = Depends(require_permission("feature_flags.read"))
+    current_user = Depends(require_permission("system.admin"))
 ) -> List[Dict[str, Any]]:
     """Get all available feature flags"""
     try:
@@ -82,7 +82,7 @@ async def update_user_feature_flag(
     value: bool,
     tenant_id: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user = Depends(require_permission("feature_flags.update"))
+    current_user = Depends(require_permission("system.admin"))
 ):
     """Update a feature flag for a specific user"""
     try:
@@ -115,7 +115,7 @@ async def update_tenant_feature_flag(
     flag_name: str,
     value: bool,
     db: Session = Depends(get_db),
-    current_user = Depends(require_permission("feature_flags.update"))
+    current_user = Depends(require_permission("system.admin"))
 ):
     """Update a feature flag for a specific tenant"""
     try:
@@ -147,7 +147,7 @@ async def create_feature_flag(
     default_value: Any = False,
     tenant_id: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user = Depends(require_permission("feature_flags.admin"))
+    current_user = Depends(require_permission("system.admin"))
 ):
     """Create a new feature flag"""
     try:
@@ -179,7 +179,7 @@ async def delete_user_flag_override(
     flag_name: str,
     tenant_id: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user = Depends(require_permission("feature_flags.update"))
+    current_user = Depends(require_permission("system.admin"))
 ):
     """Delete a user-specific feature flag override"""
     try:
@@ -235,7 +235,7 @@ async def update_feature_flag(
     flag_name: str,
     update_request: Dict[str, Any],
     db: Session = Depends(get_db),
-    current_user = Depends(require_permission("feature_flags.update"))
+    current_user = Depends(require_permission("system.admin"))
 ):
     """Update a feature flag with real-time broadcasting to affected users"""
     try:
@@ -294,7 +294,7 @@ async def update_feature_flag(
 # Pioneer-compatible API endpoints (matching Flutter expectations)
 
 @router.get("/api/flags")
-async def get_pioneer_flags():
+async def get_pioneer_flags(current_user = Depends(require_permission("system.admin"))):
     """Get all feature flags in Pioneer API format (for Flutter compatibility)"""
     try:
         feature_flag_service = get_feature_flag_service(None)  # No DB needed for fallback
@@ -320,7 +320,7 @@ async def get_pioneer_flags():
 
 
 @router.post("/flags")
-async def create_pioneer_flag(flag_data: Dict[str, Any]):
+async def create_pioneer_flag(flag_data: Dict[str, Any], current_user = Depends(require_permission("system.admin"))):
     """Create a new feature flag (Pioneer API format)"""
     try:
         flag_info = flag_data.get("flag", {})
@@ -369,7 +369,7 @@ async def create_pioneer_flag(flag_data: Dict[str, Any]):
 
 
 @router.put("/flags/{flag_id}")
-async def update_pioneer_flag(flag_id: str, flag_data: Dict[str, Any]):
+async def update_pioneer_flag(flag_id: str, flag_data: Dict[str, Any], current_user = Depends(require_permission("system.admin"))):
     """Update a feature flag (Pioneer API format)"""
     try:
         flag_info = flag_data.get("flag", {})
@@ -414,7 +414,7 @@ async def update_pioneer_flag(flag_id: str, flag_data: Dict[str, Any]):
 
 
 @router.delete("/flags/{flag_id}")
-async def delete_pioneer_flag(flag_id: str):
+async def delete_pioneer_flag(flag_id: str, current_user = Depends(require_permission("system.admin"))):
     """Delete a feature flag (Pioneer API format)"""
     try:
         # Extract title from flag_id (remove pioneer- prefix)
@@ -451,7 +451,7 @@ async def check_feature_flag(
     user_id: Optional[str] = None,
     tenant_id: Optional[str] = None,
     db: Session = Depends(get_db)
-) -> Dict[str, bool]:
+) -> Dict[str, Any]:
     """Check if a specific feature flag is enabled"""
     try:
         feature_flag_service = get_feature_flag_service(db)
@@ -471,7 +471,7 @@ async def manage_role_feature_access(
     role_name: str,
     feature_flags: Dict[str, bool],
     db: Session = Depends(get_db),
-    current_user = Depends(require_permission("feature_flags.manage"))
+    current_user = Depends(require_permission("system.admin"))
 ):
     """
     Manage feature flag access for a specific role
@@ -527,7 +527,7 @@ async def broadcast_to_role(
     feature_key: str,
     new_value: bool,
     db: Session = Depends(get_db),
-    current_user = Depends(require_permission("feature_flags.broadcast"))
+    current_user = Depends(require_permission("system.admin"))
 ):
     """
     Broadcast feature flag update to all users with a specific role
@@ -557,7 +557,7 @@ async def broadcast_to_tenant(
     tenant_id: str,
     feature_key: str,
     new_value: bool,
-    current_user = Depends(require_permission("feature_flags.broadcast"))
+    current_user = Depends(require_permission("system.admin"))
 ):
     """
     Broadcast feature flag update to all users in a specific tenant
@@ -584,7 +584,7 @@ async def broadcast_to_tenant(
 
 @router.get("/websocket/stats")
 async def get_websocket_stats(
-    current_user = Depends(require_permission("feature_flags.read"))
+    current_user = Depends(require_permission("system.admin"))
 ):
     """
     Get WebSocket connection statistics
@@ -609,7 +609,7 @@ async def get_websocket_stats(
 async def get_role_feature_access(
     role_name: str,
     db: Session = Depends(get_db),
-    current_user = Depends(require_permission("feature_flags.read"))
+    current_user = Depends(require_permission("system.admin"))
 ):
     """
     Get feature flag access configuration for a specific role
@@ -657,7 +657,7 @@ async def get_role_feature_access(
 
 @router.get("/access-control/rules")
 async def get_access_control_rules(
-    current_user = Depends(require_permission("feature_flags.manage"))
+    current_user = Depends(require_permission("system.admin"))
 ):
     """
     Get feature flag access control rules

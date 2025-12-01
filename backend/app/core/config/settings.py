@@ -122,7 +122,7 @@ class Settings(BaseSettings):
     email_from: Optional[str] = os.getenv("EMAIL_FROM", os.getenv("EMAIL_USER"))
     
     # Feature Flag Configuration (Pioneer)
-    pioneer_url: str = os.getenv("PIONEER_URL", "http://localhost:8080")
+    pioneer_url: str = os.getenv("PIONEER_URL", "http://pioneer:4001")
     pioneer_api_key: str = os.getenv("PIONEER_API_KEY", "")
 
     # FeatureHub Configuration (legacy - deprecated)
