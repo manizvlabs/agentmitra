@@ -6,6 +6,45 @@
 
 ---
 
+## Infrastructure & Deployment Disclaimer
+
+### 🚨 IMPORTANT INFRASTRUCTURE REQUIREMENTS
+
+**This implementation plan assumes the following infrastructure setup:**
+
+#### Local Services (MacBook Brew)
+- **PostgreSQL 16**: Must be running locally via `brew services start postgresql@16`
+- **Redis**: Must be running locally via `brew services start redis`
+- **Database**: `agentmitra_dev` with schema `lic_schema` (user: `agentmitra`, password: `agentmitra_dev`)
+
+#### Docker Services (Production)
+- **Pioneer Feature Flags**: Uses the Pioneer services defined in `docker-compose.prod.yml`
+  - `pioneer-nats` (NATS messaging)
+  - `pioneer-compass-server` (REST API on port 4001)
+  - `pioneer-scout` (SSE on port 4002)
+  - `pioneer-compass-client` (Admin UI on port 4000)
+
+#### Deployment Scripts
+- **Production Startup**: Use `scripts/deploy/start-prod.sh` for complete production deployment
+- **Docker Compose**: Use `docker-compose.prod.yml` for container orchestration
+- **Local Services**: PostgreSQL and Redis run outside Docker (local brew services)
+
+#### Configuration Management
+- **Flutter App**: All configuration via `.env` file
+- **Backend API**: All configuration via `backend/env.production` or `backend/.env`
+- **React Config Portal**: All configuration via `config-portal/.env`
+
+**⚠️ CRITICAL**: Do not add PostgreSQL or Redis containers to `docker-compose.prod.yml`. These services must run locally on the MacBook via brew services for proper data persistence and performance.
+
+**📋 Pre-deployment Checklist:**
+1. `brew services start postgresql@16`
+2. `brew services start redis`
+3. Verify `agentmitra_dev` database exists with `lic_schema`
+4. Ensure `.env` files are configured for all components
+5. Run `scripts/deploy/start-prod.sh` for production startup
+
+---
+
 ## Table of Contents
 
 1. [Executive Summary](#1-executive-summary)
@@ -1477,6 +1516,57 @@ This plan provides step-by-step instructions for restructuring the Agent Mitra F
 
 ## 13. Implementation Guidelines
 
+### 13.0 Environment Configuration
+
+#### .env File Structure
+
+**Flutter App (.env):**
+```env
+API_BASE_URL=https://your-backend-domain.com
+API_KEY=your-api-key
+ENABLE_LOGGING=true
+APP_ENVIRONMENT=production
+```
+
+**Backend (backend/.env):**
+```env
+ENVIRONMENT=production
+DATABASE_URL=postgresql://agentmitra:agentmitra_dev@localhost:5432/agentmitra_dev
+REDIS_URL=redis://localhost:6379
+JWT_SECRET_KEY=your-production-jwt-secret
+PIONEER_URL=http://localhost:4001
+OPENAI_API_KEY=your-openai-key
+MINIO_ENDPOINT=minio:9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+```
+
+**React Config Portal (config-portal/.env):**
+```env
+REACT_APP_API_URL=http://localhost:8012
+REACT_APP_ENVIRONMENT=production
+REACT_APP_PIONEER_URL=http://localhost:4001
+```
+
+**Environment Loading Pattern:**
+```dart
+// Flutter
+class Config {
+  static String get apiBaseUrl => dotenv.env['API_BASE_URL'] ?? '';
+  static String get apiKey => dotenv.env['API_KEY'] ?? '';
+}
+
+// Backend (Python)
+import os
+api_url = os.getenv('API_BASE_URL', 'http://localhost:8012')
+database_url = os.getenv('DATABASE_URL')
+
+// React
+const apiUrl = process.env.REACT_APP_API_URL;
+```
+
+---
+
 ### 13.1 Code Quality Standards
 
 1. **No Mock Data**
@@ -1596,6 +1686,9 @@ class CustomerDashboardRepository {
 - [ ] **Error Handling** - Proper error handling throughout
 - [ ] **Loading States** - Loading indicators where needed
 - [ ] **Database Migrations** - All DB changes via Flyway
+- [ ] **Environment Configuration** - All config externalized via .env files
+- [ ] **Deployment Scripts** - Production deployment via `scripts/deploy/start-prod.sh`
+- [ ] **Infrastructure Setup** - PostgreSQL/Redis local, Pioneer via Docker
 - [ ] **Performance** - App performs well with real data
 - [ ] **Accessibility** - Accessibility features work
 - [ ] **Responsive Design** - Works on all screen sizes
@@ -1619,6 +1712,35 @@ class CustomerDashboardRepository {
 
 ---
 
+## Deployment & Infrastructure
+
+### Production Deployment
+
+**Use the following scripts for production deployment:**
+
+1. **Complete Production Startup**: `scripts/deploy/start-prod.sh`
+   - Checks Docker daemon
+   - Validates .env files
+   - Generates SSL certificates
+   - Builds Flutter web app
+   - Starts all Docker services
+
+2. **Docker Compose Configuration**: `docker-compose.prod.yml`
+   - Backend API (port 8012)
+   - React Config Portal (port 3013)
+   - Nginx reverse proxy (port 80/443)
+   - Monitoring stack (Prometheus, Grafana)
+   - MinIO object storage (port 9000/9001)
+   - Pioneer feature flag services (ports 4000-4002)
+
+**Infrastructure Requirements:**
+- ✅ PostgreSQL 16 via `brew services start postgresql@16`
+- ✅ Redis via `brew services start redis`
+- ✅ Pioneer services via Docker Compose
+- ✅ .env files configured for all components
+
+---
+
 ## Notes for Cursor AI Coding Agent
 
 When implementing this plan:
@@ -1628,9 +1750,12 @@ When implementing this plan:
 3. **Use real APIs** - Never create mock data, use the 265 existing endpoints
 4. **Match wireframes exactly** - Colors, spacing, typography, layout must match 100%
 5. **Follow patterns** - Use existing code patterns
-6. **Test incrementally** - Test each step before moving on
-7. **Document changes** - Comment on why changes were made
-8. **Verify database** - Ensure data persists to correct tables in lic_schema
+6. **Configure environment** - Use .env files for all configuration (Flutter, Backend, React)
+7. **Test incrementally** - Test each step before moving on
+8. **Document changes** - Comment on why changes were made
+9. **Verify database** - Ensure data persists to correct tables in lic_schema
+10. **Use deployment scripts** - Production deployment via `scripts/deploy/start-prod.sh`
+11. **Infrastructure setup** - PostgreSQL/Redis local via brew, Pioneer via Docker Compose
 
 **Remember:** The goal is 100% conformance with discovery documents, especially wireframes.md. Every screen, every navigation pattern, every content structure must match the specifications exactly. All data must come from real APIs and persist to real database tables.
 
