@@ -35,851 +35,564 @@
       "key": "test_flag_id",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "test_user_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "test_user_id",
+      "value": "650742fb-5fa7-4913-8e4f-cdad3ccbe476",
+      "type": "string"
     }
   ],
   "item": [
     {
-      "name": "\ud83d\udd10 Authentication & Authorization",
+      "name": "\ud83d\udcdc Core System",
       "item": [
         {
-          "name": "Super Admin Login",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"phone_number\": \"+919876543200\", \"password\": \"testpassword\"}"
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": [
-                "{{api_host}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "login"
-              ]
-            }
-          },
-          "event": [
+          "name": "\ud83d\udd10 Authentication & Authorization",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Response has access token\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('access_token');",
-                  "    pm.environment.set('super_admin_token', jsonData.access_token);",
-                  "});",
-                  "",
-                  "pm.test(\"User is super admin\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.user.role).to.eql('super_admin');",
-                  "});",
-                  "",
-                  "pm.test(\"Has system.admin permission\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.permissions).to.include('system.admin');",
-                  "});"
+              "name": "Super Admin Login",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Provider Admin Login",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"phone_number\": \"+919876543201\", \"password\": \"testpassword\"}"
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": [
-                "{{api_host}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "login"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Response has access token\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.environment.set('provider_admin_token', jsonData.access_token);",
-                  "});",
-                  "",
-                  "pm.test(\"User is provider admin\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.user.role).to.eql('insurance_provider_admin');",
-                  "});",
-                  "",
-                  "pm.test(\"Does NOT have system.admin permission\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.permissions).to.not.include('system.admin');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "\ud83d\udcf1 OTP & External Services",
-      "item": [
-        {
-          "name": "Send SMS OTP",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"to_phone\": \"{{test_phone_number}}\", \"otp\": \"{{test_otp}}\"}"
-            },
-            "url": {
-              "raw": "{{base_url}}/external/sms/otp",
-              "host": [
-                "{{api_host}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "external",
-                "sms",
-                "otp"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Response has success\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.success).to.be.true;",
-                  "});",
-                  "",
-                  "pm.test(\"Response has mock OTP\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.data.otp_sent).to.eql('123456');",
-                  "    pm.expect(jsonData.data.mock).to.be.true;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Send WhatsApp OTP",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/external/whatsapp/otp?to_phone={{test_phone_number}}&otp={{test_otp}}",
-              "host": [
-                "{{api_host}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "external",
-                "whatsapp",
-                "otp"
-              ],
-              "query": [
-                {
-                  "key": "to_phone",
-                  "value": "{{test_phone_number}}"
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"phone_number\": \"+919876543200\", \"password\": \"testpassword\"}"
                 },
+                "url": {
+                  "raw": "{{base_url}}/auth/login",
+                  "host": [
+                    "{{api_host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "event": [
                 {
-                  "key": "otp",
-                  "value": "{{test_otp}}"
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response has access token\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('access_token');",
+                      "    pm.environment.set('super_admin_token', jsonData.access_token);",
+                      "});",
+                      "",
+                      "pm.test(\"User is super admin\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.user.role).to.eql('super_admin');",
+                      "});",
+                      "",
+                      "pm.test(\"Has system.admin permission\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.permissions).to.include('system.admin');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
                 }
               ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Response has success\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.success).to.be.true;",
-                  "});",
-                  "",
-                  "pm.test(\"Response has mock OTP\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.data.otp_sent).to.eql('123456');",
-                  "    pm.expect(jsonData.data.mock).to.be.true;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Get SMS Status (requires message_id)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/external/sms/status/{{message_id}}",
-              "host": [
-                "{{api_host}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "external",
-                "sms",
-                "status",
-                "{{message_id}}"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 404 (no message_id)\", function () {",
-                  "    pm.response.to.have.status(404);",
-                  "});",
-                  "",
-                  "pm.test(\"Response indicates not found\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.detail).to.include('Not Found');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Get WhatsApp Status (requires message_id)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/external/whatsapp/status/{{message_id}}",
-              "host": [
-                "{{api_host}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "external",
-                "whatsapp",
-                "status",
-                "{{message_id}}"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 404 (no message_id)\", function () {",
-                  "    pm.response.to.have.status(404);",
-                  "});",
-                  "",
-                  "pm.test(\"Response indicates not found\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.detail).to.include('Not Found');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Send SMS Message (requires auth - will fail in test)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"to_phone\": \"{{test_phone_number}}\", \"message\": \"Test message from Agent Mitra API\", \"message_type\": \"transactional\"}"
             },
-            "url": {
-              "raw": "{{base_url}}/external/sms/send",
-              "host": [
-                "{{api_host}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "external",
-                "sms",
-                "send"
-              ]
-            }
-          },
-          "event": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 401 (authentication required)\", function () {",
-                  "    pm.response.to.have.status(401);",
-                  "});",
-                  "",
-                  "pm.test(\"Response indicates auth required\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.detail).to.include('Authentication required');",
-                  "});"
+              "name": "Provider Admin Login",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Send WhatsApp Message (requires auth - will fail in test)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"to_phone\": \"{{test_phone_number}}\", \"message_type\": \"text\", \"content\": {\"body\": \"Test message from Agent Mitra API\"}}"
-            },
-            "url": {
-              "raw": "{{base_url}}/external/whatsapp/send",
-              "host": [
-                "{{api_host}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "external",
-                "whatsapp",
-                "send"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 401 (authentication required)\", function () {",
-                  "    pm.response.to.have.status(401);",
-                  "});",
-                  "",
-                  "pm.test(\"Response indicates auth required\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.detail).to.include('Authentication required');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "AI Chat Completion (requires auth - will fail in test)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"messages\": [{\"role\": \"user\", \"content\": \"Hello, how are you?\"}], \"model\": \"gpt-3.5-turbo\", \"temperature\": 0.7}"
-            },
-            "url": {
-              "raw": "{{base_url}}/external/ai/chat",
-              "host": [
-                "{{api_host}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "external",
-                "ai",
-                "chat"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 401 (authentication required)\", function () {",
-                  "    pm.response.to.have.status(401);",
-                  "});",
-                  "",
-                  "pm.test(\"Response indicates auth required\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.detail).to.include('Authentication required');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "\ud83c\udfe5 Health Check",
-      "item": [
-        {
-          "name": "System Health Check",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{api_host}}/health",
-              "host": [
-                "{{api_host}}"
-              ],
-              "path": [
-                "health"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Response has status healthy\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.status).to.eql('healthy');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "\ud83d\udea9 Feature Flags & Configuration",
-      "item": [
-        {
-          "name": "Check Feature Flag Status (Public)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/feature-flags/check/dashboard_enabled",
-              "host": [
-                "{{api_host}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "feature-flags",
-                "check",
-                "dashboard_enabled"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Response has flag status\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('flag_name');",
-                  "    pm.expect(jsonData).to.have.property('enabled');",
-                  "    pm.expect(jsonData.flag_name).to.eql('dashboard_enabled');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Check Another Feature Flag (Public)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/feature-flags/check/is_test",
-              "host": [
-                "{{api_host}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "feature-flags",
-                "check",
-                "is_test"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Flag is enabled\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.enabled).to.be.true;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Get User Feature Flags (Super Admin)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{super_admin_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/feature-flags/user/{{super_admin_user_id}}",
-              "host": [
-                "{{api_host}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "feature-flags",
-                "user",
-                "{{super_admin_user_id}}"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Response contains feature flags\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('dashboard_enabled');",
-                  "    pm.expect(jsonData).to.have.property('is_test');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Get All Feature Flags (Super Admin)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{super_admin_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/feature-flags/all",
-              "host": [
-                "{{api_host}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "feature-flags",
-                "all"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Response is an array\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.be.an('array');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Create Pioneer Feature Flag (Super Admin)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{super_admin_token}}"
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"phone_number\": \"+919876543201\", \"password\": \"testpassword\"}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/login",
+                  "host": [
+                    "{{api_host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "auth",
+                    "login"
+                  ]
+                }
               },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"flag\": {\"title\": \"postman_test_flag\", \"description\": \"Created via Postman test\", \"is_active\": true, \"rollout\": 50}}"
-            },
-            "url": {
-              "raw": "{{base_url}}/feature-flags/flags",
-              "host": [
-                "{{api_host}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "feature-flags",
-                "flags"
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response has access token\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.environment.set('provider_admin_token', jsonData.access_token);",
+                      "});",
+                      "",
+                      "pm.test(\"User is provider admin\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.user.role).to.eql('insurance_provider_admin');",
+                      "});",
+                      "",
+                      "pm.test(\"Does NOT have system.admin permission\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.permissions).to.not.include('system.admin');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
               ]
-            }
-          },
-          "event": [
+            },
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Flag created successfully\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('id');",
-                  "    pm.expect(jsonData.title).to.eql('postman_test_flag');",
-                  "    pm.environment.set('test_flag_id', jsonData.id);",
-                  "});"
+              "name": "Junior Agent Login (Test User)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Update Pioneer Feature Flag (Super Admin)",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{super_admin_token}}"
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"phone_number\": \"+919876543204\", \"password\": \"testpassword\"}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/login",
+                  "host": [
+                    "{{api_host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "auth",
+                    "login"
+                  ]
+                }
               },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"flag\": {\"description\": \"Updated via Postman\", \"is_active\": false, \"rollout\": 25}}"
-            },
-            "url": {
-              "raw": "{{base_url}}/feature-flags/flags/{{test_flag_id}}",
-              "host": [
-                "{{api_host}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "feature-flags",
-                "flags",
-                "{{test_flag_id}}"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Flag updated successfully\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.description).to.eql('Updated via Postman');",
-                  "    pm.expect(jsonData.is_active).to.be.false;",
-                  "    pm.expect(jsonData.rollout).to.eql(25);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Delete Pioneer Feature Flag (Super Admin)",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{super_admin_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/feature-flags/flags/{{test_flag_id}}",
-              "host": [
-                "{{api_host}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "feature-flags",
-                "flags",
-                "{{test_flag_id}}"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test(\"Flag deleted successfully\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.success).to.be.true;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Provider Admin Access Denied (403)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{provider_admin_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/feature-flags/all",
-              "host": [
-                "{{api_host}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "feature-flags",
-                "all"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 403\", function () {",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                  "pm.test(\"Status code is 403 (user deactivated)\", function () {",
                   "    pm.response.to.have.status(403);",
                   "});",
                   "",
-                  "pm.test(\"Access denied message\", function () {",
+                  "pm.test(\"Account deactivated message\", function () {",
                   "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.detail).to.include('system.admin required');",
+                  "    pm.expect(jsonData.detail).to.include('not active');",
                   "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "\ud83d\udc65 User Management",
+          "item": [
+            {
+              "name": "Get Current User Profile",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{super_admin_token}}"
+                  }
                 ],
-                "type": "text/javascript"
-              }
+                "url": {
+                  "raw": "{{base_url}}/users/me",
+                  "host": [
+                    "{{api_host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "me"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response has user data\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('user_id');",
+                      "    pm.expect(jsonData).to.have.property('email');",
+                      "    pm.expect(jsonData).to.have.property('role');",
+                      "});",
+                      "",
+                      "pm.test(\"User is authenticated user\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.role).to.eql('super_admin');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Search & Filter Users (Admin Only)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{super_admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/users/?role=policyholder&limit=5",
+                  "host": [
+                    "{{api_host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users"
+                  ],
+                  "query": [
+                    {
+                      "key": "role",
+                      "value": "policyholder"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "5"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response is array of users\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.be.an('array');",
+                      "});",
+                      "",
+                      "pm.test(\"All returned users are policyholders\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    jsonData.forEach(function(user) {",
+                      "        pm.expect(user.role).to.eql('policyholder');",
+                      "    });",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Get User by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{super_admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/users/{{test_user_id}}",
+                  "host": [
+                    "{{api_host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{test_user_id}}"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response has correct user\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.user_id).to.eql('650742fb-5fa7-4913-8e4f-cdad3ccbe476');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Update User Profile",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{super_admin_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"display_name\": \"Updated Test User\", \"language_preference\": \"hi\"}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/users/{{super_admin_user_id}}",
+                  "host": [
+                    "{{api_host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{super_admin_user_id}}"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"User profile updated\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.display_name).to.eql('Updated Test User');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Get User Preferences",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{super_admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/users/{{super_admin_user_id}}/preferences",
+                  "host": [
+                    "{{api_host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{super_admin_user_id}}",
+                    "preferences"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response has preferences\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('language_preference');",
+                      "    pm.expect(jsonData).to.have.property('theme_preference');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Update User Preferences",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{super_admin_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"language_preference\": \"en\", \"theme_preference\": \"dark\", \"notification_preferences\": {\"email\": true, \"sms\": false}}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/users/{{super_admin_user_id}}/preferences",
+                  "host": [
+                    "{{api_host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "{{super_admin_user_id}}",
+                    "preferences"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Preferences updated\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.language_preference).to.eql('en');",
+                      "    pm.expect(jsonData.theme_preference).to.eql('dark');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Deactivate User (Super Admin Only)",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{super_admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/users/431432dc-823a-4a2e-8532-6c6b76c8c394",
+                  "host": [
+                    "{{api_host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "431432dc-823a-4a2e-8532-6c6b76c8c394"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"User deactivated\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.message).to.include('deactivated');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "\ud83c\udfe5 Health Check",
+          "item": [
+            {
+              "name": "System Health Check",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/health",
+                  "host": [
+                    "{{api_host}}"
+                  ],
+                  "path": [
+                    "health"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response has status healthy\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.status).to.eql('healthy');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
             }
           ]
         }

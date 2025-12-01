@@ -184,10 +184,16 @@ show_usage() {
     echo ""
     echo "Options:"
     echo "  all           Run all tests (default)"
+    echo "  core          Run only Core System tests (auth, users, health)"
     echo "  auth          Run only Authentication tests"
-    echo "  otp           Run only OTP & External Services tests"
+    echo "  users         Run only User Management tests"
+    echo "  business      Run only Business Operations tests (agents, providers, policies)"
+    echo "  content       Run only Content & Marketing tests"
+    echo "  admin         Run only System Administration tests"
+    echo "  external      Run only External Services & OTP tests"
+    echo "  otp           Run only OTP & External Services tests (legacy)"
     echo "  health        Run only Health Check tests"
-    echo "  features      Run only Feature Flags tests"
+    echo "  features      Run only Feature Flags tests (legacy)"
     echo "  help          Show this help message"
     echo ""
     echo "Environments:"
@@ -224,7 +230,7 @@ main() {
             show_usage
             exit 0
             ;;
-        "all"|"auth"|"otp"|"health"|"features")
+        "all"|"auth"|"otp"|"health"|"features"|"users"|"core"|"business"|"content"|"admin"|"external")
             test_type="$1"
             environment="${2:-local}"
             ;;
@@ -263,6 +269,24 @@ main() {
             ;;
         "features")
             run_specific_folder "🚩 Feature Flags & Configuration"
+            ;;
+        "core")
+            run_specific_folder "📜 Core System"
+            ;;
+        "users")
+            run_specific_folder "👥 User Management"
+            ;;
+        "business")
+            run_specific_folder "📊 Business Operations"
+            ;;
+        "content")
+            run_specific_folder "📝 Content & Marketing"
+            ;;
+        "admin")
+            run_specific_folder "⚙️ System Administration"
+            ;;
+        "external")
+            run_specific_folder "📱 OTP & External Services"
             ;;
         *)
             log_error "Unknown test type: $test_type"
