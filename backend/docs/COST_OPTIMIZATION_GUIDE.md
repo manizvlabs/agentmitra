@@ -178,3 +178,4 @@ grep VIDEO_TRANSCRIPTION_AUTO backend/.env
 - Usage Dashboard: https://platform.openai.com/usage
 - Cost Analysis Script: `backend/scripts/check_api_costs.py`
 
+

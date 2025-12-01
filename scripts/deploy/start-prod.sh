@@ -237,3 +237,5 @@ echo ""
 echo -e "${GREEN}All set! Your services are running.${NC}"
 echo ""
 
+# Copy .env file to web build directory for Flutter web builds
+cp .env build/web/ || true

@@ -166,18 +166,16 @@ void main() async {
 
   // Initialize Pioneer for feature flag management
   try {
-    // Pioneer configuration from environment variables
     final config = AppConfig();
     if (config.pioneerEnabled) {
       await PioneerService.initialize(
         scoutUrl: config.pioneerScoutUrl,
         sdkKey: config.pioneerApiKey,
       );
-      print('Pioneer initialized with real service');
+      print('Pioneer initialized successfully');
     } else {
-      print('Pioneer mock mode - not initializing real service');
+      print('Pioneer disabled - using mock mode');
     }
-    print('Pioneer initialized successfully (${config.pioneerEnabled ? 'real mode' : 'mock mode'})');
   } catch (e) {
     print('Pioneer initialization failed: $e');
     print('App cannot start without Pioneer service. Please ensure Pioneer is running.');

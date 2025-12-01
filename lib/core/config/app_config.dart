@@ -225,10 +225,18 @@ class AppConfig {
     _firebaseMessagingSenderId = dotenv.get('FIREBASE_MESSAGING_SENDER_ID', fallback: 'your_firebase_sender_id');
 
     // Pioneer Feature Flags
-    _pioneerEnabled = dotenv.get('PIONEER_ENABLED', fallback: 'true') == 'true';
-    _pioneerUrl = dotenv.get('PIONEER_URL', fallback: 'http://localhost:4001');
-    _pioneerApiKey = dotenv.get('PIONEER_API_KEY', fallback: 'your_pioneer_api_key');
-    _pioneerScoutUrl = dotenv.get('PIONEER_SCOUT_URL', fallback: 'http://localhost:4002');
+    // For web builds, force Pioneer to be enabled and use nginx proxy configuration
+    if (kIsWeb) {
+      _pioneerEnabled = true;
+      _pioneerUrl = 'http://localhost/pioneer';
+      _pioneerApiKey = 'test-sdk-key-12345';
+      _pioneerScoutUrl = 'http://localhost/pioneer';
+    } else {
+      _pioneerEnabled = dotenv.get('PIONEER_ENABLED', fallback: 'true') == 'true';
+      _pioneerUrl = dotenv.get('PIONEER_URL', fallback: 'http://localhost:4001');
+      _pioneerApiKey = dotenv.get('PIONEER_API_KEY', fallback: 'test-sdk-key-12345');
+      _pioneerScoutUrl = dotenv.get('PIONEER_SCOUT_URL', fallback: 'http://localhost:4002');
+    }
 
     // Platform Specific
     _iosAppStoreId = dotenv.get('IOS_APP_STORE_ID', fallback: 'com.agentmitra.app');
