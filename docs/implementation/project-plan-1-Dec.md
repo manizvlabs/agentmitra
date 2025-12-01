@@ -30,9 +30,10 @@
 - **Local Services**: PostgreSQL and Redis run outside Docker (local brew services)
 
 #### Configuration Management
-- **Flutter App**: All configuration via `.env` file
-- **Backend API**: All configuration via `backend/env.production` or `backend/.env`
-- **React Config Portal**: All configuration via `config-portal/.env`
+- **Unified .env File**: Single `.env` file in project root contains all configuration
+- **Flutter App**: Loads from root `.env` file via flutter_dotenv
+- **Backend API**: Loads from root `.env` file with fallback to individual env files
+- **React Config Portal**: Loads from root `.env` file with REACT_APP_ prefixed variables
 
 **⚠️ CRITICAL**: Do not add PostgreSQL or Redis containers to `docker-compose.prod.yml`. These services must run locally on the MacBook via brew services for proper data persistence and performance.
 
@@ -1516,54 +1517,64 @@ This plan provides step-by-step instructions for restructuring the Agent Mitra F
 
 ## 13. Implementation Guidelines
 
-### 13.0 Environment Configuration
+### 13.0 Unified Environment Configuration
 
-#### .env File Structure
+#### Single .env File Approach
 
-**Flutter App (.env):**
-```env
-API_BASE_URL=https://your-backend-domain.com
-API_KEY=your-api-key
-ENABLE_LOGGING=true
-APP_ENVIRONMENT=production
+All components now use a **single unified `.env` file** in the project root that contains configuration for:
+- Flutter Mobile App
+- Python Backend API
+- React Config Portal
+
+**Project Structure:**
 ```
-
-**Backend (backend/.env):**
-```env
-ENVIRONMENT=production
-DATABASE_URL=postgresql://agentmitra:agentmitra_dev@localhost:5432/agentmitra_dev
-REDIS_URL=redis://localhost:6379
-JWT_SECRET_KEY=your-production-jwt-secret
-PIONEER_URL=http://localhost:4001
-OPENAI_API_KEY=your-openai-key
-MINIO_ENDPOINT=minio:9000
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=minioadmin
-```
-
-**React Config Portal (config-portal/.env):**
-```env
-REACT_APP_API_URL=http://localhost:8012
-REACT_APP_ENVIRONMENT=production
-REACT_APP_PIONEER_URL=http://localhost:4001
+agentmitra/
+├── .env                    # Unified configuration file
+├── .env.example           # Template (can be committed)
+├── flutter_app/           # Loads from root .env
+├── backend/               # Loads from root .env
+└── config-portal/         # Loads from root .env
 ```
 
 **Environment Loading Pattern:**
+
 ```dart
-// Flutter
-class Config {
-  static String get apiBaseUrl => dotenv.env['API_BASE_URL'] ?? '';
-  static String get apiKey => dotenv.env['API_KEY'] ?? '';
+// Flutter (lib/core/config/app_config.dart)
+class AppConfig {
+  static Future<void> initialize() async {
+    await dotenv.load(fileName: '.env'); // Loads from project root
+  }
+
+  static String get apiBaseUrl => dotenv.get('API_BASE_URL');
+  static bool get enableChatbot => dotenv.get('ENABLE_CHATBOT') == 'true';
 }
-
-// Backend (Python)
-import os
-api_url = os.getenv('API_BASE_URL', 'http://localhost:8012')
-database_url = os.getenv('DATABASE_URL')
-
-// React
-const apiUrl = process.env.REACT_APP_API_URL;
 ```
+
+```python
+# Backend (backend/app/core/config/settings.py)
+PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
+env_file = PROJECT_ROOT / ".env"
+
+if env_file.exists():
+    load_dotenv(env_file, override=True)  # Loads from project root
+
+# All settings loaded from unified .env file
+settings = Settings()
+```
+
+```javascript
+// React Config Portal
+// Uses REACT_APP_ prefixed variables from root .env
+const apiUrl = process.env.REACT_APP_API_URL;
+const pioneerUrl = process.env.REACT_APP_PIONEER_URL;
+```
+
+**Benefits:**
+- ✅ Single source of truth for all configuration
+- ✅ No duplicate environment variables
+- ✅ Easier deployment and environment management
+- ✅ Consistent configuration across all components
+- ✅ Simplified development setup
 
 ---
 
@@ -1686,7 +1697,7 @@ class CustomerDashboardRepository {
 - [ ] **Error Handling** - Proper error handling throughout
 - [ ] **Loading States** - Loading indicators where needed
 - [ ] **Database Migrations** - All DB changes via Flyway
-- [ ] **Environment Configuration** - All config externalized via .env files
+- [ ] **Unified Environment Configuration** - Single `.env` file in project root
 - [ ] **Deployment Scripts** - Production deployment via `scripts/deploy/start-prod.sh`
 - [ ] **Infrastructure Setup** - PostgreSQL/Redis local, Pioneer via Docker
 - [ ] **Performance** - App performs well with real data
@@ -1750,7 +1761,7 @@ When implementing this plan:
 3. **Use real APIs** - Never create mock data, use the 265 existing endpoints
 4. **Match wireframes exactly** - Colors, spacing, typography, layout must match 100%
 5. **Follow patterns** - Use existing code patterns
-6. **Configure environment** - Use .env files for all configuration (Flutter, Backend, React)
+6. **Unified Configuration** - Use single `.env` file in project root for all components
 7. **Test incrementally** - Test each step before moving on
 8. **Document changes** - Comment on why changes were made
 9. **Verify database** - Ensure data persists to correct tables in lic_schema

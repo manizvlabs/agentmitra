@@ -8,19 +8,19 @@ from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 from typing import Optional
 
-# Get the backend directory (parent of this file)
-BACKEND_DIR = Path(__file__).parent.parent.parent
+# Get the project root directory (two levels up from backend)
+PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 
 # Load .env files in order of precedence:
 # 1. .env.local (highest priority, should be gitignored)
-# 2. .env (default, can be committed)
-# 3. env.development (development defaults)
-# 4. env.example (template)
+# 2. .env (unified configuration file in project root)
+# 3. env.development (development defaults - legacy)
+# 4. env.example (template - legacy)
 # 5. Environment variables (highest priority if set)
-env_local = BACKEND_DIR / ".env.local"
-env_file = BACKEND_DIR / ".env"
-env_development = BACKEND_DIR / "env.development"
-env_example = BACKEND_DIR / "env.example"
+env_local = PROJECT_ROOT / ".env.local"
+env_file = PROJECT_ROOT / ".env"
+env_development = PROJECT_ROOT / "backend/env.development"
+env_example = PROJECT_ROOT / "backend/env.example"
 
 if env_local.exists():
     load_dotenv(env_local, override=True)
