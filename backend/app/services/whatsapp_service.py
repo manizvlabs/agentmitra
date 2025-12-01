@@ -142,6 +142,27 @@ class WhatsAppService:
 
     async def send_otp_message(self, to_phone: str, otp: str) -> Dict[str, Any]:
         """Send OTP via WhatsApp"""
+        # Check if mock OTP is enabled via Pioneer feature flag
+        from app.services.pioneer_service import PioneerService
+        pioneer_service = PioneerService()
+
+        use_mock_otp = await pioneer_service.get_flag_value("mock_otp_enabled", default=False)
+
+        if use_mock_otp:
+            # Return mock response with hardcoded OTP 123456
+            return {
+                "provider": "whatsapp_mock",
+                "message_id": f"whatsapp_mock_{to_phone}_{int(datetime.utcnow().timestamp())}",
+                "status": "sent",
+                "to": to_phone,
+                "message_type": "text",
+                "otp_sent": "123456",  # Always send 123456 in mock mode
+                "content": {"body": f"Your Agent Mitra verification code is: 123456. Valid for 5 minutes."},
+                "timestamp": datetime.utcnow().isoformat(),
+                "mock": True
+            }
+
+        # Use real WhatsApp service
         text = f"Your Agent Mitra verification code is: {otp}. Valid for 5 minutes."
         return await self.send_text_message(to_phone, text)
 

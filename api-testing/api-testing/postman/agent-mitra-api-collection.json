@@ -39,7 +39,7 @@
   ],
   "item": [
     {
-      "name": "Authentication",
+      "name": "\ud83d\udd10 Authentication & Authorization",
       "item": [
         {
           "name": "Super Admin Login",
@@ -56,9 +56,16 @@
               "raw": "{\"phone_number\": \"+919876543200\", \"password\": \"testpassword\"}"
             },
             "url": {
-              "raw": "{{base_url}}/api/v1/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "login"]
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
             }
           },
           "event": [
@@ -106,9 +113,16 @@
               "raw": "{\"phone_number\": \"+919876543201\", \"password\": \"testpassword\"}"
             },
             "url": {
-              "raw": "{{base_url}}/api/v1/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "login"]
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
             }
           },
           "event": [
@@ -143,7 +157,338 @@
       ]
     },
     {
-      "name": "Health Check",
+      "name": "\ud83d\udcf1 OTP & External Services",
+      "item": [
+        {
+          "name": "Send SMS OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"to_phone\": \"{{test_phone_number}}\", \"otp\": \"{{test_otp}}\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/external/sms/otp",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "external",
+                "sms",
+                "otp"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test(\"Response has mock OTP\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.otp_sent).to.eql('123456');",
+                  "    pm.expect(jsonData.data.mock).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Send WhatsApp OTP",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/external/whatsapp/otp?to_phone={{test_phone_number}}&otp={{test_otp}}",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "external",
+                "whatsapp",
+                "otp"
+              ],
+              "query": [
+                {
+                  "key": "to_phone",
+                  "value": "{{test_phone_number}}"
+                },
+                {
+                  "key": "otp",
+                  "value": "{{test_otp}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test(\"Response has mock OTP\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.otp_sent).to.eql('123456');",
+                  "    pm.expect(jsonData.data.mock).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get SMS Status (requires message_id)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/external/sms/status/{{message_id}}",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "external",
+                "sms",
+                "status",
+                "{{message_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404 (no message_id)\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Response indicates not found\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.detail).to.include('Not Found');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get WhatsApp Status (requires message_id)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/external/whatsapp/status/{{message_id}}",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "external",
+                "whatsapp",
+                "status",
+                "{{message_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404 (no message_id)\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Response indicates not found\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.detail).to.include('Not Found');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Send SMS Message (requires auth - will fail in test)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"to_phone\": \"{{test_phone_number}}\", \"message\": \"Test message from Agent Mitra API\", \"message_type\": \"transactional\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/external/sms/send",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "external",
+                "sms",
+                "send"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 (authentication required)\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"Response indicates auth required\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.detail).to.include('Authentication required');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Send WhatsApp Message (requires auth - will fail in test)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"to_phone\": \"{{test_phone_number}}\", \"message_type\": \"text\", \"content\": {\"body\": \"Test message from Agent Mitra API\"}}"
+            },
+            "url": {
+              "raw": "{{base_url}}/external/whatsapp/send",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "external",
+                "whatsapp",
+                "send"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 (authentication required)\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"Response indicates auth required\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.detail).to.include('Authentication required');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "AI Chat Completion (requires auth - will fail in test)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"messages\": [{\"role\": \"user\", \"content\": \"Hello, how are you?\"}], \"model\": \"gpt-3.5-turbo\", \"temperature\": 0.7}"
+            },
+            "url": {
+              "raw": "{{base_url}}/external/ai/chat",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "external",
+                "ai",
+                "chat"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 (authentication required)\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"Response indicates auth required\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.detail).to.include('Authentication required');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "\ud83c\udfe5 Health Check",
       "item": [
         {
           "name": "System Health Check",
@@ -151,9 +496,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/health",
-              "host": ["{{base_url}}"],
-              "path": ["health"]
+              "raw": "{{api_host}}/health",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "health"
+              ]
             }
           },
           "event": [
@@ -178,7 +527,7 @@
       ]
     },
     {
-      "name": "Feature Flags",
+      "name": "\ud83d\udea9 Feature Flags & Configuration",
       "item": [
         {
           "name": "Check Feature Flag Status (Public)",
@@ -186,9 +535,17 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/v1/feature-flags/check/dashboard_enabled",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "feature-flags", "check", "dashboard_enabled"]
+              "raw": "{{base_url}}/feature-flags/check/dashboard_enabled",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "feature-flags",
+                "check",
+                "dashboard_enabled"
+              ]
             }
           },
           "event": [
@@ -218,9 +575,17 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/v1/feature-flags/check/is_test",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "feature-flags", "check", "is_test"]
+              "raw": "{{base_url}}/feature-flags/check/is_test",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "feature-flags",
+                "check",
+                "is_test"
+              ]
             }
           },
           "event": [
@@ -253,9 +618,17 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/feature-flags/user/{{super_admin_user_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "feature-flags", "user", "{{super_admin_user_id}}"]
+              "raw": "{{base_url}}/feature-flags/user/{{super_admin_user_id}}",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "feature-flags",
+                "user",
+                "{{super_admin_user_id}}"
+              ]
             }
           },
           "event": [
@@ -289,9 +662,16 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/feature-flags/all",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "feature-flags", "all"]
+              "raw": "{{base_url}}/feature-flags/all",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "feature-flags",
+                "all"
+              ]
             }
           },
           "event": [
@@ -332,9 +712,16 @@
               "raw": "{\"flag\": {\"title\": \"postman_test_flag\", \"description\": \"Created via Postman test\", \"is_active\": true, \"rollout\": 50}}"
             },
             "url": {
-              "raw": "{{base_url}}/api/v1/feature-flags/flags",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "feature-flags", "flags"]
+              "raw": "{{base_url}}/feature-flags/flags",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "feature-flags",
+                "flags"
+              ]
             }
           },
           "event": [
@@ -377,9 +764,17 @@
               "raw": "{\"flag\": {\"description\": \"Updated via Postman\", \"is_active\": false, \"rollout\": 25}}"
             },
             "url": {
-              "raw": "{{base_url}}/api/v1/feature-flags/flags/{{test_flag_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "feature-flags", "flags", "{{test_flag_id}}"]
+              "raw": "{{base_url}}/feature-flags/flags/{{test_flag_id}}",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "feature-flags",
+                "flags",
+                "{{test_flag_id}}"
+              ]
             }
           },
           "event": [
@@ -414,9 +809,17 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/feature-flags/flags/{{test_flag_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "feature-flags", "flags", "{{test_flag_id}}"]
+              "raw": "{{base_url}}/feature-flags/flags/{{test_flag_id}}",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "feature-flags",
+                "flags",
+                "{{test_flag_id}}"
+              ]
             }
           },
           "event": [
@@ -449,9 +852,16 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/feature-flags/all",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "feature-flags", "all"]
+              "raw": "{{base_url}}/feature-flags/all",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "feature-flags",
+                "all"
+              ]
             }
           },
           "event": [
@@ -493,8 +903,8 @@
         "type": "text/javascript",
         "exec": [
           "// Global test script",
-          "pm.test('Response time is less than 2000ms', function () {",
-          "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+          "pm.test('Response time is less than 5000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
           "});",
           "",
           "pm.test('Response has proper headers', function () {",

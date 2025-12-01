@@ -129,6 +129,30 @@ class SMSService:
 
     async def send_otp(self, to_phone: str, otp: str, expiry_minutes: int = 5) -> Dict[str, Any]:
         """Send OTP via SMS with expiration info"""
+        # Check if mock OTP is enabled via Pioneer feature flag
+        from app.services.pioneer_service import PioneerService
+        pioneer_service = PioneerService()
+
+        use_mock_otp = await pioneer_service.get_flag_value("mock_otp_enabled", default=False)
+
+        if use_mock_otp:
+            # Return mock response with hardcoded OTP 123456
+            return {
+                "provider": "mock",
+                "message_id": f"mock_{to_phone}_{int(datetime.utcnow().timestamp())}",
+                "status": "sent",
+                "to": to_phone,
+                "otp_sent": "123456",  # Always send 123456 in mock mode
+                "message": f"Your Agent Mitra verification code is: 123456. Valid for {expiry_minutes} minutes.",
+                "message_type": "otp",
+                "priority": "high",
+                "delivery_time_seconds": 0.001,
+                "provider_configured": True,
+                "timestamp": datetime.utcnow().isoformat(),
+                "mock": True
+            }
+
+        # Use real SMS service
         message = f"Your Agent Mitra verification code is: {otp}. Valid for {expiry_minutes} minutes."
         return await self.send_sms(to_phone, message, message_type="otp", priority="high")
 

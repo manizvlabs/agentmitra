@@ -77,7 +77,6 @@ async def send_sms(
 @router.post("/sms/otp")
 async def send_otp(
     request: OTPRequest,
-    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """Send OTP via SMS"""
@@ -170,7 +169,6 @@ async def send_whatsapp_message(
 async def send_whatsapp_otp(
     to_phone: str,
     otp: str,
-    current_user: UserContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
     """Send OTP via WhatsApp"""
