@@ -179,3 +179,5 @@ grep VIDEO_TRANSCRIPTION_AUTO backend/.env
 - Cost Analysis Script: `backend/scripts/check_api_costs.py`
 
 
+
+
