@@ -75,8 +75,7 @@ class RevenueForecastingService:
         from sqlalchemy.orm import Session
         from app.core.database import get_db_session
 
-        session = next(get_db_session())
-        try:
+        with get_db_session() as session:
             # Try to use agent_monthly_summary table if it exists
             try:
                 from app.models.analytics import AgentMonthlySummary
@@ -143,9 +142,6 @@ class RevenueForecastingService:
                 })
 
             return historical_data
-
-        finally:
-            session.close()
 
     @staticmethod
     def _calculate_base_forecast(historical_data: List[Dict], months: int) -> Dict[str, Any]:

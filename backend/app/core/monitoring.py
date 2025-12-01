@@ -1,304 +1,164 @@
 """
-Application Monitoring & Metrics
-================================
-
-This module provides comprehensive monitoring including:
-- Application performance metrics
-- Health checks and alerts
-- Custom business metrics
-- Integration with monitoring services
+Monitoring utilities for response time tracking and performance metrics
 """
-
 import time
 import logging
-from typing import Dict, Any, Optional
-from dataclasses import dataclass
-from contextlib import asynccontextmanager
-
-import psutil
-from prometheus_client import Counter, Histogram, Gauge, generate_latest
-
-from app.core.config.settings import settings
+from functools import wraps
+from typing import Callable, Any
+from fastapi import Request, Response
 
 logger = logging.getLogger(__name__)
 
-# Prometheus metrics
-REQUEST_COUNT = Counter(
-    'http_requests_total',
-    'Total HTTP requests',
-    ['method', 'endpoint', 'status_code']
-)
 
-REQUEST_LATENCY = Histogram(
-    'http_request_duration_seconds',
-    'HTTP request latency',
-    ['method', 'endpoint']
-)
+def response_time_monitor(endpoint_name: str = None):
+    """
+    Decorator to monitor response times for endpoints
 
-ACTIVE_CONNECTIONS = Gauge(
-    'active_connections',
-    'Number of active connections'
-)
+    Args:
+        endpoint_name: Name of the endpoint for logging
+    """
+    def decorator(func: Callable) -> Callable:
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            start_time = time.time()
 
-DB_CONNECTIONS = Gauge(
-    'db_connections_active',
-    'Number of active database connections'
-)
+            try:
+                # Get endpoint name from function if not provided
+                name = endpoint_name or func.__name__
 
-MEMORY_USAGE = Gauge(
-    'memory_usage_bytes',
-    'Memory usage in bytes'
-)
+                # Execute the function
+                result = await func(*args, **kwargs)
 
-CPU_USAGE = Gauge(
-    'cpu_usage_percent',
-    'CPU usage percentage'
-)
+                # Calculate response time
+                end_time = time.time()
+                response_time_ms = (end_time - start_time) * 1000
 
-# Business metrics
-POLICY_CREATED_COUNT = Counter(
-    'policies_created_total',
-    'Total number of policies created',
-    ['agent_type', 'policy_type']
-)
+                # Log response time
+                logger.info(f"Endpoint '{name}' completed in {response_time_ms:.2f}ms")
 
-PAYMENT_PROCESSED_COUNT = Counter(
-    'payments_processed_total',
-    'Total number of payments processed',
-    ['gateway', 'status']
-)
+                # Add response time header if result is a Response object
+                if hasattr(result, 'headers'):
+                    result.headers['X-Response-Time'] = f"{response_time_ms:.2f}ms"
 
-WHATSAPP_MESSAGES_SENT = Counter(
-    'whatsapp_messages_sent_total',
-    'Total WhatsApp messages sent',
-    ['message_type', 'status']
-)
+                return result
 
-IMPORT_JOBS_COMPLETED = Counter(
-    'import_jobs_completed_total',
-    'Total import jobs completed',
-    ['import_type', 'status']
-)
+            except Exception as e:
+                # Calculate response time even for errors
+                end_time = time.time()
+                response_time_ms = (end_time - start_time) * 1000
 
-USER_LOGIN_COUNT = Counter(
-    'user_logins_total',
-    'Total user logins',
-    ['user_type', 'login_method']
-)
+                name = endpoint_name or func.__name__
+                logger.error(f"Endpoint '{name}' failed after {response_time_ms:.2f}ms: {str(e)}")
 
-API_ERRORS = Counter(
-    'api_errors_total',
-    'Total API errors',
-    ['endpoint', 'error_type']
-)
+                raise
+
+        return wrapper
+    return decorator
 
 
-@dataclass
-class HealthStatus:
-    """Health check status"""
-    status: str  # 'healthy', 'degraded', 'unhealthy'
-    timestamp: float
-    checks: Dict[str, Dict[str, Any]]
+def analytics_monitor(endpoint_name: str = None):
+    """
+    Specialized decorator for analytics endpoints with performance logging
+    """
+    def decorator(func: Callable) -> Callable:
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            start_time = time.time()
+
+            try:
+                # Get endpoint name
+                name = endpoint_name or f"analytics.{func.__name__}"
+
+                logger.info(f"Analytics request started: {name}")
+
+                # Execute the function
+                result = await func(*args, **kwargs)
+
+                # Calculate and log performance
+                end_time = time.time()
+                response_time_ms = (end_time - start_time) * 1000
+
+                # Log performance metrics
+                if response_time_ms > 1000:  # Log slow queries (> 1 second)
+                    logger.warning(f"SLOW ANALYTICS: '{name}' took {response_time_ms:.2f}ms")
+                elif response_time_ms > 500:  # Log moderately slow queries (> 500ms)
+                    logger.info(f"MODERATE ANALYTICS: '{name}' took {response_time_ms:.2f}ms")
+                else:
+                    logger.debug(f"FAST ANALYTICS: '{name}' took {response_time_ms:.2f}ms")
+
+                # Add performance headers
+                if hasattr(result, 'headers'):
+                    result.headers['X-Response-Time'] = f"{response_time_ms:.2f}ms"
+                    result.headers['X-Endpoint-Name'] = name
+
+                return result
+
+            except Exception as e:
+                # Log error with timing
+                end_time = time.time()
+                response_time_ms = (end_time - start_time) * 1000
+
+                name = endpoint_name or f"analytics.{func.__name__}"
+                logger.error(f"Analytics error in '{name}' after {response_time_ms:.2f}ms: {str(e)}")
+
+                raise
+
+        return wrapper
+    return decorator
 
 
-class MonitoringService:
-    """Application monitoring service"""
+class PerformanceTracker:
+    """Utility class for tracking performance metrics"""
 
     def __init__(self):
-        self.start_time = time.time()
+        self.requests = []
 
-    async def health_check(self) -> HealthStatus:
-        """Comprehensive health check"""
+    def start_request(self, request_id: str, endpoint: str):
+        """Start tracking a request"""
+        self.requests.append({
+            'id': request_id,
+            'endpoint': endpoint,
+            'start_time': time.time(),
+            'status': 'in_progress'
+        })
 
-        checks = {}
+    def end_request(self, request_id: str, status: str = 'completed'):
+        """End tracking a request"""
+        for req in self.requests:
+            if req['id'] == request_id:
+                req['end_time'] = time.time()
+                req['duration_ms'] = (req['end_time'] - req['start_time']) * 1000
+                req['status'] = status
 
-        # Database health
-        db_status = await self._check_database()
-        checks['database'] = db_status
+                # Log performance
+                duration = req['duration_ms']
+                endpoint = req['endpoint']
 
-        # Redis health
-        redis_status = await self._check_redis()
-        checks['redis'] = redis_status
+                if duration > 2000:
+                    logger.warning(f"Very slow request: {endpoint} took {duration:.2f}ms")
+                elif duration > 1000:
+                    logger.info(f"Slow request: {endpoint} took {duration:.2f}ms")
 
-        # External services
-        external_status = await self._check_external_services()
-        checks['external_services'] = external_status
+                break
 
-        # Application metrics
-        app_status = await self._check_application_metrics()
-        checks['application'] = app_status
+    def get_stats(self):
+        """Get performance statistics"""
+        completed_requests = [r for r in self.requests if r.get('status') != 'in_progress']
 
-        # Determine overall status
-        failed_checks = [k for k, v in checks.items() if not v.get('healthy', False)]
-        if failed_checks:
-            if len(failed_checks) > 2:
-                status = 'unhealthy'
-            else:
-                status = 'degraded'
-        else:
-            status = 'healthy'
+        if not completed_requests:
+            return {'total_requests': 0, 'avg_response_time': 0, 'slow_requests': 0}
 
-        return HealthStatus(
-            status=status,
-            timestamp=time.time(),
-            checks=checks
-        )
+        total_time = sum(r['duration_ms'] for r in completed_requests)
+        avg_time = total_time / len(completed_requests)
+        slow_requests = len([r for r in completed_requests if r['duration_ms'] > 1000])
 
-    async def get_metrics(self) -> str:
-        """Get Prometheus metrics"""
-        # Update gauges
-        MEMORY_USAGE.set(psutil.virtual_memory().used)
-        CPU_USAGE.set(psutil.cpu_percent(interval=1))
-
-        # Generate latest metrics
-        return generate_latest()
-
-    async def record_request_metrics(
-        self,
-        method: str,
-        endpoint: str,
-        status_code: int,
-        duration: float
-    ):
-        """Record HTTP request metrics"""
-        REQUEST_COUNT.labels(
-            method=method,
-            endpoint=endpoint,
-            status_code=status_code
-        ).inc()
-
-        REQUEST_LATENCY.labels(
-            method=method,
-            endpoint=endpoint
-        ).observe(duration)
-
-        # Record API errors
-        if status_code >= 400:
-            API_ERRORS.labels(
-                endpoint=endpoint,
-                error_type=self._get_error_type(status_code)
-            ).inc()
-
-    @asynccontextmanager
-    async def measure_request_time(self, method: str, endpoint: str):
-        """Context manager to measure request time"""
-        start_time = time.time()
-        try:
-            yield
-        finally:
-            duration = time.time() - start_time
-            await self.record_request_metrics(method, endpoint, 200, duration)
-
-    def record_business_metrics(
-        self,
-        metric_type: str,
-        labels: Dict[str, str] = None,
-        value: float = 1.0
-    ):
-        """Record business metrics"""
-        labels = labels or {}
-
-        if metric_type == "policy_created":
-            POLICY_CREATED_COUNT.labels(**labels).inc(value)
-        elif metric_type == "payment_processed":
-            PAYMENT_PROCESSED_COUNT.labels(**labels).inc(value)
-        elif metric_type == "whatsapp_message_sent":
-            WHATSAPP_MESSAGES_SENT.labels(**labels).inc(value)
-        elif metric_type == "import_job_completed":
-            IMPORT_JOBS_COMPLETED.labels(**labels).inc(value)
-        elif metric_type == "user_login":
-            USER_LOGIN_COUNT.labels(**labels).inc(value)
-
-    async def _check_database(self) -> Dict[str, Any]:
-        """Check database connectivity"""
-        try:
-            from app.core.database import check_database_health
-            result = await check_database_health()
-            return {
-                'healthy': result['status'] == 'healthy',
-                'response_time': result.get('response_time'),
-                'active_connections': result.get('active_connections')
-            }
-        except Exception as e:
-            return {
-                'healthy': False,
-                'error': str(e)
-            }
-
-    async def _check_redis(self) -> Dict[str, Any]:
-        """Check Redis connectivity"""
-        try:
-            import redis
-            r = redis.from_url(settings.redis_url)
-            r.ping()
-            return {'healthy': True}
-        except Exception as e:
-            return {
-                'healthy': False,
-                'error': str(e)
-            }
-
-    async def _check_external_services(self) -> Dict[str, Any]:
-        """Check external service connectivity"""
-        services_status = {}
-
-        # Check OpenAI
-        try:
-            import openai
-            # Simple connectivity check (API key validation)
-            if settings.openai_api_key:
-                services_status['openai'] = {'healthy': True}
-            else:
-                services_status['openai'] = {'healthy': False, 'error': 'API key not configured'}
-        except:
-            services_status['openai'] = {'healthy': False}
-
-        # Check WhatsApp
-        try:
-            if settings.whatsapp_access_token and settings.whatsapp_api_url:
-                services_status['whatsapp'] = {'healthy': True}
-            else:
-                services_status['whatsapp'] = {'healthy': False, 'error': 'Not configured'}
-        except:
-            services_status['whatsapp'] = {'healthy': False}
-
-        # Check payment gateways
-        try:
-            if settings.razorpay_key_id or settings.stripe_secret_key:
-                services_status['payment_gateways'] = {'healthy': True}
-            else:
-                services_status['payment_gateways'] = {'healthy': False, 'error': 'No gateway configured'}
-        except:
-            services_status['payment_gateways'] = {'healthy': False}
-
-        return services_status
-
-    async def _check_application_metrics(self) -> Dict[str, Any]:
-        """Check application-specific metrics"""
         return {
-            'healthy': True,
-            'uptime_seconds': time.time() - self.start_time,
-            'memory_usage': psutil.virtual_memory().percent,
-            'cpu_usage': psutil.cpu_percent(interval=1)
+            'total_requests': len(completed_requests),
+            'avg_response_time': avg_time,
+            'slow_requests': slow_requests,
+            'recent_requests': completed_requests[-10:]  # Last 10 requests
         }
 
-    def _get_error_type(self, status_code: int) -> str:
-        """Get error type from HTTP status code"""
-        if status_code == 400:
-            return 'bad_request'
-        elif status_code == 401:
-            return 'unauthorized'
-        elif status_code == 403:
-            return 'forbidden'
-        elif status_code == 404:
-            return 'not_found'
-        elif status_code == 422:
-            return 'validation_error'
-        elif status_code >= 500:
-            return 'server_error'
-        else:
-            return 'other'
 
-
-# Global monitoring instance
-monitoring = MonitoringService()
+# Global performance tracker
+performance_tracker = PerformanceTracker()

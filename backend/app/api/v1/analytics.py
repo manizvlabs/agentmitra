@@ -14,6 +14,7 @@ from app.core.auth_middleware import (
     require_any_role,
     require_permission
 )
+from app.core.monitoring import analytics_monitor
 from app.services.analytics_service import AnalyticsService
 from app.services.roi_calculation_service import ROICalculationService
 from app.services.revenue_forecasting_service import RevenueForecastingService
@@ -209,6 +210,7 @@ async def get_hot_leads(
 
 
 @router.get("/leads/dashboard/{agent_id}")
+@analytics_monitor("leads.dashboard")
 async def get_leads_dashboard_data(
     agent_id: str,
     priority: str = Query("all", regex="^(all|high|medium|low)$"),
@@ -708,6 +710,7 @@ async def get_business_intelligence_insights(
 # =====================================================
 
 @router.get("/dashboard/overview", response_model=DashboardKPIs)
+@analytics_monitor("dashboard.overview")
 async def get_global_dashboard(
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
@@ -725,6 +728,27 @@ async def get_global_dashboard(
         return kpis
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch global dashboard KPIs: {str(e)}")
+
+
+@router.get("/dashboard/top-agents", response_model=List[TopPerformer])
+@analytics_monitor("dashboard.top_agents")
+async def get_top_performing_agents(
+    limit: int = Query(10, ge=1, le=50),
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    db: Session = Depends(get_db)
+):
+    """Get top performing agents by premium collected"""
+    try:
+        repo = AnalyticsRepository(db)
+
+        date_range = None
+        if start_date and end_date:
+            date_range = (start_date, end_date)
+
+        return repo.get_top_performing_agents(limit=limit, date_range=date_range)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch top performing agents: {str(e)}")
 
 
 @router.get("/dashboard/{agent_id}", response_model=DashboardKPIs)
@@ -774,26 +798,6 @@ async def get_policy_trends_chart(
         return repo.get_policy_trends(agent_id=agent_id, months=months)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch policy trends: {str(e)}")
-
-
-@router.get("/dashboard/top-agents", response_model=List[TopPerformer])
-async def get_top_performing_agents(
-    limit: int = Query(10, ge=1, le=50),
-    start_date: Optional[date] = None,
-    end_date: Optional[date] = None,
-    db: Session = Depends(get_db)
-):
-    """Get top performing agents by premium collected"""
-    try:
-        repo = AnalyticsRepository(db)
-
-        date_range = None
-        if start_date and end_date:
-            date_range = (start_date, end_date)
-
-        return repo.get_top_performing_agents(limit=limit, date_range=date_range)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch top performing agents: {str(e)}")
 
 
 # =====================================================

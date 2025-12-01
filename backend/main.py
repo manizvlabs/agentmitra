@@ -17,8 +17,8 @@ import uvicorn
 import os
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv(".env")
+# Load environment variables from root .env file
+load_dotenv("../.env")
 
 # Setup logging
 setup_logging(

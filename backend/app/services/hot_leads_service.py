@@ -64,8 +64,7 @@ class HotLeadsService:
         from sqlalchemy.orm import Session
         from app.core.database import get_db_session
 
-        session = next(get_db_session())
-        try:
+        with get_db_session() as session:
             # Try to use leads table if it exists, otherwise generate simulated leads based on policies
             try:
                 from app.models.lead import Lead
@@ -81,6 +80,7 @@ class HotLeadsService:
                     lead_age_days = (datetime.utcnow() - lead.created_at).days
 
                     leads.append({
+                        'lead_id': str(lead.lead_id),
                         'customer_name': lead.customer_name,
                         'contact_number': lead.contact_number,
                         'lead_source': lead.lead_source,
@@ -91,6 +91,7 @@ class HotLeadsService:
                         'urgency_level': 'high' if lead.priority == 'high' else 'medium' if lead.priority == 'medium' else 'low',
                         'previous_interactions': lead.followup_count or 0,
                         'response_time_hours': float(lead.response_time_hours or 24.0),
+                        'last_contact': lead.last_contact_at.isoformat() if lead.last_contact_at else None,
                     })
 
                 # If we have leads from database, return them
@@ -101,8 +102,7 @@ class HotLeadsService:
                 pass
 
             # Fallback: Generate simulated leads based on recent policy activity
-            from app.models.policy import InsurancePolicy
-            from app.models.customer import Policyholder
+            from app.models.policy import InsurancePolicy, Policyholder
 
             # Get recent policies that could represent leads
             recent_policies = session.query(InsurancePolicy, Policyholder).join(Policyholder).filter(
@@ -117,9 +117,14 @@ class HotLeadsService:
             for i, (policy, customer) in enumerate(recent_policies):
                 lead_age_days = (datetime.utcnow() - policy.created_at).days
 
+                # Get customer name from the related user
+                customer_name = "Unknown Customer"
+                if customer.user:
+                    customer_name = f"{customer.user.first_name or 'Unknown'} {customer.user.last_name or 'Customer'}"
+
                 leads.append({
-                    'customer_name': f"{customer.first_name} {customer.last_name}",
-                    'contact_number': customer.phone or '+91-9876543210',
+                    'customer_name': customer_name,
+                    'contact_number': customer.user.phone_number if customer.user else '+91-9876543210',
                     'lead_source': lead_sources[i % len(lead_sources)],
                     'lead_age_days': min(lead_age_days, 30),  # Cap at 30 days
                     'engagement_score': 70 + (i * 5) % 30,  # Vary engagement scores
@@ -131,9 +136,6 @@ class HotLeadsService:
                 })
 
             return leads
-
-        finally:
-            session.close()
 
     @staticmethod
     def _score_leads(leads: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

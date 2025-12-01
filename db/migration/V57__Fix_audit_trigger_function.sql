@@ -10,6 +10,7 @@
 DROP TRIGGER IF EXISTS audit_tenant_data_changes_trigger ON lic_schema.insurance_policies;
 DROP TRIGGER IF EXISTS audit_tenant_data_changes_trigger ON lic_schema.agents;
 DROP TRIGGER IF EXISTS audit_tenant_data_changes_trigger ON lic_schema.users;
+DROP TRIGGER IF EXISTS audit_tenant_data_changes_trigger ON lic_schema.policyholders;
 
 -- Recreate audit function to be generic and handle any table structure
 CREATE OR REPLACE FUNCTION lic_schema.audit_tenant_data_changes()

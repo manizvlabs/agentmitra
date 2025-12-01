@@ -16,6 +16,7 @@ from app.models.analytics import (
     TrendData,
     TopPerformer
 )
+from app.core.cache import cache, CacheKeys
 
 
 class AnalyticsRepository:
@@ -30,6 +31,16 @@ class AnalyticsRepository:
 
     def get_dashboard_kpis(self, agent_id: Optional[str] = None, date_range: Optional[Tuple[date, date]] = None) -> DashboardKPIs:
         """Get comprehensive dashboard KPIs"""
+
+        # Check cache first
+        cache_key = CacheKeys.dashboard_kpis(agent_id)
+        if date_range:
+            start, end = date_range
+            cache_key += f":daterange:{start}:{end}"
+
+        cached_result = cache.get(cache_key)
+        if cached_result:
+            return DashboardKPIs(**cached_result)
 
         # Base query components
         date_filter = ""
@@ -104,7 +115,7 @@ class AnalyticsRepository:
         # Calculate average policy value
         avg_policy_value = (premium_data.total_premium / total_policies) if total_policies > 0 else 0
 
-        return DashboardKPIs(
+        result = DashboardKPIs(
             total_policies=total_policies or 0,
             active_policies=active_policies or 0,
             total_premium_collected=premium_data.total_premium or 0,
@@ -115,6 +126,11 @@ class AnalyticsRepository:
             conversion_rate=conversion_rate,
             average_policy_value=avg_policy_value
         )
+
+        # Cache the result for 10 minutes
+        cache.set(cache_key, result.dict(), 600)
+
+        return result
 
     # =====================================================
     # AGENT PERFORMANCE ANALYTICS
@@ -174,6 +190,12 @@ class AnalyticsRepository:
     def get_top_performing_agents(self, limit: int = 10, date_range: Optional[Tuple[date, date]] = None) -> List[TopPerformer]:
         """Get top performing agents by premium collected"""
 
+        # Check cache first
+        cache_key = CacheKeys.top_agents(limit, date_range)
+        cached_result = cache.get(cache_key)
+        if cached_result:
+            return [TopPerformer(**item) for item in cached_result]
+
         date_filter = ""
         if date_range:
             start_date, end_date = date_range
@@ -198,7 +220,7 @@ class AnalyticsRepository:
 
         results = self.db.execute(text(query)).all()
 
-        return [
+        top_performers = [
             TopPerformer(
                 id=row.agent_id,
                 name=row.agent_name,
@@ -207,6 +229,11 @@ class AnalyticsRepository:
             )
             for idx, row in enumerate(results)
         ]
+
+        # Cache the result for 10 minutes
+        cache.set(cache_key, [tp.dict() for tp in top_performers], 600)
+
+        return top_performers
 
     # =====================================================
     # POLICY ANALYTICS

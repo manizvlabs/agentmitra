@@ -10,8 +10,7 @@ from sqlalchemy import and_, func, or_, desc, case, cast, Float
 from sqlalchemy.sql import label
 
 from app.models.agent import Agent
-from app.models.policy import InsurancePolicy
-from app.models.payment import PaymentTransaction
+from app.models.policy import InsurancePolicy, PremiumPayment
 from app.models.user import User
 from app.models.lead import Lead
 from app.models.campaign import Campaign, CampaignExecution
@@ -102,8 +101,8 @@ class ROICalculationService:
         from app.models.user import User
 
         with get_db_session() as session:
-            # Get agent with user details
-            agent = session.query(Agent).join(User).filter(Agent.agent_id == agent_id).first()
+            # Get agent with user details (specify foreign key to avoid ambiguity)
+            agent = session.query(Agent).join(User, Agent.user_id == User.user_id).filter(Agent.agent_id == agent_id).first()
             if agent:
                 return {
                     'id': str(agent.agent_id),
@@ -147,13 +146,13 @@ class ROICalculationService:
                 from app.models.payment import PaymentTransaction
 
                 revenue_result = session.query(
-                    func.sum(PaymentTransaction.amount).label('total_revenue'),
-                    func.count(PaymentTransaction.payment_id).label('total_payments')
+                    func.sum(PremiumPayment.amount).label('total_revenue'),
+                    func.count(PremiumPayment.payment_id).label('total_payments')
                 ).join(InsurancePolicy).filter(
                     InsurancePolicy.agent_id == agent_id,
-                    PaymentTransaction.payment_date >= start_date,
-                    PaymentTransaction.payment_date <= end_date,
-                    PaymentTransaction.status == 'completed'
+                    PremiumPayment.payment_date >= start_date,
+                    PremiumPayment.payment_date <= end_date,
+                    PremiumPayment.status == 'completed'
                 ).first()
 
                 total_revenue = float(revenue_result.total_revenue or 0)
@@ -244,25 +243,27 @@ class ROICalculationService:
     @staticmethod
     def _calculate_efficiency_metrics(agent_id: str, start_date: datetime) -> Dict[str, Any]:
         """Calculate efficiency and productivity metrics"""
+        from app.core.database import get_db_session
         from app.repositories.analytics_repository import AnalyticsRepository
 
-        repo = AnalyticsRepository()
-        revenue_data = repo.get_revenue_analytics(agent_id=agent_id, date_range=(start_date, datetime.utcnow()))
+        with get_db_session() as session:
+            repo = AnalyticsRepository(session)
+            revenue_data = repo.get_revenue_analytics(agent_id=agent_id, date_range=(start_date.date(), datetime.utcnow().date()))
 
-        # Calculate retention rate
-        retention_rate = ROICalculationService._calculate_retention_rate(agent_id, start_date)
+            # Calculate retention rate
+            retention_rate = ROICalculationService._calculate_retention_rate(agent_id, start_date)
 
-        # Calculate average response time
-        avg_response_time = ROICalculationService._calculate_avg_response_time(agent_id, start_date)
+            # Calculate average response time
+            avg_response_time = ROICalculationService._calculate_avg_response_time(agent_id, start_date)
 
-        # Calculate collection efficiency (already in revenue metrics)
-        collection_rate = revenue_data.collection_rate if hasattr(revenue_data, 'collection_rate') else 0
+            # Calculate collection efficiency (already in revenue metrics)
+            collection_rate = revenue_data.collection_rate if hasattr(revenue_data, 'collection_rate') else 0
 
-        return {
-            'collection_rate': collection_rate,
-            'retention_rate': round(retention_rate, 2),
-            'avg_response_time': round(avg_response_time, 2),
-        }
+            return {
+                'collection_rate': collection_rate,
+                'retention_rate': round(retention_rate, 2),
+                'avg_response_time': round(avg_response_time, 2),
+            }
 
     @staticmethod
     def _calculate_retention_rate(agent_id: str, start_date: datetime) -> float:

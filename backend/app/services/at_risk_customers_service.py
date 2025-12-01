@@ -63,11 +63,10 @@ class AtRiskCustomersService:
         from sqlalchemy.orm import Session
         from app.core.database import get_db_session
 
-        session = next(get_db_session())
-        try:
+        with get_db_session() as session:
             # Try to use customer_retention_analytics table if it exists
             try:
-                from app.models.customer_retention import CustomerRetentionAnalytics
+                from app.models.customer_retention import CustomerRetentionAnalytics  # This might not exist, will handle gracefully
 
                 retention_data = session.query(CustomerRetentionAnalytics).filter(
                     CustomerRetentionAnalytics.assigned_agent_id == agent_id,
@@ -98,8 +97,7 @@ class AtRiskCustomersService:
                 pass
 
             # Fallback: Generate simulated at-risk customers based on policy data
-            from app.models.policy import InsurancePolicy
-            from app.models.customer import Policyholder
+            from app.models.policy import InsurancePolicy, Policyholder
 
             # Get active policies for the agent
             policies = session.query(InsurancePolicy, Policyholder).join(Policyholder).filter(
@@ -126,8 +124,14 @@ class AtRiskCustomersService:
                 ]
                 profile = risk_profiles[i % len(risk_profiles)]
 
+                # Get customer name from the related user
+                customer_name = "Unknown Customer"
+                if customer.user:
+                    customer_name = f"{customer.user.first_name or 'Unknown'} {customer.user.last_name or 'Customer'}"
+
                 customer_data = {
-                    'customer_name': f"{customer.first_name} {customer.last_name}",
+                    'customer_id': str(customer.policyholder_id),
+                    'customer_name': customer_name,
                     'policy_number': f"POL{policy.policy_id}",
                     'premium_value': float(policy.premium_amount or 25000),
                     'last_payment_date': datetime.utcnow() - timedelta(days=days_since_payment),
@@ -144,9 +148,6 @@ class AtRiskCustomersService:
                 customers.append(customer_data)
 
             return customers
-
-        finally:
-            session.close()
 
     @staticmethod
     def _assess_customer_risk(customers: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
