@@ -335,13 +335,12 @@ async def create_pioneer_flag(flag_data: Dict[str, Any], current_user = Depends(
                 detail="Flag title is required"
             )
 
-        # Create flag in database
-        from app.repositories.feature_flag_repository import FeatureFlagRepository
-        from app.core.database import get_db
-        db = next(get_db())
-        repo = FeatureFlagRepository(db)
+        # Create flag in Pioneer database
+        from app.repositories.pioneer_repository import PioneerRepository
 
-        success = await repo.create_flag(title, description, "BOOLEAN", is_active)
+        repo = PioneerRepository()
+
+        success = repo.create_flag(title, description, is_active, rollout)
 
         if not success:
             raise HTTPException(
@@ -380,13 +379,12 @@ async def update_pioneer_flag(flag_id: str, flag_data: Dict[str, Any], current_u
         # Extract title from flag_id (remove pioneer- prefix)
         title = flag_id.replace("pioneer-", "")
 
-        # Update flag in database
-        from app.repositories.feature_flag_repository import FeatureFlagRepository
-        from app.core.database import get_db
-        db = next(get_db())
-        repo = FeatureFlagRepository(db)
+        # Update flag in Pioneer database
+        from app.repositories.pioneer_repository import PioneerRepository
 
-        success = await repo.update_flag_value(title, bool(is_active) if is_active is not None else None)
+        repo = PioneerRepository()
+
+        success = repo.update_flag(title, is_active, rollout, description)
 
         if not success:
             raise HTTPException(
@@ -420,13 +418,12 @@ async def delete_pioneer_flag(flag_id: str, current_user = Depends(require_permi
         # Extract title from flag_id (remove pioneer- prefix)
         title = flag_id.replace("pioneer-", "")
 
-        # Delete flag from database
-        from app.repositories.feature_flag_repository import FeatureFlagRepository
-        from app.core.database import get_db
-        db = next(get_db())
-        repo = FeatureFlagRepository(db)
+        # Delete flag from Pioneer database
+        from app.repositories.pioneer_repository import PioneerRepository
 
-        success = await repo.delete_flag_override(title)
+        repo = PioneerRepository()
+
+        success = repo.delete_flag(title)
 
         if not success:
             raise HTTPException(

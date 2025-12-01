@@ -39,6 +39,10 @@ env/
 api_test_results.json
 rbac_*_results.json
 
+# API Testing Results
+api-testing/reports/*.json
+api-testing/reports/*-results.json
+
 # Flutter
 .dart_tool/
 .flutter-plugins

@@ -21,8 +21,9 @@ class PioneerRepository:
 
     def __init__(self, db_url: Optional[str] = None):
         """Initialize with Pioneer database connection"""
-        # From Docker container, connect to host.docker.internal
-        host = os.getenv("PIONEER_DB_HOST", "host.docker.internal")
+        # When running locally (not in Docker), connect to localhost
+        # When in Docker, connect to host.docker.internal
+        host = os.getenv("PIONEER_DB_HOST", "localhost")  # Default to localhost for local development
         self.db_url = db_url or f"postgresql://pioneer:pioneer123@{host}:5432/pioneer"
         self.engine = create_engine(self.db_url, echo=settings.db_echo)
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
