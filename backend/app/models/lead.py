@@ -13,6 +13,9 @@ lead_source_enum = ENUM('website', 'referral', 'cold_call', 'social_media', 'ema
                        'whatsapp_campaign', 'event', 'partner', 'walk_in', 'other', name='lead_source_enum')
 lead_priority_enum = ENUM('high', 'medium', 'low', name='lead_priority_enum')
 
+interaction_type_enum = ENUM('call', 'email', 'whatsapp', 'meeting', 'visit', 'sms', 'social_media', 'other', name='interaction_type_enum')
+interaction_method_enum = ENUM('inbound', 'outbound', name='interaction_method_enum')
+
 
 class Lead(Base):
     __tablename__ = "leads"
@@ -73,3 +76,31 @@ class Lead(Base):
     created_by_user = relationship("User", foreign_keys=[created_by])
     updated_by_user = relationship("User", foreign_keys=[updated_by])
     converted_policy = relationship("InsurancePolicy", foreign_keys=[converted_policy_id])
+    interactions = relationship("LeadInteraction", back_populates="lead")
+
+
+class LeadInteraction(Base):
+    __tablename__ = "lead_interactions"
+    __table_args__ = {'schema': 'lic_schema'}
+
+    interaction_id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    lead_id = Column(UUID(as_uuid=True), ForeignKey('lic_schema.leads.lead_id'), nullable=False)
+    agent_id = Column(UUID(as_uuid=True), ForeignKey('lic_schema.agents.agent_id'))
+
+    # Interaction details
+    interaction_type = Column(interaction_type_enum, nullable=False)
+    interaction_method = Column(interaction_method_enum)
+    duration_minutes = Column(Integer)
+    outcome = Column(String(255))
+    notes = Column(Text)
+
+    # Follow-up
+    next_action = Column(Text)
+    next_action_date = Column(DateTime)
+
+    # Audit
+    created_at = Column(DateTime, default=func.now())
+
+    # Relationships
+    lead = relationship("Lead", back_populates="interactions")
+    agent = relationship("Agent", back_populates="lead_interactions")

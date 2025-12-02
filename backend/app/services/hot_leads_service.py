@@ -276,30 +276,126 @@ class HotLeadsService:
     @staticmethod
     def get_lead_details(lead_id: str) -> Optional[Dict[str, Any]]:
         """Get detailed information about a specific lead"""
-        # Placeholder implementation
-        return {
-            'lead_id': lead_id,
-            'customer_details': {
-                'name': 'Sample Customer',
-                'phone': '+91-9876543210',
-                'email': 'customer@example.com',
-                'location': 'Mumbai, Maharashtra'
-            },
-            'lead_history': [
-                {
-                    'date': '2024-01-15',
-                    'action': 'Lead created from WhatsApp campaign',
-                    'channel': 'whatsapp'
-                },
-                {
-                    'date': '2024-01-16',
-                    'action': 'Customer viewed policy details',
-                    'channel': 'mobile_app'
+        try:
+            from sqlalchemy.orm import Session
+            from app.core.database import get_db_session
+            from app.models.lead import Lead, LeadInteraction
+
+            with get_db_session() as session:
+                # Get the lead
+                lead = session.query(Lead).filter(Lead.lead_id == lead_id).first()
+                if not lead:
+                    return None
+
+                # Get lead interactions
+                interactions = session.query(LeadInteraction).filter(
+                    LeadInteraction.lead_id == lead_id
+                ).order_by(LeadInteraction.created_at.desc()).limit(10).all()
+
+                # Build lead history from interactions
+                lead_history = []
+                for interaction in interactions:
+                    lead_history.append({
+                        'date': interaction.created_at.isoformat(),
+                        'action': f"{interaction.interaction_type.title()} interaction: {interaction.outcome or 'Completed'}",
+                        'channel': interaction.interaction_method or interaction.interaction_type,
+                        'notes': interaction.notes
+                    })
+
+                # Add lead creation as first history item
+                lead_history.append({
+                    'date': lead.created_at.isoformat(),
+                    'action': f'Lead created from {lead.lead_source.replace("_", " ").title()} campaign',
+                    'channel': lead.lead_source,
+                    'notes': f'Insurance type: {lead.insurance_type or "Not specified"}'
+                })
+
+                # Sort history by date (newest first)
+                lead_history.sort(key=lambda x: x['date'], reverse=True)
+
+                # Generate recommended actions based on lead status and scoring
+                recommended_actions = HotLeadsService._generate_recommended_actions(lead)
+
+                return {
+                    'lead_id': str(lead.lead_id),
+                    'customer_details': {
+                        'name': lead.customer_name,
+                        'phone': lead.contact_number,
+                        'email': lead.email,
+                        'location': lead.location or 'Not specified'
+                    },
+                    'lead_info': {
+                        'source': lead.lead_source,
+                        'status': lead.lead_status,
+                        'priority': lead.priority,
+                        'insurance_type': lead.insurance_type,
+                        'budget_range': lead.budget_range,
+                        'coverage_required': lead.coverage_required,
+                        'conversion_score': float(lead.conversion_score or 0),
+                        'engagement_score': float(lead.engagement_score or 0),
+                        'potential_premium': float(lead.potential_premium or 0),
+                        'created_at': lead.created_at.isoformat(),
+                        'last_contact': lead.last_contact_at.isoformat() if lead.last_contact_at else None
+                    },
+                    'lead_history': lead_history[:20],  # Limit to 20 most recent
+                    'recommended_actions': recommended_actions
                 }
-            ],
-            'recommended_actions': [
-                'Call customer within 2 hours',
-                'Prepare quote for ₹50,000 term insurance',
-                'Send policy brochure via WhatsApp'
-            ]
-        }
+
+        except Exception as e:
+            logger.error(f"Error getting lead details for {lead_id}: {str(e)}")
+            return None
+
+    @staticmethod
+    def _generate_recommended_actions(lead: 'Lead') -> List[str]:
+        """Generate recommended actions based on lead status and characteristics"""
+        actions = []
+
+        if lead.lead_status == 'new':
+            actions.extend([
+                'Call customer within 2 hours to introduce services',
+                f'Prepare personalized quote for {lead.insurance_type or "life insurance"}',
+                'Send welcome WhatsApp message with policy overview'
+            ])
+
+        elif lead.lead_status == 'contacted':
+            actions.extend([
+                'Follow up on initial conversation',
+                'Schedule product demonstration call',
+                'Send detailed policy comparison document'
+            ])
+
+        elif lead.lead_status == 'qualified':
+            actions.extend([
+                'Prepare formal quote with exact premium calculation',
+                'Schedule in-person or video consultation',
+                'Send application forms and requirements checklist'
+            ])
+
+        elif lead.lead_status == 'quoted':
+            actions.extend([
+                'Address any objections or concerns about quote',
+                'Offer payment plan options if needed',
+                'Guide through application process'
+            ])
+
+        # Priority-based actions
+        if lead.priority == 'high' or (lead.conversion_score or 0) > 70:
+            actions.insert(0, 'URGENT: Contact customer immediately - high priority lead')
+
+        # Source-based actions
+        if lead.lead_source == 'referral':
+            actions.append('Thank referring customer and offer referral bonus')
+
+        # Insurance type specific actions
+        if lead.insurance_type == 'term_life':
+            actions.append('Focus on family protection and financial security benefits')
+        elif lead.insurance_type == 'health':
+            actions.append('Emphasize comprehensive coverage and cashless benefits')
+        elif lead.insurance_type == 'ulip':
+            actions.append('Highlight investment growth potential and flexibility')
+
+        # Engagement-based actions
+        if (lead.engagement_score or 0) < 30:
+            actions.append('Re-engage customer with personalized video message')
+
+        return actions[:5]  # Return top 5 actions

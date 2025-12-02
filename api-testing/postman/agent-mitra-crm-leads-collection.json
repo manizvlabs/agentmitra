@@ -1,0 +1,868 @@
+{
+  "info": {
+    "name": "Agent Mitra CRM & Lead Management API Collection",
+    "description": "Comprehensive API collection for Agent Mitra CRM & Lead Management system with real database testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "agent-mitra-crm-leads"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "{{api_host}}{{api_version}}",
+      "type": "string"
+    },
+    {
+      "key": "lead_id",
+      "value": "5a265f16-b335-4baf-ac39-dfeb06c60f09",
+      "type": "string",
+      "description": "📝 LEAD DATA: ID of created test lead",
+      "enabled": true
+    },
+    {
+      "key": "customer_id",
+      "value": "e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a10",
+      "type": "string",
+      "description": "👥 CUSTOMER DATA: ID of test customer for retention plan",
+      "enabled": true
+    },
+    {
+      "key": "agent_id",
+      "value": "7b501e0e-4393-4b5a-8de7-25fe384e91da",
+      "type": "string",
+      "description": "👤 AGENT DATA: ID of senior agent for testing",
+      "enabled": true
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Senior Agent Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has access token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('access_token');",
+                  "    pm.environment.set('senior_agent_token', jsonData.access_token);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has user data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('user');",
+                  "    pm.expect(jsonData.user.role).to.eql('senior_agent');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{senior_agent_phone}}\",\n  \"password\": \"{{senior_agent_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticate as Senior Agent to get JWT token for testing CRM APIs"
+          },
+          "response": []
+        }
+      ],
+      "description": "Authentication endpoints for CRM testing"
+    },
+    {
+      "name": "👥 Customers API",
+      "item": [
+        {
+          "name": "List Agent Customers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success status\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test(\"Response has customers array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('customers');",
+                  "    pm.expect(jsonData.data.customers).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Customers have required fields\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data.customers.length > 0) {",
+                  "        var customer = jsonData.data.customers[0];",
+                  "        pm.expect(customer).to.have.property('policyholder_id');",
+                  "        pm.expect(customer).to.have.property('customer_name');",
+                  "        pm.expect(customer).to.have.property('total_policies');",
+                  "        pm.expect(customer).to.have.property('total_premium');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/agents/{{agent_id}}/customers",
+              "host": ["{{base_url}}"],
+              "path": ["agents", "{{agent_id}}", "customers"]
+            },
+            "description": "List all customers for a specific agent with policy and premium data"
+          },
+          "response": []
+        }
+      ],
+      "description": "Customer management endpoints"
+    },
+    {
+      "name": "📊 CRM Analytics",
+      "item": [
+        {
+          "name": "Hot Leads Analytics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success status\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test(\"Response has leads data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('leads');",
+                  "    pm.expect(jsonData.data).to.have.property('total_leads_count');",
+                  "    pm.expect(jsonData.data).to.have.property('conversion_rate');",
+                  "});",
+                  "",
+                  "pm.test(\"Analytics calculations are present\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('summary');",
+                  "    pm.expect(jsonData.data.summary).to.have.property('conversion_rate');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/analytics/leads/hot/{{agent_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["analytics", "leads", "hot", "{{agent_id}}"]
+            },
+            "description": "Get hot leads analytics with scoring and conversion predictions"
+          },
+          "response": []
+        },
+        {
+          "name": "Leads Dashboard Analytics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success status\", function () {",
+                  "    pm.response.json().success;",
+                  "});",
+                  "",
+                  "pm.test(\"Response has dashboard data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('leads_summary');",
+                  "    pm.expect(jsonData.data).to.have.property('leads_list');",
+                  "    pm.expect(jsonData.data).to.have.property('priority_breakdown');",
+                  "});",
+                  "",
+                  "pm.test(\"Dashboard summary is correct\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var summary = jsonData.data.leads_summary;",
+                  "    pm.expect(summary).to.have.property('hot_leads_count');",
+                  "    pm.expect(summary).to.have.property('total_potential_value');",
+                  "    pm.expect(summary).to.have.property('conversion_rate');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/analytics/leads/dashboard/{{agent_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["analytics", "leads", "dashboard", "{{agent_id}}"]
+            },
+            "description": "Get leads dashboard data formatted for frontend consumption"
+          },
+          "response": []
+        },
+        {
+          "name": "Lead Details Analytics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success status\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test(\"Response has lead details\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('lead_id');",
+                  "    pm.expect(jsonData.data).to.have.property('customer_details');",
+                  "    pm.expect(jsonData.data).to.have.property('lead_info');",
+                  "    pm.expect(jsonData.data).to.have.property('lead_history');",
+                  "    pm.expect(jsonData.data).to.have.property('recommended_actions');",
+                  "});",
+                  "",
+                  "pm.test(\"Lead info is comprehensive\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var leadInfo = jsonData.data.lead_info;",
+                  "    pm.expect(leadInfo).to.have.property('conversion_score');",
+                  "    pm.expect(leadInfo).to.have.property('engagement_score');",
+                  "    pm.expect(leadInfo).to.have.property('potential_premium');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/analytics/leads/{{lead_id}}/details",
+              "host": ["{{base_url}}"],
+              "path": ["analytics", "leads", "{{lead_id}}", "details"]
+            },
+            "description": "Get detailed analytics and history for a specific lead"
+          },
+          "response": []
+        }
+      ],
+      "description": "CRM analytics endpoints for leads management"
+    },
+    {
+      "name": "🎯 Retention Analytics",
+      "item": [
+        {
+          "name": "At-Risk Customers Analytics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success status\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test(\"Response has risk data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('at_risk_count');",
+                  "    pm.expect(jsonData.data).to.have.property('total_retention_value');",
+                  "    pm.expect(jsonData.data).to.have.property('customers');",
+                  "    pm.expect(jsonData.data).to.have.property('summary');",
+                  "});",
+                  "",
+                  "pm.test(\"Risk summary is complete\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var summary = jsonData.data.summary;",
+                  "    pm.expect(summary).to.have.property('total_at_risk');",
+                  "    pm.expect(summary).to.have.property('success_rate');",
+                  "    pm.expect(summary).to.have.property('retention_opportunities');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/analytics/customers/at-risk/{{agent_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["analytics", "customers", "at-risk", "{{agent_id}}"]
+            },
+            "description": "Get at-risk customers with retention recommendations and risk scoring"
+          },
+          "response": []
+        },
+        {
+          "name": "Retention Dashboard Analytics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success status\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test(\"Response has dashboard data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('retention_summary');",
+                  "    pm.expect(jsonData.data).to.have.property('risk_breakdown');",
+                  "    pm.expect(jsonData.data).to.have.property('customers_list');",
+                  "});",
+                  "",
+                  "pm.test(\"Retention summary is correct\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var summary = jsonData.data.retention_summary;",
+                  "    pm.expect(summary).to.have.property('at_risk_count');",
+                  "    pm.expect(summary).to.have.property('total_retention_value');",
+                  "    pm.expect(summary).to.have.property('retention_success_rate');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/analytics/customers/retention/dashboard/{{agent_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["analytics", "customers", "retention", "dashboard", "{{agent_id}}"]
+            },
+            "description": "Get retention dashboard data formatted for frontend consumption"
+          },
+          "response": []
+        },
+        {
+          "name": "Customer Retention Plan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success status\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test(\"Response has retention plan\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('customer_id');",
+                  "    pm.expect(jsonData.data).to.have.property('retention_plan');",
+                  "});",
+                  "",
+                  "pm.test(\"Retention plan is comprehensive\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var plan = jsonData.data.retention_plan;",
+                  "    pm.expect(plan).to.have.property('current_status');",
+                  "    pm.expect(plan).to.have.property('risk_score');",
+                  "    pm.expect(plan).to.have.property('timeline');",
+                  "    pm.expect(plan).to.have.property('expected_outcome');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/analytics/customers/{{customer_id}}/retention-plan",
+              "host": ["{{base_url}}"],
+              "path": ["analytics", "customers", "{{customer_id}}", "retention-plan"]
+            },
+            "description": "Get detailed retention plan for a specific customer with risk assessment"
+          },
+          "response": []
+        }
+      ],
+      "description": "Customer retention analytics and planning endpoints"
+    },
+    {
+      "name": "📝 Lead CRUD Operations",
+      "item": [
+        {
+          "name": "Create New Lead",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has lead data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('lead_id');",
+                  "    pm.expect(jsonData).to.have.property('customer_name');",
+                  "    pm.environment.set('new_lead_id', jsonData.lead_id);",
+                  "});",
+                  "",
+                  "pm.test(\"Lead has required fields\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.lead_status).to.eql('new');",
+                  "    pm.expect(jsonData.priority).to.be.oneOf(['high', 'medium', 'low']);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_name\": \"Test Customer API\",\n  \"contact_number\": \"+919876543299\",\n  \"email\": \"test.api@example.com\",\n  \"location\": \"Mumbai Test\",\n  \"lead_source\": \"website\",\n  \"priority\": \"high\",\n  \"insurance_type\": \"health\",\n  \"budget_range\": \"20000-50000\",\n  \"coverage_required\": 2000000\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/leads/",
+              "host": ["{{base_url}}"],
+              "path": ["leads"]
+            },
+            "description": "Create a new lead with comprehensive customer information"
+          },
+          "response": []
+        },
+        {
+          "name": "List Leads with Filters",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success status\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test(\"Response has leads data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('leads');",
+                  "    pm.expect(jsonData.data).to.have.property('total');",
+                  "    pm.expect(jsonData.data).to.have.property('limit');",
+                  "});",
+                  "",
+                  "pm.test(\"Leads have required fields\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data.leads.length > 0) {",
+                  "        var lead = jsonData.data.leads[0];",
+                  "        pm.expect(lead).to.have.property('lead_id');",
+                  "        pm.expect(lead).to.have.property('customer_name');",
+                  "        pm.expect(lead).to.have.property('lead_status');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/leads/?status=new&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["leads"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "new"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "List leads with filtering by status and pagination"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Lead by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has lead data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('lead_id');",
+                  "    pm.expect(jsonData.lead_id).to.eql(pm.collectionVariables.get('lead_id'));",
+                  "});",
+                  "",
+                  "pm.test(\"Lead has comprehensive data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('customer_name');",
+                  "    pm.expect(jsonData).to.have.property('lead_status');",
+                  "    pm.expect(jsonData).to.have.property('conversion_score');",
+                  "    pm.expect(jsonData).to.have.property('engagement_score');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/leads/{{lead_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["leads", "{{lead_id}}"]
+            },
+            "description": "Get detailed information about a specific lead by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Lead",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has updated lead data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('lead_id');",
+                  "    pm.expect(jsonData.customer_name).to.include('Updated');",
+                  "});",
+                  "",
+                  "pm.test(\"Lead update is reflected\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.location).to.eql('Mumbai, Maharashtra Updated');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_name\": \"John Doe Updated via API\",\n  \"location\": \"Mumbai, Maharashtra Updated\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/leads/{{lead_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["leads", "{{lead_id}}"]
+            },
+            "description": "Update lead information with partial data"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Lead Interaction",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has interaction data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('interaction_id');",
+                  "    pm.expect(jsonData.interaction_type).to.eql('call');",
+                  "    pm.expect(jsonData.outcome).to.eql('interested');",
+                  "});",
+                  "",
+                  "pm.test(\"Interaction has required fields\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('created_at');",
+                  "    pm.expect(jsonData.notes).to.include('API test interaction');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"interaction_type\": \"call\",\n  \"interaction_method\": \"outbound\",\n  \"duration_minutes\": 10,\n  \"outcome\": \"interested\",\n  \"notes\": \"Customer showed interest in life insurance policy - API test interaction\",\n  \"next_action\": \"Send policy details via email\",\n  \"next_action_date\": \"2025-12-10T14:00:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/leads/{{lead_id}}/interactions",
+              "host": ["{{base_url}}"],
+              "path": ["leads", "{{lead_id}}", "interactions"]
+            },
+            "description": "Add a new interaction to an existing lead"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Lead Interactions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success status\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test(\"Response has interactions data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('interactions');",
+                  "    pm.expect(jsonData.data.interactions).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Interactions have required fields\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data.interactions.length > 0) {",
+                  "        var interaction = jsonData.data.interactions[0];",
+                  "        pm.expect(interaction).to.have.property('interaction_id');",
+                  "        pm.expect(interaction).to.have.property('interaction_type');",
+                  "        pm.expect(interaction).to.have.property('created_at');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/leads/{{lead_id}}/interactions",
+              "host": ["{{base_url}}"],
+              "path": ["leads", "{{lead_id}}", "interactions"]
+            },
+            "description": "Get all interactions for a specific lead"
+          },
+          "response": []
+        },
+        {
+          "name": "Qualify Lead",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success status\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.message).to.include('qualified');",
+                  "});",
+                  "",
+                  "pm.test(\"Qualification data is correct\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.is_qualified).to.be.true;",
+                  "    pm.expect(jsonData.data.qualification_notes).to.include('qualified via API');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_qualified\": true,\n  \"qualification_notes\": \"Lead qualified via API test - strong interest and good credit profile\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/leads/{{lead_id}}/qualify",
+              "host": ["{{base_url}}"],
+              "path": ["leads", "{{lead_id}}", "qualify"]
+            },
+            "description": "Qualify a lead as ready for conversion"
+          },
+          "response": []
+        }
+      ],
+      "description": "Lead management CRUD operations"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script for CRM collection",
+          "// Set up common variables and authentication"
+        ]
+      }
+    }
+  ],
+  "_postman_exported_at": "2025-12-02T08:30:00.000Z",
+  "_postman_exported_using": "Agent Mitra CRM API Testing Suite"
+}

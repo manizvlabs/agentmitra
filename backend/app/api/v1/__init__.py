@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_current_user_context, UserContext
-from . import auth, users, providers, agents, policies, presentations, chat, analytics, health, notifications, campaigns, tenants, rbac, content, external_services, feature_flags, quotes, trial, subscription, dashboard
+from . import auth, users, providers, agents, policies, presentations, chat, analytics, health, notifications, campaigns, tenants, rbac, content, external_services, feature_flags, quotes, trial, subscription, dashboard, leads
 # Temporarily disable callbacks due to model conflicts
 # from . import callbacks
 
@@ -169,6 +169,7 @@ api_router.include_router(auth.router, prefix="/auth", tags=["authentication"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(providers.router, prefix="/providers", tags=["providers"])
 api_router.include_router(agents.router, tags=["agents"])
+api_router.include_router(leads.router, tags=["leads"])
 api_router.include_router(policies.router, prefix="/policies", tags=["policies"])
 api_router.include_router(presentations.router, prefix="/presentations", tags=["presentations"])
 api_router.include_router(chat.router, prefix="/chat", tags=["chat"])

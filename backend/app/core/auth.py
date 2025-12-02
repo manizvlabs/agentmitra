@@ -117,6 +117,14 @@ PERMISSIONS = {
     # Analytics & Reporting
     "analytics.read": ["super_admin", "provider_admin", "regional_manager", "senior_agent"],
     "reports.generate": ["super_admin", "provider_admin", "regional_manager"],
+
+    # Lead Management
+    "leads.read": ["super_admin", "provider_admin", "regional_manager", "senior_agent", "junior_agent"],
+    "leads.create": ["junior_agent", "senior_agent"],
+    "leads.update": ["junior_agent", "senior_agent", "regional_manager"],
+    "leads.delete": ["super_admin", "provider_admin", "regional_manager"],
+
+    # Tenant Management
     "tenants.read": ["super_admin"],
     "tenants.create": ["super_admin"],
     "tenants.update": ["super_admin"],

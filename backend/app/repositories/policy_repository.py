@@ -104,6 +104,16 @@ class PolicyholderRepository:
         self.db.commit()
         return True
 
+    def get_by_agent(self, agent_id, limit: int = 20, offset: int = 0) -> List[Policyholder]:
+        """Get policyholders by agent ID"""
+        if isinstance(agent_id, str):
+            try:
+                agent_id = uuid.UUID(agent_id)
+            except ValueError:
+                return []
+
+        return self.db.query(Policyholder).filter(Policyholder.agent_id == agent_id).order_by(Policyholder.created_at.desc()).limit(limit).offset(offset).all()
+
 
 class PolicyRepository:
     """Repository for insurance policy operations"""

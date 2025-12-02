@@ -69,6 +69,7 @@ class Agent(Base, TimestampMixin):
 
     # Analytics relationships
     leads = relationship("Lead", back_populates="agent")
+    lead_interactions = relationship("LeadInteraction", back_populates="agent")
     revenue_forecast_scenarios = relationship("RevenueForecastScenario", back_populates="agent")
 
     def __repr__(self):

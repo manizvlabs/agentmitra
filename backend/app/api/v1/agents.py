@@ -131,6 +131,25 @@ class AgentPerformanceMetrics(BaseModel):
     presentations_delivered: int
 
 
+class CustomerSummary(BaseModel):
+    """Customer summary for agent dashboard"""
+    policyholder_id: str
+    user_id: str
+    customer_id: Optional[str]
+    salutation: Optional[str]
+    marital_status: Optional[str]
+    occupation: Optional[str]
+    annual_income: Optional[float]
+    engagement_score: Optional[float]
+    total_policies: int
+    total_premium: float
+    last_interaction_at: Optional[str]
+    user_profile: Dict[str, Any]
+
+    class Config:
+        from_attributes = True
+
+
 @router.get("/profile", response_model=AgentProfileResponse)
 async def get_agent_profile(
     current_user: User = Depends(get_current_user_context),
@@ -700,3 +719,93 @@ async def get_agent_by_id(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get agent: {str(e)}")
+
+
+@router.get("/{agent_id}/customers")
+async def get_agent_customers(
+    agent_id: str,
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    current_user: User = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Get customers (policyholders) for a specific agent
+
+    - **agent_id**: Agent identifier
+    - **limit**: Maximum number of customers to return (1-100)
+    - **offset**: Pagination offset
+    """
+    try:
+        from app.repositories.policy_repository import PolicyholderRepository
+
+        # Check if current user has permission to view agent customers
+        # Agents can only see their own customers, admins can see all
+        agent_repo = AgentRepository(db)
+        agent = agent_repo.get_by_id(agent_id)
+
+        if not agent:
+            raise HTTPException(status_code=404, detail="Agent not found")
+
+        # Check permissions - agents can only view their own customers
+        if str(current_user.user_id) != str(agent.user_id):
+            # Check if user has admin permissions
+            if not current_user.has_permission("agents.read"):
+                raise HTTPException(
+                    status_code=403,
+                    detail="Access denied. You can only view your own customers."
+                )
+
+        # Get customers for this agent
+        policyholder_repo = PolicyholderRepository(db)
+        policyholders = policyholder_repo.get_by_agent(agent_id, limit=limit, offset=offset)
+
+        # Build customer summaries with policy counts and premium totals
+        customers = []
+        for policyholder in policyholders:
+            # Get user's profile data
+            user_profile = {
+                "first_name": policyholder.user.first_name if policyholder.user else None,
+                "last_name": policyholder.user.last_name if policyholder.user else None,
+                "display_name": policyholder.user.display_name if policyholder.user else None,
+                "email": policyholder.user.email if policyholder.user else None,
+                "phone_number": policyholder.user.phone_number if policyholder.user else None,
+                "avatar_url": policyholder.user.avatar_url if policyholder.user else None
+            }
+
+            # Calculate total policies and premium for this customer
+            total_policies = len(policyholder.policies) if policyholder.policies else 0
+            total_premium = sum(float(policy.premium_amount or 0) for policy in (policyholder.policies or []))
+
+            customer_summary = CustomerSummary(
+                policyholder_id=str(policyholder.policyholder_id),
+                user_id=str(policyholder.user_id),
+                customer_id=policyholder.customer_id,
+                salutation=policyholder.salutation,
+                marital_status=policyholder.marital_status,
+                occupation=policyholder.occupation,
+                annual_income=float(policyholder.annual_income) if policyholder.annual_income else None,
+                engagement_score=float(policyholder.engagement_score) if policyholder.engagement_score else None,
+                total_policies=total_policies,
+                total_premium=total_premium,
+                last_interaction_at=policyholder.last_interaction_at.isoformat() if policyholder.last_interaction_at else None,
+                user_profile=user_profile
+            )
+
+            customers.append(customer_summary)
+
+        return {
+            "success": True,
+            "data": {
+                "customers": [customer.dict() for customer in customers],
+                "total": len(customers),
+                "limit": limit,
+                "offset": offset
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get agent customers: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to get agent customers: {str(e)}")
