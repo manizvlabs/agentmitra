@@ -2,6 +2,7 @@
 Trial Subscription Models
 """
 from sqlalchemy import Column, String, Date, TIMESTAMP, Boolean, Integer, DECIMAL, JSON, UUID, ForeignKey, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from app.models.base import Base, TimestampMixin, AuditMixin
 
@@ -30,7 +31,7 @@ class TrialSubscription(Base, TimestampMixin, AuditMixin):
         return f"<TrialSubscription(trial_id='{self.trial_id}', user_id='{self.user_id}', status='{self.trial_status}')>"
 
 
-class TrialEngagement(Base, TimestampMixin):
+class TrialEngagement(Base, TimestampMixin, AuditMixin):
     """Trial user engagement tracking"""
 
     __tablename__ = "trial_engagement"
@@ -39,7 +40,7 @@ class TrialEngagement(Base, TimestampMixin):
     trial_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.trial_subscriptions.trial_id", ondelete="CASCADE"), nullable=False)
     feature_used = Column(String(100))
     engagement_type = Column(String(50))  # 'view', 'interaction', 'completion'
-    engagement_metadata = Column(JSON)
+    engagement_metadata = Column(JSONB)  # Changed from JSON to JSONB to match database
     engaged_at = Column(TIMESTAMP, server_default=func.now())
 
     # Relationships

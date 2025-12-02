@@ -33,7 +33,7 @@
               "pm.test(\"Response has access_token\", function () {",
               "    var jsonData = pm.response.json();",
               "    pm.expect(jsonData).to.have.property('access_token');",
-              "    pm.collectionVariables.set(\"senior_agent_token\", jsonData.access_token);",
+              "    pm.environment.set(\"senior_agent_token\", jsonData.access_token);",
               "});",
               "",
               "pm.test(\"Login successful\", function () {",

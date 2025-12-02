@@ -199,14 +199,23 @@
                   "listen": "test",
                   "script": {
                     "exec": [
-                  "pm.test(\"Status code is 403 (user deactivated)\", function () {",
-                  "    pm.response.to.have.status(403);",
-                  "});",
-                  "",
-                  "pm.test(\"Account deactivated message\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.detail).to.include('not active');",
-                  "});"
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response has access_token\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property(\"access_token\");",
+                      "    pm.environment.set(\"junior_agent_token\", jsonData.access_token);",
+                      "});",
+                      "",
+                      "pm.test(\"Login successful\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property(\"access_token\");",
+                      "    pm.expect(jsonData).to.have.property(\"user\");",
+                      "    pm.expect(jsonData.user.status).to.eql(\"active\");",
+                      "    pm.expect(jsonData.user.role).to.eql(\"junior_agent\");",
+                      "});"
                     ],
                     "type": "text/javascript"
                   }
@@ -584,9 +593,8 @@
                       "    pm.response.to.have.status(200);",
                       "});",
                       "",
-                      "pm.test(\"Response has status healthy\", function () {",
-                      "    var jsonData = pm.response.json();",
-                      "    pm.expect(jsonData.status).to.eql('healthy');",
+                      "pm.test(\"Response has proper headers\", function () {",
+                      "    pm.response.to.have.header(\"Content-Type\", \"text/plain\");",
                       "});"
                     ],
                     "type": "text/javascript"

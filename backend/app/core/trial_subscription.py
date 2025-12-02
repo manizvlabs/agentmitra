@@ -236,33 +236,43 @@ class TrialSubscriptionService:
     def record_engagement(self, user_id: str, feature_used: str,
                          engagement_type: str, metadata: Dict = None) -> Dict[str, Any]:
         """Record trial user engagement"""
-        # Find active trial
-        trial = self.db.query(TrialSubscription).filter(
-            and_(
-                TrialSubscription.user_id == user_id,
-                TrialSubscription.trial_status == "active"
+        try:
+            # Find active trial - debug: let's be more permissive and check all trials for this user
+            trial = self.db.query(TrialSubscription).filter(
+                TrialSubscription.user_id == user_id
+            ).first()
+
+            if not trial:
+                # Count total trials in DB for debugging
+                total_trials = self.db.query(TrialSubscription).count()
+                user_trials = self.db.query(TrialSubscription).filter(
+                    TrialSubscription.user_id == user_id
+                ).all()
+                return {"recorded": False, "reason": f"No trial found for user {user_id}. Total trials in DB: {total_trials}, User trials: {len(user_trials)}"}
+
+            # Check if trial is active (not converted)
+            if trial.trial_status == "converted":
+                return {"recorded": False, "reason": f"Trial has been converted (status: {trial.trial_status})"}
+
+            # Record engagement
+            engagement = TrialEngagement(
+                trial_id=trial.trial_id,
+                feature_used=feature_used,
+                engagement_type=engagement_type,
+                engagement_metadata=metadata or {}
             )
-        ).first()
 
-        if not trial:
-            return {"recorded": False, "reason": "No active trial found"}
+            self.db.add(engagement)
+            self.db.commit()
 
-        # Record engagement
-        engagement = TrialEngagement(
-            trial_id=trial.trial_id,
-            feature_used=feature_used,
-            engagement_type=engagement_type,
-            engagement_metadata=metadata or {}
-        )
-
-        self.db.add(engagement)
-        self.db.commit()
-
-        return {
-            "recorded": True,
-            "engagement_id": str(engagement.engagement_id),
-            "trial_id": str(trial.trial_id)
-        }
+            return {
+                "recorded": True,
+                "engagement_id": str(engagement.engagement_id),
+                "trial_id": str(trial.trial_id)
+            }
+        except Exception as e:
+            logger.error(f"Error recording engagement for user {user_id}: {e}")
+            return {"recorded": False, "error": str(e)}
 
     def get_trial_analytics(self) -> Dict[str, Any]:
         """Get comprehensive trial analytics"""
