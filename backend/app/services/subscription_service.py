@@ -333,12 +333,20 @@ class SubscriptionService:
             "plan": {
                 "plan_id": str(plan.plan_id),
                 "plan_name": plan.plan_name,
+                "plan_type": plan.plan_type,
                 "display_name": plan.display_name,
                 "description": plan.description,
                 "price_monthly": float(plan.price_monthly) if plan.price_monthly else None,
                 "price_yearly": float(plan.price_yearly) if plan.price_yearly else None,
-                "features": plan.features,
-                "limitations": plan.limitations
+                "currency": plan.currency,
+                "features": plan.features or [],
+                "limitations": plan.limitations or {},
+                "max_users": plan.max_users,
+                "max_storage_gb": plan.max_storage_gb,
+                "max_policies": plan.max_policies,
+                "is_popular": plan.is_popular,
+                "trial_days": plan.trial_days,
+                "sort_order": plan.sort_order
             },
             "billing_cycle": subscription.billing_cycle,
             "status": subscription.status,
