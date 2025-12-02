@@ -38,10 +38,14 @@ env/
 *_test_results.json
 api_test_results.json
 rbac_*_results.json
+*notification_api_test_results*.json
+*notification_api_test_summary*.txt
 
 # API Testing Results
 api-testing/reports/*.json
 api-testing/reports/*-results.json
+api-testing/postman/reports/*.html
+api-testing/postman/reports/*.xml
 
 # Flutter
 .dart_tool/
@@ -98,3 +102,4 @@ temp/
 /backend/venv
 /backend/venv
 /api-testing/api-testing/reports
+/api-testing/postman/reports
