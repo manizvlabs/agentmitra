@@ -33,6 +33,7 @@ __pycache__/
 venv/
 env/
 .venv/
+venv_test/
 
 # Test Results
 *_test_results.json
