@@ -1,8 +1,9 @@
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
+from uuid import UUID
 
 from ...core.database import get_db
 from ...core.auth import get_current_user_context, get_current_user_optional, get_current_user
@@ -62,6 +63,7 @@ class NotificationStatistics(BaseModel):
 
 @router.get("/", response_model=List[NotificationResponse])
 async def get_notifications(
+    request: Request,
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=100),
     type_filter: Optional[str] = None,
@@ -76,8 +78,12 @@ async def get_notifications(
     try:
         notification_service = NotificationService(db)
 
+        # Get tenant_id from request state
+        tenant_id = getattr(request.state, 'tenant_id', '00000000-0000-0000-0000-000000000000')
+
         notifications = await notification_service.get_user_notifications(
             user_id=current_user.user_id,
+            tenant_id=tenant_id,
             page=page,
             limit=limit,
             type_filter=type_filter,
@@ -94,6 +100,7 @@ async def get_notifications(
 
 @router.get("/statistics", response_model=NotificationStatistics)
 async def get_notification_statistics(
+    request: Request,
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     current_user: User = Depends(get_current_user),
@@ -103,8 +110,12 @@ async def get_notification_statistics(
     try:
         notification_service = NotificationService(db)
 
+        # Get tenant_id from request state
+        tenant_id = getattr(request.state, 'tenant_id', '00000000-0000-0000-0000-000000000000')
+
         stats = await notification_service.get_user_notification_statistics(
             user_id=current_user.user_id,
+            tenant_id=tenant_id,
             start_date=start_date,
             end_date=end_date
         )
@@ -113,10 +124,86 @@ async def get_notification_statistics(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get notification statistics: {str(e)}")
 
+# Settings endpoints
+@router.get("/settings", response_model=NotificationSettings)
+async def get_notification_settings(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get user notification settings"""
+    try:
+        notification_service = NotificationService(db)
+
+        settings = await notification_service.get_user_notification_settings(
+            user_id=current_user.user_id
+        )
+
+        return settings
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get notification settings: {str(e)}")
+
+@router.put("/settings")
+async def update_notification_settings(
+    settings: NotificationSettings,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update user notification settings"""
+    try:
+        notification_service = NotificationService(db)
+
+        success = await notification_service.update_user_notification_settings(
+            user_id=current_user.user_id,
+            settings=settings.dict()
+        )
+
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to update notification settings")
+
+        return {"message": "Notification settings updated"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update notification settings: {str(e)}")
+
+# FCM token management
+class DeviceTokenRequest(BaseModel):
+    token: str
+    device_type: str  # ios/android
+
+@router.post("/device-token")
+async def register_device_token(
+    device_data: DeviceTokenRequest,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Register FCM device token for push notifications"""
+    try:
+        notification_service = NotificationService(db)
+
+        success = await notification_service.register_device_token(
+            user_id=current_user.user_id,
+            token=device_data.token,
+            device_type=device_data.device_type
+        )
+
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to register device token")
+
+        return {"message": "Device token registered"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to register device token: {str(e)}")
+
 
 @router.get("/{notification_id}", response_model=NotificationResponse)
 async def get_notification(
     notification_id: str,
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -124,9 +211,13 @@ async def get_notification(
     try:
         notification_service = NotificationService(db)
 
+        # Get tenant_id from request state
+        tenant_id = getattr(request.state, 'tenant_id', '00000000-0000-0000-0000-000000000000')
+
         notification = await notification_service.get_notification_by_id(
             notification_id=notification_id,
-            user_id=current_user.user_id
+            user_id=current_user.user_id,
+            tenant_id=tenant_id
         )
 
         if not notification:
@@ -141,6 +232,7 @@ async def get_notification(
 @router.patch("/{notification_id}/read")
 async def mark_notification_read(
     notification_id: str,
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -148,9 +240,13 @@ async def mark_notification_read(
     try:
         notification_service = NotificationService(db)
 
+        # Get tenant_id from request state
+        tenant_id = getattr(request.state, 'tenant_id', '00000000-0000-0000-0000-000000000000')
+
         success = await notification_service.mark_notification_read(
             notification_id=notification_id,
-            user_id=current_user.user_id
+            user_id=current_user.user_id,
+            tenant_id=tenant_id
         )
 
         if not success:
@@ -165,6 +261,7 @@ async def mark_notification_read(
 @router.patch("/read")
 async def mark_notifications_read(
     notification_ids: List[str],
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -172,9 +269,13 @@ async def mark_notifications_read(
     try:
         notification_service = NotificationService(db)
 
+        # Get tenant_id from request state
+        tenant_id = getattr(request.state, 'tenant_id', '00000000-0000-0000-0000-000000000000')
+
         success_count = await notification_service.mark_notifications_read(
             notification_ids=notification_ids,
-            user_id=current_user.user_id
+            user_id=current_user.user_id,
+            tenant_id=tenant_id
         )
 
         return {
@@ -187,6 +288,7 @@ async def mark_notifications_read(
 @router.delete("/{notification_id}")
 async def delete_notification(
     notification_id: str,
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -194,9 +296,13 @@ async def delete_notification(
     try:
         notification_service = NotificationService(db)
 
+        # Get tenant_id from request state
+        tenant_id = getattr(request.state, 'tenant_id', '00000000-0000-0000-0000-000000000000')
+
         success = await notification_service.delete_notification(
             notification_id=notification_id,
-            user_id=current_user.user_id
+            user_id=current_user.user_id,
+            tenant_id=tenant_id
         )
 
         if not success:
@@ -211,6 +317,7 @@ async def delete_notification(
 @router.post("/", response_model=NotificationResponse)
 async def create_notification(
     notification: NotificationCreate,
+    request: Request,
     background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -220,6 +327,9 @@ async def create_notification(
     try:
         notification_service = NotificationService(db)
 
+        # Get tenant_id from request state
+        tenant_id = getattr(request.state, 'tenant_id', '00000000-0000-0000-0000-000000000000')
+
         target_user_id = notification.user_id or current_user.user_id
 
         created_notification = await notification_service.create_notification(
@@ -228,6 +338,7 @@ async def create_notification(
             body=notification.body,
             type=notification.type,
             priority=notification.priority,
+            tenant_id=tenant_id,
             action_url=notification.action_url,
             action_route=notification.action_route,
             action_text=notification.action_text,
@@ -250,6 +361,7 @@ async def create_notification(
 @router.post("/bulk")
 async def create_bulk_notifications(
     notifications: List[NotificationCreate],
+    request: Request,
     background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -258,6 +370,9 @@ async def create_bulk_notifications(
     # TODO: Add admin role check
     try:
         notification_service = NotificationService(db)
+
+        # Get tenant_id from request state
+        tenant_id = getattr(request.state, 'tenant_id', '00000000-0000-0000-0000-000000000000')
 
         created_notifications = []
         for notification in notifications:
@@ -269,6 +384,7 @@ async def create_bulk_notifications(
                 body=notification.body,
                 type=notification.type,
                 priority=notification.priority,
+                tenant_id=tenant_id,
                 action_url=notification.action_url,
                 action_route=notification.action_route,
                 action_text=notification.action_text,
@@ -295,6 +411,7 @@ async def create_bulk_notifications(
 
 @router.post("/test")
 async def send_test_notification(
+    request: Request,
     title: str = "Test Notification",
     body: str = "This is a test notification",
     current_user: User = Depends(get_current_user),
@@ -304,12 +421,16 @@ async def send_test_notification(
     try:
         notification_service = NotificationService(db)
 
+        # Get tenant_id from request state
+        tenant_id = getattr(request.state, 'tenant_id', '00000000-0000-0000-0000-000000000000')
+
         notification = await notification_service.create_notification(
             user_id=current_user.user_id,
             title=title,
             body=body,
             type="system",
-            priority="low"
+            priority="low",
+            tenant_id=tenant_id
         )
 
         # Send push notification
@@ -322,6 +443,7 @@ async def send_test_notification(
 # Settings endpoints
 @router.get("/settings", response_model=NotificationSettings)
 async def get_notification_settings(
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -340,6 +462,7 @@ async def get_notification_settings(
 @router.put("/settings")
 async def update_notification_settings(
     settings: NotificationSettings,
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -360,30 +483,3 @@ async def update_notification_settings(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update notification settings: {str(e)}")
-
-# FCM token management
-@router.post("/device-token")
-async def register_device_token(
-    token: str,
-    device_type: str = Query(..., description="Device type (ios/android)"),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Register FCM device token for push notifications"""
-    try:
-        notification_service = NotificationService(db)
-
-        success = await notification_service.register_device_token(
-            user_id=current_user.user_id,
-            token=token,
-            device_type=device_type
-        )
-
-        if not success:
-            raise HTTPException(status_code=500, detail="Failed to register device token")
-
-        return {"message": "Device token registered"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to register device token: {str(e)}")

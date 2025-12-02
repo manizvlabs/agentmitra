@@ -1,0 +1,1316 @@
+{
+  "info": {
+    "name": "Agent Mitra Notification Management API Collection",
+    "description": "Comprehensive API collection for Agent Mitra Notification Management system with real database testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "agent-mitra-notifications"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "{{api_host}}{{api_version}}",
+      "type": "string"
+    },
+    {
+      "key": "notification_id",
+      "value": "",
+      "type": "string",
+      "description": "🔔 NOTIFICATION DATA: ID of created test notification"
+    },
+    {
+      "key": "bulk_notification_ids",
+      "value": "[]",
+      "type": "string",
+      "description": "🔔 NOTIFICATION DATA: Array of bulk created notification IDs"
+    },
+    {
+      "key": "device_token",
+      "value": "test_device_token_{{$randomUUID}}",
+      "type": "string",
+      "description": "📱 DEVICE DATA: Test device token for push notifications"
+    },
+    {
+      "key": "super_admin_token",
+      "value": "",
+      "type": "string",
+      "description": "🔐 AUTH TOKENS: JWT token for super admin user"
+    },
+    {
+      "key": "senior_agent_token",
+      "value": "",
+      "type": "string",
+      "description": "🔐 AUTH TOKENS: JWT token for senior agent user"
+    },
+    {
+      "key": "policyholder_token",
+      "value": "",
+      "type": "string",
+      "description": "🔐 AUTH TOKENS: JWT token for policyholder user"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Login as Super Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has access_token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('access_token');",
+                  "    pm.environment.set('super_admin_token', jsonData.access_token);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has user data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('user');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{super_admin_phone}}\",\n  \"password\": \"{{super_admin_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/auth/login",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticate as Super Admin user to get JWT token"
+          }
+        },
+        {
+          "name": "Login as Senior Agent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has access_token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('access_token');",
+                  "    pm.environment.set('senior_agent_token', jsonData.access_token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{senior_agent_phone}}\",\n  \"password\": \"{{senior_agent_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/auth/login",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticate as Senior Agent user to get JWT token"
+          }
+        },
+        {
+          "name": "Login as Policyholder",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has access_token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('access_token');",
+                  "    pm.environment.set('policyholder_token', jsonData.access_token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{policyholder_phone}}\",\n  \"password\": \"{{policyholder_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/auth/login",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticate as Policyholder user to get JWT token"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 Notification Management",
+      "item": [
+        {
+          "name": "Get Notifications List",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Response has proper structure\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.length > 0) {",
+                  "        var notification = jsonData[0];",
+                  "        pm.expect(notification).to.have.property('id');",
+                  "        pm.expect(notification).to.have.property('title');",
+                  "        pm.expect(notification).to.have.property('body');",
+                  "        pm.expect(notification).to.have.property('type');",
+                  "        pm.expect(notification).to.have.property('priority');",
+                  "        pm.expect(notification).to.have.property('is_read');",
+                  "        pm.expect(notification).to.have.property('created_at');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/?page=1&limit=10",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get paginated list of notifications for authenticated user"
+          }
+        },
+        {
+          "name": "Get Notification Statistics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has required statistics\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('total_notifications');",
+                  "    pm.expect(jsonData).to.have.property('unread_count');",
+                  "    pm.expect(jsonData).to.have.property('read_count');",
+                  "    pm.expect(jsonData).to.have.property('notifications_by_type');",
+                  "    pm.expect(jsonData).to.have.property('notifications_by_priority');",
+                  "    pm.expect(jsonData).to.have.property('recent_activity');",
+                  "});",
+                  "",
+                  "pm.test(\"Statistics are valid\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.total_notifications).to.be.a('number');",
+                  "    pm.expect(jsonData.unread_count).to.be.a('number');",
+                  "    pm.expect(jsonData.read_count).to.be.a('number');",
+                  "    pm.expect(jsonData.total_notifications).to.be.at.least(jsonData.unread_count + jsonData.read_count);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/statistics",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                "statistics"
+              ]
+            },
+            "description": "Get comprehensive notification statistics for authenticated user"
+          }
+        },
+        {
+          "name": "Create Notification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has notification data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('title');",
+                  "    pm.expect(jsonData).to.have.property('body');",
+                  "    pm.expect(jsonData).to.have.property('type');",
+                  "    pm.expect(jsonData).to.have.property('priority');",
+                  "    pm.expect(jsonData).to.have.property('is_read');",
+                  "    pm.environment.set('notification_id', jsonData.id);",
+                  "});",
+                  "",
+                  "pm.test(\"Notification has correct type and priority\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.type).to.eql('system');",
+                  "    pm.expect(jsonData.priority).to.eql('medium');",
+                  "    pm.expect(jsonData.is_read).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Test Notification {{$randomUUID}}\",\n  \"body\": \"This is a comprehensive test notification created via Postman API testing\",\n  \"type\": \"system\",\n  \"priority\": \"medium\",\n  \"action_text\": \"View Details\",\n  \"action_route\": \"/dashboard\",\n  \"data\": {\n    \"test\": true,\n    \"source\": \"postman_api_test\",\n    \"timestamp\": \"{{$timestamp}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                ""
+              ]
+            },
+            "description": "Create a new notification with comprehensive data"
+          }
+        },
+        {
+          "name": "Get Single Notification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has notification data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('title');",
+                  "    pm.expect(jsonData).to.have.property('body');",
+                  "    pm.expect(jsonData.id).to.eql(pm.environment.get('notification_id'));",
+                  "});",
+                  "",
+                  "pm.test(\"Notification is_read is false initially\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.is_read).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/{{notification_id}}",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                "{{notification_id}}"
+              ]
+            },
+            "description": "Get details of a specific notification by ID"
+          }
+        },
+        {
+          "name": "Mark Notification as Read",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success message\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.message).to.eql('Notification marked as read');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/{{notification_id}}/read",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                "{{notification_id}}",
+                "read"
+              ]
+            },
+            "description": "Mark a specific notification as read"
+          }
+        },
+        {
+          "name": "Verify Notification Marked as Read",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Notification is now read\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.is_read).to.be.true;",
+                  "    pm.expect(jsonData).to.have.property('read_at');",
+                  "    pm.expect(jsonData.read_at).to.not.be.null;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/{{notification_id}}",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                "{{notification_id}}"
+              ]
+            },
+            "description": "Verify that the notification was marked as read"
+          }
+        },
+        {
+          "name": "Create Bulk Notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has bulk creation data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('notifications');",
+                  "    pm.expect(jsonData.notifications).to.be.an('array');",
+                  "    pm.expect(jsonData.notifications.length).to.be.at.least(2);",
+                  "});",
+                  "",
+                  "pm.test(\"Bulk notifications created successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    jsonData.notifications.forEach(function(notification) {",
+                  "        pm.expect(notification).to.have.property('id');",
+                  "        pm.expect(notification).to.have.property('title');",
+                  "        pm.expect(notification).to.have.property('body');",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"title\": \"Bulk Test Notification 1\",\n    \"body\": \"First notification in bulk creation test\",\n    \"type\": \"marketing\",\n    \"priority\": \"low\",\n    \"data\": {\"bulk_test\": true, \"index\": 1}\n  },\n  {\n    \"title\": \"Bulk Test Notification 2\",\n    \"body\": \"Second notification in bulk creation test\",\n    \"type\": \"system\",\n    \"priority\": \"high\",\n    \"action_text\": \"Take Action\",\n    \"action_route\": \"/alerts\",\n    \"data\": {\"bulk_test\": true, \"index\": 2}\n  }\n]"
+            },
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/bulk",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                "bulk"
+              ]
+            },
+            "description": "Create multiple notifications in bulk"
+          }
+        },
+        {
+          "name": "Send Test Notification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success message\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.message).to.eql('Test notification sent');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"API Test Notification {{$randomUUID}}\",\n  \"body\": \"This is a test notification sent via Postman API testing suite\"\n}"
+            },
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/test",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                "test"
+              ]
+            },
+            "description": "Send a test notification to current user"
+          }
+        },
+        {
+          "name": "Mark Multiple Notifications as Read",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has bulk operation result\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('success_count');",
+                  "    pm.expect(jsonData.success_count).to.be.at.least(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\"{{notification_id}}\"]"
+            },
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/read",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                "read"
+              ]
+            },
+            "description": "Mark multiple notifications as read (bulk operation)"
+          }
+        },
+        {
+          "name": "Delete Notification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success message\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.message).to.eql('Notification deleted');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/{{notification_id}}",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                "{{notification_id}}"
+              ]
+            },
+            "description": "Delete a notification by ID"
+          }
+        },
+        {
+          "name": "Verify Notification Deleted",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Response indicates notification not found\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('detail');",
+                  "    pm.expect(jsonData.detail).to.eql('Notification not found');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/{{notification_id}}",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                "{{notification_id}}"
+              ]
+            },
+            "description": "Verify that the deleted notification is no longer accessible"
+          }
+        }
+      ]
+    },
+    {
+      "name": "⚙️ Notification Settings",
+      "item": [
+        {
+          "name": "Get Notification Settings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has all settings\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('enable_push_notifications');",
+                  "    pm.expect(jsonData).to.have.property('enable_policy_notifications');",
+                  "    pm.expect(jsonData).to.have.property('enable_payment_reminders');",
+                  "    pm.expect(jsonData).to.have.property('enable_claim_updates');",
+                  "    pm.expect(jsonData).to.have.property('enable_renewal_notices');",
+                  "    pm.expect(jsonData).to.have.property('enable_marketing_notifications');",
+                  "    pm.expect(jsonData).to.have.property('enable_sound');",
+                  "    pm.expect(jsonData).to.have.property('enable_vibration');",
+                  "    pm.expect(jsonData).to.have.property('show_badge');",
+                  "    pm.expect(jsonData).to.have.property('enabled_topics');",
+                  "});",
+                  "",
+                  "pm.test(\"Settings have correct types\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.enable_push_notifications).to.be.a('boolean');",
+                  "    pm.expect(jsonData.enabled_topics).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/settings",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                "settings"
+              ]
+            },
+            "description": "Get current user's notification settings"
+          }
+        },
+        {
+          "name": "Update Notification Settings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success message\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.message).to.eql('Notification settings updated');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enable_push_notifications\": true,\n  \"enable_policy_notifications\": true,\n  \"enable_payment_reminders\": false,\n  \"enable_claim_updates\": true,\n  \"enable_renewal_notices\": true,\n  \"enable_marketing_notifications\": false,\n  \"enable_sound\": true,\n  \"enable_vibration\": true,\n  \"show_badge\": true,\n  \"quiet_hours_enabled\": false,\n  \"enabled_topics\": [\"general\", \"policies\", \"payments\", \"claims\"]\n}"
+            },
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/settings",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                "settings"
+              ]
+            },
+            "description": "Update user's notification settings"
+          }
+        },
+        {
+          "name": "Verify Settings Updated",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Settings were updated\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.enable_payment_reminders).to.be.false;",
+                  "    pm.expect(jsonData.enabled_topics).to.include('claims');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/settings",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                "settings"
+              ]
+            },
+            "description": "Verify that notification settings were updated correctly"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📱 Device Token Management",
+      "item": [
+        {
+          "name": "Register Device Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success message\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.message).to.eql('Device token registered');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{device_token}}\",\n  \"device_type\": \"android\"\n}"
+            },
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/device-token",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                "device-token"
+              ]
+            },
+            "description": "Register FCM device token for push notifications"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔍 Notification Filtering Tests",
+      "item": [
+        {
+          "name": "Filter by Type",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"All notifications have correct type\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    jsonData.forEach(function(notification) {",
+                  "        pm.expect(notification.type).to.eql('system');",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/?type_filter=system",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "type_filter",
+                  "value": "system"
+                }
+              ]
+            },
+            "description": "Test filtering notifications by type"
+          }
+        },
+        {
+          "name": "Filter by Priority",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"All notifications have correct priority\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    jsonData.forEach(function(notification) {",
+                  "        pm.expect(notification.priority).to.eql('high');",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/?priority_filter=high",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "priority_filter",
+                  "value": "high"
+                }
+              ]
+            },
+            "description": "Test filtering notifications by priority"
+          }
+        },
+        {
+          "name": "Filter by Read Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"All notifications have correct read status\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    jsonData.forEach(function(notification) {",
+                  "        pm.expect(notification.is_read).to.be.true;",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/?is_read=true",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "is_read",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Test filtering notifications by read status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🧪 Edge Cases & Error Handling",
+      "item": [
+        {
+          "name": "Get Non-existent Notification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has error message\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('detail');",
+                  "    pm.expect(jsonData.detail).to.eql('Notification not found');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/00000000-0000-0000-0000-000000000000",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                "00000000-0000-0000-0000-000000000000"
+              ]
+            },
+            "description": "Test getting a non-existent notification (should return 404)"
+          }
+        },
+        {
+          "name": "Mark Non-existent Notification as Read",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has error message\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('detail');",
+                  "    pm.expect(jsonData.detail).to.eql('Notification not found');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/00000000-0000-0000-0000-000000000000/read",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                "00000000-0000-0000-0000-000000000000",
+                "read"
+              ]
+            },
+            "description": "Test marking a non-existent notification as read (should return 404)"
+          }
+        },
+        {
+          "name": "Delete Non-existent Notification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has error message\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('detail');",
+                  "    pm.expect(jsonData.detail).to.eql('Notification not found');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/00000000-0000-0000-0000-000000000000",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                "00000000-0000-0000-0000-000000000000"
+              ]
+            },
+            "description": "Test deleting a non-existent notification (should return 404)"
+          }
+        },
+        {
+          "name": "Unauthorized Access Test",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_host}}{{api_version}}/notifications/",
+              "host": [
+                "{{api_host}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "notifications",
+                ""
+              ]
+            },
+            "description": "Test accessing notifications without authentication (should return 401)"
+          }
+        }
+      ]
+    }
+  ]
+}

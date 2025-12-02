@@ -15,6 +15,7 @@ class NotificationService:
     async def get_user_notifications(
         self,
         user_id: str,
+        tenant_id: Optional[str] = None,
         page: int = 1,
         limit: int = 50,
         type_filter: Optional[str] = None,
@@ -25,7 +26,11 @@ class NotificationService:
     ) -> List[Dict[str, Any]]:
         """Get user notifications with filtering and pagination"""
         try:
-            query = self.db.query(Notification).filter(Notification.user_id == user_id)
+            tenant_filter = tenant_id if tenant_id else '00000000-0000-0000-0000-000000000000'
+            query = self.db.query(Notification).filter(
+                Notification.user_id == user_id,
+                Notification.tenant_id == tenant_filter
+            )
 
             # Apply filters
             if type_filter:
@@ -54,8 +59,8 @@ class NotificationService:
             result = []
             for notification in notifications:
                 result.append({
-                    "id": notification.id,
-                    "user_id": notification.user_id,
+                    "id": str(notification.id),
+                    "user_id": str(notification.user_id),
                     "title": notification.title,
                     "body": notification.body,
                     "type": notification.type,
@@ -77,19 +82,24 @@ class NotificationService:
             logger.error(f"Failed to get user notifications: {str(e)}")
             raise
 
-    async def get_notification_by_id(self, notification_id: str, user_id: str) -> Optional[Dict[str, Any]]:
+    async def get_notification_by_id(self, notification_id: str, user_id: str, tenant_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """Get a specific notification by ID"""
         try:
+            tenant_filter = tenant_id if tenant_id else '00000000-0000-0000-0000-000000000000'
             notification = self.db.query(Notification).filter(
-                and_(Notification.id == notification_id, Notification.user_id == user_id)
+                and_(
+                    Notification.id == notification_id,
+                    Notification.user_id == user_id,
+                    Notification.tenant_id == tenant_filter
+                )
             ).first()
 
             if not notification:
                 return None
 
             return {
-                "id": notification.id,
-                "user_id": notification.user_id,
+                "id": str(notification.id),
+                "user_id": str(notification.user_id),
                 "title": notification.title,
                 "body": notification.body,
                 "type": notification.type,
@@ -115,6 +125,7 @@ class NotificationService:
         body: str,
         type: str,
         priority: str = "medium",
+        tenant_id: Optional[str] = None,
         action_url: Optional[str] = None,
         action_route: Optional[str] = None,
         action_text: Optional[str] = None,
@@ -133,6 +144,7 @@ class NotificationService:
                 body=body,
                 type=type,
                 priority=priority,
+                tenant_id=tenant_id or '00000000-0000-0000-0000-000000000000',  # Default tenant
                 is_read=False,
                 action_url=action_url,
                 action_route=action_route,
@@ -148,8 +160,8 @@ class NotificationService:
             self.db.refresh(notification)
 
             result = {
-                "id": notification.id,
-                "user_id": notification.user_id,
+                "id": str(notification.id),
+                "user_id": str(notification.user_id),
                 "title": notification.title,
                 "body": notification.body,
                 "type": notification.type,
@@ -172,11 +184,16 @@ class NotificationService:
             logger.error(f"Failed to create notification: {str(e)}")
             raise
 
-    async def mark_notification_read(self, notification_id: str, user_id: str) -> bool:
+    async def mark_notification_read(self, notification_id: str, user_id: str, tenant_id: Optional[str] = None) -> bool:
         """Mark a notification as read"""
         try:
+            tenant_filter = tenant_id if tenant_id else '00000000-0000-0000-0000-000000000000'
             notification = self.db.query(Notification).filter(
-                and_(Notification.id == notification_id, Notification.user_id == user_id)
+                and_(
+                    Notification.id == notification_id,
+                    Notification.user_id == user_id,
+                    Notification.tenant_id == tenant_filter
+                )
             ).first()
 
             if not notification:
@@ -195,13 +212,15 @@ class NotificationService:
             logger.error(f"Failed to mark notification as read: {str(e)}")
             raise
 
-    async def mark_notifications_read(self, notification_ids: List[str], user_id: str) -> int:
+    async def mark_notifications_read(self, notification_ids: List[str], user_id: str, tenant_id: Optional[str] = None) -> int:
         """Mark multiple notifications as read"""
         try:
+            tenant_filter = tenant_id if tenant_id else '00000000-0000-0000-0000-000000000000'
             updated_count = self.db.query(Notification).filter(
                 and_(
                     Notification.id.in_(notification_ids),
                     Notification.user_id == user_id,
+                    Notification.tenant_id == tenant_filter,
                     Notification.is_read == False
                 )
             ).update({
@@ -219,11 +238,16 @@ class NotificationService:
             logger.error(f"Failed to mark notifications as read: {str(e)}")
             raise
 
-    async def delete_notification(self, notification_id: str, user_id: str) -> bool:
+    async def delete_notification(self, notification_id: str, user_id: str, tenant_id: Optional[str] = None) -> bool:
         """Delete a notification"""
         try:
+            tenant_filter = tenant_id if tenant_id else '00000000-0000-0000-0000-000000000000'
             deleted_count = self.db.query(Notification).filter(
-                and_(Notification.id == notification_id, Notification.user_id == user_id)
+                and_(
+                    Notification.id == notification_id,
+                    Notification.user_id == user_id,
+                    Notification.tenant_id == tenant_filter
+                )
             ).delete()
 
             self.db.commit()
@@ -242,12 +266,17 @@ class NotificationService:
     async def get_user_notification_statistics(
         self,
         user_id: str,
+        tenant_id: Optional[str] = None,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None
     ) -> Dict[str, Any]:
         """Get notification statistics for a user"""
         try:
-            query = self.db.query(Notification).filter(Notification.user_id == user_id)
+            tenant_filter = tenant_id if tenant_id else '00000000-0000-0000-0000-000000000000'
+            query = self.db.query(Notification).filter(
+                Notification.user_id == user_id,
+                Notification.tenant_id == tenant_filter
+            )
 
             if start_date:
                 query = query.filter(Notification.created_at >= start_date)
@@ -284,7 +313,7 @@ class NotificationService:
             recent_activity = []
             for notification in recent_notifications:
                 recent_activity.append({
-                    "id": notification.id,
+                    "id": str(notification.id),
                     "title": notification.title,
                     "type": notification.type,
                     "is_read": notification.is_read,
@@ -304,7 +333,7 @@ class NotificationService:
             logger.error(f"Failed to get notification statistics: {str(e)}")
             raise
 
-    async def get_user_notification_settings(self, user_id: str) -> Dict[str, Any]:
+    async def get_user_notification_settings(self, user_id: str, tenant_id: Optional[str] = None) -> Dict[str, Any]:
         """Get user notification settings"""
         try:
             settings = self.db.query(NotificationSettings).filter(

@@ -12,6 +12,7 @@ class Notification(Base):
 
     id = Column(String(36), primary_key=True, index=True)
     user_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     title = Column(String(255), nullable=False)
     body = Column(Text, nullable=False)
     type = Column(String(50), nullable=False, index=True)  # policy, payment, claim, renewal, general, marketing, system
