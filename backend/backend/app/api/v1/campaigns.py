@@ -1,7 +1,7 @@
 """
 Campaign Management API Endpoints
 """
-from fastapi import APIRouter, HTTPException, Depends, status, Query, Request
+from fastapi import APIRouter, HTTPException, Depends, status, Query
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
@@ -82,7 +82,6 @@ class CampaignResponse(BaseModel):
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_campaign(
     campaign_data: CampaignCreate,
-    request: Request,
     db: Session = Depends(get_db),
     current_user: UserContext = Depends(get_current_user_context)
 ):
@@ -96,13 +95,9 @@ async def create_campaign(
                 detail="User is not associated with an agent"
             )
 
-        # Get tenant_id from request state
-        tenant_id = getattr(request.state, 'tenant_id', '00000000-0000-0000-0000-000000000000')
-
         campaign_dict = campaign_data.dict()
         campaign = CampaignService.create_campaign(
             db=db,
-            tenant_id=UUID(tenant_id),
             agent_id=UUID(agent_id),
             campaign_data=campaign_dict,
             created_by=UUID(current_user.user_id)
@@ -211,39 +206,6 @@ async def get_campaign_templates(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get templates: {str(e)}"
-        )
-
-
-@router.get("/recommendations")
-async def get_campaign_recommendations(
-    db: Session = Depends(get_db),
-    current_user: UserContext = Depends(get_current_user_context)
-):
-    """Get campaign recommendations for the agent"""
-    try:
-        agent_id = UUID(current_user.agent_id) if current_user.agent_id else None
-        if not agent_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="User is not associated with an agent"
-            )
-
-        recommendations = CampaignAutomationService.get_campaign_recommendations(
-            db=db,
-            agent_id=agent_id
-        )
-
-        return {
-            "success": True,
-            "data": recommendations
-        }
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get recommendations: {str(e)}"
         )
 
 
@@ -439,7 +401,6 @@ async def get_campaign_analytics(
 async def create_campaign_from_template(
     template_id: str,
     campaign_data: CampaignCreate,
-    request: Request,
     db: Session = Depends(get_db),
     current_user: UserContext = Depends(get_current_user_context)
 ):
@@ -452,13 +413,9 @@ async def create_campaign_from_template(
                 detail="User is not associated with an agent"
             )
 
-        # Get tenant_id from request state
-        tenant_id = getattr(request.state, 'tenant_id', '00000000-0000-0000-0000-000000000000')
-
         campaign_dict = campaign_data.dict()
         campaign = CampaignService.create_campaign_from_template(
             db=db,
-            tenant_id=UUID(tenant_id),
             agent_id=agent_id,
             template_id=UUID(template_id),
             campaign_data=campaign_dict,
@@ -487,4 +444,36 @@ async def create_campaign_from_template(
             detail=f"Failed to create campaign from template: {str(e)}"
         )
 
+
+@router.get("/recommendations")
+async def get_campaign_recommendations(
+    db: Session = Depends(get_db),
+    current_user: UserContext = Depends(get_current_user_context)
+):
+    """Get campaign recommendations for the agent"""
+    try:
+        agent_id = UUID(current_user.agent_id) if current_user.agent_id else None
+        if not agent_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User is not associated with an agent"
+            )
+
+        recommendations = CampaignAutomationService.get_campaign_recommendations(
+            db=db,
+            agent_id=agent_id
+        )
+
+        return {
+            "success": True,
+            "data": recommendations
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get recommendations: {str(e)}"
+        )
 

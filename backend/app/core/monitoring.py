@@ -162,3 +162,6 @@ class PerformanceTracker:
 
 # Global performance tracker
 performance_tracker = PerformanceTracker()
+
+# Export for backward compatibility
+monitoring = performance_tracker

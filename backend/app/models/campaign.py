@@ -16,6 +16,7 @@ class Campaign(Base, TimestampMixin):
     __table_args__ = {"schema": "lic_schema"}
 
     campaign_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.tenants.tenant_id"), nullable=False)
     agent_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.agents.agent_id"), nullable=False)
     
     # Campaign basic information
@@ -112,6 +113,7 @@ class CampaignExecution(Base, TimestampMixin):
     __table_args__ = {"schema": "lic_schema"}
 
     execution_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.tenants.tenant_id"), nullable=False)
     campaign_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.campaigns.campaign_id"), nullable=False)
     policyholder_id = Column(UUID(as_uuid=True), ForeignKey("lic_schema.policyholders.policyholder_id"), nullable=False)
     

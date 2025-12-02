@@ -708,12 +708,12 @@ class UserContext:
         """Get agent_id for the user if they are an agent"""
         if self._agent_id is not None:
             return self._agent_id
-        
+
         # Only lookup if user is an agent role
         if self.role not in ['junior_agent', 'senior_agent', 'regional_manager']:
             self._agent_id = None
             return None
-        
+
         # Lookup agent_id from database
         if self._db:
             try:
@@ -721,12 +721,16 @@ class UserContext:
                 agent = self._db.query(Agent).filter(Agent.user_id == self.user.user_id).first()
                 if agent:
                     self._agent_id = str(agent.agent_id)
+                    print(f"DEBUG: Found agent_id {self._agent_id} for user {self.user_id}")
                     return self._agent_id
+                else:
+                    print(f"DEBUG: No agent found for user {self.user_id}")
             except Exception as e:
+                print(f"DEBUG: Error looking up agent_id for user {self.user_id}: {e}")
                 get_auth_logger().warning(f"Error looking up agent_id for user {self.user_id}: {e}")
                 self._agent_id = None
                 return None
-        
+
         self._agent_id = None
         return None
 

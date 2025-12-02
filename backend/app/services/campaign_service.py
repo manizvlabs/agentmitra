@@ -20,6 +20,7 @@ class CampaignService:
     @staticmethod
     def create_campaign(
         db: Session,
+        tenant_id: UUID,
         agent_id: UUID,
         campaign_data: Dict[str, Any],
         created_by: UUID
@@ -27,6 +28,7 @@ class CampaignService:
         """Create a new campaign"""
         try:
             campaign = Campaign(
+                tenant_id=tenant_id,
                 agent_id=agent_id,
                 campaign_name=campaign_data.get("campaign_name"),
                 campaign_type=campaign_data.get("campaign_type"),
@@ -256,6 +258,7 @@ class CampaignService:
     @staticmethod
     def create_campaign_from_template(
         db: Session,
+        tenant_id: UUID,
         agent_id: UUID,
         template_id: UUID,
         campaign_data: Dict[str, Any],
@@ -278,7 +281,7 @@ class CampaignService:
             **campaign_data
         }
         
-        campaign = CampaignService.create_campaign(db, agent_id, merged_data, created_by)
+        campaign = CampaignService.create_campaign(db, tenant_id, agent_id, merged_data, created_by)
         
         # Update template usage count
         template.usage_count = (template.usage_count or 0) + 1

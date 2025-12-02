@@ -9,7 +9,7 @@ from datetime import timedelta
 import redis
 from functools import wraps
 
-from app.core.config import settings
+from app.core.config.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -19,25 +19,26 @@ class RedisCache:
 
     def __init__(self):
         self.redis_client = None
-        self._connect()
+        # Temporarily disable Redis connection during startup
+        # self._connect()
 
     def _connect(self):
         """Establish Redis connection"""
         try:
             self.redis_client = redis.Redis(
-                host=settings.REDIS_HOST,
-                port=settings.REDIS_PORT,
-                db=settings.REDIS_DB,
-                password=settings.REDIS_PASSWORD,
+                host=settings.redis_host,
+                port=settings.redis_port,
+                db=settings.redis_db,
+                password=settings.redis_password,
                 decode_responses=True,
-                socket_connect_timeout=5,
-                socket_timeout=5,
-                retry_on_timeout=True,
-                max_connections=20
+                socket_connect_timeout=2,
+                socket_timeout=2,
+                retry_on_timeout=False,
+                max_connections=10
             )
-            # Test connection
+            # Test connection with shorter timeout
             self.redis_client.ping()
-            logger.info(f"Connected to Redis at {settings.REDIS_HOST}:{settings.REDIS_PORT}")
+            logger.info(f"Connected to Redis at {settings.redis_host}:{settings.redis_port}")
         except redis.ConnectionError as e:
             logger.warning(f"Failed to connect to Redis: {e}")
             self.redis_client = None
@@ -47,7 +48,23 @@ class RedisCache:
 
     def is_connected(self) -> bool:
         """Check if Redis is connected"""
-        return self.redis_client is not None
+        return False  # Redis disabled for testing
+
+    def get(self, key: str) -> Optional[str]:
+        """Get value from cache"""
+        return None  # Redis disabled
+
+    def set(self, key: str, value: Any, ttl: int = 300) -> bool:
+        """Set value in cache with TTL"""
+        return False  # Redis disabled
+
+    def delete(self, key: str) -> bool:
+        """Delete key from cache"""
+        return False  # Redis disabled
+
+    def exists(self, key: str) -> bool:
+        """Check if key exists"""
+        return False  # Redis disabled
 
     def get(self, key: str) -> Optional[Any]:
         """Get value from cache"""
