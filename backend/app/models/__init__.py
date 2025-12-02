@@ -101,7 +101,7 @@ try:
 except ImportError:
     FeatureFlag = None
     FeatureFlagOverride = None
-# from .rbac_audit import RbacAuditLog  # Enable later
+# from .rbac_audit import RbacAuditLog  # Import locally to avoid TextClause errors
 
 # DO NOT configure mappers here - it will be done in main.py after all imports
 # Configuring mappers during import causes relationship resolution errors

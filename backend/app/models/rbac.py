@@ -72,11 +72,12 @@ class UserRole(Base):
     __tablename__ = "user_roles"
     __table_args__ = {'schema': 'lic_schema'}
 
-    user_role_id = Column(UUID(as_uuid=True), primary_key=True, default=func.gen_random_uuid())
+    assignment_id = Column(UUID(as_uuid=True), primary_key=True, default=func.gen_random_uuid())
     user_id = Column(UUID(as_uuid=True), ForeignKey('lic_schema.users.user_id'), nullable=False)
     role_id = Column(UUID(as_uuid=True), ForeignKey('lic_schema.roles.role_id'), nullable=False)
     assigned_by = Column(UUID(as_uuid=True), ForeignKey('lic_schema.users.user_id'))
     assigned_at = Column(DateTime, default=func.now())
+    expires_at = Column(DateTime)
 
     # Relationships - causing TextClause error, will be added later
 

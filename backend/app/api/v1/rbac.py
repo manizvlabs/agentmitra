@@ -160,6 +160,8 @@ async def assign_role_to_user(
         )
 
         if not success:
+            # Log more details about the failure
+            logger.error(f"Role assignment failed for user {request.user_id}, role {request.role_name}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed to assign role"
@@ -170,6 +172,7 @@ async def assign_role_to_user(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Exception during role assignment: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to assign role: {str(e)}"
@@ -389,28 +392,50 @@ async def get_rbac_audit_log(
         )
 
     try:
-        from app.models.rbac_audit import RbacAuditLog
+        # Use raw SQL to avoid model import issues
+        from sqlalchemy import text
 
-        query = db.query(RbacAuditLog).order_by(RbacAuditLog.timestamp.desc())
+        # Build the query dynamically
+        sql = """
+        SELECT audit_id, tenant_id, user_id, action, target_user_id,
+               target_role_id, target_permission_id, target_flag_id,
+               details, success, timestamp
+        FROM lic_schema.rbac_audit_log
+        WHERE 1=1
+        """
+
+        params = {}
 
         if action:
-            query = query.filter(RbacAuditLog.action == action)
+            sql += " AND action = :action"
+            params['action'] = action
+
         if user_id:
-            query = query.filter(RbacAuditLog.user_id == user_id)
+            sql += " AND user_id = :user_id"
+            params['user_id'] = user_id
 
-        audit_entries = query.limit(limit).offset(offset).all()
+        sql += " ORDER BY timestamp DESC LIMIT :limit OFFSET :offset"
+        params['limit'] = limit
+        params['offset'] = offset
 
-        return [{
-            "audit_id": str(entry.audit_id),
-            "tenant_id": str(entry.tenant_id) if entry.tenant_id else None,
-            "user_id": str(entry.user_id) if entry.user_id else None,
-            "action": entry.action,
-            "target_user_id": str(entry.target_user_id) if entry.target_user_id else None,
-            "target_role_id": str(entry.target_role_id) if entry.target_role_id else None,
-            "details": entry.details,
-            "success": entry.success,
-            "timestamp": entry.timestamp.isoformat()
-        } for entry in audit_entries]
+        # Execute the query
+        result = db.execute(text(sql), params)
+
+        audit_entries = []
+        for row in result:
+            audit_entries.append({
+                "audit_id": str(row.audit_id),
+                "tenant_id": str(row.tenant_id) if row.tenant_id else None,
+                "user_id": str(row.user_id) if row.user_id else None,
+                "action": row.action,
+                "target_user_id": str(row.target_user_id) if row.target_user_id else None,
+                "target_role_id": str(row.target_role_id) if row.target_role_id else None,
+                "details": row.details,
+                "success": row.success,
+                "timestamp": row.timestamp.isoformat() if row.timestamp else None
+            })
+
+        return audit_entries
 
     except Exception as e:
         raise HTTPException(
