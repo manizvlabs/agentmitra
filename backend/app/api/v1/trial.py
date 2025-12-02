@@ -111,7 +111,7 @@ async def setup_trial_user(
                 detail="Insufficient permissions to manage trials"
             )
 
-        trial_service = TrialSubscriptionService()
+        trial_service = TrialSubscriptionService(db)
 
         # Get user from database
         from app.repositories.user_repository import UserRepository
@@ -168,7 +168,7 @@ async def get_trial_status(
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
-        trial_service = TrialSubscriptionService()
+        trial_service = TrialSubscriptionService(db)
         trial_status = trial_service.check_trial_status(user)
 
         # Calculate additional metrics
@@ -241,7 +241,7 @@ async def extend_trial(
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
-        trial_service = TrialSubscriptionService()
+        trial_service = TrialSubscriptionService(db)
         result = trial_service.extend_trial(
             user=user,
             extension_days=extension_data.extension_days,
@@ -290,7 +290,7 @@ async def convert_trial_to_subscription(
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
-        trial_service = TrialSubscriptionService()
+        trial_service = TrialSubscriptionService(db)
         result = trial_service.convert_trial_to_subscription(
             user=user,
             conversion_plan=conversion_plan
@@ -331,7 +331,7 @@ async def record_trial_engagement(
                 detail="Cannot record engagement for this user"
             )
 
-        trial_service = TrialSubscriptionService()
+        trial_service = TrialSubscriptionService(db)
         result = trial_service.record_engagement(
             user_id=user_id,
             feature_used=engagement_data.feature_used,
@@ -368,7 +368,7 @@ async def get_trial_analytics_overview(
                 detail="Insufficient permissions to view trial analytics"
             )
 
-        trial_service = TrialSubscriptionService()
+        trial_service = TrialSubscriptionService(db)
         analytics = trial_service.get_trial_analytics()
 
         return TrialAnalyticsResponse(**analytics)
@@ -398,7 +398,7 @@ async def get_trials_expiring_soon(
                 detail="Insufficient permissions to view expiring trials"
             )
 
-        trial_service = TrialSubscriptionService()
+        trial_service = TrialSubscriptionService(db)
         expiring_trials = trial_service.get_expiring_trials(days=days)
 
         return {
@@ -442,7 +442,7 @@ async def send_trial_expiration_reminder(
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
-        trial_service = TrialSubscriptionService()
+        trial_service = TrialSubscriptionService(db)
         result = trial_service.send_expiration_reminder(
             user=user,
             reminder_type=reminder_type
