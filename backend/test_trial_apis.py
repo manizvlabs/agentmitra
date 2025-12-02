@@ -246,7 +246,36 @@ class TrialAPITester:
         """Test POST /api/v1/trial/extend/{user_id}"""
         print("\n🧪 Testing Trial Extend API")
 
-        # Test with Regional Manager (should work)
+        # First, set up a trial for Regional Manager to test extension
+        if self.authenticate_user("super_admin"):
+            # Get regional manager user ID
+            if self.authenticate_user("regional_manager"):
+                token = self.auth_tokens.get("regional_manager")
+                if token:
+                    import base64
+                    payload = token.split('.')[1]
+                    payload += '=' * (4 - len(payload) % 4)
+                    decoded = json.loads(base64.urlsafe_b64decode(payload))
+                    regional_manager_id = decoded.get('sub')
+
+                    # Set up trial for regional manager using super admin
+                    if self.authenticate_user("super_admin"):
+                        trial_data = {
+                            "plan_type": "agent_trial",
+                            "custom_trial_days": 14,
+                            "extension_days": 0
+                        }
+
+                        response = self.session.post(
+                            f"{API_BASE}/trial/setup",
+                            params={"user_id": regional_manager_id},
+                            json=trial_data
+                        )
+
+                        if response.status_code == 200:
+                            print(f"✅ Set up trial for Regional Manager: {regional_manager_id}")
+
+        # Now test extension with Regional Manager who has an active trial
         if self.authenticate_user("regional_manager"):
             if not user_id:
                 # Get current user ID from JWT token
@@ -273,14 +302,15 @@ class TrialAPITester:
                 if response.status_code == 200:
                     data = response.json()
                     if data.get("success"):
+                        extension_result = data.get("data", {})
                         self.log_result(
                             "POST /api/v1/trial/extend/{user_id}",
                             "PASS",
                             "Trial extension successful",
                             {
-                                "extended_by_days": data.get("data", {}).get("extended_by_days"),
-                                "new_end_date": data.get("data", {}).get("new_end_date"),
-                                "total_extension_days": data.get("data", {}).get("total_extension_days")
+                                "extended_by_days": extension_result.get("extended_by_days"),
+                                "new_end_date": extension_result.get("new_end_date"),
+                                "total_extension_days": extension_result.get("total_extension_days")
                             }
                         )
                     else:
@@ -298,46 +328,53 @@ class TrialAPITester:
         """Test POST /api/v1/trial/convert/{user_id}"""
         print("\n🧪 Testing Trial Convert API")
 
-        # Test with Super Admin
+        # Test with Super Admin - but first ensure they have an active trial
         if self.authenticate_user("super_admin"):
-            if not user_id:
-                # Get current user ID from JWT token
-                token = self.auth_tokens.get("super_admin")
-                if token:
-                    import base64
-                    payload = token.split('.')[1]
-                    payload += '=' * (4 - len(payload) % 4)
-                    decoded = json.loads(base64.urlsafe_b64decode(payload))
-                    user_id = decoded.get('sub')
+            # Get current user ID from JWT token
+            token = self.auth_tokens.get("super_admin")
+            if token:
+                import base64
+                payload = token.split('.')[1]
+                payload += '=' * (4 - len(payload) % 4)
+                decoded = json.loads(base64.urlsafe_b64decode(payload))
+                user_id = decoded.get('sub')
 
-            if user_id:
-                # Convert to premium plan
-                response = self.session.post(
-                    f"{API_BASE}/trial/convert/{user_id}",
-                    params={"conversion_plan": "premium_customer"}
-                )
+                # Check if user has an active trial first
+                status_response = self.session.get(f"{API_BASE}/trial/status/{user_id}")
+                has_active_trial = False
 
-                if response.status_code == 200:
-                    data = response.json()
-                    if data.get("success"):
-                        self.log_result(
-                            "POST /api/v1/trial/convert/{user_id}",
-                            "PASS",
-                            "Trial conversion successful",
-                            {
-                                "conversion_date": data.get("data", {}).get("conversion_date"),
-                                "conversion_plan": data.get("data", {}).get("conversion_plan"),
-                                "trial_duration_days": data.get("data", {}).get("trial_duration_days")
-                            }
-                        )
+                if status_response.status_code == 200:
+                    status_data = status_response.json()
+                    has_active_trial = status_data.get("is_trial", False) and status_data.get("trial_status") != "converted"
+
+                if has_active_trial and user_id:
+                    # Convert to premium plan
+                    response = self.session.post(
+                        f"{API_BASE}/trial/convert/{user_id}",
+                        params={"conversion_plan": "premium_customer"}
+                    )
+
+                    if response.status_code == 200:
+                        data = response.json()
+                        if data.get("success"):
+                            self.log_result(
+                                "POST /api/v1/trial/convert/{user_id}",
+                                "PASS",
+                                "Trial conversion successful",
+                                {
+                                    "conversion_date": data.get("data", {}).get("conversion_date"),
+                                    "conversion_plan": data.get("data", {}).get("conversion_plan"),
+                                    "trial_duration_days": data.get("data", {}).get("trial_duration_days")
+                                }
+                            )
+                        else:
+                            self.log_result("POST /api/v1/trial/convert/{user_id}", "FAIL", f"Trial conversion failed: {data}")
                     else:
-                        self.log_result("POST /api/v1/trial/convert/{user_id}", "FAIL", f"Trial conversion failed: {data}")
-                elif response.status_code == 500 and "No active trial found" in response.text:
-                    self.log_result("POST /api/v1/trial/convert/{user_id}", "SKIP", "No active trial to convert")
+                        self.log_result("POST /api/v1/trial/convert/{user_id}", "FAIL", f"HTTP {response.status_code}: {response.text}")
                 else:
-                    self.log_result("POST /api/v1/trial/convert/{user_id}", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                    self.log_result("POST /api/v1/trial/convert/{user_id}", "SKIP", f"No active trial to convert (user_id: {user_id})")
             else:
-                self.log_result("POST /api/v1/trial/convert/{user_id}", "SKIP", "No user ID available")
+                self.log_result("POST /api/v1/trial/convert/{user_id}", "SKIP", "Could not get user token")
         else:
             self.log_result("POST /api/v1/trial/convert/{user_id}", "SKIP", "Authentication failed")
 
@@ -345,7 +382,39 @@ class TrialAPITester:
         """Test POST /api/v1/trial/engagement/{user_id}"""
         print("\n🧪 Testing Trial Engagement API")
 
-        # Test with Senior Agent (should work)
+        # First, set up a trial for Senior Agent to test engagement
+        if self.authenticate_user("super_admin"):
+            # Get senior agent user ID
+            token = self.auth_tokens.get("super_admin")
+            if token:
+                # Switch to senior agent to get their ID
+                if self.authenticate_user("senior_agent"):
+                    token = self.auth_tokens.get("senior_agent")
+                    if token:
+                        import base64
+                        payload = token.split('.')[1]
+                        payload += '=' * (4 - len(payload) % 4)
+                        decoded = json.loads(base64.urlsafe_b64decode(payload))
+                        senior_agent_id = decoded.get('sub')
+
+                        # Set up trial for senior agent using super admin
+                        if self.authenticate_user("super_admin"):
+                            trial_data = {
+                                "plan_type": "agent_trial",
+                                "custom_trial_days": 14,
+                                "extension_days": 0
+                            }
+
+                            response = self.session.post(
+                                f"{API_BASE}/trial/setup",
+                                params={"user_id": senior_agent_id},
+                                json=trial_data
+                            )
+
+                            if response.status_code == 200:
+                                print(f"✅ Set up trial for Senior Agent: {senior_agent_id}")
+
+        # Now test engagement with Senior Agent who has an active trial
         if self.authenticate_user("senior_agent"):
             if not user_id:
                 # Get current user ID from JWT token
@@ -377,13 +446,15 @@ class TrialAPITester:
                 if response.status_code == 200:
                     data = response.json()
                     if data.get("success"):
+                        engagement_result = data.get("data", {})
                         self.log_result(
                             "POST /api/v1/trial/engagement/{user_id}",
                             "PASS",
                             "Engagement recorded successfully",
                             {
-                                "engagement_id": data.get("data", {}).get("engagement_id"),
-                                "recorded": data.get("data", {}).get("recorded")
+                                "engagement_id": engagement_result.get("engagement_id"),
+                                "recorded": engagement_result.get("recorded"),
+                                "trial_id": engagement_result.get("trial_id")
                             }
                         )
                     else:
@@ -449,47 +520,50 @@ class TrialAPITester:
         """Test POST /api/v1/trial/send-reminder/{user_id}"""
         print("\n🧪 Testing Trial Reminder API")
 
-        # Test with Super Admin
-        if self.authenticate_user("super_admin"):
-            if not user_id:
-                # Get current user ID from JWT token
-                token = self.auth_tokens.get("super_admin")
-                if token:
-                    import base64
-                    payload = token.split('.')[1]
-                    payload += '=' * (4 - len(payload) % 4)
-                    decoded = json.loads(base64.urlsafe_b64decode(payload))
-                    user_id = decoded.get('sub')
+        # Test with Super Admin, but target the regional manager who should have an active trial
+        if self.authenticate_user("regional_manager"):
+            # Get regional manager user ID who should have an active trial
+            token = self.auth_tokens.get("regional_manager")
+            if token:
+                import base64
+                payload = token.split('.')[1]
+                payload += '=' * (4 - len(payload) % 4)
+                decoded = json.loads(base64.urlsafe_b64decode(payload))
+                target_user_id = decoded.get('sub')
 
-            if user_id:
-                response = self.session.post(
-                    f"{API_BASE}/trial/send-reminder/{user_id}",
-                    params={"reminder_type": "email"}
-                )
+                # Use super admin to send reminder
+                if self.authenticate_user("super_admin"):
+                    response = self.session.post(
+                        f"{API_BASE}/trial/send-reminder/{target_user_id}",
+                        params={"reminder_type": "email"}
+                    )
 
-                if response.status_code == 200:
-                    data = response.json()
-                    if data.get("success"):
-                        self.log_result(
-                            "POST /api/v1/trial/send-reminder/{user_id}",
-                            "PASS",
-                            "Trial reminder sent successfully",
-                            {
-                                "reminder_type": data.get("data", {}).get("reminder_type"),
-                                "days_remaining": data.get("data", {}).get("days_remaining"),
-                                "sent_at": data.get("data", {}).get("sent_at")
-                            }
-                        )
+                    if response.status_code == 200:
+                        data = response.json()
+                        if data.get("success"):
+                            reminder_result = data.get("data", {})
+                            self.log_result(
+                                "POST /api/v1/trial/send-reminder/{user_id}",
+                                "PASS",
+                                "Trial reminder sent successfully",
+                                {
+                                    "reminder_type": reminder_result.get("reminder_type"),
+                                    "days_remaining": reminder_result.get("days_remaining"),
+                                    "sent_at": reminder_result.get("sent_at")
+                                }
+                            )
+                        else:
+                            self.log_result("POST /api/v1/trial/send-reminder/{user_id}", "FAIL", f"Reminder sending failed: {data}")
+                    elif response.status_code == 500 and "No active trial found" in response.text:
+                        self.log_result("POST /api/v1/trial/send-reminder/{user_id}", "SKIP", "No active trial to send reminder for")
                     else:
-                        self.log_result("POST /api/v1/trial/send-reminder/{user_id}", "FAIL", f"Reminder sending failed: {data}")
-                elif response.status_code == 500 and "No active trial found" in response.text:
-                    self.log_result("POST /api/v1/trial/send-reminder/{user_id}", "SKIP", "No active trial to send reminder for")
+                        self.log_result("POST /api/v1/trial/send-reminder/{user_id}", "FAIL", f"HTTP {response.status_code}: {response.text}")
                 else:
-                    self.log_result("POST /api/v1/trial/send-reminder/{user_id}", "FAIL", f"HTTP {response.status_code}: {response.text}")
+                    self.log_result("POST /api/v1/trial/send-reminder/{user_id}", "SKIP", "Super admin authentication failed")
             else:
-                self.log_result("POST /api/v1/trial/send-reminder/{user_id}", "SKIP", "No user ID available")
+                self.log_result("POST /api/v1/trial/send-reminder/{user_id}", "SKIP", "Could not get regional manager user ID")
         else:
-            self.log_result("POST /api/v1/trial/send-reminder/{user_id}", "SKIP", "Authentication failed")
+            self.log_result("POST /api/v1/trial/send-reminder/{user_id}", "SKIP", "Regional manager authentication failed")
 
     def test_permission_denied_scenarios(self):
         """Test scenarios where access should be denied"""

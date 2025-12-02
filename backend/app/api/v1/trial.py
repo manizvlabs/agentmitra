@@ -341,7 +341,8 @@ async def record_trial_engagement(
 
         return {
             "success": True,
-            "message": "Engagement recorded successfully"
+            "message": "Engagement recorded successfully",
+            "data": result
         }
 
     except HTTPException:

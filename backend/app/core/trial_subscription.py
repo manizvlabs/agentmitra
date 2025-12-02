@@ -5,7 +5,7 @@ Handles trial period checking and subscription verification
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta, date
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, func, or_
+from sqlalchemy import and_, func, or_, case
 from app.models.user import User
 from app.models.trial import TrialSubscription, TrialEngagement
 from app.core.logging_config import get_logger
@@ -269,9 +269,9 @@ class TrialSubscriptionService:
         # Get trial counts
         trial_counts = self.db.query(
             func.count(TrialSubscription.trial_id).label("total_trials"),
-            func.sum(func.case((TrialSubscription.trial_status == "active", 1), else_=0)).label("active_trials"),
-            func.sum(func.case((TrialSubscription.trial_status == "expired", 1), else_=0)).label("expired_trials"),
-            func.sum(func.case((TrialSubscription.trial_status == "converted", 1), else_=0)).label("converted_trials")
+            func.sum(case((TrialSubscription.trial_status == "active", 1), else_=0)).label("active_trials"),
+            func.sum(case((TrialSubscription.trial_status == "expired", 1), else_=0)).label("expired_trials"),
+            func.sum(case((TrialSubscription.trial_status == "converted", 1), else_=0)).label("converted_trials")
         ).first()
 
         # Calculate conversion rate
