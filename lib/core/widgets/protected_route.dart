@@ -30,11 +30,22 @@ class _ProtectedRouteState extends State<ProtectedRoute> {
   bool _isAuthenticated = false;
   bool _hasAccess = false;
   String? _errorMessage;
+  bool _hasCheckedAccess = false;
 
   @override
   void initState() {
     super.initState();
-    _checkAccess();
+    // Don't check access here - wait for didChangeDependencies
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Check access after dependencies are available (only once)
+    if (!_hasCheckedAccess) {
+      _hasCheckedAccess = true;
+      _checkAccess();
+    }
   }
 
   Future<void> _checkAccess() async {
@@ -83,8 +94,6 @@ class _ProtectedRouteState extends State<ProtectedRoute> {
       // Check role requirements
       if (widget.requiredRoles != null && widget.requiredRoles!.isNotEmpty) {
         final currentRole = rbacService.getCurrentUserRole();
-        final currentUserRoles = rbacService.getCurrentUserRoles();
-        final currentPermissions = rbacService.getCurrentUserPermissions();
 
         // Super admin has access to everything
         final isSuperAdmin = currentRole?.value == 'super_admin';

@@ -5,6 +5,9 @@ import '../features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../core/services/feature_flag_service.dart';
 import '../core/services/auth_service.dart';
 import '../core/services/rbac_service.dart';
+import '../shared/widgets/vyaptix_logo.dart';
+import '../shared/widgets/copyright_footer.dart';
+import '../shared/theme/app_theme.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -203,33 +206,33 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       debugPrint('  - UserRole Enum: $userRole');
       debugPrint('  - UserRole Value: ${userRole?.value}');
 
-      // Navigate to role-specific dashboard
-      if (userRole == UserRole.superAdmin) {
-        debugPrint('🚀 Redirecting Super Admin to /super-admin-dashboard');
-        Navigator.of(context).pushReplacementNamed('/super-admin-dashboard');
-      } else if (userRole == UserRole.providerAdmin) {
-        debugPrint('🚀 Redirecting Provider Admin to /provider-admin-dashboard');
-        Navigator.of(context).pushReplacementNamed('/provider-admin-dashboard');
-      } else if (userRole == UserRole.regionalManager) {
-        debugPrint('🚀 Redirecting Regional Manager to /regional-manager-dashboard');
-        Navigator.of(context).pushReplacementNamed('/regional-manager-dashboard');
-      } else if (userRole == UserRole.seniorAgent) {
-        debugPrint('🚀 Redirecting Senior Agent to /senior-agent-dashboard');
-        Navigator.of(context).pushReplacementNamed('/senior-agent-dashboard');
-      } else if (userRole == UserRole.juniorAgent) {
-        debugPrint('🚀 Redirecting Junior Agent to /agent-dashboard');
-        Navigator.of(context).pushReplacementNamed('/agent-dashboard');
-      } else if (userRole == UserRole.policyholder) {
-        debugPrint('🚀 Redirecting Policyholder to /customer-dashboard');
-        Navigator.of(context).pushReplacementNamed('/customer-dashboard');
-      } else if (userRole == UserRole.supportStaff) {
-        debugPrint('🚀 Redirecting Support Staff to /callback-management');
-        Navigator.of(context).pushReplacementNamed('/callback-management');
+      // Determine route based on user role (Phase 1: Navigation Architecture)
+      String targetRoute;
+      if (userRole == null) {
+        // No role, go to welcome
+        targetRoute = '/welcome';
       } else {
-        // Default fallback
-        debugPrint('⚠️ Unknown role, defaulting to /customer-dashboard');
-        Navigator.of(context).pushReplacementNamed('/customer-dashboard');
+        // Route to appropriate navigation container based on role
+        switch (userRole) {
+          case UserRole.policyholder:
+          case UserRole.regionalManager:
+            targetRoute = '/customer-portal';
+            break;
+          case UserRole.juniorAgent:
+          case UserRole.seniorAgent:
+            targetRoute = '/agent-portal';
+            break;
+          case UserRole.superAdmin:
+          case UserRole.providerAdmin:
+            targetRoute = '/admin-portal';
+            break;
+          default:
+            targetRoute = '/welcome';
+        }
       }
+
+      debugPrint('🚀 Splash Screen navigating to: $targetRoute');
+      Navigator.of(context).pushReplacementNamed(targetRoute);
     } else {
       Navigator.of(context).pushReplacementNamed('/welcome');
     }
@@ -272,25 +275,26 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1a237e), // Deep blue background
+      backgroundColor: AppTheme.vyaptixBlueDark,
       body: SafeArea(
         child: Container(
           width: double.infinity,
           height: double.infinity,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
               colors: [
-                Color(0xFF1a237e), // Deep blue
-                Color(0xFF3949ab), // Lighter blue
+                AppTheme.vyaptixBlueDark,
+                AppTheme.vyaptixBlue,
+                AppTheme.vyaptixBlueLight,
               ],
             ),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo Section
+              // Logo Section with VyaptIX Logo
               Expanded(
                 flex: 3,
                 child: Center(
@@ -304,28 +308,13 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // Logo/Icon placeholder (using emoji as per wireframes)
-                              Container(
-                                width: 120,
-                                height: 120,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(24),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 10),
-                                    ),
-                                  ],
-                                ),
-                                child: const Icon(
-                                  Icons.business_center,
-                                  size: 60,
-                                  color: Color(0xFF1a237e),
-                                ),
+                              // VyaptIX Logo
+                              const VyaptixLogo(
+                                size: 140,
+                                showTagline: true,
+                                showPoweredBy: false,
                               ),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: 32),
                               // App Name
                               const Text(
                                 'AGENT MITRA',
@@ -346,6 +335,10 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                 decoration: BoxDecoration(
                                   color: Colors.white.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.2),
+                                    width: 1,
+                                  ),
                                 ),
                                 child: const Text(
                                   'Friend of Agents',
@@ -434,12 +427,48 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                 ),
               ),
 
-              // Bottom spacing
-              const SizedBox(height: 40),
+              // Powered by VyaptIX and Copyright Footer
+              Padding(
+                padding: const EdgeInsets.only(bottom: 32),
+                child: FadeTransition(
+                  opacity: _loadingFadeAnimation,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        height: 1,
+                        width: 120,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.transparent,
+                              Colors.white.withOpacity(0.3),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const VyaptixLogo(
+                        size: 60,
+                        showTagline: false,
+                        showPoweredBy: true,
+                      ),
+                      const SizedBox(height: 24),
+                      // Copyright and Trademark Information
+                      const CopyrightFooter(
+                        showFullDetails: true,
+                        textColor: Colors.white,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
   }
+
 }

@@ -6,6 +6,7 @@ import '../core/services/dashboard_service.dart';
 import '../core/models/dashboard_models.dart';
 import '../core/widgets/context_aware_back_button.dart';
 import '../features/auth/presentation/viewmodels/auth_viewmodel.dart';
+import '../shared/theme/app_theme.dart';
 
 class SuperAdminDashboard extends StatefulWidget {
   const SuperAdminDashboard({super.key});
@@ -63,7 +64,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
     return Scaffold(
       appBar: ContextAwareAppBar(
         title: 'Super Admin Dashboard',
-        backgroundColor: Colors.red.shade700,
+        backgroundColor: AppTheme.vyaptixBlue,
         foregroundColor: Colors.white,
         showBreadcrumbs: true,
         actions: [
@@ -91,7 +92,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
                     // Welcome Section
                     Card(
                       elevation: 4,
-                      color: Colors.red.shade50,
+                      color: AppTheme.vyaptixBlue.withOpacity(0.1),
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
@@ -100,7 +101,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
                             Row(
                               children: [
                                 Icon(Icons.admin_panel_settings,
-                                    size: 32, color: Colors.red.shade700),
+                                    size: 32, color: AppTheme.vyaptixBlue),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
@@ -113,7 +114,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
                                             .headlineSmall
                                             ?.copyWith(
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.red.shade700,
+                                              color: AppTheme.vyaptixBlue,
                                             ),
                                       ),
                                       Text(
@@ -121,7 +122,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodyMedium
-                                            ?.copyWith(color: Colors.red.shade600),
+                                            ?.copyWith(color: AppTheme.vyaptixBlueDark),
                                       ),
                                     ],
                                   ),
@@ -285,9 +286,9 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
         children: [
           DrawerHeader(
             decoration: BoxDecoration(
-              color: Colors.red.shade700,
+              color: AppTheme.vyaptixBlue,
             ),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -295,7 +296,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
                   radius: 30,
                   backgroundColor: Colors.white,
                   child: Icon(Icons.admin_panel_settings,
-                      size: 30, color: Colors.red),
+                      size: 30, color: AppTheme.vyaptixBlue),
                 ),
                 SizedBox(height: 10),
                 Text(
@@ -317,7 +318,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.dashboard, color: Colors.red),
+            leading: Icon(Icons.dashboard, color: AppTheme.vyaptixBlue),
             title: const Text('Dashboard'),
             selected: true,
             onTap: () => Navigator.of(context).pop(),

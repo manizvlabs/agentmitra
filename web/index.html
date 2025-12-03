@@ -36,7 +36,8 @@
     <!-- Font preloads removed to avoid console warnings - fonts are loaded on-demand by Flutter -->
 
   <!-- This script adds the flutter initialization JS code -->
-  <script src="flutter.js" defer></script>
+  <!-- flutter.js must load synchronously to initialize _flutter.loader before flutter_bootstrap.js -->
+  <script src="flutter.js"></script>
   <script src="flutter_bootstrap.js" defer></script>
 </head>
 <body>

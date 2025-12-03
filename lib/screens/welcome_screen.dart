@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/services/auth_service.dart';
 import '../core/services/logger_service.dart';
 import '../core/services/feature_flag_service.dart';
+import '../shared/widgets/copyright_footer.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -393,7 +394,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                           ),
                         ),
 
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 24),
+                        // Copyright and Trademark Footer
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 24),
+                          child: CopyrightFooter(
+                            showFullDetails: false,
+                            textColor: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
                       ],
                     ),
                   ),

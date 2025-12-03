@@ -341,7 +341,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
-        border: BorderSide(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Text(
         label,

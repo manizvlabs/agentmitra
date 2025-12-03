@@ -28,7 +28,6 @@ import '../../features/customers/presentation/pages/customers_page.dart';
 import '../../screens/tenant_onboarding_screen.dart';
 import '../../screens/role_assignment_screen.dart';
 import '../../screens/compliance_reporting_screen.dart';
-import '../../screens/test_phase1_screen.dart';
 import '../../screens/onboarding_completion_page.dart';
 import '../../screens/agent_discovery_screen.dart';
 import '../../screens/document_upload_screen.dart';
@@ -294,12 +293,6 @@ class AppRouter {
         builder: (context, state) => const _DemoNavigation(),
       ),
 
-      // Phase 1 Test Screen
-      GoRoute(
-        path: '/test-phase1',
-        name: 'test-phase1',
-        builder: (context, state) => const TestPhase1Screen(),
-      ),
 
       // Configuration Portal Routes (Protected with RBAC)
       GoRoute(
