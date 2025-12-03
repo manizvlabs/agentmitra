@@ -168,13 +168,13 @@ def get_db_stats() -> Dict[str, Any]:
     if hasattr(pool, 'size'):
         stats["pool_size"] = pool.size
     if hasattr(pool, 'checkedin'):
-        stats["connections_checked_in"] = pool.checkedin()
+        stats["connections_checked_in"] = pool.checkedin
     if hasattr(pool, 'checkedout'):
-        stats["connections_checked_out"] = pool.checkedout()
+        stats["connections_checked_out"] = pool.checkedout
     if hasattr(pool, 'overflow'):
-        stats["overflow_connections"] = pool.overflow()
+        stats["overflow_connections"] = pool.overflow
     if hasattr(pool, 'invalid'):
-        stats["invalid_connections"] = pool.invalid()
+        stats["invalid_connections"] = pool.invalid
 
     return stats
 

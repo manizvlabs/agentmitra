@@ -7,6 +7,7 @@ import '../screens/regional_manager_dashboard.dart';
 import '../screens/senior_agent_dashboard.dart';
 import '../screens/splash_screen.dart';
 import '../screens/tenant_list_screen.dart';
+import '../screens/system_dashboard_screen.dart';
 import '../screens/reports_screen.dart';
 import '../screens/admin_settings_screen.dart';
 import '../features/config_portal/presentation/pages/user_management_page.dart';
