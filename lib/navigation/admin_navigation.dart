@@ -8,6 +8,7 @@ import '../screens/senior_agent_dashboard.dart';
 import '../screens/splash_screen.dart';
 import '../screens/tenant_list_screen.dart';
 import '../screens/system_dashboard_screen.dart';
+import '../screens/users_management_screen.dart';
 import '../screens/reports_screen.dart';
 import '../screens/admin_settings_screen.dart';
 import '../features/config_portal/presentation/pages/user_management_page.dart';
@@ -69,8 +70,8 @@ class _AdminNavigationContainerState extends ConsumerState<AdminNavigationContai
         _tabTitles = ['System', 'Users', 'Tenants', 'Analytics', 'Settings'];
         _tabRoutes = ['/super-admin-dashboard', '/user-management', '/tenants', '/system-analytics', '/admin-settings'];
         _tabWidgets = [
-          const SuperAdminDashboard(),
-          const UserManagementPage(),
+          const SystemDashboardScreen(),
+          const UsersManagementScreen(),
           const TenantListScreen(),
           const ReportsScreen(),
           const AdminSettingsScreen(),
