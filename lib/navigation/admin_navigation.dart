@@ -9,6 +9,7 @@ import '../screens/splash_screen.dart';
 import '../screens/tenant_list_screen.dart';
 import '../screens/system_dashboard_screen.dart';
 import '../screens/users_management_screen.dart';
+import '../screens/admin_analytics_screen.dart';
 import '../screens/reports_screen.dart';
 import '../screens/admin_settings_screen.dart';
 import '../features/config_portal/presentation/pages/user_management_page.dart';
@@ -73,7 +74,7 @@ class _AdminNavigationContainerState extends ConsumerState<AdminNavigationContai
           const SystemDashboardScreen(),
           const UsersManagementScreen(),
           const TenantListScreen(),
-          const ReportsScreen(),
+          const AdminAnalyticsScreen(),
           const AdminSettingsScreen(),
         ];
         break;
