@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../features/tenant_management/presentation/viewmodels/tenant_management_viewmodel.dart';
-import '../core/di/service_locator.dart';
 import '../shared/theme/app_theme.dart';
 import '../shared/constants/app_constants.dart';
 
@@ -31,11 +30,11 @@ class _TenantOnboardingScreenState extends State<TenantOnboardingScreen>
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => getIt<TenantManagementViewModel>(),
+      create: (_) => TenantManagementViewModel.simple(),
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Tenant Management'),
-          backgroundColor: AppTheme.primaryColor,
+          backgroundColor: AppTheme.vyaptixBlue,
           foregroundColor: Colors.white,
           bottom: TabBar(
             controller: _tabController,
@@ -72,7 +71,7 @@ class _TenantOnboardingScreenState extends State<TenantOnboardingScreen>
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryColor,
+                  color: AppTheme.vyaptixBlue,
                 ),
               ),
               const SizedBox(height: 8),
@@ -416,7 +415,7 @@ class _TenantOnboardingScreenState extends State<TenantOnboardingScreen>
                           }
                         },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
+                    backgroundColor: AppTheme.vyaptixBlue,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -467,7 +466,7 @@ class _TenantOnboardingScreenState extends State<TenantOnboardingScreen>
                 ElevatedButton(
                   onPressed: () => _tabController.animateTo(0),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
+                    backgroundColor: AppTheme.vyaptixBlue,
                     foregroundColor: Colors.white,
                   ),
                   child: const Text('Create Tenant'),

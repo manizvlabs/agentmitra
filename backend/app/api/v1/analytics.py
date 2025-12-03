@@ -1019,6 +1019,101 @@ async def generate_custom_report(
         raise HTTPException(status_code=500, detail=f"Failed to generate report: {str(e)}")
 
 
+@router.get("/reports/generate")
+async def generate_report(
+    report_type: str = "policies",
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    user_id: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Generate reports based on type and date range - GET version for frontend compatibility"""
+    try:
+        repo = AnalyticsRepository(db)
+
+        # Parse dates
+        date_range = None
+        if start_date and end_date:
+            try:
+                start = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+                end = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+                date_range = (start.date(), end.date())
+            except:
+                # If parsing fails, use current month
+                end_date_obj = datetime.now().date()
+                start_date_obj = end_date_obj.replace(day=1)
+                date_range = (start_date_obj, end_date_obj)
+
+        # Generate report based on type
+        if report_type == "policies":
+            policy_data = repo.get_policy_analytics(agent_id=user_id, date_range=date_range)
+            return {
+                "summary": {
+                    "total_count": policy_data.get("total_policies", 0),
+                    "total_amount": policy_data.get("total_premium", 0),
+                    "success_rate": policy_data.get("active_policies_rate", 0)
+                },
+                "details": [
+                    {"title": "Active Policies", "value": policy_data.get("active_policies", 0)},
+                    {"title": "Total Premium", "value": f"₹{policy_data.get('total_premium', 0):,.2f}"},
+                    {"title": "New Policies", "value": policy_data.get("new_policies", 0)}
+                ]
+            }
+        elif report_type == "payments":
+            payment_data = repo.get_revenue_analytics(agent_id=user_id, date_range=date_range)
+            return {
+                "summary": {
+                    "total_count": payment_data.get("total_payments", 0),
+                    "total_amount": payment_data.get("total_revenue", 0)
+                },
+                "details": [
+                    {"title": "Total Revenue", "value": f"₹{payment_data.get('total_revenue', 0):,.2f}"},
+                    {"title": "Pending Payments", "value": payment_data.get("pending_payments", 0)},
+                    {"title": "Overdue Payments", "value": payment_data.get("overdue_payments", 0)}
+                ]
+            }
+        elif report_type == "customers":
+            # Use dashboard KPIs for customer data
+            customer_data = repo.get_dashboard_kpis(agent_id=user_id, date_range=date_range)
+            return {
+                "summary": {
+                    "total_count": customer_data.get("total_customers", 0),
+                    "total_amount": customer_data.get("total_premium", 0)
+                },
+                "details": [
+                    {"title": "Total Customers", "value": customer_data.get("total_customers", 0)},
+                    {"title": "Active Customers", "value": customer_data.get("active_customers", 0)},
+                    {"title": "New Customers", "value": customer_data.get("new_customers", 0)}
+                ]
+            }
+        elif report_type == "performance":
+            perf_data = repo.get_agent_performance_metrics(agent_id=user_id, date_range=date_range)
+            return {
+                "summary": {
+                    "total_count": perf_data.get("total_policies_sold", 0),
+                    "total_amount": perf_data.get("total_revenue", 0)
+                },
+                "details": [
+                    {"title": "Policies Sold", "value": perf_data.get("total_policies_sold", 0)},
+                    {"title": "Conversion Rate", "value": f"{perf_data.get('conversion_rate', 0):.1f}%"},
+                    {"title": "Customer Satisfaction", "value": f"{perf_data.get('customer_satisfaction', 0):.1f}/5"}
+                ]
+            }
+        else:
+            # Default to policies
+            policy_data = repo.get_policy_analytics(agent_id=user_id, date_range=date_range)
+            return {
+                "summary": {
+                    "total_count": policy_data.get("total_policies", 0),
+                    "total_amount": policy_data.get("total_premium", 0)
+                },
+                "details": []
+            }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate report: {str(e)}")
+
+
 @router.get("/reports/summary")
 async def get_analytics_summary(
     db: Session = Depends(get_db)

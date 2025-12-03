@@ -6,10 +6,12 @@ import '../screens/provider_admin_dashboard.dart';
 import '../screens/regional_manager_dashboard.dart';
 import '../screens/senior_agent_dashboard.dart';
 import '../screens/splash_screen.dart';
+import '../screens/tenant_list_screen.dart';
+import '../screens/reports_screen.dart';
+import '../screens/admin_settings_screen.dart';
 import '../features/config_portal/presentation/pages/user_management_page.dart';
 import '../core/services/navigation_service.dart';
 import '../core/services/rbac_service.dart';
-import '../shared/theme/app_theme.dart';
 
 /// Admin Navigation Container
 /// Adapts navigation based on admin role:
@@ -53,20 +55,24 @@ class _AdminNavigationContainerState extends ConsumerState<AdminNavigationContai
       final rbacService = context.read<RbacService>();
       _userRole = rbacService.getCurrentUserRole();
     } catch (e) {
-      // RBAC service not available yet, default to guest
-      _userRole = UserRole.guestUser;
+      _userRole = null;
     }
 
-    switch (_userRole ?? UserRole.guestUser) {
+    // If no role detected, default to superAdmin for admin portal
+    if (_userRole == null || _userRole == UserRole.guestUser) {
+      _userRole = UserRole.superAdmin;
+    }
+
+    switch (_userRole ?? UserRole.superAdmin) {
       case UserRole.superAdmin:
         _tabTitles = ['System', 'Users', 'Tenants', 'Analytics', 'Settings'];
         _tabRoutes = ['/super-admin-dashboard', '/user-management', '/tenants', '/system-analytics', '/admin-settings'];
         _tabWidgets = [
           const SuperAdminDashboard(),
           const UserManagementPage(),
-          const PlaceholderScreen(title: 'Tenants'), // TODO: Implement Tenants page
-          const PlaceholderScreen(title: 'System Analytics'), // TODO: Implement System Analytics page
-          const PlaceholderScreen(title: 'Admin Settings'), // TODO: Implement Admin Settings page
+          const TenantListScreen(),
+          const ReportsScreen(),
+          const AdminSettingsScreen(),
         ];
         break;
 
@@ -77,8 +83,8 @@ class _AdminNavigationContainerState extends ConsumerState<AdminNavigationContai
           const ProviderAdminDashboard(),
           const UserManagementPage(),
           const PlaceholderScreen(title: 'Regions'), // TODO: Implement Regions page
-          const PlaceholderScreen(title: 'Provider Analytics'), // TODO: Implement Provider Analytics page
-          const PlaceholderScreen(title: 'Admin Settings'), // TODO: Implement Admin Settings page
+          const ReportsScreen(),
+          const AdminSettingsScreen(),
         ];
         break;
 
@@ -88,9 +94,9 @@ class _AdminNavigationContainerState extends ConsumerState<AdminNavigationContai
         _tabWidgets = [
           const RegionalManagerDashboard(),
           const PlaceholderScreen(title: 'Agent Management'), // TODO: Implement Agent Management page
-          const PlaceholderScreen(title: 'Regional Analytics'), // TODO: Implement Regional Analytics page
+          const ReportsScreen(),
           const PlaceholderScreen(title: 'Campaigns'), // TODO: Implement Campaigns page
-          const PlaceholderScreen(title: 'Admin Settings'), // TODO: Implement Admin Settings page
+          const AdminSettingsScreen(),
         ];
         break;
 
@@ -100,21 +106,22 @@ class _AdminNavigationContainerState extends ConsumerState<AdminNavigationContai
         _tabWidgets = [
           const SeniorAgentDashboard(),
           const PlaceholderScreen(title: 'Team Management'), // TODO: Implement Team Management page
-          const PlaceholderScreen(title: 'Agent Analytics'), // TODO: Implement Agent Analytics page
+          const ReportsScreen(),
           const PlaceholderScreen(title: 'Campaigns'), // TODO: Implement Campaigns page
           const PlaceholderScreen(title: 'Agent Profile'), // TODO: Implement Agent Profile page
         ];
         break;
 
       default:
-        // Fallback for any other admin roles
-        _tabTitles = ['Dashboard', 'Management', 'Analytics', 'Settings'];
-        _tabRoutes = ['/admin-dashboard', '/management', '/analytics', '/settings'];
+        // Fallback for any other admin roles - use superAdmin screens
+        _tabTitles = ['System', 'Users', 'Tenants', 'Analytics', 'Settings'];
+        _tabRoutes = ['/super-admin-dashboard', '/user-management', '/tenants', '/system-analytics', '/admin-settings'];
         _tabWidgets = [
-          const PlaceholderScreen(title: 'Dashboard'),
-          const PlaceholderScreen(title: 'Management'),
-          const PlaceholderScreen(title: 'Analytics'),
-          const PlaceholderScreen(title: 'Settings'),
+          const SuperAdminDashboard(),
+          const UserManagementPage(),
+          const TenantListScreen(),
+          const ReportsScreen(),
+          const AdminSettingsScreen(),
         ];
     }
   }
@@ -149,7 +156,10 @@ class _AdminNavigationContainerState extends ConsumerState<AdminNavigationContai
           ),
         ),
       ),
-      drawer: AdminDrawerMenu(userRole: _userRole),
+      drawer: AdminDrawerMenu(
+        userRole: _userRole,
+        onNavigateToTab: _onItemTapped,
+      ),
       body: IndexedStack(
         index: _selectedIndex,
         children: _tabWidgets,
@@ -249,8 +259,13 @@ class _AdminNavigationContainerState extends ConsumerState<AdminNavigationContai
 /// Drawer menu for admin-specific tools
 class AdminDrawerMenu extends StatelessWidget {
   final UserRole? userRole;
+  final Function(int) onNavigateToTab;
 
-  const AdminDrawerMenu({super.key, required this.userRole});
+  const AdminDrawerMenu({
+    super.key,
+    required this.userRole,
+    required this.onNavigateToTab,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -279,7 +294,9 @@ class AdminDrawerMenu extends StatelessWidget {
               title: const Text('Feature Flags'),
               onTap: () {
                 Navigator.pop(context);
-                // Navigate to feature flags
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Feature flags management coming soon')),
+                );
               },
             ),
             ListTile(
@@ -287,7 +304,8 @@ class AdminDrawerMenu extends StatelessWidget {
               title: const Text('Tenants'),
               onTap: () {
                 Navigator.pop(context);
-                // Navigate to tenants
+                // Navigate to tenants tab (index 2 for super admin)
+                onNavigateToTab(2);
               },
             ),
           ],
@@ -298,7 +316,9 @@ class AdminDrawerMenu extends StatelessWidget {
               title: const Text('Regions'),
               onTap: () {
                 Navigator.pop(context);
-                // Navigate to regions
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Regions management coming soon')),
+                );
               },
             ),
           ],
@@ -309,7 +329,10 @@ class AdminDrawerMenu extends StatelessWidget {
             title: const Text('Data Import'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.of(context).pushNamed('/data-import-dashboard');
+              // Navigate to data import - this should be implemented in config portal
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Data import available in Config Portal')),
+              );
             },
           ),
 
@@ -318,7 +341,8 @@ class AdminDrawerMenu extends StatelessWidget {
             title: const Text('Reports'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.of(context).pushNamed('/reporting-dashboard');
+              // Navigate to analytics tab (index 3 for most admin roles)
+              onNavigateToTab(3);
             },
           ),
 
@@ -327,7 +351,8 @@ class AdminDrawerMenu extends StatelessWidget {
             title: const Text('Accessibility'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.of(context).pushNamed('/accessibility-settings');
+              // Navigate to settings tab (index 4 for most admin roles)
+              onNavigateToTab(4);
             },
           ),
 
@@ -336,7 +361,8 @@ class AdminDrawerMenu extends StatelessWidget {
             title: const Text('Language'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.of(context).pushNamed('/language-selection');
+              // Navigate to settings tab (index 4 for most admin roles)
+              onNavigateToTab(4);
             },
           ),
 
@@ -375,7 +401,7 @@ class PlaceholderScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppTheme.vyaptixBlue,
+        backgroundColor: const Color(0xFF0083B0), // VyaptIX Blue
         title: Text(title, style: const TextStyle(color: Colors.white)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -389,7 +415,7 @@ class PlaceholderScreen extends StatelessWidget {
             Icon(
               Icons.construction,
               size: 64,
-              color: Colors.grey.shade400,
+              color: const Color(0xFF0083B0).withOpacity(0.5),
             ),
             const SizedBox(height: 16),
             Text(

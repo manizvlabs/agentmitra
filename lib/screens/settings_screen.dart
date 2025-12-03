@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/services/auth_service.dart';
 import '../core/services/api_service.dart';
-import '../shared/widgets/loading_overlay.dart';
+import '../core/widgets/loading/loading_overlay.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});

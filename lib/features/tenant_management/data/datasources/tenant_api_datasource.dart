@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../../../core/services/api_service.dart';
+import '../../../../../core/services/api_service.dart';
 import '../models/tenant.dart';
 
 class TenantApiDataSource {

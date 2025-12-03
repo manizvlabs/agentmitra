@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../../../core/architecture/base/base_viewmodel.dart';
+import '../../../../core/architecture/base/base_viewmodel.dart';
 import '../../domain/usecases/create_tenant_usecase.dart';
 import '../../domain/usecases/get_tenants_usecase.dart';
 import '../../data/models/tenant.dart';
+import '../../data/repositories/tenant_repository.dart';
+import '../../data/datasources/tenant_api_datasource.dart';
 
 class TenantManagementViewModel extends BaseViewModel {
   final CreateTenantUseCase _createTenantUseCase;
@@ -63,6 +65,17 @@ class TenantManagementViewModel extends BaseViewModel {
     this._createTenantUseCase,
     this._getTenantsUseCase,
   );
+
+  // Factory constructor for simple instantiation
+  factory TenantManagementViewModel.simple() {
+    // TODO: Implement proper dependency injection
+    // Create stub repositories for now
+    final repository = TenantRepository(TenantApiDataSource(ApiService()));
+    return TenantManagementViewModel(
+      CreateTenantUseCase(repository),
+      GetTenantsUseCase(repository),
+    );
+  }
 
   @override
   void dispose() {

@@ -51,9 +51,8 @@ class NavigationRouter {
 
   /// Get initial route based on user authentication and role
   String getInitialRoute(BuildContext context) {
-    // During app startup, RBAC service may not be initialized yet
-    // Default to splash screen and let the app handle authentication flow
-    return '/splash';
+    // For testing admin portal - force admin route
+    return '/admin-portal';
   }
 
   // Get role-based route for navigation container

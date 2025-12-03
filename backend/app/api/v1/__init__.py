@@ -190,8 +190,12 @@ api_router.include_router(tenants.router, prefix="/tenants", tags=["tenants"])
 api_router.include_router(rbac.router, prefix="/rbac", tags=["rbac"])
 # Admin router (optional - for testing/maintenance)
 try:
+    print("DEBUG: Attempting to import admin router...")
     from . import admin
+    print("DEBUG: Admin router imported successfully, including in API router...")
     api_router.include_router(admin.router, tags=["admin"])
-except (ImportError, NameError, AttributeError):
+    print("DEBUG: Admin router included successfully")
+except (ImportError, NameError, AttributeError) as e:
+    print(f"DEBUG: Failed to include admin router: {e}")
     pass
 

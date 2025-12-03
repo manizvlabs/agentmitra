@@ -9,7 +9,7 @@ Handles user authentication, authorization, and permission checking.
 import logging
 from typing import List, Dict, Any, Optional, Set, Tuple
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, text
 from functools import wraps
 
 from app.core.logging_config import get_logger
@@ -183,12 +183,12 @@ class RBACService:
         try:
             # Query user roles from database
             if self.db:
-                result = self.db.execute("""
+                result = self.db.execute(text("""
                     SELECT r.role_name
                     FROM user_roles ur
                     JOIN roles r ON ur.role_id = r.role_id
                     WHERE ur.user_id = :user_id
-                """, {"user_id": user_id})
+                """), {"user_id": user_id})
 
                 roles = [row.role_name for row in result]
             else:
