@@ -142,7 +142,7 @@ def check_db_connection() -> Dict[str, Any]:
             return {
                 "status": "healthy" if result[0] == 1 else "unhealthy",
                 "response_time_ms": round(response_time * 1000, 2),
-                "pool_size": getattr(engine.pool, 'size', 0) if hasattr(engine.pool, 'size') else 0,
+                "pool_size": 0,  # Pool size info not available in all environments
                 "checked_at": time.time(),
             }
     except Exception as e:
@@ -166,15 +166,15 @@ def get_db_stats() -> Dict[str, Any]:
 
     # Add pool-specific stats
     if hasattr(pool, 'size'):
-        stats["pool_size"] = pool.size
+        stats["pool_size"] = pool.size() if callable(pool.size) else pool.size
     if hasattr(pool, 'checkedin'):
-        stats["connections_checked_in"] = pool.checkedin
+        stats["connections_checked_in"] = pool.checkedin()
     if hasattr(pool, 'checkedout'):
-        stats["connections_checked_out"] = pool.checkedout
+        stats["connections_checked_out"] = pool.checkedout()
     if hasattr(pool, 'overflow'):
-        stats["overflow_connections"] = pool.overflow
+        stats["overflow_connections"] = pool.overflow()
     if hasattr(pool, 'invalid'):
-        stats["invalid_connections"] = pool.invalid
+        stats["invalid_connections"] = pool.invalid()
 
     return stats
 

@@ -115,22 +115,6 @@ class Tenant(Base):
     storage_limit_gb = Column(Integer, default=10)
     api_rate_limit = Column(Integer, default=1000)
 
-    # Contact information
-    contact_email = Column(String(255))
-    contact_phone = Column(String(20))
-    business_address = Column(JSONB)
-
-    # Branding and customization
-    branding_settings = Column(JSONB)
-    theme_settings = Column(JSONB)
-
-    # Compliance and legal
-    compliance_status = Column(JSONB)
-    regulatory_approvals = Column(JSONB)
-
-    # Metadata
-    tenant_metadata = Column(JSONB)
-
     created_at = Column(TIMESTAMP, default=func.now())
     updated_at = Column(TIMESTAMP, default=func.now())
 

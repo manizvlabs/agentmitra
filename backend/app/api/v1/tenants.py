@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, status
 from pydantic import BaseModel, validator, EmailStr
 from typing import Optional, Dict, List, Any
 from sqlalchemy.orm import Session
-from app.core.database import get_db
+from app.core.database import get_db, SessionLocal
 from app.core.tenant_middleware import get_tenant_context, get_tenant_service
 from app.core.tenant_service import TenantService
 from app.core.audit_service import AuditService
@@ -70,12 +70,7 @@ class TenantResponse(BaseModel):
     max_users: Optional[int]
     storage_limit_gb: Optional[int]
     api_rate_limit: Optional[int]
-    contact_email: Optional[str]
-    contact_phone: Optional[str]
-    business_address: Optional[Dict[str, Any]]
     created_at: datetime
-    compliance_status: Optional[Dict[str, Any]]
-    regulatory_approvals: Optional[Dict[str, Any]]
 
 
 class TenantProvisioningStatus(BaseModel):
@@ -223,12 +218,7 @@ async def list_tenants(
                     max_users=tenant.max_users,
                     storage_limit_gb=tenant.storage_limit_gb,
                     api_rate_limit=tenant.api_rate_limit,
-                    contact_email=tenant.contact_email,
-                    contact_phone=tenant.contact_phone,
-                    business_address=tenant.business_address,
                     created_at=tenant.created_at,
-                    compliance_status=tenant.compliance_status,
-                    regulatory_approvals=tenant.regulatory_approvals
                 )
                 for tenant in tenants
             ]
@@ -269,12 +259,7 @@ async def get_tenant(
             max_users=tenant_context['max_users'],
             storage_limit_gb=tenant_context['storage_limit_gb'],
             api_rate_limit=tenant_context['api_rate_limit'],
-            contact_email=tenant_context['contact_email'],
-            contact_phone=tenant_context['contact_phone'],
-            business_address=tenant_context['business_address'],
             created_at=datetime.fromisoformat(tenant_context.get('created_at', datetime.utcnow().isoformat())),
-            compliance_status=tenant_context['compliance_status'],
-            regulatory_approvals=tenant_context['regulatory_approvals']
         )
 
     except ValueError as e:

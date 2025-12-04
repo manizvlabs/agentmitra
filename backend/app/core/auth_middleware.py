@@ -18,9 +18,7 @@ from jose import jwt, JWTError
 from app.core.config.settings import settings
 from app.core.database import get_db
 from app.services.rbac_service import get_rbac_service, RBACService
-from app.core.logging_config import get_logger
-
-logger = get_logger(__name__)
+import logging
 
 # Security scheme
 security = HTTPBearer(auto_error=False)
@@ -145,7 +143,7 @@ async def get_current_user_context(
                 # Fallback: use basic permissions based on role
                 permissions = await rbac_service._get_role_permissions(user_row.role or "guest")
         except Exception as e:
-            logger.warning(f"RBAC service failed, using minimal permissions: {e}")
+            logging.warning(f"RBAC service failed, using minimal permissions: {e}")
             # Minimal fallback permissions
             permissions = {"users.read"}  # Only basic read access
 
@@ -163,13 +161,13 @@ async def get_current_user_context(
             detail="Token has expired"
         )
     except JWTError as e:
-        logger.warning(f"JWT validation failed: {e}")
+        logging.warning(f"JWT validation failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication token"
         )
     except Exception as e:
-        logger.error(f"Authentication error: {e}")
+        logging.error(f"Authentication error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Authentication service error"
@@ -255,7 +253,7 @@ async def auth_middleware(request: Request, call_next):
     # Skip detailed processing for multipart/form-data requests to avoid serialization issues
     content_type = request.headers.get('content-type', '').lower()
     if 'multipart/form-data' in content_type:
-        logger.debug(f"Skipping auth middleware processing for multipart request: {path}")
+        logging.debug(f"Skipping auth middleware processing for multipart request: {path}")
         try:
             response = await call_next(request)
             return response
@@ -263,9 +261,9 @@ async def auth_middleware(request: Request, call_next):
             # Be very careful with exception logging for multipart requests
             try:
                 error_str = str(type(e).__name__)  # Just log the exception type
-                logger.error(f"Error in multipart request processing: {error_str}")
+                logging.error(f"Error in multipart request processing: {error_str}")
             except Exception:
-                logger.error("Error in multipart request processing: [unable to serialize exception]")
+                logging.error("Error in multipart request processing: [unable to serialize exception]")
             return JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={"detail": "Internal server error"}
@@ -287,7 +285,7 @@ async def auth_middleware(request: Request, call_next):
             error_msg = str(e)
         except Exception:
             error_msg = "Request processing error (non-serializable exception)"
-        logger.error(f"Request processing error: {error_msg}")
+        logging.error(f"Request processing error: {error_msg}")
         # For multipart requests, don't try to return detailed error info
         content_type = request.headers.get('content-type', '').lower()
         if 'multipart/form-data' in content_type:
