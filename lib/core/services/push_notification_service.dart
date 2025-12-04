@@ -164,7 +164,7 @@ class PushNotificationService {
   /// Register FCM token with backend
   Future<void> _registerTokenWithBackend(String token) async {
     try {
-      await ApiService.post('/api/v1/users/fcm-token', {
+      await ApiService.post('/api/v1/notifications/device-token', {
         'fcm_token': token,
         'device_type': Platform.isIOS ? 'ios' : 'android',
       });

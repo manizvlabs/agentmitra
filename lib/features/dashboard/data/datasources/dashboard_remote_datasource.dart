@@ -57,7 +57,7 @@ class DashboardRemoteDataSource {
   }) async {
     try {
       final response = await ApiService.get(
-        '/api/v1/dashboard/notifications/$userId',
+        '/api/v1/notifications/',
         queryParameters: {'limit': limit.toString()},
       );
 
@@ -80,7 +80,7 @@ class DashboardRemoteDataSource {
   Future<void> markNotificationAsRead(String notificationId) async {
     try {
       await ApiService.put(
-        '/api/v1/dashboard/notifications/$notificationId/read',
+        '/api/v1/notifications/$notificationId/read',
         {},
       );
     } catch (e) {

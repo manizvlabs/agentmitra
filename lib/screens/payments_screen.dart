@@ -67,16 +67,13 @@ class _PaymentsScreenState extends State<PaymentsScreen> with SingleTickerProvid
     setState(() => _isLoading = true);
 
     try {
-      // Load outstanding payments
-      final outstandingResponse = await ApiService.get(
-        '/api/v1/payments/outstanding/${AuthService().currentUser?.id}'
+      // Load payments analytics (from project plan section 2.1)
+      final paymentsResponse = await ApiService.get(
+        '/api/v1/analytics/payments/analytics'
       );
-      _outstandingPayments = List<Map<String, dynamic>>.from(outstandingResponse['data'] ?? []);
-
-      // Load payment history
-      final historyResponse = await ApiService.get(
-        '/api/v1/payments/history/${AuthService().currentUser?.id}'
-      );
+      // Extract outstanding and history from analytics response
+      _outstandingPayments = List<Map<String, dynamic>>.from(paymentsResponse['outstanding'] ?? []);
+      _paymentHistory = List<Map<String, dynamic>>.from(paymentsResponse['history'] ?? []);
       _paymentHistory = List<Map<String, dynamic>>.from(historyResponse['data'] ?? []);
     } catch (e) {
       if (mounted) {
@@ -387,8 +384,14 @@ class _PaymentsScreenState extends State<PaymentsScreen> with SingleTickerProvid
         'items': _selectedPayment != null ? [_selectedPayment] : _outstandingPayments,
       };
 
-      // Process payment
-      final response = await ApiService.post('/api/v1/payments/process', paymentData);
+      // Process payment using policy payment endpoint (from project plan section 2.1)
+      // Note: Direct payment processing may need to be handled differently
+      // For now, we'll use a placeholder that matches available endpoints
+      final response = await ApiService.post('/api/v1/policies/${paymentData['policy_id']}/premiums', {
+        'amount': paymentData['amount'],
+        'payment_method': paymentData['payment_method'],
+        'transaction_id': paymentData['transaction_id'],
+      });
 
       Navigator.of(context).pop(); // Close loading overlay
 

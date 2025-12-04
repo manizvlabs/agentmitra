@@ -177,9 +177,9 @@ class _ExcelUploadScreenState extends State<ExcelUploadScreen>
         });
       }
 
-      // Call actual upload API
+      // Call actual upload API (from project plan section 2.1: POST /api/v1/import/upload)
       final response = await ApiService.post(
-        '/api/v1/import/excel',
+        '/api/v1/import/upload',
         data: {
           'fileName': _selectedFile!.name,
           'fileSize': _selectedFile!.size,

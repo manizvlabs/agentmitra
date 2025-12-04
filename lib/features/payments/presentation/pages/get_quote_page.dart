@@ -495,7 +495,7 @@ class _GetQuotePageState extends State<GetQuotePage> {
       debugPrint('📤 GetQuotePage - Submitting quote request: $quoteRequest');
 
       // Make API call to create quote request
-      final response = await ApiService.post('/api/v1/quotes/requests', quoteRequest);
+      final response = await ApiService.post('/api/v1/quotes/', quoteRequest);
 
       debugPrint('📤 GetQuotePage - Quote request submitted successfully: $response');
 

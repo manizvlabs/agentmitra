@@ -15,6 +15,7 @@ import '../screens/admin_settings_screen.dart';
 import '../features/config_portal/presentation/pages/user_management_page.dart';
 import '../core/services/navigation_service.dart';
 import '../core/services/rbac_service.dart';
+import 'package:go_router/go_router.dart';
 
 /// Admin Navigation Container
 /// Adapts navigation based on admin role:
@@ -141,6 +142,12 @@ class _AdminNavigationContainerState extends ConsumerState<AdminNavigationContai
         _tabRoutes[index],
       );
     }
+  }
+
+  // Navigate to specific admin screens via deep linking
+  void _navigateToScreen(String routeName, {Map<String, dynamic>? extra}) {
+    // Use GoRouter for deep linking
+    GoRouter.of(context).goNamed(routeName, extra: extra);
   }
 
   @override
@@ -297,9 +304,8 @@ class AdminDrawerMenu extends StatelessWidget {
               title: const Text('Feature Flags'),
               onTap: () {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Feature flags management coming soon')),
-                );
+                // Navigate to settings tab for feature flags (index 4 for super admin)
+                onNavigateToTab(4);
               },
             ),
             ListTile(
@@ -309,6 +315,24 @@ class AdminDrawerMenu extends StatelessWidget {
                 Navigator.pop(context);
                 // Navigate to tenants tab (index 2 for super admin)
                 onNavigateToTab(2);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.people),
+              title: const Text('User Management'),
+              onTap: () {
+                Navigator.pop(context);
+                // Navigate to users tab (index 1 for super admin)
+                onNavigateToTab(1);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.analytics),
+              title: const Text('System Analytics'),
+              onTap: () {
+                Navigator.pop(context);
+                // Navigate to analytics tab (index 3 for super admin)
+                onNavigateToTab(3);
               },
             ),
           ],
@@ -332,10 +356,18 @@ class AdminDrawerMenu extends StatelessWidget {
             title: const Text('Data Import'),
             onTap: () {
               Navigator.pop(context);
-              // Navigate to data import - this should be implemented in config portal
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Data import available in Config Portal')),
-              );
+              // Navigate to data import dashboard
+              GoRouter.of(context).goNamed('data-import-dashboard');
+            },
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.table_chart),
+            title: const Text('Excel Upload'),
+            onTap: () {
+              Navigator.pop(context);
+              // Navigate to excel upload screen
+              GoRouter.of(context).goNamed('excel-upload');
             },
           ),
 
@@ -346,6 +378,16 @@ class AdminDrawerMenu extends StatelessWidget {
               Navigator.pop(context);
               // Navigate to analytics tab (index 3 for most admin roles)
               onNavigateToTab(3);
+            },
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title: const Text('System Settings'),
+            onTap: () {
+              Navigator.pop(context);
+              // Navigate to settings tab (index 4 for most admin roles)
+              onNavigateToTab(4);
             },
           ),
 

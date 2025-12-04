@@ -6,6 +6,7 @@ import '../screens/roi_analytics_dashboard.dart';
 import '../screens/marketing_campaign_builder.dart';
 import '../features/agent/presentation/pages/agent_profile_page.dart';
 import '../core/services/navigation_service.dart';
+import 'package:go_router/go_router.dart';
 
 /// Agent Navigation Container
 /// Implements tab-based navigation with 5 bottom tabs as per wireframes:
@@ -59,6 +60,12 @@ class _AgentNavigationContainerState extends ConsumerState<AgentNavigationContai
       _tabTitles[index],
       _tabRoutes[index],
     );
+  }
+
+  // Navigate to specific agent screens via deep linking
+  void _navigateToScreen(String routeName, {Map<String, dynamic>? extra}) {
+    // Use GoRouter for deep linking
+    GoRouter.of(context).goNamed(routeName, extra: extra);
   }
 
   @override
@@ -140,28 +147,50 @@ class AgentDrawerMenu extends StatelessWidget {
               ),
             ),
           ),
+
+          // Content Creation & Management
+          ListTile(
+            leading: const Icon(Icons.format_quote),
+            title: const Text('Daily Quotes'),
+            onTap: () {
+              Navigator.pop(context);
+              GoRouter.of(context).goNamed('daily-quotes');
+            },
+          ),
           ListTile(
             leading: const Icon(Icons.present_to_all),
             title: const Text('Presentations'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.of(context).pushNamed('/presentations');
+              GoRouter.of(context).goNamed('presentations');
             },
           ),
+
+          // Business Tools
           ListTile(
             leading: const Icon(Icons.calendar_today),
             title: const Text('Premium Calendar'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.of(context).pushNamed('/premium-calendar');
+              GoRouter.of(context).goNamed('premium-calendar');
             },
           ),
+          ListTile(
+            leading: const Icon(Icons.my_library_books),
+            title: const Text('My Policies'),
+            onTap: () {
+              Navigator.pop(context);
+              GoRouter.of(context).goNamed('policies');
+            },
+          ),
+
+          // Communication
           ListTile(
             leading: const Icon(Icons.chat),
             title: const Text('Agent Chat'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.of(context).pushNamed('/agent-chat');
+              GoRouter.of(context).goNamed('agent-chat');
             },
           ),
           ListTile(
@@ -169,24 +198,39 @@ class AgentDrawerMenu extends StatelessWidget {
             title: const Text('Reminders'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.of(context).pushNamed('/reminders');
+              GoRouter.of(context).goNamed('reminders');
             },
           ),
+
+          // Analytics & Performance
+          ListTile(
+            leading: const Icon(Icons.content_copy),
+            title: const Text('Content Performance'),
+            onTap: () {
+              Navigator.pop(context);
+              GoRouter.of(context).goNamed('content-performance');
+            },
+          ),
+
+          // Search & Discovery
           ListTile(
             leading: const Icon(Icons.search),
             title: const Text('Global Search'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.of(context).pushNamed('/global-search');
+              GoRouter.of(context).goNamed('global-search');
             },
           ),
+
           const Divider(),
+
+          // Settings & Preferences
           ListTile(
             leading: const Icon(Icons.settings),
             title: const Text('Settings'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.of(context).pushNamed('/settings');
+              GoRouter.of(context).goNamed('settings');
             },
           ),
           ListTile(
@@ -194,7 +238,7 @@ class AgentDrawerMenu extends StatelessWidget {
             title: const Text('Accessibility'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.of(context).pushNamed('/accessibility-settings');
+              GoRouter.of(context).goNamed('accessibility-settings');
             },
           ),
           ListTile(
@@ -202,15 +246,17 @@ class AgentDrawerMenu extends StatelessWidget {
             title: const Text('Language'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.of(context).pushNamed('/language-selection');
+              GoRouter.of(context).goNamed('language-selection');
             },
           ),
+
+          // Support & Account
           ListTile(
             leading: const Icon(Icons.help),
             title: const Text('Help & Support'),
             onTap: () {
               Navigator.pop(context);
-              // Navigate to help
+              // Navigate to help - implement when available
             },
           ),
           ListTile(
@@ -218,7 +264,7 @@ class AgentDrawerMenu extends StatelessWidget {
             title: const Text('Logout'),
             onTap: () {
               Navigator.pop(context);
-              // Handle logout
+              // Handle logout - implement authentication flow
             },
           ),
         ],

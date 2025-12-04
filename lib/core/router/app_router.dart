@@ -40,6 +40,37 @@ import '../../features/config_portal/presentation/pages/excel_template_config_pa
 import '../../features/config_portal/presentation/pages/customer_data_management_page.dart';
 import '../../features/config_portal/presentation/pages/reporting_dashboard_page.dart';
 import '../../features/config_portal/presentation/pages/user_management_page.dart';
+// Admin Portal Pages
+import '../../screens/system_dashboard_screen.dart';
+import '../../screens/users_management_screen.dart';
+import '../../screens/tenant_list_screen.dart';
+import '../../screens/admin_analytics_screen.dart';
+import '../../screens/admin_settings_screen.dart';
+import '../../screens/super_admin_dashboard.dart';
+import '../../screens/provider_admin_dashboard.dart';
+import '../../screens/regional_manager_dashboard.dart';
+import '../../screens/senior_agent_dashboard.dart';
+// Additional screens for comprehensive navigation
+import '../../screens/daily_quotes_screen.dart';
+import '../../screens/premium_calendar_screen.dart';
+import '../../screens/agent_chat_screen.dart';
+import '../../screens/reminders_screen.dart';
+import '../../screens/presentations_screen.dart';
+import '../../screens/campaign_performance_screen.dart';
+import '../../screens/content_performance_screen.dart';
+import '../../screens/global_search_screen.dart';
+import '../../screens/data_pending_screen.dart';
+import '../../screens/smart_chatbot_screen.dart';
+import '../../screens/agent_verification_screen.dart';
+import '../../screens/customer_dashboard.dart';
+import '../../screens/payments_screen.dart';
+import '../../screens/file_new_claim_screen.dart';
+import '../../screens/settings_screen.dart';
+import '../../screens/accessibility_settings_screen.dart';
+import '../../screens/language_selection_screen.dart';
+import '../../screens/excel_upload_screen.dart';
+import '../../screens/data_import_progress_screen.dart';
+import '../../screens/reports_screen.dart';
 // Protected Route Widget
 import '../../core/widgets/protected_route.dart';
 import '../../core/services/rbac_service.dart';
@@ -144,10 +175,7 @@ class AppRouter {
       GoRoute(
         path: '/policy-details',
         name: 'policy-details',
-        builder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>?;
-          return PolicyDetailsScreen(policyId: extra?['policyId']);
-        },
+        builder: (context, state) => const PolicyDetailsScreen(),
       ),
 
       GoRoute(
@@ -342,6 +370,359 @@ class AppRouter {
           requiredPermissions: ['users.read'],
           child: const UserManagementPage(),
         ),
+      ),
+
+      // Admin Portal Routes - Super Admin
+      GoRoute(
+        path: '/super-admin-dashboard',
+        name: 'super-admin-dashboard',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.superAdmin],
+          requiredPermissions: ['system.admin'],
+          child: const SystemDashboardScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/tenants',
+        name: 'tenants',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.superAdmin],
+          requiredPermissions: ['tenants.read'],
+          child: const TenantListScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/system-analytics',
+        name: 'system-analytics',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.superAdmin],
+          requiredPermissions: ['analytics.read'],
+          child: const AdminAnalyticsScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/admin-settings',
+        name: 'admin-settings',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.superAdmin],
+          requiredPermissions: ['system.config'],
+          child: const AdminSettingsScreen(),
+        ),
+      ),
+
+      // Admin Portal Routes - Provider Admin
+      GoRoute(
+        path: '/provider-admin-dashboard',
+        name: 'provider-admin-dashboard',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.providerAdmin],
+          requiredPermissions: ['providers.read'],
+          child: const ProviderAdminDashboard(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/regions',
+        name: 'regions',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.providerAdmin],
+          requiredPermissions: ['regions.read'],
+          child: const ReportsScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/provider-analytics',
+        name: 'provider-analytics',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.providerAdmin],
+          requiredPermissions: ['analytics.read'],
+          child: const ReportsScreen(),
+        ),
+      ),
+
+      // Admin Portal Routes - Regional Manager
+      GoRoute(
+        path: '/regional-manager-dashboard',
+        name: 'regional-manager-dashboard',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.regionalManager],
+          requiredPermissions: ['regions.admin'],
+          child: const RegionalManagerDashboard(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/agent-management',
+        name: 'agent-management',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.regionalManager],
+          requiredPermissions: ['agents.manage'],
+          child: const ReportsScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/regional-analytics',
+        name: 'regional-analytics',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.regionalManager],
+          requiredPermissions: ['analytics.read'],
+          child: const ReportsScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/campaigns',
+        name: 'campaigns',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [
+            UserRole.regionalManager,
+            UserRole.seniorAgent,
+          ],
+          requiredPermissions: ['campaigns.read'],
+          child: const ReportsScreen(),
+        ),
+      ),
+
+      // Admin Portal Routes - Senior Agent
+      GoRoute(
+        path: '/senior-agent-dashboard',
+        name: 'senior-agent-dashboard',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.seniorAgent],
+          requiredPermissions: ['agents.read'],
+          child: const SeniorAgentDashboard(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/team-management',
+        name: 'team-management',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.seniorAgent],
+          requiredPermissions: ['agents.manage'],
+          child: const ReportsScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/agent-analytics',
+        name: 'agent-analytics',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.seniorAgent],
+          requiredPermissions: ['analytics.read'],
+          child: const ReportsScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/agent-profile',
+        name: 'agent-profile',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.seniorAgent],
+          requiredPermissions: ['users.profile'],
+          child: const AgentProfilePage(),
+        ),
+      ),
+
+      // Additional Agent Portal Routes for Deep Linking
+      GoRoute(
+        path: '/daily-quotes',
+        name: 'daily-quotes',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent],
+          requiredPermissions: ['content.create'],
+          child: const DailyQuotesScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/premium-calendar',
+        name: 'premium-calendar',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent],
+          requiredPermissions: ['policies.read'],
+          child: const PremiumCalendarScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/agent-chat',
+        name: 'agent-chat',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent],
+          requiredPermissions: ['communication.read'],
+          child: const AgentChatScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/reminders',
+        name: 'reminders',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent],
+          requiredPermissions: ['reminders.read'],
+          child: const RemindersScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/presentations',
+        name: 'presentations',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent],
+          requiredPermissions: ['presentations.read'],
+          child: const PresentationsScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/campaign-performance',
+        name: 'campaign-performance',
+        builder: (context, state) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          return ProtectedRoute(
+            requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent],
+            requiredPermissions: ['campaigns.read'],
+            child: CampaignPerformanceScreen(campaignId: args as String?),
+          );
+        },
+      ),
+
+      GoRoute(
+        path: '/content-performance',
+        name: 'content-performance',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent],
+          requiredPermissions: ['content.read'],
+          child: const ContentPerformanceScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/global-search',
+        name: 'global-search',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent, UserRole.policyholder],
+          requiredPermissions: ['search.read'],
+          child: const GlobalSearchScreen(),
+        ),
+      ),
+
+      // Customer Portal Additional Routes
+      GoRoute(
+        path: '/data-pending',
+        name: 'data-pending',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.policyholder, UserRole.juniorAgent, UserRole.seniorAgent],
+          child: const DataPendingScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/smart-chatbot',
+        name: 'smart-chatbot',
+        builder: (context, state) => const ChatbotPage(),
+      ),
+
+      GoRoute(
+        path: '/payments',
+        name: 'payments',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.policyholder],
+          requiredPermissions: ['payments.read'],
+          child: const PaymentsScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/file-new-claim',
+        name: 'file-new-claim',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.policyholder],
+          requiredPermissions: ['claims.create'],
+          child: const FileNewClaimScreen(),
+        ),
+      ),
+
+      // Additional Admin Routes for Deep Linking
+      GoRoute(
+        path: '/users-management',
+        name: 'users-management',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.superAdmin, UserRole.providerAdmin],
+          requiredPermissions: ['users.read'],
+          child: const UsersManagementScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/admin-analytics',
+        name: 'admin-analytics',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.superAdmin, UserRole.providerAdmin, UserRole.regionalManager],
+          requiredPermissions: ['analytics.read'],
+          child: const AdminAnalyticsScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/admin-settings',
+        name: 'admin-settings',
+        builder: (context, state) => ProtectedRoute(
+          requiredRoles: [UserRole.superAdmin, UserRole.providerAdmin, UserRole.regionalManager],
+          requiredPermissions: ['system.config'],
+          child: const AdminSettingsScreen(),
+        ),
+      ),
+
+      // Config Portal Routes for Deep Linking
+      GoRoute(
+        path: '/excel-upload',
+        name: 'excel-upload',
+        builder: (context, state) => ProtectedRoute(
+          requiredPermissions: ['data_import.create'],
+          child: const ExcelUploadScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: '/data-import-progress',
+        name: 'data-import-progress',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return ProtectedRoute(
+            requiredPermissions: ['data_import.read'],
+            child: DataImportProgressScreen(
+              importId: extra?['importId'] ?? '',
+              fileName: extra?['fileName'] ?? 'Unknown File',
+              totalRecords: extra?['totalRecords'] ?? 0,
+            ),
+          );
+        },
+      ),
+
+      // Settings and Utility Routes
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        builder: (context, state) => const SettingsScreen(),
+      ),
+
+      GoRoute(
+        path: '/accessibility-settings',
+        name: 'accessibility-settings',
+        builder: (context, state) => const AccessibilitySettingsScreen(),
+      ),
+
+      GoRoute(
+        path: '/language-selection',
+        name: 'language-selection',
+        builder: (context, state) => const LanguageSelectionScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

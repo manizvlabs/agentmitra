@@ -14,6 +14,8 @@ import '../screens/campaign_performance_screen.dart';
 import '../screens/content_performance_screen.dart';
 import '../screens/trial_expiration_screen.dart';
 import '../screens/data_pending_screen.dart';
+import '../screens/whatsapp_integration_screen.dart';
+import '../screens/learning_center_screen.dart';
 import '../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../features/chatbot/presentation/pages/chatbot_page.dart';
 import '../features/notifications/presentation/pages/notification_page.dart';
@@ -132,6 +134,14 @@ class NavigationRouter {
         (context) => const AgentNavigationContainer(),
         requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent],
       ),
+      '/roi-analytics': _protectedRoute(
+        (context) => const AgentNavigationContainer(),
+        requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent, UserRole.regionalManager],
+      ),
+      '/campaign-builder': _protectedRoute(
+        (context) => const AgentNavigationContainer(),
+        requiredRoles: [UserRole.juniorAgent, UserRole.seniorAgent, UserRole.regionalManager],
+      ),
 
       // Deep-linking routes (accessible from within containers)
       '/policies': _protectedRoute(
@@ -169,16 +179,20 @@ class NavigationRouter {
         requiredPermissions: ['policies.create'],
       ),
       '/whatsapp-integration': _protectedRoute(
-        (context) => const CustomerNavigationContainer(),
+        (context) => const WhatsappIntegrationScreen(),
+        requiredRoles: [UserRole.policyholder, UserRole.juniorAgent, UserRole.seniorAgent],
       ),
       '/smart-chatbot': _protectedRoute(
         (context) => const ChatbotPage(),
+        requiredRoles: [UserRole.policyholder, UserRole.juniorAgent, UserRole.seniorAgent],
       ),
       '/notifications': _protectedRoute(
         (context) => const NotificationPage(),
+        requiredRoles: [UserRole.policyholder, UserRole.juniorAgent, UserRole.seniorAgent],
       ),
       '/learning-center': _protectedRoute(
-        (context) => const CustomerNavigationContainer(),
+        (context) => const LearningCenterScreen(),
+        requiredRoles: [UserRole.policyholder, UserRole.juniorAgent, UserRole.seniorAgent],
       ),
       '/agent-profile': _protectedRoute(
         (context) => const CustomerNavigationContainer(), // Redirect to appropriate container

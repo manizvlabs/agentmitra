@@ -46,7 +46,9 @@ class _FileNewClaimScreenState extends State<FileNewClaimScreen> {
 
   Future<void> _loadUserPolicies() async {
     try {
-      final response = await ApiService.get('/api/v1/policies/user/${AuthService().currentUser?.id}');
+      final response = await ApiService.get('/api/v1/policies/', queryParameters: {
+        'policyholder_id': AuthService().currentUser?.id,
+      });
       setState(() {
         _policies = List<Map<String, dynamic>>.from(response['data'] ?? []);
       });

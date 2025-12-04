@@ -6,6 +6,7 @@ import '../screens/whatsapp_integration_screen.dart';
 import '../screens/learning_center_screen.dart';
 import '../features/agent/presentation/pages/agent_profile_page.dart';
 import '../core/services/navigation_service.dart';
+import 'package:go_router/go_router.dart';
 
 /// Customer Navigation Container
 /// Implements tab-based navigation with 5 bottom tabs as per wireframes:
@@ -59,6 +60,12 @@ class _CustomerNavigationContainerState extends ConsumerState<CustomerNavigation
       _tabTitles[index],
       _tabRoutes[index],
     );
+  }
+
+  // Navigate to specific customer screens via deep linking
+  void _navigateToScreen(String routeName, {Map<String, dynamic>? extra}) {
+    // Use GoRouter for deep linking
+    GoRouter.of(context).goNamed(routeName, extra: extra);
   }
 
   @override
@@ -140,20 +147,90 @@ class CustomerDrawerMenu extends StatelessWidget {
               ),
             ),
           ),
+
+          // Policy Management
+          ListTile(
+            leading: const Icon(Icons.payment),
+            title: const Text('Payments'),
+            onTap: () {
+              Navigator.pop(context);
+              GoRouter.of(context).goNamed('payments');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.report_problem),
+            title: const Text('File New Claim'),
+            onTap: () {
+              Navigator.pop(context);
+              GoRouter.of(context).goNamed('file-new-claim');
+            },
+          ),
+
+          // Communication & Support
+          ListTile(
+            leading: const Icon(Icons.smart_toy),
+            title: const Text('Smart Chatbot'),
+            onTap: () {
+              Navigator.pop(context);
+              GoRouter.of(context).goNamed('smart-chatbot');
+            },
+          ),
+
+          // Data & Status
+          ListTile(
+            leading: const Icon(Icons.hourglass_empty),
+            title: const Text('Data Pending'),
+            onTap: () {
+              Navigator.pop(context);
+              GoRouter.of(context).goNamed('data-pending');
+            },
+          ),
+
+          // Search
+          ListTile(
+            leading: const Icon(Icons.search),
+            title: const Text('Global Search'),
+            onTap: () {
+              Navigator.pop(context);
+              GoRouter.of(context).goNamed('global-search');
+            },
+          ),
+
+          const Divider(),
+
+          // Settings & Preferences
           ListTile(
             leading: const Icon(Icons.settings),
             title: const Text('Settings'),
             onTap: () {
               Navigator.pop(context);
-              // Navigate to settings
+              GoRouter.of(context).goNamed('settings');
             },
           ),
+          ListTile(
+            leading: const Icon(Icons.accessibility),
+            title: const Text('Accessibility'),
+            onTap: () {
+              Navigator.pop(context);
+              GoRouter.of(context).goNamed('accessibility-settings');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.language),
+            title: const Text('Language'),
+            onTap: () {
+              Navigator.pop(context);
+              GoRouter.of(context).goNamed('language-selection');
+            },
+          ),
+
+          // Support & Account
           ListTile(
             leading: const Icon(Icons.help),
             title: const Text('Help & Support'),
             onTap: () {
               Navigator.pop(context);
-              // Navigate to help
+              // Navigate to help - implement when available
             },
           ),
           ListTile(
@@ -161,7 +238,7 @@ class CustomerDrawerMenu extends StatelessWidget {
             title: const Text('Logout'),
             onTap: () {
               Navigator.pop(context);
-              // Handle logout
+              // Handle logout - implement authentication flow
             },
           ),
         ],
