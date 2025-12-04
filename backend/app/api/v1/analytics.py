@@ -714,6 +714,7 @@ async def get_business_intelligence_insights(
 async def get_global_dashboard(
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
+    current_user: UserContext = Depends(require_any_role(["super_admin", "provider_admin", "regional_manager", "senior_agent"])),
     db: Session = Depends(get_db)
 ):
     """Get global dashboard KPIs (all agents)"""
@@ -736,6 +737,7 @@ async def get_top_performing_agents(
     limit: int = Query(10, ge=1, le=50),
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
+    current_user: UserContext = Depends(require_any_role(["super_admin", "provider_admin", "regional_manager", "senior_agent"])),
     db: Session = Depends(get_db)
 ):
     """Get top performing agents by premium collected"""
@@ -776,6 +778,7 @@ async def get_agent_dashboard(
 async def get_revenue_trends_chart(
     agent_id: Optional[str] = None,
     months: int = Query(12, ge=1, le=24),
+    current_user: UserContext = Depends(require_any_role(["super_admin", "provider_admin", "regional_manager", "senior_agent"])),
     db: Session = Depends(get_db)
 ):
     """Get revenue trends chart data"""
@@ -790,6 +793,7 @@ async def get_revenue_trends_chart(
 async def get_policy_trends_chart(
     agent_id: Optional[str] = None,
     months: int = Query(12, ge=1, le=24),
+    current_user: UserContext = Depends(require_any_role(["super_admin", "provider_admin", "regional_manager", "senior_agent"])),
     db: Session = Depends(get_db)
 ):
     """Get policy creation trends chart data"""

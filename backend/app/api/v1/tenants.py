@@ -371,14 +371,20 @@ async def reactivate_tenant(
         )
 
 
+class TenantConfigUpdateRequest(BaseModel):
+    """Request model for updating tenant configuration"""
+    max_users: Optional[int] = None
+    storage_limit_gb: Optional[int] = None
+    api_rate_limit: Optional[int] = None
+
+
 @router.post("/{tenant_id}/config")
 async def update_tenant_config(
     tenant_id: str,
-    config_key: str,
-    config_value: Any,
-    config_type: Optional[str] = 'string',
+    config: TenantConfigUpdateRequest,
     current_user: UserContext = Depends(get_current_user_context),
-    tenant_service: TenantService = Depends(get_tenant_service)
+    tenant_service: TenantService = Depends(get_tenant_service),
+    db: Session = Depends(get_db)
 ):
     """
     Update tenant configuration
@@ -390,7 +396,30 @@ async def update_tenant_config(
         )
 
     try:
-        tenant_service.update_tenant_config(tenant_id, config_key, config_value, config_type)
+        # Get the tenant to update
+        from app.models.shared import Tenant
+        tenant = db.query(Tenant).filter(Tenant.tenant_id == tenant_id).first()
+
+        if not tenant:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Tenant not found"
+            )
+
+        # Update the configuration fields
+        updates = {}
+        if config.max_users is not None:
+            tenant.max_users = config.max_users
+            updates['max_users'] = config.max_users
+        if config.storage_limit_gb is not None:
+            tenant.storage_limit_gb = config.storage_limit_gb
+            updates['storage_limit_gb'] = config.storage_limit_gb
+        if config.api_rate_limit is not None:
+            tenant.api_rate_limit = config.api_rate_limit
+            updates['api_rate_limit'] = config.api_rate_limit
+
+        tenant.updated_at = datetime.utcnow()
+        db.commit()
 
         # Audit the config update
         audit_service = AuditService(tenant_service)
@@ -401,8 +430,7 @@ async def update_tenant_config(
             resource_type='system',
             resource_id=tenant_id,
             details={
-                'config_key': config_key,
-                'config_type': config_type,
+                'updates': updates,
                 'updated_by': current_user.user_id
             },
             ip_address=getattr(current_user, 'ip_address', None)
@@ -410,8 +438,11 @@ async def update_tenant_config(
 
         return {"message": "Tenant configuration updated successfully"}
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to update tenant config {tenant_id}: {e}")
+        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update tenant configuration"

@@ -185,8 +185,8 @@ class RBACService:
             if self.db:
                 result = self.db.execute(text("""
                     SELECT r.role_name
-                    FROM user_roles ur
-                    JOIN roles r ON ur.role_id = r.role_id
+                    FROM lic_schema.user_roles ur
+                    JOIN lic_schema.roles r ON ur.role_id = r.role_id
                     WHERE ur.user_id = :user_id
                 """), {"user_id": user_id})
 

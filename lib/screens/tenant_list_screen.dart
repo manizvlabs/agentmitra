@@ -175,25 +175,44 @@ class _TenantListScreenState extends State<TenantListScreen> {
       builder: (context) => AlertDialog(
         title: Text('Configure ${tenant['tenant_name']}'),
         content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: maxUsersController,
-                decoration: const InputDecoration(labelText: 'Max Users'),
-                keyboardType: TextInputType.number,
-              ),
-              TextFormField(
-                controller: storageController,
-                decoration: const InputDecoration(labelText: 'Storage Limit (GB)'),
-                keyboardType: TextInputType.number,
-              ),
-              TextFormField(
-                controller: apiRateController,
-                decoration: const InputDecoration(labelText: 'API Rate Limit'),
-                keyboardType: TextInputType.number,
-              ),
-            ],
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 400, maxWidth: 600),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: maxUsersController,
+                  decoration: const InputDecoration(
+                    labelText: 'Max Users',
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: storageController,
+                  decoration: const InputDecoration(
+                    labelText: 'Storage Limit (GB)',
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: apiRateController,
+                  decoration: const InputDecoration(
+                    labelText: 'API Rate Limit',
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
         ),
         actions: [

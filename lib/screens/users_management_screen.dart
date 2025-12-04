@@ -64,7 +64,20 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       final response = await ApiService.get('/api/v1/rbac/roles');
       // API returns direct array of roles, not wrapped in 'data' key
       final roleList = response as List<dynamic>? ?? [];
-      setState(() => _roles = List<Map<String, dynamic>>.from(roleList));
+
+      // Remove duplicates based on role_name
+      final seenRoleNames = <String>{};
+      final uniqueRoles = <Map<String, dynamic>>[];
+
+      for (final role in roleList) {
+        final roleName = role['role_name'] as String?;
+        if (roleName != null && !seenRoleNames.contains(roleName)) {
+          seenRoleNames.add(roleName);
+          uniqueRoles.add(role as Map<String, dynamic>);
+        }
+      }
+
+      setState(() => _roles = uniqueRoles);
     } catch (e) {
       print('Failed to load roles: $e');
       if (mounted) {
@@ -148,10 +161,11 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
   }
 
   void _showRoleManagementDialog(Map<String, dynamic> user) {
+    final displayName = user['display_name'] ?? user['email'] ?? user['phone_number'] ?? 'Unknown User';
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Manage Roles: ${user['display_name']}'),
+        title: Text('Manage Roles: $displayName'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
