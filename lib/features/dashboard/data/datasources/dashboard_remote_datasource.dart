@@ -90,13 +90,8 @@ class DashboardRemoteDataSource {
 
   /// Refresh dashboard cache
   Future<void> refreshDashboardCache(String agentId) async {
-    try {
-      await ApiService.post(
-        // Cache refresh endpoint not in project plan - removing
-        {},
-      );
-    } catch (e) {
-      throw Exception('Failed to refresh dashboard cache: $e');
-    }
+    // Cache refresh endpoint not implemented - removing API call
+    // TODO: Implement cache refresh when endpoint is available
+    return;
   }
 }

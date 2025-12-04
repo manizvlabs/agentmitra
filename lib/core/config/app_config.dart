@@ -225,8 +225,14 @@ class AppConfig {
     _firebaseMessagingSenderId = dotenv.get('FIREBASE_MESSAGING_SENDER_ID', fallback: 'your_firebase_sender_id');
 
     // Pioneer Feature Flags
-    // For web builds, force Pioneer to be enabled and use nginx proxy configuration
-    if (kIsWeb) {
+    // For development, make Pioneer optional to allow testing without external services
+    if (kIsWeb && _debug) {
+      // In debug web mode, make Pioneer optional for easier development
+      _pioneerEnabled = dotenv.get('PIONEER_ENABLED', fallback: 'false') == 'true';
+      _pioneerUrl = 'http://localhost/pioneer';
+      _pioneerApiKey = 'test-sdk-key-12345';
+      _pioneerScoutUrl = 'http://localhost/pioneer';
+    } else if (kIsWeb) {
       _pioneerEnabled = true;
       _pioneerUrl = 'http://localhost/pioneer';
       _pioneerApiKey = 'test-sdk-key-12345';

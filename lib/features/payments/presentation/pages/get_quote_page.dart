@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/services/api_service.dart';
+import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 
 class GetQuotePage extends StatefulWidget {
   const GetQuotePage({super.key});
@@ -511,7 +513,7 @@ class _GetQuotePageState extends State<GetQuotePage> {
             'customer_email': _emailController.text,
             'product_type': _selectedProduct,
             'agent_id': _selectedAgent,
-            'user_id': AuthService().currentUser?.id,
+            'user_id': Provider.of<AuthViewModel>(context, listen: false).currentUser?.id,
           }
         });
       } catch (e) {

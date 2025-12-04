@@ -75,8 +75,8 @@ void main() async {
     }
   } catch (e) {
     print('Pioneer initialization failed: $e');
-    print('App cannot start without Pioneer service. Please ensure Pioneer is running.');
-    throw e; // Re-throw to prevent app startup
+    print('Continuing with default feature flags - some features may be limited');
+    // Don't throw - allow app to continue with default flags
   }
 
   runApp(

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import './connectivity_service.dart';
 import 'logger_service.dart';
 import 'api_service.dart';
+import 'auth_service.dart';
 
 /// Service for handling data synchronization between local and remote sources
 class SyncService {
