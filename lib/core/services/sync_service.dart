@@ -108,7 +108,7 @@ class SyncService {
   Future<SyncOperationResult> _syncUserData(DateTime? lastSync) async {
     try {
       // Sync user profile, preferences, etc.
-      final response = await ApiService.get('/api/v1/users/profile');
+      final response = await ApiService.get('/api/v1/users/me');
 
       // Apply server changes locally
       await _applyUserDataChanges(response['data']);
@@ -127,7 +127,7 @@ class SyncService {
   Future<SyncOperationResult> _syncAgentData(DateTime? lastSync) async {
     try {
       // Sync agent-specific data
-      final response = await ApiService.get('/api/v1/agents/me');
+      final response = await ApiService.get('/api/v1/agents/profile');
 
       await _applyAgentDataChanges(response['data']);
 
@@ -144,7 +144,7 @@ class SyncService {
   /// Sync presentation data
   Future<SyncOperationResult> _syncPresentationData(DateTime? lastSync) async {
     try {
-      final response = await ApiService.get('/api/v1/presentations/agent/me', queryParameters: {
+      final response = await ApiService.get('/api/v1/presentations/agent/${AuthService().currentUser?.id}', queryParameters: {
         'since': lastSync?.toIso8601String(),
       });
 

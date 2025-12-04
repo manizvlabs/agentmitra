@@ -172,7 +172,7 @@ class ClaimsViewModel extends ChangeNotifier {
         'claimed_amount': _claimedAmount,
       };
 
-      final response = await ApiService.post('/api/v1/policies/$_policyId/claims', claimData);
+      final response = await ApiService.post('/api/v1/claims', claimData);
       
       final data = response is Map ? response : (response['data'] ?? response);
       final claim = Claim.fromJson(data);

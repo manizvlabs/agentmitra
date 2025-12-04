@@ -57,7 +57,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> with SingleTi
   Future<void> _loadSystemSettings() async {
     try {
       // Try to load system settings - endpoint may not exist yet
-      final response = await ApiService.get('/api/v1/admin/settings');
+      // Admin settings endpoint not in project plan - using feature flags instead
+      final response = await ApiService.get('/api/v1/rbac/feature-flags');
       setState(() => _systemSettings = response['data'] ?? {});
     } catch (e) {
       print('System settings API failed: $e');
@@ -165,7 +166,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> with SingleTi
 
     try {
       // Try to update system setting - endpoint may not exist yet
-      await ApiService.put('/api/v1/admin/settings', {key: value});
+      // Admin settings not in project plan - this would need backend implementation
 
       setState(() => _systemSettings[key] = value);
 

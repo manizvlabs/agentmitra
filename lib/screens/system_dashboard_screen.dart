@@ -60,7 +60,7 @@ class _SystemDashboardScreenState extends State<SystemDashboardScreen> {
 
   Future<void> _loadSystemHealth() async {
     try {
-      final response = await ApiService.get('/api/v1/health/system');
+      final response = await ApiService.get('/api/v1/dashboard/system-overview');
       setState(() => _systemHealth = response ?? {});
     } catch (e) {
       print('System health API failed: $e');
@@ -69,7 +69,8 @@ class _SystemDashboardScreenState extends State<SystemDashboardScreen> {
 
   Future<void> _loadDatabaseHealth() async {
     try {
-      final response = await ApiService.get('/api/v1/health/database');
+      // Database health not in project plan - using system overview instead
+      final response = await ApiService.get('/api/v1/dashboard/system-overview');
       setState(() => _databaseHealth = response ?? {});
     } catch (e) {
       print('Database health API failed: $e');
@@ -78,7 +79,8 @@ class _SystemDashboardScreenState extends State<SystemDashboardScreen> {
 
   Future<void> _loadMetrics() async {
     try {
-      final response = await ApiService.get('/api/v1/metrics');
+      // General metrics not in project plan - using analytics dashboard instead
+      final response = await ApiService.get('/api/v1/analytics/dashboard/overview');
       setState(() => _metrics = {'raw': response ?? ''});
     } catch (e) {
       print('Metrics API failed: $e');

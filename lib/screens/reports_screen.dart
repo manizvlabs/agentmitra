@@ -530,7 +530,7 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
         if (AuthService().currentUser?.id != null) 'agent_id': AuthService().currentUser!.id,
       };
 
-      final response = await ApiService.get('/api/v1/analytics/export/$dataType', queryParameters: queryParams);
+      final response = await ApiService.get('/api/v1/analytics/reports/summary', queryParameters: queryParams);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

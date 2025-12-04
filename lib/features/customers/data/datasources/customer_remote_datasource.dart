@@ -47,7 +47,7 @@ class CustomerRemoteDataSourceImpl implements CustomerRemoteDataSource {
   @override
   Future<Customer> getCustomerById(String customerId) async {
     try {
-      final response = await ApiService.get('/api/v1/users/$customerId');
+      final response = await ApiService.get('/api/v1/users/', queryParameters: {'id': customerId});
       return Customer.fromJson(response);
     } catch (e) {
       throw Exception('Failed to fetch customer: $e');

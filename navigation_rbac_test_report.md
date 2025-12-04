@@ -1,5 +1,5 @@
 # API Endpoint Testing Report
-**Test Date:** 2025-12-04 09:49:52
+**Test Date:** 2025-12-04 10:02:56
 **API Base URL:** http://localhost/api/v1
 
 ## Summary
@@ -166,7 +166,7 @@
 | /dashboard/system-overview | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | /health/system | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | /health/database | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| /metrics | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| /metrics | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | /tenants/ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | /rbac/feature-flags | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | /notifications/settings | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -180,7 +180,7 @@
 | /dashboard/analytics | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | /dashboard/home | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | /dashboard/presentations/carousel | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| /dashboard/feature-tiles | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
+| /dashboard/feature-tiles | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ |
 | /agents/profile | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ |
 | /agents/performance/metrics | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | /policies/ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |

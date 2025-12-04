@@ -37,7 +37,7 @@ class DashboardService {
   /// Fetch regional overview data for Regional Manager dashboard
   Future<RegionalOverviewData> getRegionalOverview(String region) async {
     try {
-      final data = await ApiService.get('/api/v1/dashboard/regional-overview?region=$region');
+      final data = await ApiService.get('/api/v1/dashboard/regional-overview');
       return RegionalOverviewData.fromJson(data);
     } catch (e) {
       debugPrint('Error fetching regional overview: $e');

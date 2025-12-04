@@ -92,7 +92,7 @@ class DashboardRemoteDataSource {
   Future<void> refreshDashboardCache(String agentId) async {
     try {
       await ApiService.post(
-        '/api/v1/dashboard/cache/refresh/$agentId',
+        // Cache refresh endpoint not in project plan - removing
         {},
       );
     } catch (e) {

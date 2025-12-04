@@ -85,7 +85,7 @@ class NotificationRemoteDataSource {
   Future<bool> updateNotificationSettings(NotificationSettings settings) async {
     try {
       final settingsJson = settings.toJson();
-      await ApiService.put('/api/v1/users/notification-settings', settingsJson);
+      await ApiService.put('/api/v1/notifications/settings', settingsJson);
       _logger.info('Updated notification settings');
       return true;
     } catch (e, stackTrace) {
@@ -97,7 +97,7 @@ class NotificationRemoteDataSource {
   /// Get notification settings
   Future<NotificationSettings?> getNotificationSettings() async {
     try {
-      final response = await ApiService.get('/api/v1/users/notification-settings');
+      final response = await ApiService.get('/api/v1/notifications/settings');
       final settings = NotificationSettings.fromJson(response['data']);
       _logger.info('Fetched notification settings');
       return settings;
@@ -110,7 +110,7 @@ class NotificationRemoteDataSource {
   /// Register device token
   Future<bool> registerDeviceToken(String token, String deviceType) async {
     try {
-      await ApiService.post('/api/v1/users/device-token', {
+      await ApiService.post('/api/v1/notifications/device-token', {
         'token': token,
         'device_type': deviceType,
       });

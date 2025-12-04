@@ -26,8 +26,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     try {
       // Load user settings
-      final settingsResponse = await ApiService.get('/api/v1/users/settings');
-      final profileResponse = await ApiService.get('/api/v1/users/profile');
+      final settingsResponse = await ApiService.get('/api/v1/users/me');
+      final profileResponse = await ApiService.get('/api/v1/users/me');
 
       setState(() {
         _settings = settingsResponse['data'] ?? {};
@@ -48,7 +48,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _updateSetting(String key, dynamic value) async {
     try {
-      await ApiService.put('/api/v1/users/settings', {
+      await ApiService.put('/api/v1/users/me', {
         key: value,
       });
 
@@ -410,7 +410,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ElevatedButton(
             onPressed: () async {
               try {
-                await ApiService.put('/api/v1/users/profile', {
+                await ApiService.put('/api/v1/users/me', {
                   'name': nameController.text,
                   'email': emailController.text,
                   'phone': phoneController.text,
@@ -487,7 +487,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               }
 
               try {
-                await ApiService.put('/api/v1/users/change-password', {
+                await ApiService.put('/api/v1/auth/change-password', {
                   'current_password': currentPasswordController.text,
                   'new_password': newPasswordController.text,
                 });

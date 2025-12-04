@@ -471,7 +471,7 @@ class _ReportsPageState extends State<ReportsPage> {
               try {
                 // Call API to generate PDF report
                 final response = await ApiService.get(
-                  '/api/v1/reports/export',
+                  '/api/v1/analytics/reports/summary',
                   queryParameters: {
                     'type': _selectedReportType.toLowerCase().replaceAll(' ', '_'),
                     'format': 'pdf',
@@ -496,7 +496,7 @@ class _ReportsPageState extends State<ReportsPage> {
               try {
                 // Call API to generate Excel report
                 final response = await ApiService.get(
-                  '/api/v1/reports/export',
+                  '/api/v1/analytics/reports/summary',
                   queryParameters: {
                     'type': _selectedReportType.toLowerCase().replaceAll(' ', '_'),
                     'format': 'excel',

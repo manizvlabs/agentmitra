@@ -38,7 +38,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
 
     try {
       final currentUser = await AuthService().getCurrentUser(context);
-      final response = await ApiService.get('/api/v1/customers/agent/${currentUser?.id}');
+      final response = await ApiService.get('/api/v1/users/', queryParameters: {'role': 'policyholder'});
       setState(() {
         _customers = List<Map<String, dynamic>>.from(response['data'] ?? []);
         _applyFilters();

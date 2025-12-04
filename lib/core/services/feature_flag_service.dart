@@ -197,7 +197,7 @@ class FeatureFlagService {
       if (effectiveUserId != null) {
         try {
           final response = await ApiService.get(
-            '/api/v1/feature-flags/user/$effectiveUserId',
+            '/api/v1/feature-flags/user/${AuthService().currentUser?.id}',
             queryParameters: {
               if (tenantId != null) 'tenant_id': tenantId,
             },
