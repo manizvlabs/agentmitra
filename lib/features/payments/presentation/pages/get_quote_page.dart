@@ -495,14 +495,37 @@ class _GetQuotePageState extends State<GetQuotePage> {
       debugPrint('📤 GetQuotePage - Submitting quote request: $quoteRequest');
 
       // Make API call to create quote request
-      final response = await ApiService.post('/api/v1/quotes/', quoteRequest);
-
-      debugPrint('📤 GetQuotePage - Quote request submitted successfully: $response');
+      // Quotes cannot be obtained through AgentMitra - direct to insurance provider
+      // Send notification to agent about quote request
+      try {
+        await ApiService.post('/api/v1/notifications/', {
+          'title': 'Quote Request Attempt',
+          'message': '${_nameController.text} is requesting a quote for ${_selectedProduct ?? 'insurance product'} through AgentMitra. Please assist them directly through LIC portal.',
+          'type': 'quote_assistance',
+          'recipient_type': 'agent',
+          'priority': 'high',
+          'metadata': {
+            'customer_name': _nameController.text,
+            'customer_age': _ageController.text,
+            'customer_phone': _phoneController.text,
+            'customer_email': _emailController.text,
+            'product_type': _selectedProduct,
+            'agent_id': _selectedAgent,
+            'user_id': AuthService().currentUser?.id,
+          }
+        });
+      } catch (e) {
+        // Notification sending failed, but continue with info screen
+        debugPrint('Failed to notify agent: $e');
+      }
 
       if (!mounted) {
-        debugPrint('📤 GetQuotePage - Widget not mounted after API call');
+        debugPrint('📤 GetQuotePage - Widget not mounted after notification');
         return;
       }
+
+      // Show quote info screen instead of success message
+      _showQuoteInfoScreen();
 
     } catch (e) {
       debugPrint('📤 GetQuotePage - API call failed: $e');
@@ -553,6 +576,64 @@ class _GetQuotePageState extends State<GetQuotePage> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showQuoteInfoScreen() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Insurance Quote Information'),
+          content: const SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Insurance quotes cannot be obtained through the AgentMitra app at this time.',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'To get an insurance quote from LIC, please visit the official LIC website or contact your nearest LIC branch office.',
+                  style: TextStyle(height: 1.4),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '📍 LIC Official Website:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'www.licindia.in',
+                  style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                ),
+                SizedBox(height: 12),
+                Text(
+                  '📞 LIC Customer Care:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text('1800-XXX-XXXX'),
+                SizedBox(height: 16),
+                Text(
+                  'Your insurance agent has been notified and will assist you with getting a personalized quote.',
+                  style: TextStyle(fontStyle: FontStyle.italic),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+                Navigator.of(context).pop(); // Close screen
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

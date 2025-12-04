@@ -285,3 +285,76 @@ async def logout(
     # For JWT-based auth, logout is mainly client-side
     # In a more advanced setup, you could blacklist tokens here
     return {"message": "Successfully logged out", "success": True}
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+    confirm_password: str
+
+
+@router.put("/change-password", response_model=dict)
+async def change_password(
+    password_data: ChangePasswordRequest,
+    current_user: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Change user password
+
+    Validates current password and updates to new password
+    """
+    try:
+        # Validate passwords match
+        if password_data.new_password != password_data.confirm_password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="New password and confirmation do not match"
+            )
+
+        # Get user from database
+        user_repo = UserRepository(db)
+        user = user_repo.get_by_id(current_user.user_id)
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        # Verify current password
+        if not verify_password(password_data.current_password, user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Current password is incorrect"
+            )
+
+        # Hash new password
+        new_hashed_password = get_password_hash(password_data.new_password)
+
+        # Update user password
+        user_repo.update_password(current_user.user_id, new_hashed_password)
+
+        # Log the password change
+        await AuditLogger.log_event(
+            db=db,
+            user_id=current_user.user_id,
+            action="password_changed",
+            resource_type="user",
+            resource_id=current_user.user_id,
+            details={"message": "Password changed by user"},
+            severity="info"
+        )
+
+        logger.info(f"Password changed successfully for user {current_user.user_id}")
+
+        return {"message": "Password changed successfully", "success": True}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error changing password for user {current_user.user_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to change password. Please try again later."
+        )

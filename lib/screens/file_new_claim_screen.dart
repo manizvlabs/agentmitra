@@ -325,17 +325,30 @@ class _FileNewClaimScreenState extends State<FileNewClaimScreen> {
         'supporting_documents': _supportingDocuments.map((file) => file.path.split('/').last).toList(),
       };
 
-      // Submit claim
-      final response = await ApiService.post('/api/v1/claims', claimData);
+      // Claims cannot be processed through AgentMitra - direct to insurance provider
+      // Send notification to agent about claim attempt
+      try {
+        await ApiService.post('/api/v1/notifications/', {
+          'title': 'Claim Filing Attempt',
+          'message': '${AuthService().currentUser?.name ?? 'Policyholder'} is trying to file a claim for policy $_selectedPolicyId through AgentMitra. Please assist them directly through LIC portal.',
+          'type': 'claim_assistance',
+          'recipient_type': 'agent',
+          'priority': 'high',
+          'metadata': {
+            'policy_id': _selectedPolicyId,
+            'user_id': AuthService().currentUser?.id,
+            'claim_type': _claimType,
+            'description': _description,
+          }
+        });
+      } catch (e) {
+        // Notification sending failed, but continue with info screen
+        print('Failed to notify agent: $e');
+      }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Claim submitted successfully! You will receive a confirmation soon.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.of(context).pop();
+        // Show info screen instead of success message
+        _showClaimInfoScreen();
       }
     } catch (e) {
       if (mounted) {
@@ -348,5 +361,63 @@ class _FileNewClaimScreenState extends State<FileNewClaimScreen> {
         setState(() => _isSubmitting = false);
       }
     }
+  }
+
+  void _showClaimInfoScreen() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Claim Filing Information'),
+          content: const SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Claims cannot be filed through the AgentMitra app at this time.',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'To file a claim for your LIC insurance policy, please visit the official LIC website or contact your nearest LIC branch office.',
+                  style: TextStyle(height: 1.4),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '📍 LIC Official Website:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'www.licindia.in',
+                  style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                ),
+                SizedBox(height: 12),
+                Text(
+                  '📞 LIC Customer Care:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text('1800-XXX-XXXX'),
+                SizedBox(height: 16),
+                Text(
+                  'Your agent has been notified and will assist you with the claim process.',
+                  style: TextStyle(fontStyle: FontStyle.italic),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+                Navigator.of(context).pop(); // Close screen
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
