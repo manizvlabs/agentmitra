@@ -35,54 +35,22 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       if (_selectedStatusFilter.isNotEmpty) queryParams['status'] = _selectedStatusFilter;
 
       final response = await ApiService.get('/api/v1/users/', queryParameters: queryParams);
-      setState(() => _users = List<Map<String, dynamic>>.from(response['data'] ?? []));
+      // API returns direct array of users, not wrapped in 'data' key
+      final userList = response as List<dynamic>? ?? [];
+      setState(() => _users = List<Map<String, dynamic>>.from(userList));
     } catch (e) {
       print('Failed to load users: $e');
-      // Load mock data for demonstration
-      setState(() => _users = [
-        {
-          'user_id': 'usr_001',
-          'email': 'john.doe@example.com',
-          'phone_number': '+91-9876543210',
-          'first_name': 'John',
-          'last_name': 'Doe',
-          'display_name': 'John Doe',
-          'role': 'policyholder',
-          'status': 'active',
-          'phone_verified': true,
-          'email_verified': true,
-          'last_login_at': '2025-12-02T10:30:00Z',
-          'created_at': '2025-11-01T09:00:00Z'
-        },
-        {
-          'user_id': 'usr_002',
-          'email': 'jane.smith@example.com',
-          'phone_number': '+91-8765432109',
-          'first_name': 'Jane',
-          'last_name': 'Smith',
-          'display_name': 'Jane Smith',
-          'role': 'senior_agent',
-          'status': 'active',
-          'phone_verified': true,
-          'email_verified': true,
-          'last_login_at': '2025-12-03T14:20:00Z',
-          'created_at': '2025-10-15T11:30:00Z'
-        },
-        {
-          'user_id': 'usr_003',
-          'email': 'admin@agentmitra.com',
-          'phone_number': '+91-7654321098',
-          'first_name': 'Admin',
-          'last_name': 'User',
-          'display_name': 'Admin User',
-          'role': 'super_admin',
-          'status': 'active',
-          'phone_verified': true,
-          'email_verified': true,
-          'last_login_at': '2025-12-03T16:45:00Z',
-          'created_at': '2025-09-01T08:00:00Z'
-        }
-      ]);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Failed to load users. Please check your connection and try again.'),
+            action: SnackBarAction(
+              label: 'Retry',
+              onPressed: _loadUsers,
+            ),
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -94,47 +62,22 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
     try {
       // Use GET /api/v1/rbac/roles endpoint
       final response = await ApiService.get('/api/v1/rbac/roles');
-      setState(() => _roles = List<Map<String, dynamic>>.from(response['data'] ?? []));
+      // API returns direct array of roles, not wrapped in 'data' key
+      final roleList = response as List<dynamic>? ?? [];
+      setState(() => _roles = List<Map<String, dynamic>>.from(roleList));
     } catch (e) {
       print('Failed to load roles: $e');
-      // Load mock roles for demonstration
-      setState(() => _roles = [
-        {
-          'role_id': 'role_001',
-          'role_name': 'super_admin',
-          'role_description': 'Super Administrator with full system access',
-          'is_system_role': true,
-          'permissions': ['system.admin', 'users.manage', 'tenants.manage']
-        },
-        {
-          'role_id': 'role_002',
-          'role_name': 'provider_admin',
-          'role_description': 'Insurance Provider Administrator',
-          'is_system_role': true,
-          'permissions': ['users.manage', 'policies.manage']
-        },
-        {
-          'role_id': 'role_003',
-          'role_name': 'senior_agent',
-          'role_description': 'Senior Insurance Agent',
-          'is_system_role': true,
-          'permissions': ['customers.manage', 'policies.create']
-        },
-        {
-          'role_id': 'role_004',
-          'role_name': 'junior_agent',
-          'role_description': 'Junior Insurance Agent',
-          'is_system_role': true,
-          'permissions': ['customers.view', 'policies.view']
-        },
-        {
-          'role_id': 'role_005',
-          'role_name': 'policyholder',
-          'role_description': 'Insurance Policyholder',
-          'is_system_role': true,
-          'permissions': ['policies.view', 'payments.make']
-        }
-      ]);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Failed to load roles. Please check your connection and try again.'),
+            action: SnackBarAction(
+              label: 'Retry',
+              onPressed: _loadRoles,
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -158,11 +101,9 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       }
     } catch (e) {
       print('Failed to assign role: $e');
-      // Simulate success for demo
-      await _loadUsers();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Role $roleName assigned successfully (simulated)')),
+          SnackBar(content: const Text('Failed to assign role. Please try again.')),
         );
       }
     } finally {

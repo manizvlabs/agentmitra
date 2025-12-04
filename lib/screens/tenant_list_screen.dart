@@ -27,40 +27,21 @@ class _TenantListScreenState extends State<TenantListScreen> {
     try {
       // Use the verified GET /api/v1/tenants/ endpoint from project plan
       final response = await ApiService.get('/api/v1/tenants/');
-      setState(() => _tenants = List<Map<String, dynamic>>.from(response['data'] ?? []));
+      // API returns direct array of tenants, not wrapped in 'data' key
+      final tenantList = response as List<dynamic>? ?? [];
+      setState(() => _tenants = List<Map<String, dynamic>>.from(tenantList));
     } catch (e) {
-      // For testing purposes, show mock data when API fails due to authentication
-      print('API call failed ($e), using mock tenant data for testing');
-      setState(() => _tenants = [
-        {
-          'tenant_id': 'bf0b6627-c595-4fd8-93c2-cb0e9cdc86bc',
-          'tenant_code': 'LIC',
-          'tenant_name': 'Life Insurance Corporation of India',
-          'status': 'active',
-          'tenant_type': 'insurance_provider',
-          'subscription_plan': 'enterprise',
-          'max_users': 1000,
-          'storage_limit_gb': 100,
-          'api_rate_limit': 5000,
-          'created_at': '2025-11-21T13:00:53.717908Z'
-        },
-        {
-          'tenant_id': '00000000-0000-0000-0000-000000000000',
-          'tenant_code': 'DEFAULT',
-          'tenant_name': 'Default Tenant',
-          'status': 'active',
-          'tenant_type': 'independent_agent',
-          'subscription_plan': 'trial',
-          'max_users': 100,
-          'storage_limit_gb': 5,
-          'api_rate_limit': 1000,
-          'created_at': '2025-11-28T22:05:11.329831Z'
-        }
-      ]);
-
+      // Production-grade code: Show proper error instead of mock data
+      print('Failed to load tenants: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Showing mock tenant data (authentication pending)')),
+          SnackBar(
+            content: const Text('Failed to load tenants. Please check your authentication and try again.'),
+            action: SnackBarAction(
+              label: 'Retry',
+              onPressed: _loadTenants,
+            ),
+          ),
         );
       }
     } finally {
@@ -82,25 +63,17 @@ class _TenantListScreenState extends State<TenantListScreen> {
       });
     } catch (e) {
       print('Failed to load tenant details: $e');
-      // Show mock detailed data for the selected tenant
-      final tenant = _tenants.firstWhere((t) => t['tenant_id'] == tenantId);
-      setState(() {
-        _selectedTenantDetails = {
-          ...tenant,
-          'contact_email': 'admin@${tenant['tenant_code'].toLowerCase()}.com',
-          'contact_phone': '+91-9876543210',
-          'business_address': {
-            'street': '123 Business Street',
-            'city': 'Mumbai',
-            'state': 'Maharashtra',
-            'pincode': '400001'
-          },
-          'compliance_status': {'kyc': 'verified', 'aml': 'verified'},
-          'regulatory_approvals': ['IRDAI', 'RBI'],
-          'metadata': {'industry': 'Insurance', 'region': 'India'}
-        };
-        _showTenantDetails = true;
-      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Failed to load tenant details. Please try again.'),
+            action: SnackBarAction(
+              label: 'Retry',
+              onPressed: () => _loadTenantDetails(tenantId),
+            ),
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -136,20 +109,15 @@ class _TenantListScreenState extends State<TenantListScreen> {
       }
     } catch (e) {
       print('Failed to toggle tenant status: $e');
-      // Simulate success for demo
-      setState(() {
-        final tenantIndex = _tenants.indexWhere((t) => t['tenant_id'] == tenantId);
-        if (tenantIndex != -1) {
-          _tenants[tenantIndex]['status'] = newStatus;
-        }
-        if (_selectedTenantDetails != null && _selectedTenantDetails!['tenant_id'] == tenantId) {
-          _selectedTenantDetails!['status'] = newStatus;
-        }
-      });
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Tenant ${newStatus == 'active' ? 'activated' : 'deactivated'} successfully (simulated)')),
+          SnackBar(
+            content: const Text('Failed to update tenant status. Please try again.'),
+            action: SnackBarAction(
+              label: 'Retry',
+              onPressed: () => _toggleTenantStatus(tenantId, currentStatus == 'active' ? 'inactive' : 'active'),
+            ),
+          ),
         );
       }
     } finally {
@@ -184,20 +152,9 @@ class _TenantListScreenState extends State<TenantListScreen> {
       }
     } catch (e) {
       print('Failed to update tenant config: $e');
-      // Simulate success for demo
-      setState(() {
-        final tenantIndex = _tenants.indexWhere((t) => t['tenant_id'] == tenantId);
-        if (tenantIndex != -1) {
-          _tenants[tenantIndex].addAll(config);
-        }
-        if (_selectedTenantDetails != null && _selectedTenantDetails!['tenant_id'] == tenantId) {
-          _selectedTenantDetails!.addAll(config);
-        }
-      });
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tenant configuration updated successfully (simulated)')),
+          const SnackBar(content: Text('Failed to update tenant configuration. Please try again.')),
         );
       }
     } finally {

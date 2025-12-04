@@ -14,41 +14,6 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
   String _searchQuery = '';
   List<Map<String, dynamic>> _searchResults = [];
 
-  // Mock search data
-  final List<Map<String, dynamic>> _mockData = [
-    {
-      'type': 'policy',
-      'title': 'LIC Jeevan Anand Policy',
-      'subtitle': 'Policy No: LA123456789',
-      'client': 'Amit Kumar',
-      'status': 'Active',
-      'route': '/policy-details',
-    },
-    {
-      'type': 'client',
-      'title': 'Amit Kumar',
-      'subtitle': '+91 9876543210',
-      'client': 'Amit Kumar',
-      'status': 'Active Client',
-      'route': '/customers',
-    },
-    {
-      'type': 'policy',
-      'title': 'LIC Term Insurance',
-      'subtitle': 'Policy No: LT987654321',
-      'client': 'Priya Sharma',
-      'status': 'Active',
-      'route': '/policy-details',
-    },
-    {
-      'type': 'document',
-      'title': 'KYC Documents',
-      'subtitle': 'Amit Kumar - Submitted',
-      'client': 'Amit Kumar',
-      'status': 'Verified',
-      'route': '/document-upload',
-    },
-  ];
 
   @override
   void initState() {
@@ -75,15 +40,12 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
       return;
     }
 
-    _searchResults = _mockData.where((item) {
-      final title = item['title'].toString().toLowerCase();
-      final subtitle = item['subtitle'].toString().toLowerCase();
-      final client = item['client'].toString().toLowerCase();
-
-      return title.contains(_searchQuery) ||
-             subtitle.contains(_searchQuery) ||
-             client.contains(_searchQuery);
-    }).toList();
+    // TODO: Implement real search API
+    // For now, show empty results with a message that search needs backend integration
+    _searchResults = [];
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Search functionality requires backend API integration')),
+    );
   }
 
   @override

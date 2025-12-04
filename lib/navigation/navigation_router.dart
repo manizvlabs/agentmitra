@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart' as provider;
 import '../core/services/rbac_service.dart';
 import '../core/widgets/protected_route.dart';
 import '../shared/theme/app_theme.dart';
+import '../features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import 'customer_navigation.dart';
 import 'agent_navigation.dart';
 import 'admin_navigation.dart';
@@ -53,30 +55,53 @@ class NavigationRouter {
 
   /// Get initial route based on user authentication and role
   String getInitialRoute(BuildContext context) {
-    // For testing admin portal - force admin route
-    return '/admin-portal';
+    try {
+      final authViewModel = provider.Provider.of<AuthViewModel>(context, listen: false);
+      final rbacService = context.read<RbacService>();
+
+      // Check if user is authenticated
+      if (!authViewModel.isAuthenticated) {
+        return '/welcome';
+      }
+
+      // Get user's primary role
+      final userRole = rbacService.getCurrentUserRole();
+      if (userRole == null) {
+        return '/welcome'; // Fallback if no role found
+      }
+
+      // Route based on role
+      return _getRoleBasedRoute(userRole);
+    } catch (e) {
+      debugPrint('Error determining initial route: $e');
+      return '/welcome'; // Safe fallback
+    }
   }
 
-  // Get role-based route for navigation container
-  // TODO: Re-enable after authentication flow is properly implemented
-  // String _getRoleBasedRoute(UserRole role) {
-  //   switch (role) {
-  //     case UserRole.policyholder:
-  //     case UserRole.regionalManager: // Can access customer portal
-  //       return '/customer-portal';
-  //
-  //     case UserRole.juniorAgent:
-  //     case UserRole.seniorAgent:
-  //       return '/agent-portal';
-  //
-  //     case UserRole.superAdmin:
-  //     case UserRole.providerAdmin:
-  //       return '/admin-portal';
-  //
-  //     default:
-  //       return '/splash'; // Fallback
-  //   }
-  // }
+  /// Get role-based route for navigation container
+  String _getRoleBasedRoute(UserRole role) {
+    switch (role) {
+      case UserRole.policyholder:
+      case UserRole.supportStaff:
+        return '/customer-portal';
+
+      case UserRole.regionalManager:
+        // Regional managers can access both customer and agent features
+        return '/customer-portal';
+
+      case UserRole.juniorAgent:
+      case UserRole.seniorAgent:
+        return '/agent-portal';
+
+      case UserRole.superAdmin:
+      case UserRole.providerAdmin:
+        return '/admin-portal';
+
+      case UserRole.guestUser:
+      default:
+        return '/welcome'; // Fallback for guests or unknown roles
+    }
+  }
 
   /// Generate routes map with role-based navigation containers
   Map<String, WidgetBuilder> generateRoutes(BuildContext context) {

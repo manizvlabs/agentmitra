@@ -37,8 +37,11 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
       ]);
     } catch (e) {
       print('Failed to load analytics data: $e');
-      // Load mock data for demonstration
-      _loadMockData();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load analytics data. Please try again.')),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -49,7 +52,8 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
   Future<void> _loadDashboardOverview() async {
     try {
       final response = await ApiService.get('/api/v1/analytics/dashboard/overview');
-      setState(() => _dashboardOverview = response['data'] ?? {});
+      // API returns direct object, not wrapped in 'data' key
+      setState(() => _dashboardOverview = response as Map<String, dynamic>? ?? {});
     } catch (e) {
       print('Dashboard overview API failed: $e');
     }
@@ -58,7 +62,9 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
   Future<void> _loadTopAgents() async {
     try {
       final response = await ApiService.get('/api/v1/analytics/dashboard/top-agents');
-      setState(() => _topAgents = List<Map<String, dynamic>>.from(response['data'] ?? []));
+      // API returns direct array of agents, not wrapped in 'data' key
+      final agentList = response as List<dynamic>? ?? [];
+      setState(() => _topAgents = List<Map<String, dynamic>>.from(agentList));
     } catch (e) {
       print('Top agents API failed: $e');
     }
@@ -67,7 +73,9 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
   Future<void> _loadRevenueTrends() async {
     try {
       final response = await ApiService.get('/api/v1/analytics/dashboard/charts/revenue-trends');
-      setState(() => _revenueTrends = List<Map<String, dynamic>>.from(response['data'] ?? []));
+      // API returns direct array of revenue data, not wrapped in 'data' key
+      final revenueList = response as List<dynamic>? ?? [];
+      setState(() => _revenueTrends = List<Map<String, dynamic>>.from(revenueList));
     } catch (e) {
       print('Revenue trends API failed: $e');
     }
@@ -76,7 +84,9 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
   Future<void> _loadPolicyTrends() async {
     try {
       final response = await ApiService.get('/api/v1/analytics/dashboard/charts/policy-trends');
-      setState(() => _policyTrends = List<Map<String, dynamic>>.from(response['data'] ?? []));
+      // API returns direct array of policy data, not wrapped in 'data' key
+      final policyList = response as List<dynamic>? ?? [];
+      setState(() => _policyTrends = List<Map<String, dynamic>>.from(policyList));
     } catch (e) {
       print('Policy trends API failed: $e');
     }
@@ -85,192 +95,11 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
   Future<void> _loadComprehensiveAnalytics() async {
     try {
       final response = await ApiService.get('/api/v1/analytics/comprehensive/dashboard');
-      setState(() => _comprehensiveAnalytics = response['data'] ?? {});
+      // API returns direct object, not wrapped in 'data' key
+      setState(() => _comprehensiveAnalytics = response as Map<String, dynamic>? ?? {});
     } catch (e) {
       print('Comprehensive analytics API failed: $e');
     }
-  }
-
-  void _loadMockData() {
-    setState(() {
-      _dashboardOverview = {
-        'totalRevenue': 2500000.0,
-        'totalPolicies': 1250,
-        'activeAgents': 45,
-        'newPoliciesThisMonth': 89,
-        'revenueGrowth': 15.2,
-        'policyGrowth': 8.7,
-        'averagePolicyValue': 2000.0,
-        'conversionRate': 23.4,
-      };
-
-      _topAgents = [
-        {
-          'agentId': 'agent_001',
-          'agentName': 'Rajesh Kumar',
-          'policiesSold': 45,
-          'revenue': 90000.0,
-          'commission': 9000.0,
-          'rank': 1,
-        },
-        {
-          'agentId': 'agent_002',
-          'agentName': 'Priya Sharma',
-          'policiesSold': 38,
-          'revenue': 76000.0,
-          'commission': 7600.0,
-          'rank': 2,
-        },
-        {
-          'agentId': 'agent_003',
-          'agentName': 'Amit Patel',
-          'policiesSold': 32,
-          'revenue': 64000.0,
-          'commission': 6400.0,
-          'rank': 3,
-        },
-        {
-          'agentId': 'agent_004',
-          'agentName': 'Sunita Singh',
-          'policiesSold': 29,
-          'revenue': 58000.0,
-          'commission': 5800.0,
-          'rank': 4,
-        },
-        {
-          'agentId': 'agent_005',
-          'agentName': 'Vikram Rao',
-          'policiesSold': 26,
-          'revenue': 52000.0,
-          'commission': 5200.0,
-          'rank': 5,
-        },
-      ];
-
-      _revenueTrends = [
-        {'month': 'Aug', 'revenue': 180000.0, 'growth': 5.2},
-        {'month': 'Sep', 'revenue': 195000.0, 'growth': 8.3},
-        {'month': 'Oct', 'revenue': 210000.0, 'growth': 7.7},
-        {'month': 'Nov', 'revenue': 225000.0, 'growth': 7.1},
-        {'month': 'Dec', 'revenue': 250000.0, 'growth': 11.1},
-      ];
-
-      _policyTrends = [
-        {'month': 'Aug', 'policies': 95, 'growth': 3.2},
-        {'month': 'Sep', 'policies': 102, 'growth': 7.4},
-        {'month': 'Oct', 'policies': 108, 'growth': 5.9},
-        {'month': 'Nov', 'policies': 115, 'growth': 6.5},
-        {'month': 'Dec', 'policies': 125, 'growth': 8.7},
-      ];
-
-      _comprehensiveAnalytics = {
-        'systemHealth': 96.8,
-        'userEngagement': 78.5,
-        'conversionFunnel': {
-          'awareness': 1000,
-          'interest': 750,
-          'consideration': 500,
-          'purchase': 125,
-        },
-        'geographicDistribution': {
-          'Mumbai': 35,
-          'Delhi': 25,
-          'Bangalore': 20,
-          'Chennai': 12,
-          'Others': 8,
-        },
-        'productPerformance': [
-          {'product': 'Term Life', 'policies': 450, 'revenue': 900000.0},
-          {'product': 'Health Insurance', 'policies': 320, 'revenue': 640000.0},
-          {'product': 'Investment Plans', 'policies': 280, 'revenue': 560000.0},
-          {'product': 'Child Plans', 'policies': 200, 'revenue': 400000.0},
-        ],
-      };
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Analytics Dashboard', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF0083B0), // VyaptIX Blue
-        foregroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
-            onPressed: _loadAnalyticsData,
-          ),
-          IconButton(
-            icon: const Icon(Icons.download, color: Colors.white),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Export functionality would be implemented here')),
-              );
-            },
-          ),
-        ],
-      ),
-      body: LoadingOverlay(
-        isLoading: _isLoading,
-        child: _dashboardOverview.isEmpty && _topAgents.isEmpty
-          ? _buildEmptyState()
-          : RefreshIndicator(
-              onRefresh: _loadAnalyticsData,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildKPIsSection(),
-                    const SizedBox(height: 24),
-                    _buildTrendsSection(),
-                    const SizedBox(height: 24),
-                    _buildTopPerformersSection(),
-                    const SizedBox(height: 24),
-                    _buildProductPerformanceSection(),
-                    const SizedBox(height: 24),
-                    _buildGeographicInsightsSection(),
-                  ],
-                ),
-              ),
-            ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.analytics_outlined,
-            size: 64,
-            color: Colors.grey.shade400,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Analytics data unavailable',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Analytics data will appear here when available',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey.shade600,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildKPIsSection() {
@@ -829,4 +658,171 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
   }
 
   List<Map<String, dynamic>> get products => _comprehensiveAnalytics['productPerformance'] as List<Map<String, dynamic>>? ?? [];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Analytics Dashboard', style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFF0083B0),
+        foregroundColor: Colors.white,
+      ),
+      body: LoadingOverlay(
+        isLoading: _isLoading,
+        child: _dashboardOverview.isEmpty && _topAgents.isEmpty && _revenueTrends.isEmpty
+            ? const Center(
+                child: Text('Analytics data unavailable - requires backend API integration'),
+              )
+            : _buildAnalyticsContent(),
+      ),
+    );
+  }
+
+
+  Widget _buildAnalyticsContent() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Overview Cards
+          if (_dashboardOverview.isNotEmpty) ...[
+            const Text(
+              'Dashboard Overview',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            _buildOverviewCards(),
+            const SizedBox(height: 24),
+          ],
+
+          // Top Agents
+          if (_topAgents.isNotEmpty) ...[
+            const Text(
+              'Top Performing Agents',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            _buildTopAgentsList(),
+            const SizedBox(height: 24),
+          ],
+
+          // Revenue Trends
+          if (_revenueTrends.isNotEmpty) ...[
+            const Text(
+              'Revenue Trends',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            _buildRevenueChart(),
+            const SizedBox(height: 24),
+          ],
+
+          // Policy Trends
+          if (_policyTrends.isNotEmpty) ...[
+            const Text(
+              'Policy Trends',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            _buildPolicyChart(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOverviewCards() {
+    return Wrap(
+      spacing: 16,
+      runSpacing: 16,
+      children: [
+        _buildMetricCard('Total Revenue', '₹${_dashboardOverview['totalRevenue'] ?? 0}'),
+        _buildMetricCard('Total Policies', '${_dashboardOverview['totalPolicies'] ?? 0}'),
+        _buildMetricCard('Active Agents', '${_dashboardOverview['activeAgents'] ?? 0}'),
+        _buildMetricCard('New Policies', '${_dashboardOverview['newPoliciesThisMonth'] ?? 0}'),
+      ],
+    );
+  }
+
+  Widget _buildMetricCard(String title, String value) {
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0083B0),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopAgentsList() {
+    return Card(
+      elevation: 4,
+      child: ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: _topAgents.length,
+        itemBuilder: (context, index) {
+          final agent = _topAgents[index];
+          return ListTile(
+            leading: CircleAvatar(
+              backgroundColor: const Color(0xFF0083B0),
+              child: Text('${index + 1}'),
+            ),
+            title: Text(agent['agentName'] ?? 'Unknown Agent'),
+            subtitle: Text('Policies: ${agent['policiesSold'] ?? 0}'),
+            trailing: Text('₹${agent['revenue'] ?? 0}'),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildRevenueChart() {
+    // Placeholder for chart - would need a charting library
+    return Card(
+      elevation: 4,
+      child: Container(
+        height: 200,
+        padding: const EdgeInsets.all(16),
+        child: const Center(
+          child: Text('Revenue Chart - Requires Charting Library'),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPolicyChart() {
+    // Placeholder for chart - would need a charting library
+    return Card(
+      elevation: 4,
+      child: Container(
+        height: 200,
+        padding: const EdgeInsets.all(16),
+        child: const Center(
+          child: Text('Policy Chart - Requires Charting Library'),
+        ),
+      ),
+    );
+  }
 }

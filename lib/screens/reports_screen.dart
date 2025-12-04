@@ -94,19 +94,8 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
       };
 
       final response = await ApiService.get('/api/v1/analytics/reports/summary');
-      setState(() => _reportData = response['data'] ?? {
-        // Mock data for testing when API fails
-        'summary': {
-          'total_count': 15,
-          'total_amount': 2500000.0,
-          'success_rate': 85.5
-        },
-        'details': [
-          {'title': 'Active Policies', 'value': '12'},
-          {'title': 'Total Premium', 'value': '₹25,00,000'},
-          {'title': 'New Policies', 'value': '3'}
-        ]
-      });
+      // API returns direct object, not wrapped in 'data' key
+      setState(() => _reportData = response as Map<String, dynamic>? ?? {});
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

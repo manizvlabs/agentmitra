@@ -17,14 +17,8 @@ class _AgentVerificationScreenState extends State<AgentVerificationScreen> with 
 
   String _verificationStatus = 'pending'; // pending, calling, verifying, success, failed
 
-  // Mock agent data
-  final Map<String, String> _agentData = {
-    'name': 'Rajesh Kumar',
-    'code': 'LIC-ABC123',
-    'phone': '+91-9876543210',
-    'email': 'rajesh.kumar@lic.com',
-    'branch': 'LIC Mumbai Central',
-  };
+  // TODO: Implement real agent verification API integration
+  final Map<String, String> _agentData = {};
 
   @override
   void initState() {

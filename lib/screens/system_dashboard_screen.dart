@@ -39,8 +39,11 @@ class _SystemDashboardScreenState extends State<SystemDashboardScreen> {
       await _loadMetrics();
     } catch (e) {
       print('Failed to load system data: $e');
-      // Load mock data for demonstration
-      _loadMockData();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load system data. Please try again.')),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -51,10 +54,10 @@ class _SystemDashboardScreenState extends State<SystemDashboardScreen> {
   Future<void> _loadSystemOverview() async {
     try {
       final response = await ApiService.get('/api/v1/dashboard/system-overview');
-      setState(() => _systemOverview = response['data'] ?? {});
+      // API returns direct object, not wrapped in 'data' key
+      setState(() => _systemOverview = response as Map<String, dynamic>? ?? {});
     } catch (e) {
       print('System overview API failed: $e');
-      // Mock data will be loaded in _loadMockData
     }
   }
 
@@ -87,57 +90,6 @@ class _SystemDashboardScreenState extends State<SystemDashboardScreen> {
     }
   }
 
-  void _loadMockData() {
-    setState(() {
-      _systemOverview = {
-        'totalUsers': 35,
-        'activeUsers': 28,
-        'totalAgents': 8,
-        'activeAgents': 7,
-        'totalPolicies': 15,
-        'activePolicies': 13,
-        'totalPremium': 2500000.0,
-        'monthlyRevenue': 187500.0,
-        'activeSessions': 12,
-        'systemHealth': 95.5,
-        'apiCalls24h': 2847,
-        'pendingApprovals': 3,
-      };
-
-      _systemHealth = {
-        'status': 'healthy',
-        'cpu_usage': 45.2,
-        'memory_usage': 62.8,
-        'disk_usage': 34.1,
-        'uptime_seconds': 345600,
-        'load_average': [1.2, 1.5, 1.3],
-        'timestamp': DateTime.now().toIso8601String(),
-      };
-
-      _databaseHealth = {
-        'status': 'healthy',
-        'database': {
-          'connection': {
-            'status': 'healthy',
-            'response_time_ms': 2.34,
-            'pool_size': 10,
-          },
-          'pool_stats': {
-            'pool_size': 10,
-            'connections_checked_in': 8,
-            'connections_checked_out': 2,
-            'overflow_connections': 0,
-          },
-          'schema': 'lic_schema',
-        },
-        'timestamp': DateTime.now().millisecondsSinceEpoch / 1000,
-      };
-
-      _metrics = {
-        'raw': '# HELP system_cpu_usage CPU usage percentage\n# TYPE system_cpu_usage gauge\nsystem_cpu_usage 45.2\n\n# HELP system_memory_usage Memory usage percentage\n# TYPE system_memory_usage gauge\nsystem_memory_usage 62.8\n\n# HELP api_requests_total Total API requests\n# TYPE api_requests_total counter\napi_requests_total 2847',
-      };
-    });
-  }
 
   @override
   Widget build(BuildContext context) {

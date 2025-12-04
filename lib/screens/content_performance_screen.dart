@@ -16,75 +16,9 @@ class _ContentPerformanceScreenState extends State<ContentPerformanceScreen> wit
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  // Mock content analytics data
-  final Map<String, dynamic> contentAnalytics = {
-    'overview': {
-      'totalVideos': 47,
-      'totalDocuments': 23,
-      'totalViews': 15240,
-      'watchTime': '68 hours',
-      'averageRating': 4.6,
-      'growth': 23,
-    },
-    'topContent': [
-      {
-        'title': 'Premium Payment Guide',
-        'views': 2543,
-        'watchTime': '5:32',
-        'rating': 4.8,
-        'shares': 45,
-      },
-      {
-        'title': 'Understanding Your Policy',
-        'views': 1890,
-        'watchTime': '8:15',
-        'rating': 4.7,
-        'shares': 32,
-      },
-      {
-        'title': 'Claim Process Simplified',
-        'views': 1234,
-        'watchTime': '6:45',
-        'rating': 4.5,
-        'shares': 28,
-      },
-    ],
-    'engagement': {
-      'views': 15240,
-      'watchTime': '4:32',
-      'completionRate': 78,
-      'shares': 245,
-      'likes': 1890,
-      'comments': 156,
-    },
-    'demographics': {
-      'ageGroups': {
-        '25-35': 45,
-        '35-50': 35,
-        '50+': 20,
-      },
-      'geographic': {
-        'mumbai': 28,
-        'delhi': 22,
-        'others': 50,
-      },
-      'valueSegments': {
-        'high': 40,
-        'medium': 35,
-        'low': 25,
-      },
-      'deviceTypes': {
-        'mobile': 85,
-        'desktop': 15,
-      },
-    },
-    'insights': [
-      'Short videos (3-5 min) perform 40% better',
-      'Premium payment content most popular',
-      'Mobile users prefer vertical video format',
-      'Create more claim process tutorials',
-    ],
-  };
+  // TODO: Implement real content analytics API integration
+  // TODO: Implement real content analytics API integration
+  final Map<String, dynamic> contentAnalytics = {};
 
   @override
   void initState() {
