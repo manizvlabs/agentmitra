@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../core/services/api_service.dart';
 import '../core/widgets/loading/loading_overlay.dart';
 
@@ -15,11 +16,34 @@ class _SystemDashboardScreenState extends State<SystemDashboardScreen> {
   Map<String, dynamic> _systemHealth = {};
   Map<String, dynamic> _databaseHealth = {};
   Map<String, dynamic> _metrics = {};
+  
+  // Metrics history for charts
+  List<double> _cpuHistory = [];
+  List<double> _memoryHistory = [];
+  List<double> _diskHistory = [];
+  DateTime? _lastMetricsUpdate;
 
   @override
   void initState() {
     super.initState();
     _loadSystemData();
+    // Auto-refresh metrics every 30 seconds
+    _startAutoRefresh();
+  }
+
+  void _startAutoRefresh() {
+    Future.delayed(const Duration(seconds: 30), () {
+      if (mounted) {
+        _loadSystemHealth();
+        _loadMetrics();
+        _startAutoRefresh(); // Schedule next refresh
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   Future<void> _loadSystemData() async {
@@ -63,8 +87,37 @@ class _SystemDashboardScreenState extends State<SystemDashboardScreen> {
 
   Future<void> _loadSystemHealth() async {
     try {
-      final response = await ApiService.get('/api/v1/dashboard/system-overview');
-      setState(() => _systemHealth = response ?? {});
+      final response = await ApiService.get('/api/v1/health/system');
+      // API returns direct object with nested structure
+      final healthData = response as Map<String, dynamic>? ?? {};
+      
+      setState(() {
+        _systemHealth = healthData;
+        
+        // Extract metrics for charts
+        if (healthData['system'] != null) {
+          final system = healthData['system'] as Map<String, dynamic>;
+          final cpu = system['cpu'] as Map<String, dynamic>?;
+          final memory = system['memory'] as Map<String, dynamic>?;
+          final disk = system['disk'] as Map<String, dynamic>?;
+          
+          // Add to history (keep last 20 data points)
+          if (cpu != null) {
+            _cpuHistory.add(cpu['usage_percent']?.toDouble() ?? 0.0);
+            if (_cpuHistory.length > 20) _cpuHistory.removeAt(0);
+          }
+          if (memory != null) {
+            _memoryHistory.add(memory['usage_percent']?.toDouble() ?? 0.0);
+            if (_memoryHistory.length > 20) _memoryHistory.removeAt(0);
+          }
+          if (disk != null) {
+            _diskHistory.add(disk['usage_percent']?.toDouble() ?? 0.0);
+            if (_diskHistory.length > 20) _diskHistory.removeAt(0);
+          }
+        }
+        
+        _lastMetricsUpdate = DateTime.now();
+      });
     } catch (e) {
       print('System health API failed: $e');
     }
@@ -72,9 +125,9 @@ class _SystemDashboardScreenState extends State<SystemDashboardScreen> {
 
   Future<void> _loadDatabaseHealth() async {
     try {
-      // Database health not in project plan - using system overview instead
-      final response = await ApiService.get('/api/v1/dashboard/system-overview');
-      setState(() => _databaseHealth = response ?? {});
+      final response = await ApiService.get('/api/v1/health/database');
+      // API returns direct object, not wrapped in 'data' key
+      setState(() => _databaseHealth = response as Map<String, dynamic>? ?? {});
     } catch (e) {
       print('Database health API failed: $e');
     }
@@ -82,11 +135,12 @@ class _SystemDashboardScreenState extends State<SystemDashboardScreen> {
 
   Future<void> _loadMetrics() async {
     try {
-      // General metrics not in project plan - using analytics dashboard instead
-      final response = await ApiService.get('/api/v1/analytics/dashboard/overview');
-      setState(() => _metrics = {'raw': response ?? ''});
+      // Metrics endpoint returns Prometheus format plain text, not JSON
+      final metricsText = await ApiService.getText('/api/v1/metrics');
+      setState(() => _metrics = {'raw': metricsText});
     } catch (e) {
       print('Metrics API failed: $e');
+      // Silently fail - metrics are optional, we already have system health data
     }
   }
 
@@ -376,69 +430,99 @@ class _SystemDashboardScreenState extends State<SystemDashboardScreen> {
                   ),
                 ),
                 const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: (_systemHealth['status'] == 'healthy')
-                      ? Colors.green.shade100
-                      : Colors.red.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    (_systemHealth['status'] ?? 'unknown').toUpperCase(),
-                    style: TextStyle(
+                if (_systemHealth['status'] != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
                       color: (_systemHealth['status'] == 'healthy')
-                        ? Colors.green.shade800
-                        : Colors.red.shade800,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                        ? Colors.green.shade100
+                        : Colors.red.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      (_systemHealth['status'] ?? 'unknown').toUpperCase(),
+                      style: TextStyle(
+                        color: (_systemHealth['status'] == 'healthy')
+                          ? Colors.green.shade800
+                          : Colors.red.shade800,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'UNKNOWN',
+                      style: TextStyle(
+                        color: Colors.grey.shade800,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
             const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildHealthMetric(
-                    'CPU Usage',
-                    '${(_systemHealth['cpu_usage'] ?? 0).toStringAsFixed(1)}%',
-                    _getHealthColor(_systemHealth['cpu_usage'] ?? 0),
+            if (_systemHealth['system'] != null) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildHealthMetric(
+                      'CPU Usage',
+                      '${(_systemHealth['system']['cpu']?['usage_percent'] ?? 0).toStringAsFixed(1)}%',
+                      _getHealthColor((_systemHealth['system']['cpu']?['usage_percent'] ?? 0).toDouble()),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildHealthMetric(
-                    'Memory Usage',
-                    '${(_systemHealth['memory_usage'] ?? 0).toStringAsFixed(1)}%',
-                    _getHealthColor(_systemHealth['memory_usage'] ?? 0),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildHealthMetric(
+                      'Memory Usage',
+                      '${(_systemHealth['system']['memory']?['usage_percent'] ?? 0).toStringAsFixed(1)}%',
+                      _getHealthColor((_systemHealth['system']['memory']?['usage_percent'] ?? 0).toDouble()),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildHealthMetric(
-                    'Disk Usage',
-                    '${(_systemHealth['disk_usage'] ?? 0).toStringAsFixed(1)}%',
-                    _getHealthColor(_systemHealth['disk_usage'] ?? 0),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildHealthMetric(
+                      'Disk Usage',
+                      '${(_systemHealth['system']['disk']?['usage_percent'] ?? 0).toStringAsFixed(1)}%',
+                      _getHealthColor((_systemHealth['system']['disk']?['usage_percent'] ?? 0).toDouble()),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                const Icon(Icons.access_time, size: 16, color: Colors.grey),
-                const SizedBox(width: 8),
-                Text(
-                  'Uptime: ${_formatUptime(_systemHealth['uptime_seconds'] ?? 0)}',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 14,
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  const Icon(Icons.info_outline, size: 16, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'CPU Cores: ${_systemHealth['system']['cpu']?['cores'] ?? 'N/A'} | '
+                      'Memory: ${(_systemHealth['system']['memory']?['used_gb'] ?? 0).toStringAsFixed(1)}GB / ${(_systemHealth['system']['memory']?['total_gb'] ?? 0).toStringAsFixed(1)}GB',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 12,
+                      ),
+                    ),
                   ),
+                ],
+              ),
+            ] else ...[
+              const Text(
+                'System health data not available',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontStyle: FontStyle.italic,
                 ),
-              ],
-            ),
+              ),
+            ],
           ],
         ),
       ),
@@ -698,34 +782,68 @@ class _SystemDashboardScreenState extends State<SystemDashboardScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            Container(
-              height: 200,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade300),
+            if (_cpuHistory.isNotEmpty || _memoryHistory.isNotEmpty || _diskHistory.isNotEmpty) ...[
+              Container(
+                height: 250,
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: _buildMetricsChart(),
               ),
-              child: const Center(
-                child: Text(
-                  'Metrics Visualization\n\n[Chart would display here]\n\nReal-time system metrics,\nperformance graphs,\nand monitoring data',
-                  textAlign: TextAlign.center,
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildMetricChip(
+                    'CPU: ${_systemHealth['system']?['cpu']?['usage_percent']?.toStringAsFixed(1) ?? '0.0'}%',
+                    Colors.blue,
+                  ),
+                  _buildMetricChip(
+                    'Memory: ${_systemHealth['system']?['memory']?['usage_percent']?.toStringAsFixed(1) ?? '0.0'}%',
+                    Colors.green,
+                  ),
+                  _buildMetricChip(
+                    'Disk: ${_systemHealth['system']?['disk']?['usage_percent']?.toStringAsFixed(1) ?? '0.0'}%',
+                    Colors.orange,
+                  ),
+                ],
+              ),
+              if (_lastMetricsUpdate != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Last updated: ${_formatTime(_lastMetricsUpdate!)}',
                   style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
+                    fontSize: 10,
+                    color: Colors.grey.shade600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ] else ...[
+              Container(
+                height: 200,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Metrics data will appear here once system health data is loaded',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildMetricChip('CPU: 45.2%', Colors.blue),
-                _buildMetricChip('Memory: 62.8%', Colors.green),
-                _buildMetricChip('API: 2.8K req/h', Colors.orange),
-              ],
-            ),
+            ],
           ],
         ),
       ),
@@ -773,6 +891,167 @@ class _SystemDashboardScreenState extends State<SystemDashboardScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildMetricsChart() {
+    if (_cpuHistory.isEmpty && _memoryHistory.isEmpty && _diskHistory.isEmpty) {
+      return const Center(
+        child: Text('No metrics data available'),
+      );
+    }
+
+    final maxValue = [
+      ..._cpuHistory,
+      ..._memoryHistory,
+      ..._diskHistory,
+    ].fold<double>(0.0, (max, value) => value > max ? value : max);
+
+    return LineChart(
+      LineChartData(
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: maxValue > 0 ? maxValue / 5 : 20,
+          getDrawingHorizontalLine: (value) {
+            return FlLine(
+              color: Colors.grey.shade300,
+              strokeWidth: 1,
+            );
+          },
+        ),
+        titlesData: FlTitlesData(
+          show: true,
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 30,
+              interval: _cpuHistory.length > 10 ? 5 : 1,
+              getTitlesWidget: (value, meta) {
+                return Text(
+                  value.toInt().toString(),
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 10,
+                  ),
+                );
+              },
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 40,
+              interval: maxValue > 0 ? maxValue / 5 : 20,
+              getTitlesWidget: (value, meta) {
+                return Text(
+                  '${value.toInt()}%',
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 10,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        borderData: FlBorderData(
+          show: true,
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        minX: 0,
+        maxX: (_cpuHistory.length > 0 ? _cpuHistory.length : 20).toDouble() - 1,
+        minY: 0,
+        maxY: maxValue > 0 ? (maxValue * 1.1).ceilToDouble() : 100,
+        lineBarsData: [
+          if (_cpuHistory.isNotEmpty)
+            LineChartBarData(
+              spots: _cpuHistory.asMap().entries.map((e) {
+                return FlSpot(e.key.toDouble(), e.value);
+              }).toList(),
+              isCurved: true,
+              color: Colors.blue,
+              barWidth: 3,
+              isStrokeCapRound: true,
+              dotData: const FlDotData(show: false),
+              belowBarData: BarAreaData(
+                show: true,
+                color: Colors.blue.withOpacity(0.1),
+              ),
+            ),
+          if (_memoryHistory.isNotEmpty)
+            LineChartBarData(
+              spots: _memoryHistory.asMap().entries.map((e) {
+                return FlSpot(e.key.toDouble(), e.value);
+              }).toList(),
+              isCurved: true,
+              color: Colors.green,
+              barWidth: 3,
+              isStrokeCapRound: true,
+              dotData: const FlDotData(show: false),
+              belowBarData: BarAreaData(
+                show: true,
+                color: Colors.green.withOpacity(0.1),
+              ),
+            ),
+          if (_diskHistory.isNotEmpty)
+            LineChartBarData(
+              spots: _diskHistory.asMap().entries.map((e) {
+                return FlSpot(e.key.toDouble(), e.value);
+              }).toList(),
+              isCurved: true,
+              color: Colors.orange,
+              barWidth: 3,
+              isStrokeCapRound: true,
+              dotData: const FlDotData(show: false),
+              belowBarData: BarAreaData(
+                show: true,
+                color: Colors.orange.withOpacity(0.1),
+              ),
+            ),
+        ],
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipItems: (List<LineBarSpot> touchedSpots) {
+              return touchedSpots.map((LineBarSpot touchedSpot) {
+                String label = '';
+                if (touchedSpot.barIndex == 0 && _cpuHistory.isNotEmpty) {
+                  label = 'CPU';
+                } else if (touchedSpot.barIndex == (_cpuHistory.isNotEmpty ? 1 : 0) && _memoryHistory.isNotEmpty) {
+                  label = 'Memory';
+                } else if (_diskHistory.isNotEmpty) {
+                  label = 'Disk';
+                }
+                return LineTooltipItem(
+                  '$label: ${touchedSpot.y.toStringAsFixed(1)}%',
+                  const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                );
+              }).toList();
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+    
+    if (difference.inSeconds < 60) {
+      return '${difference.inSeconds}s ago';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}m ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours}h ago';
+    } else {
+      return '${difference.inDays}d ago';
+    }
   }
 
   String _formatUptime(int seconds) {

@@ -2,6 +2,7 @@
 Health check endpoints with detailed monitoring
 """
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from typing import Dict, Any
 import psutil
@@ -158,16 +159,18 @@ async def comprehensive_health(db: Session = Depends(get_db)) -> Dict[str, Any]:
 
 
 @router.get("/metrics")
-async def get_metrics() -> str:
+async def get_metrics() -> Response:
     """
     Prometheus metrics endpoint
     Returns metrics in Prometheus format for monitoring
     """
     try:
-        return await monitoring.get_metrics()
+        metrics_text = await monitoring.get_metrics()
+        return Response(content=metrics_text, media_type="text/plain")
     except Exception as e:
         logger.error(f"Metrics endpoint error: {e}")
-        return f"# Error generating metrics: {str(e)}"
+        error_text = f"# Error generating metrics: {str(e)}"
+        return Response(content=error_text, media_type="text/plain")
 
 
 @router.get("/health/monitoring")

@@ -149,6 +149,25 @@ class ApiService {
     }
   }
 
+  // GET request for plain text (non-JSON) responses
+  static Future<String> getText(String endpoint) async {
+    try {
+      var url = '$apiUrl$endpoint';
+      final response = await http.get(
+        Uri.parse(url),
+        headers: await getHeaders(),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return response.body;
+      } else {
+        throw Exception('Request failed with status ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Network error: $e');
+    }
+  }
+
   // Health check
   Future<bool> healthCheck() async {
     try {

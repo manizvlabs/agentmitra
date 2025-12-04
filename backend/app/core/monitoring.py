@@ -3,6 +3,7 @@ Monitoring utilities for response time tracking and performance metrics
 """
 import time
 import logging
+import psutil
 from functools import wraps
 from typing import Callable, Any
 from fastapi import Request, Response
@@ -158,6 +159,75 @@ class PerformanceTracker:
             'slow_requests': slow_requests,
             'recent_requests': completed_requests[-10:]  # Last 10 requests
         }
+
+    async def get_metrics(self) -> str:
+        """
+        Get Prometheus format metrics
+        Returns metrics in Prometheus text format for monitoring
+        """
+        try:
+            metrics_lines = []
+            
+            # System metrics
+            try:
+                # CPU metrics
+                cpu_percent = psutil.cpu_percent(interval=0.1)
+                cpu_count = psutil.cpu_count()
+                metrics_lines.append(f"# HELP system_cpu_usage CPU usage percentage")
+                metrics_lines.append(f"# TYPE system_cpu_usage gauge")
+                metrics_lines.append(f"system_cpu_usage {cpu_percent}")
+                metrics_lines.append(f"# HELP system_cpu_cores Number of CPU cores")
+                metrics_lines.append(f"# TYPE system_cpu_cores gauge")
+                metrics_lines.append(f"system_cpu_cores {cpu_count}")
+                
+                # Memory metrics
+                memory = psutil.virtual_memory()
+                metrics_lines.append(f"# HELP system_memory_usage Memory usage percentage")
+                metrics_lines.append(f"# TYPE system_memory_usage gauge")
+                metrics_lines.append(f"system_memory_usage {memory.percent}")
+                metrics_lines.append(f"# HELP system_memory_total_bytes Total memory in bytes")
+                metrics_lines.append(f"# TYPE system_memory_total_bytes gauge")
+                metrics_lines.append(f"system_memory_total_bytes {memory.total}")
+                metrics_lines.append(f"# HELP system_memory_available_bytes Available memory in bytes")
+                metrics_lines.append(f"# TYPE system_memory_available_bytes gauge")
+                metrics_lines.append(f"system_memory_available_bytes {memory.available}")
+                metrics_lines.append(f"# HELP system_memory_used_bytes Used memory in bytes")
+                metrics_lines.append(f"# TYPE system_memory_used_bytes gauge")
+                metrics_lines.append(f"system_memory_used_bytes {memory.used}")
+                
+                # Disk metrics
+                disk = psutil.disk_usage('/')
+                metrics_lines.append(f"# HELP system_disk_usage Disk usage percentage")
+                metrics_lines.append(f"# TYPE system_disk_usage gauge")
+                metrics_lines.append(f"system_disk_usage {disk.percent}")
+                metrics_lines.append(f"# HELP system_disk_total_bytes Total disk space in bytes")
+                metrics_lines.append(f"# TYPE system_disk_total_bytes gauge")
+                metrics_lines.append(f"system_disk_total_bytes {disk.total}")
+                metrics_lines.append(f"# HELP system_disk_free_bytes Free disk space in bytes")
+                metrics_lines.append(f"# TYPE system_disk_free_bytes gauge")
+                metrics_lines.append(f"system_disk_free_bytes {disk.free}")
+                metrics_lines.append(f"# HELP system_disk_used_bytes Used disk space in bytes")
+                metrics_lines.append(f"# TYPE system_disk_used_bytes gauge")
+                metrics_lines.append(f"system_disk_used_bytes {disk.used}")
+            except Exception as e:
+                logger.warning(f"Failed to collect system metrics: {e}")
+            
+            # Application metrics
+            stats = self.get_stats()
+            metrics_lines.append(f"# HELP api_requests_total Total API requests processed")
+            metrics_lines.append(f"# TYPE api_requests_total counter")
+            metrics_lines.append(f"api_requests_total {stats['total_requests']}")
+            metrics_lines.append(f"# HELP api_response_time_ms Average response time in milliseconds")
+            metrics_lines.append(f"# TYPE api_response_time_ms gauge")
+            metrics_lines.append(f"api_response_time_ms {stats['avg_response_time']:.2f}")
+            metrics_lines.append(f"# HELP api_slow_requests_total Total slow requests (>1000ms)")
+            metrics_lines.append(f"# TYPE api_slow_requests_total counter")
+            metrics_lines.append(f"api_slow_requests_total {stats['slow_requests']}")
+            
+            return "\n".join(metrics_lines)
+        except Exception as e:
+            logger.error(f"Error generating Prometheus metrics: {e}")
+            return f"# Error generating metrics: {str(e)}"
 
 
 # Global performance tracker
