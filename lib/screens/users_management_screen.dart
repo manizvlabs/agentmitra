@@ -181,7 +181,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                 children: _roles.map((role) {
                   final isCurrentRole = role['role_name'] == user['role'];
                   return FilterChip(
-                    label: Text(role['role_name']),
+                    label: Text(_formatRoleName(role['role_name'])),
                     selected: isCurrentRole,
                     onSelected: (selected) {
                       if (!isCurrentRole && selected) {
@@ -303,7 +303,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                     const DropdownMenuItem(value: '', child: Text('All Roles')),
                     ..._roles.map((role) => DropdownMenuItem(
                       value: role['role_name'],
-                      child: Text(role['role_name']),
+                      child: Text(_formatRoleName(role['role_name'])),
                     )),
                   ],
                   onChanged: (value) {
@@ -325,7 +325,9 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                     DropdownMenuItem(value: '', child: Text('All Status')),
                     DropdownMenuItem(value: 'active', child: Text('Active')),
                     DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
-                    DropdownMenuItem(value: 'pending', child: Text('Pending')),
+                    DropdownMenuItem(value: 'pending_verification', child: Text('Pending Verification')),
+                    DropdownMenuItem(value: 'suspended', child: Text('Suspended')),
+                    DropdownMenuItem(value: 'deactivated', child: Text('Deactivated')),
                   ],
                   onChanged: (value) {
                     _selectedStatusFilter = value ?? '';
@@ -609,7 +611,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        role.replaceAll('_', ' ').toUpperCase(),
+                        _formatRoleName(role),
                         style: TextStyle(
                           color: roleColor,
                           fontSize: 9,
@@ -654,6 +656,12 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
         ),
       ),
     );
+  }
+
+  String _formatRoleName(String roleName) {
+    return roleName.replaceAll('_', ' ').split(' ').map((word) =>
+      word.isEmpty ? '' : '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}'
+    ).join(' ');
   }
 
   String _formatDate(String dateString) {

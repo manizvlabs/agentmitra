@@ -70,9 +70,19 @@ async def get_roles(
 
     try:
         roles_data = auth_service.get_all_roles(db)
+
+        # Deduplicate roles by role_name (prefer system roles and keep the first occurrence)
+        seen_names = set()
+        unique_roles_data = []
+        for role_data in roles_data:
+            role_name = role_data['role_name']
+            if role_name not in seen_names:
+                seen_names.add(role_name)
+                unique_roles_data.append(role_data)
+
         roles = []
 
-        for role_data in roles_data:
+        for role_data in unique_roles_data:
             permissions = auth_service.get_role_permissions(role_data['role_name'], db)
             roles.append(RoleResponse(
                 role_id=role_data['role_id'],

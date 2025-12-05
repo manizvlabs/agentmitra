@@ -308,30 +308,49 @@ async def search_users(
         # Agents can only see policyholders by default
         filters["role"] = "policyholder"
 
-    if status and current_user.has_role_level("provider_admin"):
-        # Only admins can filter by status
-        filters["status"] = status
+    if status:
+        # Map frontend status values to database enum values
+        status_mapping = {
+            "pending": "pending_verification",
+            "active": "active",
+            "inactive": "inactive",
+            "suspended": "suspended",
+            "deactivated": "deactivated"
+        }
+        filters["status"] = status_mapping.get(status, status)
 
     users = user_repo.search_users(filters, limit=limit, offset=offset)
 
-    return [
-        UserResponse(
+    # Get RBAC service for role lookup
+    from app.services.rbac_service import RBACService
+    rbac_service = RBACService(db)
+
+    user_responses = []
+    for user in users:
+        # Get user role from RBAC system, fallback to user table
+        try:
+            rbac_roles = await rbac_service.get_user_roles(str(user.user_id))
+            user_role = rbac_roles[0] if rbac_roles else user.role or "policyholder"
+        except Exception:
+            user_role = user.role or "policyholder"
+
+        user_responses.append(UserResponse(
             user_id=str(user.user_id),
             email=user.email,
             phone_number=user.phone_number,
             first_name=user.first_name,
             last_name=user.last_name,
             display_name=user.display_name,
-            role=user.role,
+            role=user_role,
             status=user.status or "active",
             phone_verified=user.phone_verified,
             email_verified=user.email_verified,
             last_login_at=user.last_login_at,
             created_at=user.created_at,
             updated_at=user.updated_at
-        )
-        for user in users
-    ]
+        ))
+
+    return user_responses
 
 
 @router.get("/{user_id}/preferences", response_model=UserPreferences)

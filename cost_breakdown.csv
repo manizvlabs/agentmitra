@@ -1,0 +1,48 @@
+Category,Service / Component,Type,Cost Model,Estimated Cost (USD/month)
+Kubernetes Infra,Single Node Kubernetes (8GB/4vCPU),Infrastructure,Fixed,$48
+Kubernetes Infra,Kubernetes Load Balancer,Infrastructure,Fixed,$12
+Kubernetes Infra,Block Storage (100-150GB),Infrastructure,Variable,$10-15
+Kubernetes Infra,Total Infrastructure Cost (SNO),Infrastructure,Fixed,$70-75
+Microservice Container,CoreAPI,Container,Share of Node,$4.5
+Microservice Container,PortalAPI,Container,Share of Node,$4.5
+Microservice Container,Portal React UI,Container,Share of Node,$4.5
+Microservice Container,Nginx Ingress/Proxy,Container,Share of Node,$4.5
+Microservice Container,PostgreSQL DB,Container,Heavy Share ($x1.5),$7
+Microservice Container,Redis Cache,Container,Share of Node,$4.5
+Microservice Container,MinIO Storage,Container,Heavy Share ($x1.5),$7
+Microservice Container,Prometheus,Container,Share of Node,$4.5
+Microservice Container,Grafana,Container,Share of Node,$4.5
+Microservice Container,Loki,Container,Share of Node,$4.5
+Microservice Container,NATS Messaging,Container,Share of Node,$4.5
+Microservice Container,Pioneer Compass Server,Container,Share of Node,$4.5
+Microservice Container,Pioneer Scout Service,Container,Share of Node,$4.5
+Microservice Container,Pioneer Compass Client,Container,Share of Node,$4.5
+Microservice Container,Chatbot Service,Container,Share of Node,$4.5
+Flutter App,Flutter SDK (Dev),Development,Free,$0
+Flutter App,Dart Codebase,Development,Free,$0
+Flutter App,iOS Distribution (Apple Developer Program),Distribution,Fixed,$99/year (~$8.25/mo)
+Flutter App,Android Distribution (Google Play Console),Distribution,One-time,$25 (lifetime)
+Flutter App,TestFlight,Testing,Free,$0
+Flutter App,Play Store Beta,Testing,Free,$0
+Firebase,Firebase Core,Backend,Free Tier,$0
+Firebase,Firebase Auth,Backend,Usage-based,Variable (typically $5-20)
+Firebase,Firestore Database,Backend,Usage-based,Variable (typically $5-30)
+Firebase,Firebase Storage,Backend,Usage-based,Variable ($1-10)
+Firebase,Firebase FCM,Backend,Free,$0
+Firebase,Firebase Analytics,Backend,Free,$0
+Firebase,Crashlytics,Backend,Free,$0
+Firebase,Performance Monitoring,Backend,Free,$0
+Firebase,Remote Config,Backend,Free,$0
+Firebase,App Check,Backend,Free,$0
+Communication,WhatsApp Business API,External API,Usage-based (per message),$10-30 estimate
+Communication,Twilio SMS,External API,Usage-based,$10-50 estimate
+Communication,SendGrid Email,External API,Free+Paid Tiers,$0-15 estimate
+AI Services,OpenAI API,External API,Usage-based,$10-200 (based on volume)
+AI Services,Perplexity API,External API,Subscription,$20/month
+AI Services,AWS Comprehend,External API,Usage-based,$1-10
+Content Delivery,CloudFront CDN,CDN,Usage-based,$5-20
+Content Delivery,AWS S3 (media & backups),Storage,Usage-based,$3-10
+Monitoring,Prometheus (K8s),Container,Included in Node Share,$0 extra
+Monitoring,Grafana (K8s),Container,Included in Node Share,$0 extra
+Monitoring,Loki Logs (K8s),Container,Included in Node Share,$0 extra
+,,,,Total Estimated Monthly Cost:,$407.25
