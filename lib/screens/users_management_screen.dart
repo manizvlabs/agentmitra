@@ -207,13 +207,13 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                 spacing: 8,
                 runSpacing: 8,
                 children: _roles.map((role) {
-                  final isCurrentRole = role['role_name'] == user['role'];
+                  final isCurrentRole = _getDatabaseRoleName(role['role_name']) == user['role'];
                   return FilterChip(
                     label: Text(_formatRoleName(role['role_name'])),
                     selected: isCurrentRole,
                     onSelected: (selected) {
                       if (!isCurrentRole && selected) {
-                        _assignRole(user['user_id'], role['role_name']);
+                        _assignRole(user['user_id'], _getDatabaseRoleName(role['role_name']));
                         Navigator.of(context).pop();
                       }
                     },
@@ -338,7 +338,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                     items: [
                       const DropdownMenuItem(value: '', child: Text('All Roles')),
                       ..._roles.map((role) => DropdownMenuItem(
-                        value: role['role_name'],
+                        value: _getDatabaseRoleName(role['role_name']),
                         child: Text(_formatRoleName(role['role_name']), overflow: TextOverflow.ellipsis),
                       )),
                     ],
@@ -742,6 +742,38 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
         return normalized.split(' ').map((word) =>
           word.isEmpty ? '' : '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}'
         ).take(3).join(' '); // Limit to 3 words max
+    }
+  }
+
+  String _getDatabaseRoleName(String displayRoleName) {
+    // Convert display names back to database format
+    final normalized = displayRoleName.toLowerCase().replaceAll(' ', '_').trim();
+
+    switch (normalized) {
+      case 'super_admin':
+        return 'super_admin';
+      case 'provider_admin':
+        return 'insurance_provider_admin'; // Map to actual database value
+      case 'regional_manager':
+        return 'regional_manager';
+      case 'senior_agent':
+        return 'senior_agent';
+      case 'junior_agent':
+        return 'junior_agent';
+      case 'support_staff':
+        return 'support_staff';
+      case 'policyholder':
+        return 'policyholder';
+      case 'compliance_officer':
+        return 'compliance_officer';
+      case 'support_lead':
+      case 'customer_support_lead':
+        return 'customer_support_lead';
+      case 'guest':
+        return 'guest';
+      default:
+        // For any other roles, convert spaces to underscores
+        return displayRoleName.toLowerCase().replaceAll(' ', '_').replaceAll('-', '_');
     }
   }
 

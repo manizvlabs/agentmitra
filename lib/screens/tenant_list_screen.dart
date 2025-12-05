@@ -134,16 +134,19 @@ class _TenantListScreenState extends State<TenantListScreen> {
 
     try {
       // Use POST /api/v1/tenants/{tenant_id}/config endpoint
-      await ApiService.post('/api/v1/tenants/$tenantId/config', config);
+      final response = await ApiService.post('/api/v1/tenants/$tenantId/config', config);
 
-      // Update local state
+      // The API now returns the updated tenant data
+      final updatedTenant = response as Map<String, dynamic>;
+
+      // Update local state with the complete updated tenant data
       setState(() {
         final tenantIndex = _tenants.indexWhere((t) => t['tenant_id'] == tenantId);
         if (tenantIndex != -1) {
-          _tenants[tenantIndex].addAll(config);
+          _tenants[tenantIndex] = updatedTenant;
         }
         if (_selectedTenantDetails != null && _selectedTenantDetails!['tenant_id'] == tenantId) {
-          _selectedTenantDetails!.addAll(config);
+          _selectedTenantDetails = updatedTenant;
         }
       });
 

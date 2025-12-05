@@ -436,7 +436,19 @@ async def update_tenant_config(
             ip_address=getattr(current_user, 'ip_address', None)
         )
 
-        return {"message": "Tenant configuration updated successfully"}
+        # Return updated tenant data
+        return TenantResponse(
+            tenant_id=str(tenant.tenant_id),
+            tenant_code=tenant.tenant_code,
+            tenant_name=tenant.tenant_name,
+            tenant_type=tenant.tenant_type,
+            status=tenant.status,
+            subscription_plan=tenant.subscription_plan,
+            max_users=tenant.max_users,
+            storage_limit_gb=tenant.storage_limit_gb,
+            api_rate_limit=tenant.api_rate_limit,
+            created_at=tenant.created_at,
+        )
 
     except HTTPException:
         raise

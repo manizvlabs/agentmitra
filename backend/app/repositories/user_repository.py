@@ -259,6 +259,17 @@ class UserRepository:
         """Search and filter users with pagination"""
         from sqlalchemy import or_, and_
 
+        # Validate role filter before building query
+        if "role" in filters:
+            valid_roles = [
+                "super_admin", "provider_admin", "insurance_provider_admin", "regional_manager",
+                "senior_agent", "junior_agent", "support_staff", "policyholder",
+                "compliance_officer", "customer_support_lead", "guest"
+            ]
+            if filters["role"] not in valid_roles:
+                # Return empty result for invalid roles instead of failing
+                return []
+
         query = self.db.query(User)
 
         # Apply search filter
@@ -274,7 +285,7 @@ class UserRepository:
                 )
             )
 
-        # Apply role filter
+        # Apply role filter (now validated)
         if "role" in filters:
             query = query.filter(User.role == filters["role"])
 

@@ -341,7 +341,7 @@ class AnalyticsService:
         try:
             # Query users table for agents
             result = self.db.execute(
-                "SELECT COUNT(*) FROM lic_schema.users WHERE role IN ('agent', 'senior_agent')"
+                text("SELECT COUNT(*) FROM lic_schema.users WHERE role IN ('junior_agent', 'senior_agent')")
             )
             return result.scalar() or 0
         except Exception as e:
@@ -354,7 +354,7 @@ class AnalyticsService:
             # Query agents with recent login activity (last 30 days)
             thirty_days_ago = datetime.utcnow() - timedelta(days=30)
             result = self.db.execute(
-                "SELECT COUNT(*) FROM lic_schema.users WHERE role IN ('agent', 'senior_agent') AND last_login_at >= :thirty_days_ago",
+                text("SELECT COUNT(*) FROM lic_schema.users WHERE role IN ('junior_agent', 'senior_agent') AND last_login_at >= :thirty_days_ago"),
                 {"thirty_days_ago": thirty_days_ago}
             )
             return result.scalar() or 0
@@ -366,7 +366,7 @@ class AnalyticsService:
         """Get total policies sold"""
         try:
             # Query policies table
-            result = self.db.execute("SELECT COUNT(*) FROM lic_schema.insurance_policies")
+            result = self.db.execute(text("SELECT COUNT(*) FROM lic_schema.insurance_policies"))
             return result.scalar() or 0
         except Exception as e:
             logger.error(f"Error getting total policies: {e}")
@@ -376,7 +376,7 @@ class AnalyticsService:
         """Get total premium collected"""
         try:
             # Query premium payments table
-            result = self.db.execute("SELECT COALESCE(SUM(amount), 0) FROM lic_schema.premium_payments WHERE status = 'completed'")
+            result = self.db.execute(text("SELECT COALESCE(SUM(amount), 0) FROM lic_schema.premium_payments WHERE status = 'completed'"))
             return float(result.scalar() or 0)
         except Exception as e:
             logger.error(f"Error getting total premium: {e}")
@@ -394,7 +394,7 @@ class AnalyticsService:
         """Get top performing agents"""
         try:
             # Query agents with their performance metrics
-            result = self.db.execute("""
+            result = self.db.execute(text("""
                 SELECT
                     u.user_id as agent_id,
                     u.first_name || ' ' || u.last_name as name,
@@ -414,10 +414,10 @@ class AnalyticsService:
                     WHERE pp.status = 'completed' AND pp.created_at >= CURRENT_DATE - INTERVAL '30 days'
                     GROUP BY p.agent_id
                 ) pm ON u.user_id = pm.agent_id
-                WHERE u.role IN ('agent', 'senior_agent', 'junior_agent')
+                WHERE u.role IN ('junior_agent', 'senior_agent')
                 ORDER BY COALESCE(p.policy_count, 0) DESC, COALESCE(pm.premium_total, 0) DESC
                 LIMIT :limit
-            """, {"limit": limit})
+            """), {"limit": limit})
 
             agents = []
             for row in result:
@@ -425,7 +425,7 @@ class AnalyticsService:
                     "agent_id": row.agent_id,
                     "name": row.name or "Unknown Agent",
                     "policies_sold": int(row.policies_sold or 0),
-                    "premium_collected": float(row.premium_total or 0)
+                    "premium_collected": float(row.premium_collected or 0)
                 })
 
             return agents
@@ -688,22 +688,22 @@ class AnalyticsService:
         """Get customer-related metrics for agent"""
         try:
             # Get customer acquisition
-            result = self.db.execute("""
+            result = self.db.execute(text("""
                 SELECT COUNT(DISTINCT c.policyholder_id) as customers_acquired
                 FROM lic_schema.policyholders c
                 JOIN lic_schema.insurance_policies p ON c.policyholder_id = p.policyholder_id
                 WHERE p.agent_id = :agent_id AND p.created_at BETWEEN :start_date AND :end_date
-            """, {"agent_id": agent_id, "start_date": start_date, "end_date": end_date})
+            """), {"agent_id": agent_id, "start_date": start_date, "end_date": end_date})
 
             customers_acquired = result.scalar() or 0
 
             # Get active customers
-            result = self.db.execute("""
+            result = self.db.execute(text("""
                 SELECT COUNT(DISTINCT c.policyholder_id) as active_customers
                 FROM lic_schema.policyholders c
                 JOIN lic_schema.insurance_policies p ON c.policyholder_id = p.policyholder_id
                 WHERE p.agent_id = :agent_id AND p.status = 'active'
-            """, {"agent_id": agent_id})
+            """), {"agent_id": agent_id})
 
             active_customers = result.scalar() or 0
 

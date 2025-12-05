@@ -285,17 +285,17 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
       );
     }
 
-    final maxValue = data.map((d) => d['revenue'] ?? d['policies'] ?? 0).reduce((a, b) => a > b ? a : b);
-    final minValue = data.map((d) => d['revenue'] ?? d['policies'] ?? 0).reduce((a, b) => a < b ? a : b);
+    final maxValue = data.map((d) => d['value'] ?? 0).reduce((a, b) => a > b ? a : b);
+    final minValue = data.map((d) => d['value'] ?? 0).reduce((a, b) => a < b ? a : b);
 
     return SizedBox(
       height: 150,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: data.map((point) {
-          final value = point['revenue'] ?? point['policies'] ?? 0;
+          final value = point['value'] ?? 0;
           final height = maxValue > minValue ? ((value - minValue) / (maxValue - minValue)) * 100 : 50.0;
-          final month = point['month'] ?? '';
+          final month = point['label'] ?? point['date'] ?? '';
 
           return Expanded(
             child: Column(
@@ -431,7 +431,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    agent['agentName'] ?? 'Unknown Agent',
+                    agent['name'] ?? 'Unknown Agent',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -440,10 +440,10 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.policy, size: 14, color: Colors.grey),
+                      const Icon(Icons.star, size: 14, color: Colors.grey),
                       const SizedBox(width: 4),
                       Text(
-                        '${agent['policiesSold'] ?? 0} policies sold',
+                        'Rank #${agent['rank'] ?? 0}',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade600,
@@ -453,7 +453,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                       const Icon(Icons.attach_money, size: 14, color: Colors.grey),
                       const SizedBox(width: 4),
                       Text(
-                        '₹${(agent['commission'] ?? 0).toStringAsFixed(0)} commission',
+                        '₹${(agent['value'] ?? 0).toStringAsFixed(0)} premium',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade600,
@@ -472,7 +472,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                 border: const Border.fromBorderSide(BorderSide(color: Color(0xFF0083B0), width: 0.5)),
               ),
               child: Text(
-                '₹${(agent['revenue'] ?? 0).toStringAsFixed(0)}',
+                '₹${(agent['value'] ?? 0).toStringAsFixed(0)}',
                 style: const TextStyle(
                   color: Color(0xFF0083B0),
                   fontWeight: FontWeight.bold,

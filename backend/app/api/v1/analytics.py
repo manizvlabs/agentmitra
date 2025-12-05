@@ -1,6 +1,7 @@
 """
 Analytics API Endpoints for Business Intelligence and Reporting
 """
+import logging
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Optional, List
 from datetime import datetime, timedelta, date
@@ -34,6 +35,7 @@ from app.models.analytics import (
 )
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 # =====================================================
@@ -382,6 +384,7 @@ async def get_comprehensive_dashboard(
         }
 
     except Exception as e:
+        logger.error(f"Comprehensive dashboard error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get comprehensive dashboard: {str(e)}")
 
 
@@ -410,6 +413,7 @@ async def get_agent_performance_analytics(
         }
 
     except Exception as e:
+        logger.error(f"Agent analytics error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get agent analytics: {str(e)}")
 
 
@@ -436,6 +440,7 @@ async def get_all_agents_performance_analytics(
         }
 
     except Exception as e:
+        logger.error(f"All agents analytics error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get agents analytics: {str(e)}")
 
 
@@ -463,6 +468,7 @@ async def get_policy_analytics(
         }
 
     except Exception as e:
+        logger.error(f"Policy analytics error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get policy analytics: {str(e)}")
 
 
@@ -488,6 +494,7 @@ async def get_payment_analytics(
         }
 
     except Exception as e:
+        logger.error(f"Payment analytics error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get payment analytics: {str(e)}")
 
 
@@ -511,6 +518,7 @@ async def get_user_engagement_analytics(
         }
 
     except Exception as e:
+        logger.error(f"User engagement analytics error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get user engagement analytics: {str(e)}")
 
 
@@ -534,6 +542,7 @@ async def generate_custom_report(
         }
 
     except Exception as e:
+        logger.error(f"Custom report generation error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to generate custom report: {str(e)}")
 
 
@@ -569,6 +578,7 @@ async def export_analytics_data(
         }
 
     except Exception as e:
+        logger.error(f"Analytics data export error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to export analytics data: {str(e)}")
 
 
@@ -619,6 +629,7 @@ async def get_performance_summary_report(
         }
 
     except Exception as e:
+        logger.error(f"Performance summary generation error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to generate performance summary: {str(e)}")
 
 
@@ -702,6 +713,7 @@ async def get_business_intelligence_insights(
         }
 
     except Exception as e:
+        logger.error(f"Business insights generation error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to generate business insights: {str(e)}")
 
 
@@ -728,6 +740,7 @@ async def get_global_dashboard(
         kpis = repo.get_dashboard_kpis(agent_id=None, date_range=date_range)
         return kpis
     except Exception as e:
+        logger.error(f"Global dashboard KPIs error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch global dashboard KPIs: {str(e)}")
 
 
@@ -750,6 +763,7 @@ async def get_top_performing_agents(
 
         return repo.get_top_performing_agents(limit=limit, date_range=date_range)
     except Exception as e:
+        logger.error(f"Top performing agents error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch top performing agents: {str(e)}")
 
 
@@ -771,6 +785,7 @@ async def get_agent_dashboard(
         kpis = repo.get_dashboard_kpis(agent_id=agent_id, date_range=date_range)
         return kpis
     except Exception as e:
+        logger.error(f"Agent dashboard KPIs error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch dashboard KPIs: {str(e)}")
 
 
@@ -786,6 +801,7 @@ async def get_revenue_trends_chart(
         repo = AnalyticsRepository(db)
         return repo.get_revenue_trends(agent_id=agent_id, months=months)
     except Exception as e:
+        logger.error(f"Revenue trends error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch revenue trends: {str(e)}")
 
 
@@ -801,6 +817,7 @@ async def get_policy_trends_chart(
         repo = AnalyticsRepository(db)
         return repo.get_policy_trends(agent_id=agent_id, months=months)
     except Exception as e:
+        logger.error(f"Policy trends error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch policy trends: {str(e)}")
 
 
@@ -831,6 +848,7 @@ async def get_agent_performance(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Agent performance metrics error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch agent performance metrics: {str(e)}")
 
 
@@ -863,6 +881,7 @@ async def get_agents_performance_comparison(
             }
         }
     except Exception as e:
+        logger.error(f"Agent comparison error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch agent comparison: {str(e)}")
 
 
@@ -887,6 +906,7 @@ async def get_policy_analytics(
 
         return repo.get_policy_analytics(agent_id=agent_id, date_range=date_range)
     except Exception as e:
+        logger.error(f"Policy analytics error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch policy analytics: {str(e)}")
 
 
@@ -911,6 +931,7 @@ async def get_revenue_analytics(
 
         return repo.get_revenue_analytics(agent_id=agent_id, date_range=date_range)
     except Exception as e:
+        logger.error(f"Revenue analytics error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch revenue analytics: {str(e)}")
 
 
@@ -935,6 +956,7 @@ async def get_presentation_analytics(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Presentation analytics error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch presentation analytics: {str(e)}")
 
 
@@ -967,6 +989,7 @@ async def get_presentation_trends(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Presentation trends error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch presentation trends: {str(e)}")
 
 
@@ -1020,6 +1043,7 @@ async def generate_custom_report(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Report generation error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to generate report: {str(e)}")
 
 
@@ -1115,6 +1139,7 @@ async def generate_report(
             }
 
     except Exception as e:
+        logger.error(f"Report generation error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to generate report: {str(e)}")
 
 
@@ -1141,5 +1166,6 @@ async def get_analytics_summary(
             "generated_at": datetime.now().isoformat()
         }
     except Exception as e:
+        logger.error(f"Analytics summary generation error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to generate analytics summary: {str(e)}")
 

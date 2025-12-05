@@ -303,6 +303,7 @@ async def search_users(
         filters["search"] = q
 
     if role:
+        # Role validation is now handled in the repository layer
         filters["role"] = role
     elif current_user.role in ["junior_agent", "senior_agent"]:
         # Agents can only see policyholders by default

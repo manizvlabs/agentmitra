@@ -1,6 +1,7 @@
 """
 RBAC Management API Endpoints - Role-Based Access Control
 """
+import logging
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel, UUID4
 from typing import Optional, List, Dict, Any
@@ -9,6 +10,8 @@ from app.core.database import get_db
 from app.core.auth import get_current_user_context, UserContext, auth_service
 from app.core.audit_service import AuditService
 from app.models.rbac import UserRole, Role, RolePermission, Permission
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
