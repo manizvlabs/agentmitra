@@ -322,17 +322,10 @@ async def search_users(
     users = user_repo.search_users(filters, limit=limit, offset=offset)
 
     # Get RBAC service for role lookup
-    from app.services.rbac_service import RBACService
-    rbac_service = RBACService(db)
-
     user_responses = []
     for user in users:
-        # Get user role from RBAC system, fallback to user table
-        try:
-            rbac_roles = await rbac_service.get_user_roles(str(user.user_id))
-            user_role = rbac_roles[0] if rbac_roles else user.role or "policyholder"
-        except Exception:
-            user_role = user.role or "policyholder"
+        # Use user role from database directly (simplified approach)
+        user_role = user.role or "policyholder"
 
         user_responses.append(UserResponse(
             user_id=str(user.user_id),

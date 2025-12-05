@@ -76,15 +76,20 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       // API returns direct array of roles, not wrapped in 'data' key
       final roleList = response as List<dynamic>? ?? [];
 
-      // Remove duplicates based on role_name
-      final seenRoleNames = <String>{};
+      // Remove duplicates based on normalized role_name (convert to lowercase and replace spaces/underscores)
+      final seenNormalizedNames = <String>{};
       final uniqueRoles = <Map<String, dynamic>>[];
 
       for (final role in roleList) {
         final roleName = role['role_name'] as String?;
-        if (roleName != null && !seenRoleNames.contains(roleName)) {
-          seenRoleNames.add(roleName);
-          uniqueRoles.add(role as Map<String, dynamic>);
+        if (roleName != null) {
+          // Normalize role name: convert to lowercase, replace spaces and underscores with single format
+          final normalizedName = roleName.toLowerCase().replaceAll('_', ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
+
+          if (!seenNormalizedNames.contains(normalizedName)) {
+            seenNormalizedNames.add(normalizedName);
+            uniqueRoles.add(role as Map<String, dynamic>);
+          }
         }
       }
 
@@ -305,51 +310,59 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
           const SizedBox(height: 12),
 
           // Filters Row
-          Row(
+          Column(
             children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'Role Filter',
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 2, // Give more space to role filter
+                    child: DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        labelText: 'Role Filter',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                      value: _selectedRoleFilter.isEmpty ? null : _selectedRoleFilter,
+                      isExpanded: true, // Allow dropdown to expand
+                      items: [
+                        const DropdownMenuItem(value: '', child: Text('All Roles')),
+                        ..._roles.map((role) => DropdownMenuItem(
+                          value: role['role_name'],
+                          child: Text(_formatRoleName(role['role_name']), overflow: TextOverflow.ellipsis),
+                        )),
+                      ],
+                      onChanged: (value) {
+                        _selectedRoleFilter = value ?? '';
+                        _loadUsers();
+                      },
+                    ),
                   ),
-                  value: _selectedRoleFilter.isEmpty ? null : _selectedRoleFilter,
-                  items: [
-                    const DropdownMenuItem(value: '', child: Text('All Roles')),
-                    ..._roles.map((role) => DropdownMenuItem(
-                      value: role['role_name'],
-                      child: Text(_formatRoleName(role['role_name'])),
-                    )),
-                  ],
-                  onChanged: (value) {
-                    _selectedRoleFilter = value ?? '';
-                    _loadUsers();
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'Status Filter',
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 1, // Less space for status filter
+                    child: DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        labelText: 'Status Filter',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                      value: _selectedStatusFilter.isEmpty ? null : _selectedStatusFilter,
+                      isExpanded: true,
+                      items: const [
+                        DropdownMenuItem(value: '', child: Text('All Status')),
+                        DropdownMenuItem(value: 'active', child: Text('Active')),
+                        DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
+                        DropdownMenuItem(value: 'pending_verification', child: Text('Pending')),
+                        DropdownMenuItem(value: 'suspended', child: Text('Suspended')),
+                        DropdownMenuItem(value: 'deactivated', child: Text('Deactivated')),
+                      ],
+                      onChanged: (value) {
+                        _selectedStatusFilter = value ?? '';
+                        _loadUsers();
+                      },
+                    ),
                   ),
-                  value: _selectedStatusFilter.isEmpty ? null : _selectedStatusFilter,
-                  items: const [
-                    DropdownMenuItem(value: '', child: Text('All Status')),
-                    DropdownMenuItem(value: 'active', child: Text('Active')),
-                    DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
-                    DropdownMenuItem(value: 'pending_verification', child: Text('Pending Verification')),
-                    DropdownMenuItem(value: 'suspended', child: Text('Suspended')),
-                    DropdownMenuItem(value: 'deactivated', child: Text('Deactivated')),
-                  ],
-                  onChanged: (value) {
-                    _selectedStatusFilter = value ?? '';
-                    _loadUsers();
-                  },
-                ),
+                ],
               ),
             ],
           ),
@@ -679,9 +692,46 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
   }
 
   String _formatRoleName(String roleName) {
-    return roleName.replaceAll('_', ' ').split(' ').map((word) =>
-      word.isEmpty ? '' : '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}'
-    ).join(' ');
+    // Create shorter, more readable names for the dropdown
+    final normalized = roleName.toLowerCase().replaceAll('_', ' ').trim();
+
+    switch (normalized) {
+      case 'super admin':
+      case 'super_admin':
+        return 'Super Admin';
+      case 'provider admin':
+      case 'insurance_provider_admin':
+        return 'Provider Admin';
+      case 'regional manager':
+      case 'regional_manager':
+        return 'Regional Manager';
+      case 'senior agent':
+      case 'senior_agent':
+        return 'Senior Agent';
+      case 'junior agent':
+      case 'junior_agent':
+        return 'Junior Agent';
+      case 'support staff':
+      case 'support_staff':
+        return 'Support Staff';
+      case 'policyholder':
+      case 'customer':
+        return 'Policyholder';
+      case 'compliance officer':
+      case 'compliance_officer':
+        return 'Compliance Officer';
+      case 'customer support lead':
+      case 'customer_support_lead':
+        return 'Support Lead';
+      case 'guest':
+      case 'guest user':
+        return 'Guest';
+      default:
+        // For any other roles, capitalize each word but keep it reasonable length
+        return normalized.split(' ').map((word) =>
+          word.isEmpty ? '' : '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}'
+        ).take(3).join(' '); // Limit to 3 words max
+    }
   }
 
   String _formatDate(String dateString) {
