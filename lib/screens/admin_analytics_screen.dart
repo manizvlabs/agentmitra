@@ -64,26 +64,10 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
       final response = await ApiService.get('/api/v1/analytics/dashboard/top-agents');
       // API returns direct array of agents, not wrapped in 'data' key
       final agentList = response as List<dynamic>? ?? [];
-      final agents = List<Map<String, dynamic>>.from(agentList);
-
-      // If no data, show sample data for demo purposes
-      if (agents.isEmpty) {
-        agents.addAll([
-          {'agentName': 'John Smith', 'policiesSold': 15, 'revenue': 45000},
-          {'agentName': 'Sarah Johnson', 'policiesSold': 12, 'revenue': 36000},
-          {'agentName': 'Mike Davis', 'policiesSold': 10, 'revenue': 30000},
-        ]);
-      }
-
-      setState(() => _topAgents = agents);
+      setState(() => _topAgents = List<Map<String, dynamic>>.from(agentList));
     } catch (e) {
       print('Top agents API failed: $e');
-      // Show sample data on error
-      setState(() => _topAgents = [
-        {'agentName': 'John Smith', 'policiesSold': 15, 'revenue': 45000},
-        {'agentName': 'Sarah Johnson', 'policiesSold': 12, 'revenue': 36000},
-        {'agentName': 'Mike Davis', 'policiesSold': 10, 'revenue': 30000},
-      ]);
+      setState(() => _topAgents = []);
     }
   }
 
@@ -92,32 +76,10 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
       final response = await ApiService.get('/api/v1/analytics/dashboard/charts/revenue-trends');
       // API returns direct array of revenue data, not wrapped in 'data' key
       final revenueList = response as List<dynamic>? ?? [];
-      final trends = List<Map<String, dynamic>>.from(revenueList);
-
-      // If no data, show sample data for demo purposes
-      if (trends.isEmpty) {
-        trends.addAll([
-          {'period': 'Jan 2025', 'revenue': 25000, 'growth': 15.5},
-          {'period': 'Feb 2025', 'revenue': 28000, 'growth': 12.0},
-          {'period': 'Mar 2025', 'revenue': 32000, 'growth': 14.3},
-          {'period': 'Apr 2025', 'revenue': 29000, 'growth': -9.4},
-          {'period': 'May 2025', 'revenue': 35000, 'growth': 20.7},
-          {'period': 'Jun 2025', 'revenue': 38000, 'growth': 8.6},
-        ]);
-      }
-
-      setState(() => _revenueTrends = trends);
+      setState(() => _revenueTrends = List<Map<String, dynamic>>.from(revenueList));
     } catch (e) {
       print('Revenue trends API failed: $e');
-      // Show sample data on error
-      setState(() => _revenueTrends = [
-        {'period': 'Jan 2025', 'revenue': 25000, 'growth': 15.5},
-        {'period': 'Feb 2025', 'revenue': 28000, 'growth': 12.0},
-        {'period': 'Mar 2025', 'revenue': 32000, 'growth': 14.3},
-        {'period': 'Apr 2025', 'revenue': 29000, 'growth': -9.4},
-        {'period': 'May 2025', 'revenue': 35000, 'growth': 20.7},
-        {'period': 'Jun 2025', 'revenue': 38000, 'growth': 8.6},
-      ]);
+      setState(() => _revenueTrends = []);
     }
   }
 
@@ -126,32 +88,10 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
       final response = await ApiService.get('/api/v1/analytics/dashboard/charts/policy-trends');
       // API returns direct array of policy data, not wrapped in 'data' key
       final policyList = response as List<dynamic>? ?? [];
-      final trends = List<Map<String, dynamic>>.from(policyList);
-
-      // If no data, show sample data for demo purposes
-      if (trends.isEmpty) {
-        trends.addAll([
-          {'period': 'Jan 2025', 'policies': 12, 'growth': 20.0},
-          {'period': 'Feb 2025', 'policies': 15, 'growth': 25.0},
-          {'period': 'Mar 2025', 'policies': 18, 'growth': 20.0},
-          {'period': 'Apr 2025', 'policies': 14, 'growth': -22.2},
-          {'period': 'May 2025', 'policies': 22, 'growth': 57.1},
-          {'period': 'Jun 2025', 'policies': 25, 'growth': 13.6},
-        ]);
-      }
-
-      setState(() => _policyTrends = trends);
+      setState(() => _policyTrends = List<Map<String, dynamic>>.from(policyList));
     } catch (e) {
       print('Policy trends API failed: $e');
-      // Show sample data on error
-      setState(() => _policyTrends = [
-        {'period': 'Jan 2025', 'policies': 12, 'growth': 20.0},
-        {'period': 'Feb 2025', 'policies': 15, 'growth': 25.0},
-        {'period': 'Mar 2025', 'policies': 18, 'growth': 20.0},
-        {'period': 'Apr 2025', 'policies': 14, 'growth': -22.2},
-        {'period': 'May 2025', 'policies': 22, 'growth': 57.1},
-        {'period': 'Jun 2025', 'policies': 25, 'growth': 13.6},
-      ]);
+      setState(() => _policyTrends = []);
     }
   }
 
@@ -761,29 +701,24 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
           ],
 
           // Top Agents
-          if (_topAgents.isNotEmpty) ...[
-            const Text(
-              'Top Performing Agents',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            _buildTopAgentsList(),
-            const SizedBox(height: 24),
-          ],
+          const Text(
+            'Top Performing Agents',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          _buildTopAgentsList(),
+          const SizedBox(height: 24),
 
           // Revenue Trends
-          if (_revenueTrends.isNotEmpty) ...[
-            const Text(
-              'Revenue Trends',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            _buildRevenueChart(),
-            const SizedBox(height: 24),
-          ],
+          const Text(
+            'Revenue Trends',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          _buildRevenueChart(),
+          const SizedBox(height: 24),
 
           // Policy Trends
-          if (_policyTrends.isNotEmpty) ...[
             const Text(
               'Policy Trends',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
