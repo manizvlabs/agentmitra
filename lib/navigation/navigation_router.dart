@@ -57,7 +57,7 @@ class NavigationRouter {
   String getInitialRoute(BuildContext context) {
     try {
       final authViewModel = provider.Provider.of<AuthViewModel>(context, listen: false);
-      final rbacService = context.read<RbacService>();
+      final rbacService = provider.Provider.of<RbacService>(context, listen: false);
 
       // Check if user is authenticated
       if (!authViewModel.isAuthenticated) {
