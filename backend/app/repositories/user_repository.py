@@ -29,8 +29,33 @@ class UserRepository:
         return self.db.query(User).filter(User.user_id == user_id).first()
 
     def get_by_phone(self, phone_number: str) -> Optional[User]:
-        """Get user by phone number"""
-        return self.db.query(User).filter(User.phone_number == phone_number).first()
+        """Get user by phone number - handles both formats with/without country code"""
+        if not phone_number:
+            return None
+        
+        # Normalize phone number - try both with and without +91 prefix
+        normalized = phone_number.strip()
+        
+        # Try exact match first
+        user = self.db.query(User).filter(User.phone_number == normalized).first()
+        if user:
+            return user
+        
+        # If phone starts with +91, try without it
+        if normalized.startswith("+91"):
+            without_prefix = normalized[3:].strip()
+            user = self.db.query(User).filter(User.phone_number == without_prefix).first()
+            if user:
+                return user
+        
+        # If phone doesn't start with +91, try with it
+        if not normalized.startswith("+") and len(normalized) == 10:
+            with_prefix = f"+91{normalized}"
+            user = self.db.query(User).filter(User.phone_number == with_prefix).first()
+            if user:
+                return user
+        
+        return None
 
     def get_by_agent_code(self, agent_code: str) -> Optional[User]:
         """Get user by agent code (looks up in agents table)"""
