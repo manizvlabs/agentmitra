@@ -49,23 +49,13 @@ class ApiService {
         url += '?$queryString';
       }
 
-      final headers = await getHeaders();
-      debugPrint('ApiService GET: $url');
-      debugPrint('Headers: $headers');
-
       final response = await http.get(
         Uri.parse(url),
-        headers: headers,
+        headers: await getHeaders(),
       );
-
-      debugPrint('Response status: ${response.statusCode}');
-      if (response.statusCode >= 400) {
-        debugPrint('Response body: ${response.body}');
-      }
 
       return handleResponse(response);
     } catch (e) {
-      debugPrint('ApiService GET error: $e');
       throw Exception('Network error: $e');
     }
   }
