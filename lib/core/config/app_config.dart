@@ -137,8 +137,9 @@ class AppConfig {
     // API Configuration
     // For web builds served through nginx proxy, use empty base URL to use same origin
     // This allows nginx to proxy /api/ requests to the backend
-    final defaultApiUrl = kIsWeb ? '' : 'http://localhost:8012';
-    final defaultWsUrl = kIsWeb ? '' : 'ws://localhost:8012';
+    // For mobile apps, use Nginx proxy at port 80 to match production setup
+    final defaultApiUrl = kIsWeb ? '' : 'http://localhost:80';
+    final defaultWsUrl = kIsWeb ? '' : 'ws://localhost:80';
     _apiBaseUrl = dotenv.get('API_BASE_URL', fallback: defaultApiUrl);
     _wsBaseUrl = dotenv.get('WS_BASE_URL', fallback: defaultWsUrl);
     _apiVersion = dotenv.get('API_VERSION', fallback: '/api/v1');

@@ -240,25 +240,30 @@ class _SystemDashboardScreenState extends State<SystemDashboardScreen> {
                   ),
                 ),
                 const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: (_systemOverview['systemHealth'] ?? 0) > 90
-                      ? Colors.green.shade100
-                      : (_systemOverview['systemHealth'] ?? 0) > 70
-                        ? Colors.orange.shade100
-                        : Colors.red.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    'Health: ${(_systemOverview['systemHealth'] ?? 0).toStringAsFixed(1)}%',
-                    style: TextStyle(
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
                       color: (_systemOverview['systemHealth'] ?? 0) > 90
-                        ? Colors.green.shade800
+                        ? Colors.green.shade100
                         : (_systemOverview['systemHealth'] ?? 0) > 70
-                          ? Colors.orange.shade800
-                          : Colors.red.shade800,
-                      fontWeight: FontWeight.bold,
+                          ? Colors.orange.shade100
+                          : Colors.red.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Health: ${(_systemOverview['systemHealth'] ?? 0).toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        color: (_systemOverview['systemHealth'] ?? 0) > 90
+                          ? Colors.green.shade800
+                          : (_systemOverview['systemHealth'] ?? 0) > 70
+                            ? Colors.orange.shade800
+                            : Colors.red.shade800,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                   ),
                 ),
@@ -795,8 +800,10 @@ class _SystemDashboardScreenState extends State<SystemDashboardScreen> {
                 child: _buildMetricsChart(),
               ),
               const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
                 children: [
                   _buildMetricChip(
                     'CPU: ${_systemHealth['system']?['cpu']?['usage_percent']?.toStringAsFixed(1) ?? '0.0'}%',

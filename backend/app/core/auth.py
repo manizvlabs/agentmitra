@@ -316,13 +316,24 @@ class AuthorizationService:
     def get_all_roles(self, db: Session) -> List[Dict[str, Any]]:
         """Get all available roles"""
         try:
-            roles = db.query(Role).all()
+            # Query all roles and deduplicate by role_name (prefer system roles)
+            roles = db.query(Role).order_by(Role.is_system_role.desc(), Role.role_name).all()
+            
+            # Deduplicate by role_name, keeping the first occurrence (which will be system roles first)
+            seen_names = {}
+            unique_roles = []
+            for r in roles:
+                role_name = r.role_name
+                if role_name not in seen_names:
+                    seen_names[role_name] = r
+                    unique_roles.append(r)
+            
             return [{
                 'role_id': str(r.role_id),
                 'role_name': r.role_name,
                 'description': r.role_description,
                 'is_system_role': r.is_system_role
-            } for r in roles]
+            } for r in unique_roles]
         except Exception as e:
             get_auth_logger().error(f"Error getting all roles: {e}")
             return []

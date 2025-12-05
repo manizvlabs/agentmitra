@@ -1,5 +1,6 @@
 /// Base ViewModel class for all feature ViewModels
 /// Provides common functionality for state management
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 /// Result wrapper for async operations
@@ -66,7 +67,10 @@ abstract class BaseViewModel extends ChangeNotifier {
   /// Set initialized state
   void setInitialized(bool initialized) {
     _isInitialized = initialized;
-    notifyListeners();
+    // Defer notifyListeners to avoid calling during build phase
+    scheduleMicrotask(() {
+      notifyListeners();
+    });
   }
 
   /// Initialize ViewModel

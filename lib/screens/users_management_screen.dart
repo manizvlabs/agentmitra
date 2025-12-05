@@ -36,18 +36,29 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
 
       final response = await ApiService.get('/api/v1/users/', queryParameters: queryParams);
       // API returns direct array of users, not wrapped in 'data' key
-      final userList = response as List<dynamic>? ?? [];
+      List<dynamic> userList = [];
+      if (response is List) {
+        userList = response;
+      } else if (response is Map && response.containsKey('items')) {
+        // Handle paginated response format
+        userList = response['items'] as List<dynamic>? ?? [];
+      } else if (response is Map && response.containsKey('data')) {
+        // Handle wrapped response format
+        userList = response['data'] as List<dynamic>? ?? [];
+      }
       setState(() => _users = List<Map<String, dynamic>>.from(userList));
     } catch (e) {
-      print('Failed to load users: $e');
+      debugPrint('Failed to load users: $e');
+      debugPrint('Error type: ${e.runtimeType}');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Failed to load users. Please check your connection and try again.'),
+            content: Text('Failed to load users: ${e.toString()}'),
             action: SnackBarAction(
               label: 'Retry',
               onPressed: _loadUsers,
             ),
+            duration: const Duration(seconds: 5),
           ),
         );
       }
@@ -642,11 +653,15 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                 ),
                 const SizedBox(width: 8),
                 if (lastLogin != null) ...[
-                  Text(
-                    'Last login: ${_formatDate(lastLogin)}',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.grey.shade500,
+                  Flexible(
+                    child: Text(
+                      'Last login: ${_formatDate(lastLogin)}',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey.shade500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                   ),
                 ],

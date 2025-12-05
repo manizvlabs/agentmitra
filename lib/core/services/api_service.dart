@@ -2,7 +2,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import '../config/app_config.dart';
 
@@ -17,8 +16,9 @@ class ApiService {
       // So we use empty string to avoid double prefixing
       return '';
     }
-    // For mobile/native apps, use direct backend URL
-    return _config.fullApiUrl;
+    // For mobile/native apps, ApiConstants already include /api/v1 prefix
+    // So we use just the base URL (without /api/v1) to avoid double prefixing
+    return _config.apiBaseUrl;
   }
 
   static String get baseUrl => _config.apiBaseUrl;
@@ -37,8 +37,8 @@ class ApiService {
     return headers;
   }
 
-  // GET request
-  static Future<Map<String, dynamic>> get(String endpoint, {Map<String, dynamic>? queryParameters}) async {
+  // GET request - returns dynamic to handle both List and Map responses
+  static Future<dynamic> get(String endpoint, {Map<String, dynamic>? queryParameters}) async {
     try {
       var url = '$apiUrl$endpoint';
       if (queryParameters != null && queryParameters.isNotEmpty) {
