@@ -41,10 +41,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
   Future<void> _updateSetting(String key, dynamic value) async {
     try {
-      await ApiService.put('/api/v1/admin/settings', {
-        'key': key,
-        'value': value.toString(),
-      });
+      await ApiService.put('/api/v1/admin/settings?key=$key&value=${value.toString()}', {});
 
       setState(() => _settings[key] = value);
 

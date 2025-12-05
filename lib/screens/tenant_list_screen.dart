@@ -381,9 +381,10 @@ class _TenantListScreenState extends State<TenantListScreen> {
         onTap: () => _loadTenantDetails(tenant['tenant_id']),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Header with status and actions
               Row(

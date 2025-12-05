@@ -93,6 +93,13 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
         }
       }
 
+      // Sort roles alphabetically by display name
+      uniqueRoles.sort((a, b) {
+        final nameA = _formatRoleName(a['role_name'] ?? '');
+        final nameB = _formatRoleName(b['role_name'] ?? '');
+        return nameA.compareTo(nameB);
+      });
+
       setState(() => _roles = uniqueRoles);
     } catch (e) {
       print('Failed to load roles: $e');
