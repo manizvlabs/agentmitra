@@ -1,0 +1,17 @@
+---
+description: "Global standards for this project"
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Project Architecture Standards
+
+- This project uses a clean layered architecture: UI → Service → Repository → API/DB.
+- Do not write mock data or stub logic anywhere.
+- Do not write SQL schema changes inline inside the service or repository layer.
+- All DB schema changes MUST be implemented using **Flyway migrations** under `/db/migration`.
+- All client apps (Flutter) must consume **real backend APIs only**.
+- Business logic must not be placed in UI files.
+- All code must include minimal comments explaining business logic or API integration.
+- Always generate models, DTOs, and entities using strict typing and avoid dynamic maps.
+- Keep all generated code consistent with the existing folder structure.

@@ -1,0 +1,23 @@
+---
+description: "Rules for DB migrations using Flyway"
+globs: ["**/db/migration/**", "**/*.sql"]
+alwaysApply: true
+---
+
+# Database Rules — Flyway
+
+## Flyway Required
+- Every database change MUST be created as a Flyway migration file.
+- Migration files must follow Flyway naming convention:  
+  `V<version>__description.sql`  
+  Example: `V4__add_user_profile_table.sql`
+
+## Prohibited
+- Do NOT write schema changes inside application code.
+- Do NOT write ad-hoc SQL updates in service/repository classes.
+- Do NOT drop tables without explicit business approval (add warnings in comments if needed).
+
+## Guidelines
+- Clearly comment each migration describing why the change is needed.
+- Keep migrations backward compatible whenever possible.
+- Never modify an existing migration once merged; always create a new one.

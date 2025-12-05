@@ -1,0 +1,25 @@
+---
+description: "Rules for Flutter frontend code"
+globs: ["**/*.dart"]
+alwaysApply: true
+---
+
+# Flutter UI Coding Rules
+
+## API Integration
+- Never create mock data inside widgets, view models, controllers, or providers.
+- Every screen must load its data from a **real backend API** using the correct domain service.
+- Always parse API responses into typed model classes (no Map<String, dynamic> used directly).
+- Always use repository/service layers for data retrieval, not direct `http` calls inside widgets.
+
+## UI/State Management
+- UI files must only contain widget code; state must be in controller/provider/BLoC.
+- Do not put business logic inside UI widgets.
+- Screen must handle loading, success, and error states cleanly.
+- Use domain models, not raw JSON, inside UI layer.
+
+## Code Structure
+- Place screens in `lib/screens/`.
+- Place models in `lib/models/`.
+- Place API/repo/services under `lib/services/`.
+- Keep file names consistent: `<feature>_screen.dart`, `<feature>_service.dart`, `<feature>_model.dart`.
