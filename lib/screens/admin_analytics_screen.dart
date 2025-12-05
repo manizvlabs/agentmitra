@@ -719,13 +719,12 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
           const SizedBox(height: 24),
 
           // Policy Trends
-            const Text(
-              'Policy Trends',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            _buildPolicyChart(),
-          ],
+          const Text(
+            'Policy Trends',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          _buildPolicyChart(),
         ],
       ),
     );

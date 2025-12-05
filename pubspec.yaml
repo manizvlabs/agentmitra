@@ -96,6 +96,11 @@ dev_dependencies:
 
   flutter_lints: ^3.0.0
 
+  # Testing Framework
+  patrol: ^3.0.0
+  patrol_finders: ^2.0.0
+  mockito: ^5.4.4
+
   # Code Generation
   freezed: ^2.4.7
   build_runner: ^2.4.8
