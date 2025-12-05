@@ -113,9 +113,7 @@ flutter:
 
 # Platform-specific dependencies
 dependency_overrides:
-  # Temporarily override win32 to avoid iOS compilation issues
-  # This is a workaround until Flutter properly handles platform-specific dependencies
-  win32: 5.0.7
+  win32: ^5.15.0
 
 # Platform-specific configurations
 platforms:

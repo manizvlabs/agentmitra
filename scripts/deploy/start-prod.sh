@@ -7,7 +7,12 @@
 # 2. Creates .env file if needed
 # 3. Generates SSL certificates (if needed)
 # 4. Builds Flutter web app (if needed for nginx)
-# 5. Starts Docker Compose services
+# 5. Starts Docker Compose services (backend excluded - runs locally)
+# 6. Starts backend locally with hot reload (if requested)
+#
+# Note: Backend runs locally (not in Docker) for fast hot reload development
+# Docker services: minio, portal, nginx, pioneer services, prometheus, grafana
+# Local service: backend (runs via scripts/run_backend.sh)
 
 set -e
 
@@ -75,28 +80,46 @@ echo ""
 # Determine which services to start
 # Default: start essential services (minio + backend)
 # Usage: ./scripts/start-prod.sh [service1] [service2] ... | all | minimal
+# Note: Backend runs locally (not in Docker) for hot reload
+START_BACKEND=false
+DOCKER_SERVICES=""
+
 if [ $# -eq 0 ]; then
     # No arguments - start essential services by default
-    SERVICES="minio backend"
+    DOCKER_SERVICES="minio"
+    START_BACKEND=true
     START_ALL=false
-    echo -e "${YELLOW}Note: Starting essential services only (minio + backend)${NC}"
+    echo -e "${YELLOW}Note: Starting essential services (minio + backend)${NC}"
+    echo -e "${YELLOW}Backend will run locally with hot reload${NC}"
     echo "To start all services: ./scripts/start-prod.sh all"
     echo "To start minimal: ./scripts/start-prod.sh minimal"
     echo ""
 elif [ "$1" = "all" ]; then
-    SERVICES="pioneer-nats pioneer-compass-server pioneer-scout pioneer-compass-client minio backend portal nginx prometheus grafana"
+    DOCKER_SERVICES="pioneer-nats pioneer-compass-server pioneer-scout pioneer-compass-client minio portal nginx prometheus grafana"
+    START_BACKEND=true
     START_ALL=true
     echo -e "${GREEN}Starting all services including Pioneer, portal and nginx${NC}"
+    echo -e "${YELLOW}Backend will run locally with hot reload${NC}"
     echo ""
 elif [ "$1" = "minimal" ]; then
-    SERVICES="minio backend"
+    DOCKER_SERVICES="minio"
+    START_BACKEND=true
     START_ALL=false
 else
     # Specific services provided
-    SERVICES="$@"
+    USER_SERVICES="$@"
     START_ALL=false
+    
+    # Separate backend from Docker services
+    if echo "$USER_SERVICES" | grep -q "backend"; then
+        START_BACKEND=true
+        DOCKER_SERVICES=$(echo "$USER_SERVICES" | sed 's/backend//g' | xargs)
+    else
+        DOCKER_SERVICES="$USER_SERVICES"
+    fi
+    
     # Check if nginx or portal are in the list
-    if echo "$SERVICES" | grep -qE "(nginx|portal)"; then
+    if echo "$DOCKER_SERVICES" | grep -qE "(nginx|portal)"; then
         START_ALL=true
     fi
 fi
@@ -118,7 +141,7 @@ fi
 echo ""
 
 # Build Flutter web app if nginx is needed
-if [ "$START_ALL" = true ] || echo "$SERVICES" | grep -q "nginx"; then
+if [ "$START_ALL" = true ] || echo "$DOCKER_SERVICES" | grep -q "nginx"; then
     echo -e "${BLUE}[4/5]${NC} Checking Flutter web build..."
     if [ ! -d "$PROJECT_DIR/build/web" ] || [ ! -f "$PROJECT_DIR/build/web/index.html" ]; then
         echo -e "${YELLOW}⚠ Flutter web build not found. Building Flutter web app...${NC}"
@@ -152,15 +175,55 @@ else
 fi
 
 # Start Docker Compose services
-echo -e "${BLUE}[5/5]${NC} Starting Docker Compose services..."
-echo "Services to start: $SERVICES"
+echo -e "${BLUE}[5/6]${NC} Starting Docker Compose services..."
+if [ -n "$DOCKER_SERVICES" ]; then
+    echo "Docker services to start: $DOCKER_SERVICES"
+    docker compose -f docker-compose.prod.yml up -d $DOCKER_SERVICES
+else
+    echo "No Docker services to start"
+fi
 echo ""
 
-# Start services
-docker compose -f docker-compose.prod.yml up -d $SERVICES
+# Start backend locally if requested
+if [ "$START_BACKEND" = true ]; then
+    echo -e "${BLUE}[6/6]${NC} Starting backend locally with hot reload..."
+    echo ""
+    
+    # Check if backend is already running
+    if lsof -Pi :8012 -sTCP:LISTEN -t >/dev/null 2>&1 ; then
+        echo -e "${YELLOW}⚠ Backend is already running on port 8012${NC}"
+        echo "  If you want to restart it, stop the existing process first:"
+        echo "  lsof -ti:8012 | xargs kill"
+        echo ""
+        read -p "Press Enter to continue, or Ctrl+C to exit and stop the existing backend..."
+    else
+        # Start backend in background
+        echo -e "${GREEN}Starting backend with hot reload...${NC}"
+        echo "  Backend will run in background"
+        echo "  Logs will be written to: $PROJECT_DIR/logs/app.log"
+        echo "  To view logs: tail -f $PROJECT_DIR/logs/app.log"
+        echo ""
+        
+        # Run backend script in background and save PID
+        nohup bash "$PROJECT_DIR/scripts/run_backend.sh" > "$PROJECT_DIR/logs/backend-startup.log" 2>&1 &
+        BACKEND_PID=$!
+        echo $BACKEND_PID > "$PROJECT_DIR/.backend.pid"
+        
+        # Wait a moment for backend to start
+        sleep 3
+        
+        # Check if backend started successfully
+        if ps -p $BACKEND_PID > /dev/null 2>&1; then
+            echo -e "${GREEN}✓ Backend started successfully (PID: $BACKEND_PID)${NC}"
+        else
+            echo -e "${RED}✗ Backend failed to start${NC}"
+            echo "  Check logs: cat $PROJECT_DIR/logs/backend-startup.log"
+        fi
+    fi
+    echo ""
+fi
 
 # Wait for services to be ready
-echo ""
 echo "Waiting for services to be ready..."
 sleep 5
 
@@ -168,10 +231,22 @@ sleep 5
 echo ""
 echo "Service Status:"
 echo "==============="
-docker compose -f docker-compose.prod.yml ps
+if [ -n "$DOCKER_SERVICES" ]; then
+    docker compose -f docker-compose.prod.yml ps
+fi
+if [ "$START_BACKEND" = true ]; then
+    if [ -f "$PROJECT_DIR/.backend.pid" ]; then
+        BACKEND_PID=$(cat "$PROJECT_DIR/.backend.pid")
+        if ps -p $BACKEND_PID > /dev/null 2>&1; then
+            echo -e "${GREEN}✓ Backend (local): Running (PID: $BACKEND_PID)${NC}"
+        else
+            echo -e "${RED}✗ Backend (local): Not running${NC}"
+        fi
+    fi
+fi
 
 # Setup MinIO bucket if MinIO is running
-if echo "$SERVICES" | grep -q "minio" || [ "$SERVICES" = "all" ]; then
+if echo "$DOCKER_SERVICES" | grep -q "minio" || [ "$START_ALL" = true ]; then
     echo ""
     echo "Setting up MinIO bucket..."
     if docker ps | grep -q agentmitra_minio; then
@@ -198,43 +273,54 @@ echo -e "${GREEN}═════════════════════
 echo ""
 echo "Service URLs:"
 echo "============="
-if echo "$SERVICES" | grep -q "nginx"; then
+if echo "$DOCKER_SERVICES" | grep -q "nginx"; then
     echo "  Flutter Web App: http://localhost:80"
 fi
-if echo "$SERVICES" | grep -q "portal"; then
+if echo "$DOCKER_SERVICES" | grep -q "portal"; then
     echo "  Portal:          http://localhost:3013"
 fi
-if echo "$SERVICES" | grep -q "backend"; then
-    echo "  Backend API:     http://localhost:8012"
+if [ "$START_BACKEND" = true ]; then
+    echo "  Backend API:     http://localhost:8012 (running locally with hot reload)"
+    echo "  Backend Docs:    http://localhost:8012/docs"
 fi
-if echo "$SERVICES" | grep -q "pioneer-compass-server"; then
+if echo "$DOCKER_SERVICES" | grep -q "pioneer-compass-server"; then
     echo "  Pioneer API:     http://localhost:4001"
     echo "  Pioneer Admin:   http://localhost:4000"
 fi
-if echo "$SERVICES" | grep -q "minio"; then
+if echo "$DOCKER_SERVICES" | grep -q "minio"; then
     echo "  MinIO Console:   http://localhost:9001 (minioadmin/minioadmin)"
     echo "  MinIO API:       http://localhost:9000"
 fi
-if echo "$SERVICES" | grep -q "grafana"; then
+if echo "$DOCKER_SERVICES" | grep -q "grafana"; then
     echo "  Grafana:         http://localhost:3012 (admin/\$GRAFANA_PASSWORD)"
 fi
-if echo "$SERVICES" | grep -q "prometheus"; then
+if echo "$DOCKER_SERVICES" | grep -q "prometheus"; then
     echo "  Prometheus:      http://localhost:9012"
 fi
 echo ""
-if echo "$SERVICES" | grep -q "backend"; then
+if [ "$START_BACKEND" = true ]; then
     echo "CORS Configuration:"
     echo "  Backend allows requests from: http://localhost:8080, http://localhost:3000, http://localhost:8012, http://localhost:3013"
     echo ""
 fi
 echo "Useful Commands:"
 echo "================"
-echo "  View logs:        docker compose -f $PROJECT_DIR/docker-compose.prod.yml logs -f [service]"
-echo "  Stop services:    docker compose -f $PROJECT_DIR/docker-compose.prod.yml down"
-echo "  Restart service:  docker compose -f $PROJECT_DIR/docker-compose.prod.yml restart [service]"
-echo "  Service status:   docker compose -f $PROJECT_DIR/docker-compose.prod.yml ps"
+if [ -n "$DOCKER_SERVICES" ]; then
+    echo "  View Docker logs: docker compose -f $PROJECT_DIR/docker-compose.prod.yml logs -f [service]"
+    echo "  Stop Docker:      docker compose -f $PROJECT_DIR/docker-compose.prod.yml down"
+    echo "  Restart service:  docker compose -f $PROJECT_DIR/docker-compose.prod.yml restart [service]"
+    echo "  Docker status:    docker compose -f $PROJECT_DIR/docker-compose.prod.yml ps"
+fi
+if [ "$START_BACKEND" = true ]; then
+    echo "  Backend logs:     tail -f $PROJECT_DIR/logs/app.log"
+    echo "  Stop backend:     kill \$(cat $PROJECT_DIR/.backend.pid) 2>/dev/null || lsof -ti:8012 | xargs kill"
+    echo "  Restart backend:  kill \$(cat $PROJECT_DIR/.backend.pid) 2>/dev/null; sleep 2; $PROJECT_DIR/scripts/run_backend.sh &"
+fi
 echo ""
 echo -e "${GREEN}All set! Your services are running.${NC}"
+if [ "$START_BACKEND" = true ]; then
+    echo -e "${YELLOW}Note: Backend is running locally with hot reload - code changes will auto-reload${NC}"
+fi
 echo ""
 
 # Copy .env file to web build directory for Flutter web builds
