@@ -25,6 +25,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
 
   Future<void> _loadAnalyticsData() async {
     setState(() => _isLoading = true);
+    print('🔄 Starting analytics data loading...');
 
     try {
       // Load all analytics data in parallel
@@ -35,8 +36,9 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
         _loadPolicyTrends(),
         _loadComprehensiveAnalytics(),
       ]);
+      print('✅ All analytics data loaded successfully');
     } catch (e) {
-      print('Failed to load analytics data: $e');
+      print('❌ Failed to load analytics data: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to load analytics data. Please try again.')),
@@ -45,64 +47,86 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
+        print('🏁 Analytics loading completed, isLoading = false');
       }
     }
   }
 
   Future<void> _loadDashboardOverview() async {
     try {
+      print('📊 Loading dashboard overview...');
       final response = await ApiService.get('/api/v1/analytics/dashboard/overview');
+      print('📊 Dashboard response: $response');
       // API returns direct object, not wrapped in 'data' key
-      setState(() => _dashboardOverview = response as Map<String, dynamic>? ?? {});
+      final data = response as Map<String, dynamic>? ?? {};
+      print('📊 Dashboard parsed data: $data');
+      setState(() => _dashboardOverview = data);
+      print('📊 Dashboard overview loaded: ${_dashboardOverview.length} keys');
     } catch (e) {
-      print('Dashboard overview API failed: $e');
+      print('❌ Dashboard overview API failed: $e');
     }
   }
 
   Future<void> _loadTopAgents() async {
     try {
+      print('👥 Loading top agents...');
       final response = await ApiService.get('/api/v1/analytics/dashboard/top-agents');
+      print('👥 Top agents response: $response');
       // API returns direct array of agents, not wrapped in 'data' key
       final agentList = response as List<dynamic>? ?? [];
+      print('👥 Top agents parsed: ${agentList.length} agents');
       setState(() => _topAgents = List<Map<String, dynamic>>.from(agentList));
+      print('👥 Top agents state updated: ${_topAgents.length} agents');
     } catch (e) {
-      print('Top agents API failed: $e');
+      print('❌ Top agents API failed: $e');
       setState(() => _topAgents = []);
     }
   }
 
   Future<void> _loadRevenueTrends() async {
     try {
+      print('💰 Loading revenue trends...');
       final response = await ApiService.get('/api/v1/analytics/dashboard/charts/revenue-trends');
+      print('💰 Revenue trends response: $response');
       // API returns direct array of revenue data, not wrapped in 'data' key
       final revenueList = response as List<dynamic>? ?? [];
+      print('💰 Revenue trends parsed: ${revenueList.length} data points');
       setState(() => _revenueTrends = List<Map<String, dynamic>>.from(revenueList));
+      print('💰 Revenue trends state updated: ${_revenueTrends.length} data points');
     } catch (e) {
-      print('Revenue trends API failed: $e');
+      print('❌ Revenue trends API failed: $e');
       setState(() => _revenueTrends = []);
     }
   }
 
   Future<void> _loadPolicyTrends() async {
     try {
+      print('📈 Loading policy trends...');
       final response = await ApiService.get('/api/v1/analytics/dashboard/charts/policy-trends');
+      print('📈 Policy trends response: $response');
       // API returns direct array of policy data, not wrapped in 'data' key
       final policyList = response as List<dynamic>? ?? [];
+      print('📈 Policy trends parsed: ${policyList.length} data points');
       setState(() => _policyTrends = List<Map<String, dynamic>>.from(policyList));
+      print('📈 Policy trends state updated: ${_policyTrends.length} data points');
     } catch (e) {
-      print('Policy trends API failed: $e');
+      print('❌ Policy trends API failed: $e');
       setState(() => _policyTrends = []);
     }
   }
 
   Future<void> _loadComprehensiveAnalytics() async {
     try {
+      print('📊 Loading comprehensive analytics...');
       final response = await ApiService.get('/api/v1/analytics/comprehensive/dashboard');
+      print('📊 Comprehensive response: $response');
       // API returns data wrapped in 'data' key
       final analyticsData = response['data'] as Map<String, dynamic>? ?? {};
+      print('📊 Comprehensive parsed data: ${analyticsData.length} keys');
       setState(() => _comprehensiveAnalytics = analyticsData);
+      print('📊 Comprehensive analytics loaded: ${_comprehensiveAnalytics.length} metrics');
     } catch (e) {
-      print('Comprehensive analytics API failed: $e');
+      print('❌ Comprehensive analytics API failed: $e');
     }
   }
 
@@ -665,6 +689,14 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print('🔄 Building analytics screen...');
+    print('📊 Dashboard overview: ${_dashboardOverview.length} keys');
+    print('👥 Top agents: ${_topAgents.length} agents');
+    print('💰 Revenue trends: ${_revenueTrends.length} data points');
+    print('📈 Policy trends: ${_policyTrends.length} data points');
+    print('📊 Comprehensive: ${_comprehensiveAnalytics.length} metrics');
+    print('⏳ Is loading: $_isLoading');
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Analytics Dashboard', style: TextStyle(color: Colors.white)),
