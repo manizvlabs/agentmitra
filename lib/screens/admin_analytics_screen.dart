@@ -128,24 +128,24 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
               children: [
                 _buildKPICard(
                   'Total Revenue',
-                  '₹${(_dashboardOverview['totalRevenue'] ?? 0).toStringAsFixed(0)}',
+                  '₹${(_dashboardOverview['total_premium_collected'] ?? 0).toStringAsFixed(0)}',
                   Icons.attach_money,
                   Colors.green,
-                  '${_dashboardOverview['revenueGrowth']?.toStringAsFixed(1) ?? 0}% growth',
+                  '₹${(_dashboardOverview['monthly_premium_collected'] ?? 0).toStringAsFixed(0)} this month',
                 ),
                 _buildKPICard(
                   'Total Policies',
-                  '${_dashboardOverview['totalPolicies'] ?? 0}',
+                  '${_dashboardOverview['total_policies'] ?? 0}',
                   Icons.policy,
                   Colors.blue,
-                  '${_dashboardOverview['policyGrowth']?.toStringAsFixed(1) ?? 0}% growth',
+                  '${_dashboardOverview['active_policies'] ?? 0} active',
                 ),
                 _buildKPICard(
-                  'Active Agents',
-                  '${_dashboardOverview['activeAgents'] ?? 0}',
+                  'Total Customers',
+                  '${_dashboardOverview['total_customers'] ?? 0}',
                   Icons.people,
                   Colors.orange,
-                  'Performing agents',
+                  '${_dashboardOverview['new_customers_this_month'] ?? 0} new this month',
                 ),
                 _buildKPICard(
                   'Conversion Rate',
@@ -737,10 +737,10 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
       spacing: 16,
       runSpacing: 16,
       children: [
-        _buildMetricCard('Total Revenue', '₹${_dashboardOverview['totalRevenue'] ?? 0}'),
-        _buildMetricCard('Total Policies', '${_dashboardOverview['totalPolicies'] ?? 0}'),
-        _buildMetricCard('Active Agents', '${_dashboardOverview['activeAgents'] ?? 0}'),
-        _buildMetricCard('New Policies', '${_dashboardOverview['newPoliciesThisMonth'] ?? 0}'),
+        _buildMetricCard('Total Revenue', '₹${_dashboardOverview['total_premium_collected'] ?? 0}'),
+        _buildMetricCard('Total Policies', '${_dashboardOverview['total_policies'] ?? 0}'),
+        _buildMetricCard('Active Customers', '${_dashboardOverview['active_customers'] ?? 0}'),
+        _buildMetricCard('New Customers', '${_dashboardOverview['new_customers_this_month'] ?? 0}'),
       ],
     );
   }
@@ -799,28 +799,70 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
   }
 
   Widget _buildRevenueChart() {
-    // Placeholder for chart - would need a charting library
     return Card(
       elevation: 4,
       child: Container(
         height: 200,
         padding: const EdgeInsets.all(16),
-        child: const Center(
-          child: Text('Revenue Chart - Requires Charting Library'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Revenue Trends',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: _revenueTrends.isEmpty
+                ? const Center(child: Text('No revenue data available'))
+                : ListView.builder(
+                    itemCount: _revenueTrends.length,
+                    itemBuilder: (context, index) {
+                      final trend = _revenueTrends[index];
+                      return ListTile(
+                        title: Text('Period: ${trend['period'] ?? 'Unknown'}'),
+                        subtitle: Text('Revenue: ₹${trend['revenue'] ?? 0}'),
+                        trailing: Text('${trend['growth'] ?? 0}%'),
+                      );
+                    },
+                  ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildPolicyChart() {
-    // Placeholder for chart - would need a charting library
     return Card(
       elevation: 4,
       child: Container(
         height: 200,
         padding: const EdgeInsets.all(16),
-        child: const Center(
-          child: Text('Policy Chart - Requires Charting Library'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Policy Trends',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: _policyTrends.isEmpty
+                ? const Center(child: Text('No policy data available'))
+                : ListView.builder(
+                    itemCount: _policyTrends.length,
+                    itemBuilder: (context, index) {
+                      final trend = _policyTrends[index];
+                      return ListTile(
+                        title: Text('Period: ${trend['period'] ?? 'Unknown'}'),
+                        subtitle: Text('Policies: ${trend['policies'] ?? 0}'),
+                        trailing: Text('${trend['growth'] ?? 0}%'),
+                      );
+                    },
+                  ),
+            ),
+          ],
         ),
       ),
     );

@@ -186,27 +186,27 @@ class _TenantListScreenState extends State<TenantListScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Max Users',
                     border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   ),
                   keyboardType: TextInputType.number,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 TextFormField(
                   controller: storageController,
                   decoration: const InputDecoration(
                     labelText: 'Storage Limit (GB)',
                     border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   ),
                   keyboardType: TextInputType.number,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 TextFormField(
                   controller: apiRateController,
                   decoration: const InputDecoration(
                     labelText: 'API Rate Limit',
                     border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   ),
                   keyboardType: TextInputType.number,
                 ),
@@ -222,13 +222,29 @@ class _TenantListScreenState extends State<TenantListScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              final config = {
-                'max_users': int.tryParse(maxUsersController.text) ?? 100,
-                'storage_limit_gb': int.tryParse(storageController.text) ?? 5,
-                'api_rate_limit': int.tryParse(apiRateController.text) ?? 1000,
-              };
-              _updateTenantConfig(tenantId, config);
-              Navigator.of(context).pop();
+              final maxUsers = int.tryParse(maxUsersController.text);
+              final storageLimit = int.tryParse(storageController.text);
+              final apiRateLimit = int.tryParse(apiRateController.text);
+
+              final config = <String, dynamic>{};
+              if (maxUsers != null && maxUsers != tenant['max_users']) {
+                config['max_users'] = maxUsers;
+              }
+              if (storageLimit != null && storageLimit != tenant['storage_limit_gb']) {
+                config['storage_limit_gb'] = storageLimit;
+              }
+              if (apiRateLimit != null && apiRateLimit != tenant['api_rate_limit']) {
+                config['api_rate_limit'] = apiRateLimit;
+              }
+
+              if (config.isNotEmpty) {
+                _updateTenantConfig(tenantId, config);
+                Navigator.of(context).pop();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('No changes to update')),
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF0083B0),

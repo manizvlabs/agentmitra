@@ -172,7 +172,12 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
   }
 
   void _showRoleManagementDialog(Map<String, dynamic> user) {
-    final displayName = user['display_name'] ?? user['email'] ?? user['phone_number'] ?? 'Unknown User';
+    final displayName = (user['display_name']?.toString().isNotEmpty ?? false) ? user['display_name']
+                      : (user['email']?.toString().isNotEmpty ?? false) ? user['email']
+                      : (user['phone_number']?.toString().isNotEmpty ?? false) ? user['phone_number']
+                      : (user['first_name'] != null || user['last_name'] != null)
+                        ? '${user['first_name'] ?? ''} ${user['last_name'] ?? ''}'.trim()
+                      : 'Unknown User';
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
