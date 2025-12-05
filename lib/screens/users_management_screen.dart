@@ -310,61 +310,65 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
           const SizedBox(height: 12),
 
           // Filters Row
-          Column(
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    flex: 2, // Give more space to role filter
-                    child: DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(
-                        labelText: 'Role Filter',
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      ),
-                      value: _selectedRoleFilter.isEmpty ? null : _selectedRoleFilter,
-                      isExpanded: true, // Allow dropdown to expand
-                      items: [
-                        const DropdownMenuItem(value: '', child: Text('All Roles')),
-                        ..._roles.map((role) => DropdownMenuItem(
-                          value: role['role_name'],
-                          child: Text(_formatRoleName(role['role_name']), overflow: TextOverflow.ellipsis),
-                        )),
-                      ],
-                      onChanged: (value) {
-                        _selectedRoleFilter = value ?? '';
-                        _loadUsers();
-                      },
+          Container(
+            width: double.infinity,
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                SizedBox(
+                  width: MediaQuery.of(context).size.width > 600
+                      ? (MediaQuery.of(context).size.width - 48) / 2 - 6 // Two columns on larger screens
+                      : MediaQuery.of(context).size.width - 48, // Full width on small screens
+                  child: DropdownButtonFormField<String>(
+                    decoration: const InputDecoration(
+                      labelText: 'Role Filter',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
+                    value: _selectedRoleFilter.isEmpty ? null : _selectedRoleFilter,
+                    isExpanded: true,
+                    items: [
+                      const DropdownMenuItem(value: '', child: Text('All Roles')),
+                      ..._roles.map((role) => DropdownMenuItem(
+                        value: role['role_name'],
+                        child: Text(_formatRoleName(role['role_name']), overflow: TextOverflow.ellipsis),
+                      )),
+                    ],
+                    onChanged: (value) {
+                      _selectedRoleFilter = value ?? '';
+                      _loadUsers();
+                    },
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 1, // Less space for status filter
-                    child: DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(
-                        labelText: 'Status Filter',
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      ),
-                      value: _selectedStatusFilter.isEmpty ? null : _selectedStatusFilter,
-                      isExpanded: true,
-                      items: const [
-                        DropdownMenuItem(value: '', child: Text('All Status')),
-                        DropdownMenuItem(value: 'active', child: Text('Active')),
-                        DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
-                        DropdownMenuItem(value: 'pending_verification', child: Text('Pending')),
-                        DropdownMenuItem(value: 'suspended', child: Text('Suspended')),
-                        DropdownMenuItem(value: 'deactivated', child: Text('Deactivated')),
-                      ],
-                      onChanged: (value) {
-                        _selectedStatusFilter = value ?? '';
-                        _loadUsers();
-                      },
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width > 600
+                      ? (MediaQuery.of(context).size.width - 48) / 2 - 6 // Two columns on larger screens
+                      : MediaQuery.of(context).size.width - 48, // Full width on small screens
+                  child: DropdownButtonFormField<String>(
+                    decoration: const InputDecoration(
+                      labelText: 'Status Filter',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
+                    value: _selectedStatusFilter.isEmpty ? null : _selectedStatusFilter,
+                    isExpanded: true,
+                    items: const [
+                      DropdownMenuItem(value: '', child: Text('All Status')),
+                      DropdownMenuItem(value: 'active', child: Text('Active')),
+                      DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
+                      DropdownMenuItem(value: 'pending_verification', child: Text('Pending')),
+                      DropdownMenuItem(value: 'suspended', child: Text('Suspended')),
+                      DropdownMenuItem(value: 'deactivated', child: Text('Deactivated')),
+                    ],
+                    onChanged: (value) {
+                      _selectedStatusFilter = value ?? '';
+                      _loadUsers();
+                    },
                   ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ],
       ),

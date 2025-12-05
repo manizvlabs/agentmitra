@@ -95,8 +95,9 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
   Future<void> _loadComprehensiveAnalytics() async {
     try {
       final response = await ApiService.get('/api/v1/analytics/comprehensive/dashboard');
-      // API returns direct object, not wrapped in 'data' key
-      setState(() => _comprehensiveAnalytics = response as Map<String, dynamic>? ?? {});
+      // API returns data wrapped in 'data' key
+      final analyticsData = response['data'] as Map<String, dynamic>? ?? {};
+      setState(() => _comprehensiveAnalytics = analyticsData);
     } catch (e) {
       print('Comprehensive analytics API failed: $e');
     }

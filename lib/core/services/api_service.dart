@@ -31,6 +31,7 @@ class ApiService {
     final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'X-Tenant-ID': '00000000-0000-0000-0000-000000000000', // Default tenant ID
       if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
     };
 

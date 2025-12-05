@@ -57,8 +57,10 @@ class _TenantListScreenState extends State<TenantListScreen> {
     try {
       // Use GET /api/v1/tenants/{tenant_id} endpoint for detailed tenant info
       final response = await ApiService.get('/api/v1/tenants/$tenantId');
+      // API returns direct object, not wrapped in 'data' key
+      final tenantData = response is Map<String, dynamic> ? response : null;
       setState(() {
-        _selectedTenantDetails = response['data'];
+        _selectedTenantDetails = tenantData;
         _showTenantDetails = true;
       });
     } catch (e) {
