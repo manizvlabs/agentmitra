@@ -76,18 +76,18 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       // API returns direct array of roles, not wrapped in 'data' key
       final roleList = response as List<dynamic>? ?? [];
 
-      // Remove duplicates based on normalized role_name (convert to lowercase and replace spaces/underscores)
-      final seenNormalizedNames = <String>{};
+      // Remove duplicates based on database role name to ensure unique dropdown values
+      final seenDatabaseNames = <String>{};
       final uniqueRoles = <Map<String, dynamic>>[];
 
       for (final role in roleList) {
         final roleName = role['role_name'] as String?;
         if (roleName != null) {
-          // Normalize role name: convert to lowercase, replace spaces and underscores with single format
-          final normalizedName = roleName.toLowerCase().replaceAll('_', ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
+          // Convert to database format for uniqueness check
+          final databaseName = _getDatabaseRoleName(roleName);
 
-          if (!seenNormalizedNames.contains(normalizedName)) {
-            seenNormalizedNames.add(normalizedName);
+          if (!seenDatabaseNames.contains(databaseName)) {
+            seenDatabaseNames.add(databaseName);
             uniqueRoles.add(role as Map<String, dynamic>);
           }
         }
@@ -99,6 +99,14 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
         final nameB = _formatRoleName(b['role_name'] ?? '');
         return nameA.compareTo(nameB);
       });
+
+      // Reset selected role filter if it's no longer available
+      if (_selectedRoleFilter.isNotEmpty) {
+        final availableRoleValues = uniqueRoles.map((role) => _getDatabaseRoleName(role['role_name'])).toSet();
+        if (!availableRoleValues.contains(_selectedRoleFilter)) {
+          _selectedRoleFilter = '';
+        }
+      }
 
       setState(() => _roles = uniqueRoles);
     } catch (e) {

@@ -20,7 +20,12 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadAnalyticsData();
+    // Add a small delay to ensure authentication is fully established
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        _loadAnalyticsData();
+      }
+    });
   }
 
   Future<void> _loadAnalyticsData() async {
@@ -61,12 +66,20 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
 
   Future<void> _loadTopAgents() async {
     try {
+      print('Loading top agents...');
       final response = await ApiService.get('/api/v1/analytics/dashboard/top-agents');
+      print('Top agents response received: ${response.runtimeType}');
       // API returns direct array of agents, not wrapped in 'data' key
       final agentList = response as List<dynamic>? ?? [];
+      print('Top agents parsed: ${agentList.length} items');
       setState(() => _topAgents = List<Map<String, dynamic>>.from(agentList));
+      print('Top agents state updated successfully');
     } catch (e) {
       print('Top agents API failed: $e');
+      print('Error type: ${e.runtimeType}');
+      if (e.toString().contains('500')) {
+        print('Server returned 500 error - checking authentication...');
+      }
       setState(() => _topAgents = []);
     }
   }
