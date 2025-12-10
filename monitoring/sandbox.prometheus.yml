@@ -1,0 +1,67 @@
+# Prometheus configuration for Agent Mitra Sandbox
+# Lightweight monitoring optimized for cost-effective cloud deployment
+
+global:
+  scrape_interval: 15s  # Scrape every 15 seconds
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+# Alertmanager configuration (optional - can be added later)
+# alerting:
+#   alertmanagers:
+#   - static_configs:
+#     - targets:
+#       - alertmanager:9093
+
+rule_files:
+  # - "alert_rules.yml"  # Add alert rules later if needed
+
+scrape_configs:
+  # Backend API monitoring
+  - job_name: 'agentmitra-backend'
+    static_configs:
+      - targets: ['backend:8012']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Redis monitoring
+  - job_name: 'agentmitra-redis'
+    static_configs:
+      - targets: ['redis:6379']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Nginx monitoring
+  - job_name: 'agentmitra-nginx'
+    static_configs:
+      - targets: ['nginx:80']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Node exporter for system metrics (if running on host)
+  - job_name: 'agentmitra-node'
+    static_configs:
+      - targets: ['localhost:9100']
+    scrape_interval: 30s
+    enabled: false  # Enable if node exporter is installed
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s
+
+# Remote write configuration (optional - for long-term storage)
+# remote_write:
+#   - url: "https://prometheus-prod-10-prod-us-central-0.grafana.net/api/prom/push"
+#     basic_auth:
+#       username: "your-username"
+#       password: "your-password"
+
+# Remote read configuration (optional)
+# remote_read:
+#   - url: "https://prometheus-prod-10-prod-us-central-0.grafana.net/api/v1/read"
+#     basic_auth:
+#       username: "your-username"
+#       password: "your-password"

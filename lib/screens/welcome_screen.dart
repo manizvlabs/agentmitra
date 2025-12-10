@@ -135,7 +135,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                 Navigator.of(context).pushReplacementNamed('/agent-config-dashboard');
                 break;
               case 'super_admin':
-                Navigator.of(context).pushReplacementNamed('/agent-config-dashboard');
+                Navigator.of(context).pushReplacementNamed('/super-admin-dashboard');
                 break;
               default:
                 // Stay on welcome screen

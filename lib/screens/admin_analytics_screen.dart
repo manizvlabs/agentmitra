@@ -177,7 +177,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                 ),
                 _buildKPICard(
                   'Conversion Rate',
-                  '${_dashboardOverview['conversionRate']?.toStringAsFixed(1) ?? 0}%',
+                  '${(_dashboardOverview['conversion_rate'] as num? ?? 0).toStringAsFixed(1)}%',
                   Icons.trending_up,
                   Colors.purple,
                   'Lead to policy',
@@ -421,7 +421,18 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
   }
 
   Widget _buildTopAgentCard(Map<String, dynamic> agent, int rank) {
-    final rankColors = [Colors.amber, Colors.grey.shade400, Colors.brown.shade400];
+    final rankColors = [
+      Colors.amber,
+      Colors.grey.shade400,
+      Colors.brown.shade400,
+      Colors.blue.shade400,
+      Colors.green.shade400,
+      Colors.purple.shade400,
+      Colors.orange.shade400,
+      Colors.pink.shade400,
+      Colors.teal.shade400,
+      Colors.indigo.shade400
+    ];
 
     return Card(
       elevation: 2,
@@ -435,14 +446,14 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: rankColors[rank - 1].withOpacity(0.2),
+                color: rankColors[(rank - 1) % rankColors.length].withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
               child: Center(
                 child: Text(
                   '#$rank',
                   style: TextStyle(
-                    color: rankColors[rank - 1],
+                    color: rankColors[(rank - 1) % rankColors.length],
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -552,6 +563,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
   }
 
   Widget _buildProductCard(Map<String, dynamic> product) {
+    final products = _comprehensiveAnalytics['productPerformance'] as List<dynamic>? ?? [];
     final totalRevenue = products.fold<double>(0, (sum, p) => sum + (p['revenue'] as double? ?? 0));
     final percentage = totalRevenue > 0 ? ((product['revenue'] as double? ?? 0) / totalRevenue * 100) : 0;
 
@@ -709,192 +721,45 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
             ? const Center(
                 child: Text('Analytics data unavailable - requires backend API integration'),
               )
-            : _buildAnalyticsContent(),
+            : _buildComprehensiveAnalyticsContent(),
       ),
     );
   }
 
 
-  Widget _buildAnalyticsContent() {
+  Widget _buildComprehensiveAnalyticsContent() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Overview Cards
+          // Key Performance Indicators
           if (_dashboardOverview.isNotEmpty) ...[
-            const Text(
-              'Dashboard Overview',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            _buildOverviewCards(),
+            _buildKPIsSection(),
             const SizedBox(height: 24),
           ],
 
-          // Top Agents
-          const Text(
-            'Top Performing Agents',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          _buildTopAgentsList(),
-          const SizedBox(height: 24),
+          // Trends Section (Revenue and Policy)
+          if (_revenueTrends.isNotEmpty || _policyTrends.isNotEmpty) ...[
+            _buildTrendsSection(),
+            const SizedBox(height: 24),
+          ],
 
-          // Revenue Trends
-          const Text(
-            'Revenue Trends',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          _buildRevenueChart(),
-          const SizedBox(height: 24),
+          // Top Performing Agents
+          if (_topAgents.isNotEmpty) ...[
+            _buildTopPerformersSection(),
+            const SizedBox(height: 24),
+          ],
 
-          // Policy Trends
-          const Text(
-            'Policy Trends',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          _buildPolicyChart(),
+          // Product Performance (from comprehensive analytics)
+          if (_comprehensiveAnalytics.isNotEmpty) ...[
+            _buildProductPerformanceSection(),
+            const SizedBox(height: 24),
+            _buildGeographicInsightsSection(),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildOverviewCards() {
-    return Wrap(
-      spacing: 16,
-      runSpacing: 16,
-      children: [
-        _buildMetricCard('Total Revenue', '₹${_dashboardOverview['total_premium_collected'] ?? 0}'),
-        _buildMetricCard('Total Policies', '${_dashboardOverview['total_policies'] ?? 0}'),
-        _buildMetricCard('Active Customers', '${_dashboardOverview['active_customers'] ?? 0}'),
-        _buildMetricCard('New Customers', '${_dashboardOverview['new_customers_this_month'] ?? 0}'),
-      ],
-    );
-  }
-
-  Widget _buildMetricCard(String title, String value) {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0083B0),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTopAgentsList() {
-    return Card(
-      elevation: 4,
-      child: ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: _topAgents.length,
-        itemBuilder: (context, index) {
-          final agent = _topAgents[index];
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundColor: const Color(0xFF0083B0),
-              child: Text('${index + 1}'),
-            ),
-            title: Text(agent['agentName'] ?? 'Unknown Agent'),
-            subtitle: Text('Policies: ${agent['policiesSold'] ?? 0}'),
-            trailing: Text('₹${agent['revenue'] ?? 0}'),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildRevenueChart() {
-    return Card(
-      elevation: 4,
-      child: Container(
-        height: 200,
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Revenue Trends',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: _revenueTrends.isEmpty
-                ? const Center(child: Text('No revenue data available'))
-                : ListView.builder(
-                    itemCount: _revenueTrends.length,
-                    itemBuilder: (context, index) {
-                      final trend = _revenueTrends[index];
-                      return ListTile(
-                        title: Text('Period: ${trend['period'] ?? 'Unknown'}'),
-                        subtitle: Text('Revenue: ₹${trend['revenue'] ?? 0}'),
-                        trailing: Text('${trend['growth'] ?? 0}%'),
-                      );
-                    },
-                  ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPolicyChart() {
-    return Card(
-      elevation: 4,
-      child: Container(
-        height: 200,
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Policy Trends',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: _policyTrends.isEmpty
-                ? const Center(child: Text('No policy data available'))
-                : ListView.builder(
-                    itemCount: _policyTrends.length,
-                    itemBuilder: (context, index) {
-                      final trend = _policyTrends[index];
-                      return ListTile(
-                        title: Text('Period: ${trend['period'] ?? 'Unknown'}'),
-                        subtitle: Text('Policies: ${trend['policies'] ?? 0}'),
-                        trailing: Text('${trend['growth'] ?? 0}%'),
-                      );
-                    },
-                  ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

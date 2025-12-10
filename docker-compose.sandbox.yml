@@ -1,0 +1,203 @@
+services:
+  # Backend API - Optimized for sandbox
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: agentmitra_sandbox_backend
+    restart: unless-stopped
+    environment:
+      - ENVIRONMENT=sandbox
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_ACCESS_KEY=${AWS_ACCESS_KEY_ID}
+      - MINIO_SECRET_KEY=${AWS_SECRET_ACCESS_KEY}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
+      - MINIO_USE_SSL=true
+      - MINIO_CDN_BASE_URL=https://${MINIO_BUCKET_NAME}.s3.amazonaws.com
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PIONEER_ENABLED=false  # Disabled for cost savings
+    ports:
+      - "8012:8012"
+    volumes:
+      - ./logs/sandbox:/app/logs
+      - ./backend/ssl:/app/ssl:ro
+    networks:
+      - agentmitra_sandbox_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8012/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - redis
+    # Resource limits for cost optimization
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # Redis Cache - Using AWS ElastiCache in production
+  # This is for local development/testing only
+  redis:
+    image: redis:7-alpine
+    container_name: agentmitra_sandbox_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_sandbox_data:/data
+    networks:
+      - agentmitra_sandbox_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+
+  # Firebase Emulator - For local testing
+  firebase-emulator:
+    image: firebase/emulator:latest
+    container_name: agentmitra_firebase_emulator
+    restart: unless-stopped
+    ports:
+      - "4000:4000"  # Firestore
+      - "5001:5001"  # Auth
+      - "8080:8080"  # Functions
+      - "9000:9000"  # Hosting
+      - "9099:9099"  # FCM
+    environment:
+      - FIREBASE_PROJECT=agentmitra-sandbox
+      - FIRESTORE_EMULATOR_HOST=0.0.0.0:4000
+      - FIREBASE_AUTH_EMULATOR_HOST=0.0.0.0:5001
+      - FIREBASE_FUNCTIONS_EMULATOR_HOST=0.0.0.0:8080
+      - FIREBASE_HOSTING_EMULATOR_HOST=0.0.0.0:9000
+      - FIREBASE_FCM_EMULATOR_HOST=0.0.0.0:9099
+    volumes:
+      - ./firebase.json:/firebase.json:ro
+      - ./firebase-data:/firebase-data
+    networks:
+      - agentmitra_sandbox_network
+    profiles:
+      - testing  # Only start when explicitly requested
+
+  # MinIO - For local file storage testing
+  # In production, use AWS S3 directly
+  minio:
+    image: minio/minio:latest
+    container_name: agentmitra_sandbox_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    ports:
+      - "9000:9000"  # MinIO API
+      - "9001:9001"  # MinIO Console
+    volumes:
+      - minio_sandbox_data:/data
+    networks:
+      - agentmitra_sandbox_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - storage  # Optional for local file testing
+
+  # Nginx Reverse Proxy - Simplified for sandbox
+  nginx:
+    image: nginx:alpine
+    container_name: agentmitra_sandbox_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/sandbox.nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./build/web:/var/www/flutter:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - backend
+    networks:
+      - agentmitra_sandbox_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Monitoring - Lightweight for sandbox
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: agentmitra_sandbox_prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/sandbox.prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_sandbox_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'  # Reduced retention for cost
+      - '--web.enable-lifecycle'
+    networks:
+      - agentmitra_sandbox_network
+    profiles:
+      - monitoring  # Optional
+
+  # Grafana - For dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: agentmitra_sandbox_grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    ports:
+      - "3001:3000"  # Different port to avoid conflicts
+    volumes:
+      - grafana_sandbox_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - agentmitra_sandbox_network
+    profiles:
+      - monitoring  # Optional
+    depends_on:
+      - prometheus
+
+volumes:
+  redis_sandbox_data:
+    driver: local
+  minio_sandbox_data:
+    driver: local
+  prometheus_sandbox_data:
+    driver: local
+  grafana_sandbox_data:
+    driver: local
+
+networks:
+  agentmitra_sandbox_network:
+    driver: bridge
