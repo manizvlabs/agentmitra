@@ -1,33 +1,33 @@
 services:
-  # PostgreSQL Database - COMMENTED OUT - Using local MacBook service
-  # postgres:
-  #   image: postgres:16-alpine
-  #   container_name: agentmitra_postgres
-  #   restart: unless-stopped
-  #   environment:
-  #     POSTGRES_DB: agentmitra_dev
-  #     POSTGRES_USER: manish
-  #     POSTGRES_PASSWORD: agentmitra_dev
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
-  #     - ./db/migration:/docker-entrypoint-initdb.d
-  #   ports:
-  #     - "5432:5432"
-  #   networks:
-  #     - agentmitra_network
+  # PostgreSQL Database - Uncommented for Windows development
+  postgres:
+    image: postgres:16-alpine
+    container_name: agentmitra_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: agentmitra_dev
+      POSTGRES_USER: manish
+      POSTGRES_PASSWORD: agentmitra_dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/migration:/docker-entrypoint-initdb.d
+    ports:
+      - "5433:5432"
+    networks:
+      - agentmitra_network
 
-  # Redis for caching and sessions - COMMENTED OUT - Using local MacBook service
-  # redis:
-  #   image: redis:7-alpine
-  #   container_name: agentmitra_redis
-  #   restart: unless-stopped
-  #   command: redis-server --appendonly yes
-  #   volumes:
-  #     - redis_data:/data
-  #   ports:
-  #     - "6379:6379"
-  #   networks:
-  #     - agentmitra_network
+  # Redis for caching and sessions - Uncommented for Windows development
+  redis:
+    image: redis:7-alpine
+    container_name: agentmitra_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6380:6379"
+    networks:
+      - agentmitra_network
 
   # Python Backend API - COMMENTED OUT - Running locally with uvicorn for hot reload
   # Run backend locally with: cd backend && python main.py
@@ -335,8 +335,8 @@ services:
   #     retries: 3
 
 volumes:
-  # postgres_data:  # Commented out - using local MacBook PostgreSQL
-  # redis_data:     # Commented out - using local MacBook Redis
+  postgres_data:  # Uncommented for Windows development
+  redis_data:     # Uncommented for Windows development
   prometheus_data:
   grafana_data:
   # featurehub_db_data:  # Commented out - FeatureHub disabled

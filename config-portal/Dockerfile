@@ -13,8 +13,8 @@ ENV REACT_APP_ENVIRONMENT=$REACT_APP_ENVIRONMENT
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production --legacy-peer-deps
+# Install all dependencies (including dev dependencies for build)
+RUN npm ci --legacy-peer-deps
 
 # Copy source code
 COPY . .

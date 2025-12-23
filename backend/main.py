@@ -16,9 +16,16 @@ from app.core.config.settings import settings
 import uvicorn
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
 # Load environment variables from root .env file
-load_dotenv("../.env")
+PROJECT_ROOT = Path(__file__).parent.parent
+env_file = PROJECT_ROOT / ".env"
+if env_file.exists():
+    load_dotenv(str(env_file), override=True)
+    print(f"Loaded environment from: {env_file}")
+else:
+    print(f"Warning: .env file not found at: {env_file}")
 
 # Setup logging
 setup_logging(

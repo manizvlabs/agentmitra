@@ -53,17 +53,22 @@ def get_db_config() -> Dict[str, Any]:
         base_config.update({
             "poolclass": NullPool,    # No pooling in dev for easier debugging
             "echo": settings.debug,   # Log SQL queries in debug mode
+            "pool_recycle": 300,      # Recycle connections after 5 minutes
         })
     
     # Set schema search path for PostgreSQL
     # This ensures SQLAlchemy can find tables in the lic_schema
     if "postgresql" in settings.database_url:
         base_config["connect_args"]["options"] = "-c search_path=lic_schema,public"
+        # Force IPv4 connections and add timeouts
+        base_config["connect_args"]["host"] = "127.0.0.1"
+        base_config["connect_args"]["connect_timeout"] = 10
 
     return base_config
 
 # Create database engine with optimized configuration
 engine_config = get_db_config()
+logger.info(f"Creating database engine with URL: {settings.database_url}")
 engine = create_engine(settings.database_url, **engine_config)
 
 # Set schema search path after engine creation
@@ -98,19 +103,25 @@ def get_db():
 def init_db():
     """
     Verify database connection on startup.
-    
+
     NOTE: Database schema is managed strictly through Flyway migrations.
     Do NOT use SQLAlchemy's create_all() - all tables must be created via Flyway.
     Run migrations with: flyway -configFiles=flyway.conf migrate
     """
     # Only verify connection, do not create tables
     try:
+        logger.info("Attempting database connection...")
         with engine.connect() as conn:
+            logger.info("Executing test query...")
             conn.execute(text("SELECT 1"))
+            logger.info("Test query completed")
         logger.info("Database connection verified successfully")
     except Exception as e:
-        logger.error(f"Database connection verification failed: {e}")
-        raise
+        logger.warning(f"Database connection verification failed: {e}")
+        logger.warning("Continuing startup without database connection...")
+        # Don't raise exception to allow startup to continue
+        return False
+    return True
 
 
 def drop_db():
