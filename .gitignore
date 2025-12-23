@@ -104,3 +104,4 @@ temp/
 /backend/venv
 /api-testing/api-testing/reports
 /api-testing/postman/reports
+.backend.pid
