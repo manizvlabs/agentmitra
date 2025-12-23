@@ -60,8 +60,7 @@ def get_db_config() -> Dict[str, Any]:
     # This ensures SQLAlchemy can find tables in the lic_schema
     if "postgresql" in settings.database_url:
         base_config["connect_args"]["options"] = "-c search_path=lic_schema,public"
-        # Force IPv4 connections and add timeouts
-        base_config["connect_args"]["host"] = "127.0.0.1"
+        # Add connection timeout for reliability (host should come from DATABASE_URL)
         base_config["connect_args"]["connect_timeout"] = 10
 
     return base_config
