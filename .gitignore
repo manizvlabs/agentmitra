@@ -122,3 +122,9 @@ tmp/
 temp/
 *.tmp
 .backend.pid
+
+# Flutter SDK downloads
+flutter_sdk.zip
+
+# Duplicate gitignore files
+lib/.gitignore
