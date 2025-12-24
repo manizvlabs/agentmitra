@@ -88,6 +88,7 @@ ios/
 linux/
 macos/
 windows/
+pubspec.lock
 
 # Config Portal Flutter (don't commit Flutter files in config-portal)
 config-portal/.dart_tool/

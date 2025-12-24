@@ -22,68 +22,78 @@ import 'features/customers/presentation/viewmodels/customer_viewmodel.dart';
 
 
 void main() async {
+  print('=== STARTING AGENT MITRA APP INITIALIZATION ===');
+
   WidgetsFlutterBinding.ensureInitialized();
+  print('✓ WidgetsFlutterBinding initialized');
 
   // Initialize configuration from environment variables
+  print('Loading environment configuration...');
   try {
     await dotenv.load(fileName: '.env');
-    print('Environment configuration loaded successfully');
+    print('✓ Environment configuration loaded successfully');
   } catch (e) {
-    print('Warning: Could not load .env file, using fallback values: $e');
+    print('⚠ Warning: Could not load .env file, using fallback values: $e');
   }
 
   // Initialize app configuration
+  print('Initializing app configuration...');
   try {
     await AppConfig.initialize();
-    print('App configuration initialized successfully');
+    print('✓ App configuration initialized successfully');
   } catch (e) {
-    print('App configuration initialization failed: $e');
+    print('✗ App configuration initialization failed: $e');
   }
 
   // Initialize storage service (web-compatible)
+  print('Initializing storage service...');
   if (!kIsWeb) {
     try {
       await StorageService.initialize();
-      print('Storage service initialized');
+      print('✓ Storage service initialized');
     } catch (e) {
-      print('Storage service initialization failed: $e');
+      print('✗ Storage service initialization failed: $e');
     }
   } else {
-    // Web uses in-memory storage - this is expected behavior
-    // No need to log as it's not an error or warning
+    print('✓ Web platform detected - using in-memory storage');
   }
 
   // Initialize Service Locator (dependency injection container)
+  print('Initializing Service Locator...');
   try {
     await ServiceLocator.initialize();
-    print('Service Locator initialized successfully');
+    print('✓ Service Locator initialized successfully');
   } catch (e) {
-    print('Service Locator initialization failed: $e');
+    print('✗ Service Locator initialization failed: $e');
   }
 
   // Initialize Pioneer for feature flag management
+  print('Initializing Pioneer feature flags...');
   try {
     final config = AppConfig();
     if (config.pioneerEnabled) {
+      print('  - Pioneer is enabled, initializing...');
       await PioneerService.initialize(
         scoutUrl: config.pioneerScoutUrl,
         sdkKey: config.pioneerApiKey,
       );
-      print('Pioneer initialized successfully');
+      print('✓ Pioneer initialized successfully');
     } else {
-      print('Pioneer disabled - using mock mode');
+      print('✓ Pioneer disabled - using default feature flags');
     }
   } catch (e) {
-    print('Pioneer initialization failed: $e');
-    print('Continuing with default feature flags - some features may be limited');
+    print('✗ Pioneer initialization failed: $e');
+    print('  - Continuing with default feature flags - some features may be limited');
     // Don't throw - allow app to continue with default flags
   }
 
+  print('Starting Flutter app...');
   runApp(
     const ProviderScope(
       child: AgentMitraApp(),
     ),
   );
+  print('✓ Flutter app started successfully');
 }
 
 class AgentMitraApp extends ConsumerWidget {
@@ -91,8 +101,10 @@ class AgentMitraApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    print('Building AgentMitraApp widget...');
     // Watch theme mode from Riverpod
     final themeMode = ref.watch(themeModeProvider);
+    print('✓ Theme mode loaded: $themeMode');
 
     return provider.MultiProvider(
       providers: [
@@ -189,6 +201,7 @@ class AgentMitraApp extends ConsumerWidget {
         },
       ),
     );
+    print('✓ AgentMitraApp widget built successfully');
   }
 
 }

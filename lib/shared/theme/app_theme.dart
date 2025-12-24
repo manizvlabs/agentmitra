@@ -62,7 +62,7 @@ class AppTheme {
         elevation: 0,
         iconTheme: IconThemeData(color: textOnPrimary),
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
@@ -122,7 +122,7 @@ class AppTheme {
         elevation: 0,
         iconTheme: IconThemeData(color: textOnPrimary),
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),

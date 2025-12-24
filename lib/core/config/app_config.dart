@@ -3,12 +3,24 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Application configuration loaded from environment variables
 class AppConfig {
-  static final AppConfig _instance = AppConfig._internal();
+  static AppConfig? _instance;
+  static bool _initialized = false;
 
-  factory AppConfig() => _instance;
+  factory AppConfig() {
+    debugPrint('DEBUG: AppConfig() factory called, _instance is null: ${_instance == null}');
+    if (_instance == null) {
+      debugPrint('DEBUG: Creating AppConfig singleton instance');
+      _instance = AppConfig._internal();
+    } else {
+      debugPrint('DEBUG: Returning existing AppConfig singleton instance');
+    }
+    return _instance!;
+  }
 
   AppConfig._internal() {
+    debugPrint('DEBUG: AppConfig._internal() called, calling _loadConfig()');
     _loadConfig();
+    debugPrint('DEBUG: AppConfig._internal() completed');
   }
 
   late final String _appName;
@@ -128,21 +140,52 @@ class AppConfig {
   late final bool _enableArPreview;
 
   void _loadConfig() {
+    debugPrint('DEBUG: _loadConfig() started, _initialized = $_initialized');
     // Load environment variables
     _appName = dotenv.get('APP_NAME', fallback: 'Agent Mitra');
     _appVersion = dotenv.get('APP_VERSION', fallback: '1.0.0');
     _environment = dotenv.get('ENVIRONMENT', fallback: 'development');
     _debug = dotenv.get('DEBUG', fallback: 'true') == 'true';
 
+    // Pioneer Feature Flags - assign early since Pioneer init happens during _loadConfig execution
+    // For development, make Pioneer optional to allow testing without external services
+    if (kIsWeb && _debug) {
+      // In debug web mode, make Pioneer optional for easier development
+      _pioneerEnabled = dotenv.get('PIONEER_ENABLED', fallback: 'false') == 'true';
+      _pioneerUrl = 'http://localhost/pioneer';
+      _pioneerApiKey = 'test-sdk-key-12345';
+      _pioneerScoutUrl = 'http://localhost/pioneer';
+    } else if (kIsWeb) {
+      _pioneerEnabled = true;
+      _pioneerUrl = 'http://localhost/pioneer';
+      _pioneerApiKey = 'test-sdk-key-12345';
+      _pioneerScoutUrl = 'http://localhost/pioneer';
+    } else {
+      _pioneerEnabled = dotenv.get('PIONEER_ENABLED', fallback: 'true') == 'true';
+      _pioneerUrl = dotenv.get('PIONEER_URL', fallback: 'http://localhost:4001');
+      _pioneerApiKey = dotenv.get('PIONEER_API_KEY', fallback: 'test-sdk-key-12345');
+      _pioneerScoutUrl = dotenv.get('PIONEER_SCOUT_URL', fallback: 'http://localhost:4002');
+    }
+
     // API Configuration
     // For web builds served through nginx proxy, use empty base URL to use same origin
     // This allows nginx to proxy /api/ requests to the backend
     // For mobile apps, use Nginx proxy at port 80 to match production setup
-    final defaultApiUrl = kIsWeb ? '' : 'http://localhost:80';
-    final defaultWsUrl = kIsWeb ? '' : 'ws://localhost:80';
+    // For development web (port 8080), proxy to backend directly
+    final defaultApiUrl = kIsWeb ? 'http://localhost:8012' : 'http://localhost:80';
+    final defaultWsUrl = kIsWeb ? 'ws://localhost:8012' : 'ws://localhost:80';
     _apiBaseUrl = dotenv.get('API_BASE_URL', fallback: defaultApiUrl);
     _wsBaseUrl = dotenv.get('WS_BASE_URL', fallback: defaultWsUrl);
+
+    // Debug output for web builds
+    if (kIsWeb) {
+      debugPrint('DEBUG: API_BASE_URL set to: $_apiBaseUrl');
+      debugPrint('DEBUG: WS_BASE_URL set to: $_wsBaseUrl');
+      debugPrint('DEBUG: Full API URL: ${fullApiUrl}');
+    }
+    debugPrint('DEBUG: About to assign _apiVersion');
     _apiVersion = dotenv.get('API_VERSION', fallback: '/api/v1');
+    debugPrint('DEBUG: _apiVersion assigned: $_apiVersion');
     _apiTimeoutSeconds = int.parse(dotenv.get('API_TIMEOUT_SECONDS', fallback: '30'));
     _apiRetryAttempts = int.parse(dotenv.get('API_RETRY_ATTEMPTS', fallback: '3'));
     _apiRetryDelaySeconds = int.parse(dotenv.get('API_RETRY_DELAY_SECONDS', fallback: '2'));
@@ -225,25 +268,6 @@ class AppConfig {
     _firebaseAppId = dotenv.get('FIREBASE_APP_ID', fallback: 'your_firebase_app_id');
     _firebaseMessagingSenderId = dotenv.get('FIREBASE_MESSAGING_SENDER_ID', fallback: 'your_firebase_sender_id');
 
-    // Pioneer Feature Flags
-    // For development, make Pioneer optional to allow testing without external services
-    if (kIsWeb && _debug) {
-      // In debug web mode, make Pioneer optional for easier development
-      _pioneerEnabled = dotenv.get('PIONEER_ENABLED', fallback: 'false') == 'true';
-      _pioneerUrl = 'http://localhost/pioneer';
-      _pioneerApiKey = 'test-sdk-key-12345';
-      _pioneerScoutUrl = 'http://localhost/pioneer';
-    } else if (kIsWeb) {
-      _pioneerEnabled = true;
-      _pioneerUrl = 'http://localhost/pioneer';
-      _pioneerApiKey = 'test-sdk-key-12345';
-      _pioneerScoutUrl = 'http://localhost/pioneer';
-    } else {
-      _pioneerEnabled = dotenv.get('PIONEER_ENABLED', fallback: 'true') == 'true';
-      _pioneerUrl = dotenv.get('PIONEER_URL', fallback: 'http://localhost:4001');
-      _pioneerApiKey = dotenv.get('PIONEER_API_KEY', fallback: 'test-sdk-key-12345');
-      _pioneerScoutUrl = dotenv.get('PIONEER_SCOUT_URL', fallback: 'http://localhost:4002');
-    }
 
     // Platform Specific
     _iosAppStoreId = dotenv.get('IOS_APP_STORE_ID', fallback: 'com.agentmitra.app');
@@ -263,6 +287,8 @@ class AppConfig {
     _enableAdvancedAnalytics = dotenv.get('ENABLE_ADVANCED_ANALYTICS', fallback: 'false') == 'true';
     _enableVoiceCommands = dotenv.get('ENABLE_VOICE_COMMANDS', fallback: 'false') == 'true';
     _enableArPreview = dotenv.get('ENABLE_AR_PREVIEW', fallback: 'false') == 'true';
+
+    debugPrint('DEBUG: _loadConfig() completed successfully');
   }
 
   // Getters for all configuration values
@@ -368,10 +394,20 @@ class AppConfig {
 
   /// Initialize configuration by loading .env file
   static Future<void> initialize() async {
+    if (_initialized) {
+      debugPrint('DEBUG: AppConfig already initialized');
+      return;
+    }
+
+    debugPrint('DEBUG: AppConfig.initialize() called - loading .env file');
     try {
       await dotenv.load(fileName: '.env');
+      _initialized = true;
+      debugPrint('DEBUG: AppConfig.initialize() completed successfully');
     } catch (e) {
       debugPrint('Warning: Could not load .env file, using fallback values: $e');
+      // Still mark as initialized to avoid repeated attempts
+      _initialized = true;
     }
   }
 
