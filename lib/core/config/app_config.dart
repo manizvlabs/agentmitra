@@ -7,12 +7,16 @@ class AppConfig {
   static bool _initialized = false;
 
   factory AppConfig() {
-    debugPrint('DEBUG: AppConfig() factory called, _instance is null: ${_instance == null}');
+    debugPrint('DEBUG: AppConfig() factory called, _instance is null: ${_instance == null}, _initialized: $_initialized');
     if (_instance == null) {
       debugPrint('DEBUG: Creating AppConfig singleton instance');
       _instance = AppConfig._internal();
+      debugPrint('DEBUG: AppConfig singleton instance created successfully');
     } else {
       debugPrint('DEBUG: Returning existing AppConfig singleton instance');
+    }
+    if (_instance == null) {
+      throw Exception('CRITICAL: AppConfig singleton instance is null after creation!');
     }
     return _instance!;
   }
@@ -141,7 +145,8 @@ class AppConfig {
 
   void _loadConfig() {
     debugPrint('DEBUG: _loadConfig() started, _initialized = $_initialized');
-    // Load environment variables
+    try {
+      // Load environment variables
     _appName = dotenv.get('APP_NAME', fallback: 'Agent Mitra');
     _appVersion = dotenv.get('APP_VERSION', fallback: '1.0.0');
     _environment = dotenv.get('ENVIRONMENT', fallback: 'development');
@@ -181,7 +186,7 @@ class AppConfig {
     if (kIsWeb) {
       debugPrint('DEBUG: API_BASE_URL set to: $_apiBaseUrl');
       debugPrint('DEBUG: WS_BASE_URL set to: $_wsBaseUrl');
-      debugPrint('DEBUG: Full API URL: ${fullApiUrl}');
+      debugPrint('DEBUG: _apiVersion will be assigned next');
     }
     debugPrint('DEBUG: About to assign _apiVersion');
     _apiVersion = dotenv.get('API_VERSION', fallback: '/api/v1');
@@ -287,6 +292,12 @@ class AppConfig {
     _enableAdvancedAnalytics = dotenv.get('ENABLE_ADVANCED_ANALYTICS', fallback: 'false') == 'true';
     _enableVoiceCommands = dotenv.get('ENABLE_VOICE_COMMANDS', fallback: 'false') == 'true';
     _enableArPreview = dotenv.get('ENABLE_AR_PREVIEW', fallback: 'false') == 'true';
+
+    } catch (e, stackTrace) {
+      debugPrint('CRITICAL ERROR in _loadConfig(): $e');
+      debugPrint('Stack trace: $stackTrace');
+      // Don't rethrow - allow app to continue with partial config
+    }
 
     debugPrint('DEBUG: _loadConfig() completed successfully');
   }

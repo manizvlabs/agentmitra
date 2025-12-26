@@ -9,15 +9,10 @@ class ApiService {
   // Get configuration instance
   static AppConfig get _config => AppConfig();
 
-  // Get full API URL - use relative URLs for web deployment
+  // Get full API URL - use configured base URL for all platforms
   static String get apiUrl {
-    if (kIsWeb) {
-      // When running on web through Nginx, ApiConstants already include API version
-      // So we use empty string to avoid double prefixing
-      return '';
-    }
-    // For mobile/native apps, ApiConstants already include /api/v1 prefix
-    // So we use just the base URL (without /api/v1) to avoid double prefixing
+    // Use the configured base URL for all platforms
+    // The base URL already includes the correct host and port
     return _config.apiBaseUrl;
   }
 
