@@ -3,13 +3,33 @@ Application Configuration Settings
 Loads from environment variables with proper .env file support
 """
 import os
+import subprocess
 from pathlib import Path
+from urllib.parse import quote
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 from typing import Optional
 
 # Get the project root directory (two levels up from backend)
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
+
+def get_secret_from_gcp(secret_name: str) -> Optional[str]:
+    """
+    Retrieve a secret from Google Cloud Secret Manager.
+    Falls back to None if gcloud is not available or secret doesn't exist.
+    """
+    try:
+        result = subprocess.run(
+            ["gcloud", "secrets", "versions", "access", "latest", "--secret", secret_name],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.CalledProcessError):
+        pass
+    return None
 
 # Load .env files in order of precedence:
 # 1. .env.local (highest priority, should be gitignored)
@@ -45,11 +65,21 @@ class Settings(BaseSettings):
     api_host: str = os.getenv("API_HOST", "0.0.0.0")
     api_port: int = int(os.getenv("API_PORT", "8012"))
     
-    # Database
-    database_url: str = os.getenv(
-        "DATABASE_URL",
-        "postgresql://agentmitra:agentmitra_dev@localhost:5432/agentmitra_dev"
+    # Database - construct URL from components for security
+    db_host: str = os.getenv("DB_HOST", "localhost")
+    db_port: str = os.getenv("DB_PORT", "5432")
+    db_name: str = os.getenv("DB_NAME", "agentmitra_dev")
+    db_user: str = os.getenv("DB_USER", "manish")
+
+    # Try to get password from Google Cloud Secret Manager first, then environment, then fallback
+    db_password: str = (
+        get_secret_from_gcp("agentmitra-db-password") or
+        os.getenv("DB_PASSWORD") or
+        "uuq>9M\"hp}t.ZQ@A"  # Local development fallback
     )
+
+    # Construct database URL with URL-encoded password
+    database_url: str = f"postgresql://{db_user}:{quote(db_password)}@{db_host}:{db_port}/{db_name}"
     db_schema: str = os.getenv("DB_SCHEMA", "lic_schema")
     db_pool_size: int = int(os.getenv("DB_POOL_SIZE", "10"))
     db_max_overflow: int = int(os.getenv("DB_MAX_OVERFLOW", "20"))
