@@ -132,3 +132,14 @@ lib/.gitignore
 
 # Environment backups
 .env.backup
+
+# SSL certificates and keys (security sensitive)
+backend/ssl/
+*.pem
+*.key
+*.crt
+generate_ssl.py
+
+# Flyway CLI downloads
+/flyway-cli
+flyway-cli.zip
