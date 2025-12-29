@@ -4,7 +4,7 @@ logs/
 *.log.*
 
 # Environment
-.env
+# .env - REMOVED from gitignore to allow committing shared environment configuration
 .env.local
 .env.*.local
 
