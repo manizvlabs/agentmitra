@@ -13,23 +13,35 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 
 # Load .env files in order of precedence:
 # 1. .env.local (highest priority, should be gitignored)
-# 2. .env (unified configuration file in project root)
-# 3. env.development (development defaults - legacy)
-# 4. env.example (template - legacy)
-# 5. Environment variables (highest priority if set)
+# 2. backend/.env (backend-specific configuration - load first for backend)
+# 3. .env (unified configuration file in project root)
+# 4. env.development (development defaults - legacy)
+# 5. env.example (template - legacy)
+# 6. Environment variables (highest priority if set)
 env_local = PROJECT_ROOT / ".env.local"
+env_backend = PROJECT_ROOT / "backend" / ".env"
 env_file = PROJECT_ROOT / ".env"
 env_development = PROJECT_ROOT / "backend/env.development"
 env_example = PROJECT_ROOT / "backend/env.example"
 
 if env_local.exists():
     load_dotenv(env_local, override=True)
+    print(f"Loaded environment from: {env_local}")
+elif env_backend.exists():
+    # Load backend/.env first for backend-specific settings
+    load_dotenv(env_backend, override=True)
+    print(f"Loaded environment from: {env_backend}")
 elif env_file.exists():
     load_dotenv(env_file, override=True)
+    print(f"Loaded environment from: {env_file}")
 elif env_development.exists():
     load_dotenv(env_development, override=False)
+    print(f"Loaded environment from: {env_development}")
 elif env_example.exists():
     load_dotenv(env_example, override=False)
+    print(f"Loaded environment from: {env_example}")
+else:
+    print("Warning: No .env file found")
 
 
 class Settings(BaseSettings):
@@ -246,6 +258,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = str(env_local if env_local.exists() else env_file)
         case_sensitive = False
+        extra = 'ignore'  # Ignore extra fields from .env files
 
 
 # Create settings instance

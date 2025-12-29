@@ -129,3 +129,6 @@ flutter_sdk.zip
 
 # Duplicate gitignore files
 lib/.gitignore
+
+# Environment backups
+.env.backup

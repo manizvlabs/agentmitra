@@ -19,8 +19,7 @@ class RedisCache:
 
     def __init__(self):
         self.redis_client = None
-        # Temporarily disable Redis connection during startup
-        # self._connect()
+        self._connect()
 
     def _connect(self):
         """Establish Redis connection"""
@@ -48,34 +47,16 @@ class RedisCache:
 
     def is_connected(self) -> bool:
         """Check if Redis is connected"""
-        return False  # Redis disabled for testing
+        return self.redis_client is not None
 
     def get(self, key: str) -> Optional[str]:
-        """Get value from cache"""
-        return None  # Redis disabled
-
-    def set(self, key: str, value: Any, ttl: int = 300) -> bool:
-        """Set value in cache with TTL"""
-        return False  # Redis disabled
-
-    def delete(self, key: str) -> bool:
-        """Delete key from cache"""
-        return False  # Redis disabled
-
-    def exists(self, key: str) -> bool:
-        """Check if key exists"""
-        return False  # Redis disabled
-
-    def get(self, key: str) -> Optional[Any]:
         """Get value from cache"""
         if not self.is_connected():
             return None
 
         try:
             value = self.redis_client.get(key)
-            if value:
-                return json.loads(value)
-            return None
+            return value.decode('utf-8') if value else None
         except Exception as e:
             logger.error(f"Redis get error for key {key}: {e}")
             return None
@@ -103,19 +84,16 @@ class RedisCache:
             logger.error(f"Redis delete error for key {key}: {e}")
             return False
 
-    def delete_pattern(self, pattern: str) -> int:
-        """Delete keys matching pattern"""
+    def exists(self, key: str) -> bool:
+        """Check if key exists"""
         if not self.is_connected():
-            return 0
+            return False
 
         try:
-            keys = self.redis_client.keys(pattern)
-            if keys:
-                return self.redis_client.delete(*keys)
-            return 0
+            return bool(self.redis_client.exists(key))
         except Exception as e:
-            logger.error(f"Redis delete pattern error for {pattern}: {e}")
-            return 0
+            logger.error(f"Redis exists error for key {key}: {e}")
+            return False
 
     def clear_analytics_cache(self) -> int:
         """Clear all analytics-related cache"""

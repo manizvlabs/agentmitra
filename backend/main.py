@@ -56,9 +56,6 @@ app = FastAPI(
 # CORS middleware MUST be added FIRST, before other middleware
 # Parse CORS origins from settings (comma-separated string)
 cors_origins = settings.cors_origins.split(",") if settings.cors_origins else ["*"]
-# In development, allow all origins for easier testing
-if settings.environment == "development":
-    cors_origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -180,46 +177,46 @@ async def validation_exception_handler(request, exc):
 app.include_router(api_router)
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Verify database connection on startup"""
-    logger.info("Starting Agent Mitra API")
+# @app.on_event("startup")
+# async def startup_event():
+#     """Verify database connection on startup"""
+#     logger.info("Starting Agent Mitra API")
 
-    # Add HTTPS redirect middleware conditionally
-    if os.getenv("ENVIRONMENT", "development") == "production" and os.getenv("USE_SSL", "true").lower() == "true":
-        app.add_middleware(HTTPSRedirectMiddleware)
-        logger.info("HTTPS redirect middleware enabled")
+#     # Add HTTPS redirect middleware conditionally
+#     if os.getenv("ENVIRONMENT", "development") == "production" and os.getenv("USE_SSL", "true").lower() == "true":
+#         app.add_middleware(HTTPSRedirectMiddleware)
+#         logger.info("HTTPS redirect middleware enabled")
 
-    # Configure SQLAlchemy mappers after all models are imported
-    # This ensures all relationships can be resolved
-    try:
-        from app.models import configure_all_mappers
-        configure_all_mappers()
-        logger.info("SQLAlchemy mappers configured successfully")
-    except Exception as e:
-        logger.warning(f"Mapper configuration warning (non-critical): {e}")
+#     # Configure SQLAlchemy mappers after all models are imported
+#     # This ensures all relationships can be resolved
+#     try:
+#         from app.models import configure_all_mappers
+#         configure_all_mappers()
+#         logger.info("SQLAlchemy mappers configured successfully")
+#     except Exception as e:
+#         logger.warning(f"Mapper configuration warning (non-critical): {e}")
 
-    # Verify database connection (schema managed by Flyway migrations)
-    init_db()
-    logger.info("Database connection verified (schema managed by Flyway)")
+#     # Verify database connection (schema managed by Flyway migrations)
+#     init_db()
+#     logger.info("Database connection verified (schema managed by Flyway)")
 
 
 # Lifespan event handler (modern approach)
 from contextlib import asynccontextmanager
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Handle application startup and shutdown events"""
-    # Startup
-    logger.info("Starting Agent Mitra API with lifespan events")
-    # Verify database connection (schema managed by Flyway migrations)
-    init_db()
-    logger.info("Database connection verified (schema managed by Flyway)")
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     """Handle application startup and shutdown events"""
+#     # Startup
+#     logger.info("Starting Agent Mitra API with lifespan events")
+#     # Verify database connection (schema managed by Flyway migrations)
+#     init_db()
+#     logger.info("Database connection verified (schema managed by Flyway)")
 
-    yield
+#     yield
 
-    # Shutdown
-    logger.info("Shutting down Agent Mitra API")
+#     # Shutdown
+#     logger.info("Shutting down Agent Mitra API")
 
 
 # Update app to use lifespan (uncomment when ready to replace on_event)

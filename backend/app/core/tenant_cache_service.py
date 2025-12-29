@@ -33,7 +33,7 @@ class MultiTenantCacheService:
                 return json.loads(cached_value)
         except Exception as e:
             logger.error(f"Error retrieving cache for tenant {tenant_id}, key {key}: {e}")
-        return None
+            return None
 
     def set_tenant_cache(self, tenant_id: str, key: str, value: Any, ttl: Optional[int] = None) -> None:
         """Set cached value for a tenant"""
