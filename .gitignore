@@ -105,3 +105,7 @@ temp/
 /api-testing/api-testing/reports
 /api-testing/postman/reports
 .backend.pid
+# Environment
+.env
+.env.local
+.env.*.local
