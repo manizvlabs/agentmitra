@@ -5,9 +5,9 @@ services:
   #   container_name: agentmitra_postgres
   #   restart: unless-stopped
   #   environment:
-  #     POSTGRES_DB: agentmitra_dev_backup
+  #     POSTGRES_DB: agentmitra_dev
   #     POSTGRES_USER: manish
-  #     POSTGRES_PASSWORD: agentmitra_dev_backup
+  #     POSTGRES_PASSWORD: agentmitra_dev
   #   volumes:
   #     - postgres_data:/var/lib/postgresql/data
   #     - ./db/migration:/docker-entrypoint-initdb.d
@@ -40,7 +40,7 @@ services:
       - ENVIRONMENT=production
       - DB_HOST=35.228.130.213
       - DB_PORT=5432
-      - DB_NAME=agentmitra_dev_backup
+      - DB_NAME=agentmitra_dev
       - DB_USER=manish
       - DB_PASSWORD=uuq>9M"hp}t.ZQ@A
       - REDIS_URL=redis://host.docker.internal:6379

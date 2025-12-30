@@ -22,7 +22,7 @@ echo -e "${YELLOW}⚠️  WARNING: This will switch the backend to use $BACKUP_D
 echo -e "${YELLOW}   Make sure you have tested $BACKUP_DB thoroughly!${NC}"
 echo ""
 
-confirm="yes"
+read -p "Are you sure you want to proceed? (yes/no): " confirm
 if [ "$confirm" != "yes" ]; then
     echo "Operation cancelled."
     exit 0
