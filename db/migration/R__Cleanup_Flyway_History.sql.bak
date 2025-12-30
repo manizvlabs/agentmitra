@@ -1,0 +1,5 @@
+-- Clean up Flyway history table for baseline
+-- This script drops the existing empty flyway_schema_history table
+-- so Flyway can create a new one with proper baseline
+
+DROP TABLE IF EXISTS lic_schema.flyway_schema_history;

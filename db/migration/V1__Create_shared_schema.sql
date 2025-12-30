@@ -11,6 +11,15 @@ CREATE SCHEMA IF NOT EXISTS shared;
 CREATE SCHEMA IF NOT EXISTS lic_schema;
 CREATE SCHEMA IF NOT EXISTS audit;
 
+-- Create agentmitra role if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'agentmitra') THEN
+        CREATE ROLE agentmitra LOGIN PASSWORD 'agentmitra_password';
+    END IF;
+END
+$$;
+
 -- Grant permissions to agentmitra user
 GRANT USAGE ON SCHEMA shared TO agentmitra;
 GRANT USAGE ON SCHEMA lic_schema TO agentmitra;
