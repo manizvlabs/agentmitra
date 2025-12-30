@@ -1,0 +1,763 @@
+{
+  "info": {
+    "name": "Agent Mitra Campaign Management API Collection",
+    "description": "Comprehensive API collection for Agent Mitra Campaign Management with real database testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "agent-mitra-campaigns"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "{{api_host}}{{api_version}}",
+      "type": "string"
+    },
+    {
+      "key": "campaign_id",
+      "value": "550e8400-e29b-41d4-a716-446655440001",
+      "type": "string",
+      "description": "📝 CAMPAIGN DATA: ID of created test campaign",
+      "enabled": true
+    },
+    {
+      "key": "template_id",
+      "value": "650e8400-e29b-41d4-a716-446655440002",
+      "type": "string",
+      "description": "📝 TEMPLATE DATA: ID of campaign template to use",
+      "enabled": true
+    },
+    {
+      "key": "senior_agent_token",
+      "value": "",
+      "type": "string",
+      "description": "🔐 AUTH TOKENS: JWT token for senior agent user (+919876543203)"
+    },
+    {
+      "key": "junior_agent_token",
+      "value": "",
+      "type": "string",
+      "description": "🔐 AUTH TOKENS: JWT token for junior agent user (+919876543204)"
+    },
+    {
+      "key": "senior_agent_user_id",
+      "value": "df23ccb2-5fe1-47ed-95de-e00bd0aefaa1",
+      "type": "string",
+      "description": "🆔 USER IDS: User ID for senior agent"
+    },
+    {
+      "key": "junior_agent_user_id",
+      "value": "a473bf8a-32ce-41b9-8419-3400f1a1165b",
+      "type": "string",
+      "description": "🆔 USER IDS: User ID for junior agent"
+    }
+  ],
+  "item": [
+        {
+          "name": "🔐 Login - Senior Agent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has access_token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('access_token');",
+                  "    pm.collectionVariables.set(\"senior_agent_token\", jsonData.access_token);",
+                  "});",
+                  "",
+                  "pm.test(\"Login successful\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('access_token');",
+                  "    pm.expect(jsonData).to.have.property('user');",
+                  "    pm.expect(jsonData.user.status).to.eql('active');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"+919876543203\",\n  \"password\": \"testpassword\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "🔐 Login - Junior Agent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has access_token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('access_token');",
+                  "    pm.collectionVariables.set(\"junior_agent_token\", jsonData.access_token);",
+                  "});",
+                  "",
+                  "pm.test(\"Login successful\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('access_token');",
+                  "    pm.expect(jsonData).to.have.property('user');",
+                  "    pm.expect(jsonData.user.status).to.eql('active');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"+919876543204\",\n  \"password\": \"testpassword\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 CAMPAIGN TEMPLATES",
+      "item": [
+        {
+          "name": "📖 Get All Campaign Templates",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has data array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Templates have required fields\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data.length > 0) {",
+                  "        var template = jsonData.data[0];",
+                  "        pm.expect(template).to.have.property('template_id');",
+                  "        pm.expect(template).to.have.property('template_name');",
+                  "        pm.expect(template).to.have.property('category');",
+                  "        pm.collectionVariables.set(\"template_id\", template.template_id);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/templates",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "campaigns",
+                "templates"
+              ]
+            }
+          }
+        },
+        {
+          "name": "📖 Get Templates by Category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test(\"All templates have correct category\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    jsonData.data.forEach(function(template) {",
+                  "        pm.expect(template.category).to.eql('acquisition');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/templates?category=acquisition",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "campaigns",
+                "templates"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "acquisition"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📝 CAMPAIGN MANAGEMENT",
+      "item": [
+        {
+          "name": "📋 List Campaigns",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has data array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/campaigns",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "campaigns"
+              ]
+            }
+          }
+        },
+        {
+          "name": "📋 List Campaigns with Filters",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/campaigns?status=active&type=acquisition&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "campaigns"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "active"
+                },
+                {
+                  "key": "type",
+                  "value": "acquisition"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "➕ Create Campaign - Senior Agent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has campaign_id\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('campaign_id');",
+                  "    pm.collectionVariables.set(\"campaign_id\", jsonData.data.campaign_id);",
+                  "});",
+                  "",
+                  "pm.test(\"Campaign created successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.status).to.eql('draft');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"campaign_name\": \"Postman Test Campaign {{timestamp}}\",\n  \"campaign_type\": \"acquisition\",\n  \"campaign_goal\": \"lead_generation\",\n  \"description\": \"Test campaign created via Postman collection\",\n  \"subject\": \"Welcome to our service!\",\n  \"message\": \"Dear {{customer_name}}, welcome to our insurance service. Your policy is active.\",\n  \"message_template_id\": null,\n  \"personalization_tags\": [\"{{customer_name}}\"],\n  \"attachments\": null,\n  \"primary_channel\": \"whatsapp\",\n  \"channels\": [\"whatsapp\"],\n  \"target_audience\": \"all\",\n  \"selected_segments\": [],\n  \"targeting_rules\": null,\n  \"estimated_reach\": 100,\n  \"schedule_type\": \"immediate\",\n  \"scheduled_at\": null,\n  \"start_date\": null,\n  \"end_date\": null,\n  \"is_automated\": false,\n  \"automation_triggers\": null,\n  \"budget\": 1500.00,\n  \"estimated_cost\": 1200.00,\n  \"ab_testing_enabled\": false,\n  \"ab_test_variants\": null,\n  \"triggers\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/campaigns",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "campaigns"
+              ]
+            }
+          }
+        },
+        {
+          "name": "📖 Get Campaign Details",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test(\"Campaign data is complete\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var campaign = jsonData.data;",
+                  "    pm.expect(campaign).to.have.property('campaign_id');",
+                  "    pm.expect(campaign).to.have.property('campaign_name');",
+                  "    pm.expect(campaign).to.have.property('campaign_type');",
+                  "    pm.expect(campaign).to.have.property('status');",
+                  "    pm.expect(campaign).to.have.property('total_sent');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "campaigns",
+                "{{campaign_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "✏️ Update Campaign",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test(\"Campaign updated successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.eql('Campaign updated successfully');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"campaign_name\": \"Updated Postman Test Campaign {{timestamp}}\",\n  \"description\": \"Updated test campaign description\",\n  \"budget\": 2000.00\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "campaigns",
+                "{{campaign_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "🚀 Launch Campaign",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test(\"Campaign launched successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.status).to.eql('active');",
+                  "    pm.expect(jsonData.data).to.have.property('launched_at');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/launch",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "campaigns",
+                "{{campaign_id}}",
+                "launch"
+              ]
+            }
+          }
+        },
+        {
+          "name": "📊 Get Campaign Analytics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test(\"Analytics data is comprehensive\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var analytics = jsonData.data;",
+                  "    pm.expect(analytics).to.have.property('campaign_id');",
+                  "    pm.expect(analytics).to.have.property('total_sent');",
+                  "    pm.expect(analytics).to.have.property('total_delivered');",
+                  "    pm.expect(analytics).to.have.property('roi');",
+                  "    pm.expect(analytics).to.have.property('channel_breakdown');",
+                  "});",
+                  "",
+                  "pm.test(\"Analytics values are realistic\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var analytics = jsonData.data;",
+                  "    pm.expect(analytics.delivery_rate).to.be.at.least(0);",
+                  "    pm.expect(analytics.delivery_rate).to.be.at.most(100);",
+                  "    pm.expect(analytics.roi).to.be.at.least(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/analytics",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "campaigns",
+                "{{campaign_id}}",
+                "analytics"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 CAMPAIGN FROM TEMPLATES",
+      "item": [
+        {
+          "name": "➕ Create Campaign from Template",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test(\"Campaign created from template\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('campaign_id');",
+                  "    pm.expect(jsonData.message).to.include('from template');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"campaign_name\": \"Template Campaign {{timestamp}}\",\n  \"campaign_type\": \"acquisition\",\n  \"message\": \"Custom message for template campaign\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/campaigns/templates/{{template_id}}/create",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "campaigns",
+                "templates",
+                "{{template_id}}",
+                "create"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💡 CAMPAIGN RECOMMENDATIONS",
+      "item": [
+        {
+          "name": "💡 Get Campaign Recommendations - Senior Agent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has recommendations array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Recommendations have required fields\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data.length > 0) {",
+                  "        var rec = jsonData.data[0];",
+                  "        pm.expect(rec).to.have.property('type');",
+                  "        pm.expect(rec).to.have.property('title');",
+                  "        pm.expect(rec).to.have.property('estimated_reach');",
+                  "        pm.expect(rec).to.have.property('potential_roi');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{senior_agent_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/campaigns/recommendations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "campaigns",
+                "recommendations"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set timestamp for unique test data",
+          "pm.collectionVariables.set(\"timestamp\", new Date().getTime());",
+          "",
+          "// Initialize default variables if not set",
+          "if (!pm.collectionVariables.get(\"campaign_id\") || pm.collectionVariables.get(\"campaign_id\") === \"\") {",
+          "    pm.collectionVariables.set(\"campaign_id\", \"550e8400-e29b-41d4-a716-446655440001\");",
+          "}",
+          "if (!pm.collectionVariables.get(\"template_id\") || pm.collectionVariables.get(\"template_id\") === \"\") {",
+          "    pm.collectionVariables.set(\"template_id\", \"650e8400-e29b-41d4-a716-446655440002\");",
+          "}"
+        ]
+      }
+    }
+  ]
+}

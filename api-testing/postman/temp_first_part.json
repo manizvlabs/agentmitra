@@ -1,0 +1,155 @@
+{
+  "info": {
+    "name": "Agent Mitra Campaign Management API Collection",
+    "description": "Comprehensive API collection for Agent Mitra Campaign Management with real database testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "agent-mitra-campaigns"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "{{api_host}}{{api_version}}",
+      "type": "string"
+    },
+    {
+      "key": "campaign_id",
+      "value": "550e8400-e29b-41d4-a716-446655440001",
+      "type": "string",
+      "description": "📝 CAMPAIGN DATA: ID of created test campaign",
+      "enabled": true
+    },
+    {
+      "key": "template_id",
+      "value": "650e8400-e29b-41d4-a716-446655440002",
+      "type": "string",
+      "description": "📝 TEMPLATE DATA: ID of campaign template to use",
+      "enabled": true
+    },
+    {
+      "key": "senior_agent_token",
+      "value": "",
+      "type": "string",
+      "description": "🔐 AUTH TOKENS: JWT token for senior agent user (+919876543203)"
+    },
+    {
+      "key": "junior_agent_token",
+      "value": "",
+      "type": "string",
+      "description": "🔐 AUTH TOKENS: JWT token for junior agent user (+919876543204)"
+    },
+    {
+      "key": "senior_agent_user_id",
+      "value": "df23ccb2-5fe1-47ed-95de-e00bd0aefaa1",
+      "type": "string",
+      "description": "🆔 USER IDS: User ID for senior agent"
+    },
+    {
+      "key": "junior_agent_user_id",
+      "value": "a473bf8a-32ce-41b9-8419-3400f1a1165b",
+      "type": "string",
+      "description": "🆔 USER IDS: User ID for junior agent"
+    }
+  ],
+  "item": [
+        {
+          "name": "🔐 Login - Senior Agent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has access_token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('access_token');",
+                  "    pm.collectionVariables.set(\"senior_agent_token\", jsonData.access_token);",
+                  "});",
+                  "",
+                  "pm.test(\"Login successful\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('access_token');",
+                  "    pm.expect(jsonData).to.have.property('user');",
+                  "    pm.expect(jsonData.user.status).to.eql('active');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"+919876543203\",\n  \"password\": \"testpassword\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "🔐 Login - Junior Agent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has access_token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('access_token');",
+                  "    pm.collectionVariables.set(\"junior_agent_token\", jsonData.access_token);",
+                  "});",
+                  "",
+                  "pm.test(\"Login successful\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('access_token');",
+                  "    pm.expect(jsonData).to.have.property('user');",
+                  "    pm.expect(jsonData.user.status).to.eql('active');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"+919876543204\",\n  \"password\": \"testpassword\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        }

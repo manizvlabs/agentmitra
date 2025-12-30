@@ -25,7 +25,7 @@ COLLECTIONS=(
     "agent-mitra-api-collection.json:Main API Collection"
     "agent-mitra-rbac-collection.json:RBAC API Collection" 
     "agent-mitra-crm-leads-collection.json:CRM Leads API Collection"
-    "agent-mitra-campaigns-simple.json:Campaigns API Collection"
+    "agent-mitra-campaigns-collection.json:Campaigns API Collection"
     "agent-mitra-notifications-collection.json:Notifications API Collection"
     "agent-mitra-campaigns-simple.json:Simple Campaigns Collection"
 )
