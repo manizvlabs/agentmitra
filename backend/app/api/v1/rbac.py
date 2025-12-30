@@ -370,13 +370,16 @@ async def check_user_permission(
 
     try:
         has_perm = auth_service.has_permission(check_user_id, permission, db)
+        user_context_perm = current_user.has_permission(permission)
 
         return {
             "user_id": check_user_id,
             "permission": permission,
-            "has_permission": has_perm,
+            "has_permission_via_auth_service": has_perm,
+            "has_permission_via_user_context": user_context_perm,
+            "user_context_permissions": current_user.permissions,
             "user_roles": auth_service.get_user_roles(check_user_id, db),
-            "user_permissions": auth_service.get_user_permissions(check_user_id, db)
+            "user_permissions_from_db": auth_service.get_user_permissions(check_user_id, db)
         }
 
     except Exception as e:

@@ -198,7 +198,7 @@ async def login(
             if role == 'super_admin':
                 user_permissions = [
                     'users:*', 'roles:*', 'permissions:*', 'agents:*', 'policies:*',
-                    'analytics:*', 'reports:*', 'settings:*', 'admin:*', 'system:*'
+                    'analytics:*', 'reports:*', 'settings:*', 'admin:*', 'system:*', 'tenants:*'
                 ]
             elif role == 'insurance_provider_admin':
                 user_permissions = [

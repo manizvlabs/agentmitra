@@ -874,7 +874,7 @@ class UserContext:
         for user_perm in self.permissions:
             if user_perm.endswith(":*"):
                 prefix = user_perm[:-2]
-                if permission.startswith(prefix + ":"):
+                if permission.startswith(prefix + "."):
                     return True
 
         # If JWT doesn't have it, check database if available
