@@ -9,11 +9,14 @@ class ApiService {
   // Get configuration instance
   static AppConfig get _config => AppConfig();
 
-  // Get full API URL - use absolute URL for web deployment to ensure requests go to nginx
+  // Get full API URL - use AppConfig which handles all environments properly
   static String get apiUrl {
-    // For web deployment, use absolute URL to reach nginx on port 80
-    // For mobile, this will be overridden by AppConfig
-    return 'http://localhost';
+    // AppConfig handles:
+    // - Web: empty string for relative URLs (nginx proxy)
+    // - Mobile: full URL with proper host/port
+    // - Production: configurable via .env
+    // - Kubernetes: service discovery via .env
+    return _config.apiBaseUrl;
   }
 
   static String get baseUrl => _config.apiBaseUrl;
