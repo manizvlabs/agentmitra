@@ -29,6 +29,16 @@ class FeatureFlagService {
     'ai_insights_enabled': false,
   };
 
+  /// Initialize the service (stub for compatibility)
+  Future<void> initialize() async {
+    // No initialization needed for static maps
+  }
+
+  /// Dispose the service (stub for compatibility)
+  void dispose() {
+    // No cleanup needed for static maps
+  }
+
   /// Check if a feature flag is enabled
   Future<bool> isFeatureEnabled(String flagName, {String? userId, String? tenantId}) async {
     // Essential features are always enabled

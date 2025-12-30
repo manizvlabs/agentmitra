@@ -106,15 +106,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
         };
       });
 
-      Timer(const Duration(milliseconds: 1000), () async {
-        if (mounted) {
-          await _navigateBasedOnState();
-        }
-      });
-
       setState(() {
-        _featureFlagsValidated = true;
-        _essentialFeatures = results;
         _validationStatus = 'App ready!';
       });
 
