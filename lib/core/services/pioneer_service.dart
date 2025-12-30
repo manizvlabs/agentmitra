@@ -40,6 +40,10 @@ class PioneerService {
       debugPrint('Pioneer initialized successfully (real API)');
     } catch (e) {
       debugPrint('Failed to initialize Pioneer: $e');
+      debugPrint('Pioneer initialization details:');
+      debugPrint('  scoutUrl: $scoutUrl');
+      debugPrint('  sdkKey: ${sdkKey != null ? "set (${sdkKey!.length} chars)" : "null"}');
+      debugPrint('  compassUrl will be: ${scoutUrl.replaceAll(':4002', '').replaceAll('/pioneer', '')}/pioneer');
       throw Exception('Pioneer initialization failed: $e');
     }
   }

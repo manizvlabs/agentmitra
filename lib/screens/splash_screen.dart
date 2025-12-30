@@ -90,54 +90,27 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
         _validationStatus = 'Checking app features...';
       });
 
-      // Essential features that must be available
-      final essentialFeatures = [
-        'dashboard_enabled',
-        'login_enabled',
-        'registration_enabled',
-        'otp_verification_enabled',
-      ];
-
-      final results = <String, bool>{};
-
-      // Check if user is authenticated
+      // Essential features are always enabled since they're required for the app to function
+      // No need for complex feature flag checking that can fail
       final authViewModel = provider.Provider.of<AuthViewModel>(context, listen: false);
       final isAuthenticated = authViewModel.isAuthenticated;
 
-      // If not authenticated, skip feature flag validation and assume essential features are enabled
-      if (!isAuthenticated) {
-        debugPrint('User not authenticated, skipping feature flag validation');
-        setState(() {
-          _validationStatus = 'Initializing app...';
-          _featureFlagsValidated = true;
-          // Assume essential features are enabled when not authenticated
-          _essentialFeatures = {
-            for (final feature in essentialFeatures) feature: true
-          };
-        });
+      setState(() {
+        _validationStatus = 'Initializing app...';
+        _featureFlagsValidated = true;
+        _essentialFeatures = {
+          'dashboard_enabled': true,
+          'login_enabled': true,
+          'registration_enabled': true,
+          'otp_verification_enabled': true,
+        };
+      });
 
-        Timer(const Duration(milliseconds: 1000), () async {
-          if (mounted) {
-            await _navigateBasedOnState();
-          }
-        });
-        return;
-      }
-
-      // Check each essential feature only if authenticated
-      for (final feature in essentialFeatures) {
-        try {
-          final isEnabled = await _featureFlagService.isFeatureEnabled(feature);
-          results[feature] = isEnabled;
-          setState(() {
-            _validationStatus = 'Checking $feature...';
-            _essentialFeatures = Map.from(results);
-          });
-        } catch (e) {
-          debugPrint('Error checking feature flag $feature: $e');
-          results[feature] = true; // Default to enabled on error (for essential features)
+      Timer(const Duration(milliseconds: 1000), () async {
+        if (mounted) {
+          await _navigateBasedOnState();
         }
-      }
+      });
 
       setState(() {
         _featureFlagsValidated = true;

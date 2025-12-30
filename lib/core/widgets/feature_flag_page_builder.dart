@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../services/pioneer_service.dart';
 import 'error_pages/trial_expired_page.dart';
 import 'error_pages/unauthorized_page.dart';
 
@@ -68,20 +67,27 @@ class FeatureFlagPageBuilder extends StatelessWidget {
   }
 
   Future<bool> _checkFeatureFlag() async {
-    if (!PioneerService.isInitialized) {
-      // If Pioneer is not initialized, default to enabled for development
+    // Simplified: Essential features are always enabled
+    const essentialFeatures = [
+      'dashboard_enabled',
+      'login_enabled',
+      'registration_enabled',
+      'otp_verification_enabled'
+    ];
+
+    if (essentialFeatures.contains(featureFlagName)) {
       return true;
     }
 
-    try {
-      return await PioneerService.isFeatureEnabled(
-        featureFlagName,
-        defaultValue: true, // Default to enabled on error
-      );
-    } catch (e) {
-      // On error, default to enabled to prevent blocking users
-      return true;
-    }
+    // For other features, use defaults
+    const defaultFeatures = {
+      'payments_enabled': false,
+      'chat_enabled': true,
+      'analytics_enabled': true,
+      'notifications_enabled': true,
+    };
+
+    return defaultFeatures[featureFlagName] ?? true; // Default to enabled
   }
 
   Widget _buildDefaultDisabledPage(BuildContext context) {

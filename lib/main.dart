@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as provider;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/services/storage_service.dart';
-import 'core/services/pioneer_service.dart';
 import 'core/di/service_locator.dart';
 import 'core/providers/global_providers.dart';
 import 'core/config/app_config.dart';
@@ -64,23 +63,8 @@ void main() async {
     print('Service Locator initialization failed: $e');
   }
 
-  // Initialize Pioneer for feature flag management
-  try {
-    final config = AppConfig();
-    if (config.pioneerEnabled) {
-      await PioneerService.initialize(
-        scoutUrl: config.pioneerScoutUrl,
-        sdkKey: config.pioneerApiKey,
-      );
-      print('Pioneer initialized successfully');
-    } else {
-      print('Pioneer disabled - using mock mode');
-    }
-  } catch (e) {
-    print('Pioneer initialization failed: $e');
-    print('Continuing with default feature flags - some features may be limited');
-    // Don't throw - allow app to continue with default flags
-  }
+  // Pioneer initialization removed - using simple defaults for essential features
+  print('App initialized with essential features enabled');
 
   runApp(
     const ProviderScope(
