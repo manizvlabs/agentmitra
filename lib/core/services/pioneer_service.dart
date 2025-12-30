@@ -50,7 +50,15 @@ class PioneerService {
   /// Get default value for a feature flag when Pioneer is not available
   static bool _getDefaultValueForFlag(String flagName) {
     // Default feature flag values (conservative defaults)
+    // Essential features must be enabled by default
     const defaultFlags = {
+      // Essential features for app functionality
+      'dashboard_enabled': true,
+      'login_enabled': true,
+      'registration_enabled': true,
+      'otp_verification_enabled': true,
+
+      // Other features
       'payments_enabled': false,
       'chat_enabled': true,
       'presentation_carousel_enabled': false,

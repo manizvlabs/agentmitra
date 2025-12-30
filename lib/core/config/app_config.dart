@@ -226,11 +226,13 @@ class AppConfig {
     _firebaseMessagingSenderId = dotenv.get('FIREBASE_MESSAGING_SENDER_ID', fallback: 'your_firebase_sender_id');
 
     // Pioneer Feature Flags
-    _pioneerEnabled = dotenv.get('PIONEER_ENABLED', fallback: 'true') == 'true';
+    final pioneerEnabledStr = dotenv.get('PIONEER_ENABLED', fallback: 'true');
+    _pioneerEnabled = pioneerEnabledStr == 'true';
     _pioneerUrl = dotenv.get('PIONEER_URL', fallback: 'http://localhost/pioneer');
     _pioneerApiKey = dotenv.get('PIONEER_API_KEY', fallback: 'test-sdk-key-12345');
     _pioneerScoutUrl = dotenv.get('PIONEER_SCOUT_URL', fallback: 'http://localhost:4002');
 
+    debugPrint('🔧 PIONEER DEBUG: PIONEER_ENABLED env var = "$pioneerEnabledStr"');
     debugPrint('🔧 PIONEER CONFIG: enabled=$_pioneerEnabled, url=$_pioneerUrl, scout=$_pioneerScoutUrl');
 
     // Platform Specific

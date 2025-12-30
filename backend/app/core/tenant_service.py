@@ -317,7 +317,7 @@ class TenantService:
                 # Validate tenant data
                 self._validate_tenant_creation_data(tenant_data)
 
-                # Create tenant record
+                # Create tenant record - only use fields that exist in the model
                 tenant = Tenant(
                     tenant_code=tenant_data['tenant_code'],
                     tenant_name=tenant_data['tenant_name'],
@@ -326,13 +326,7 @@ class TenantService:
                     subscription_plan=tenant_data.get('subscription_plan', 'trial'),
                     max_users=tenant_data.get('max_users', 100),
                     storage_limit_gb=tenant_data.get('storage_limit_gb', 5),
-                    api_rate_limit=tenant_data.get('api_rate_limit', 1000),
-                    contact_email=tenant_data.get('contact_email'),
-                    contact_phone=tenant_data.get('contact_phone'),
-                    business_address=tenant_data.get('business_address'),
-                    compliance_status={'status': 'pending', 'last_review': None},
-                    regulatory_approvals=tenant_data.get('regulatory_approvals', {}),
-                    metadata=tenant_data.get('metadata', {})
+                    api_rate_limit=tenant_data.get('api_rate_limit', 1000)
                 )
 
                 session.add(tenant)
@@ -403,6 +397,42 @@ class TenantService:
             {'key': 'compliance.irda_compliance', 'value': True, 'type': 'boolean'},
             {'key': 'compliance.audit_retention_days', 'value': 2555, 'type': 'number'},  # 7 years
         ]
+
+        # Add tenant-specific configuration from request data
+        if tenant_data.get('contact_email'):
+            default_configs.append({
+                'key': 'contact.email',
+                'value': tenant_data['contact_email'],
+                'type': 'string'
+            })
+
+        if tenant_data.get('contact_phone'):
+            default_configs.append({
+                'key': 'contact.phone',
+                'value': tenant_data['contact_phone'],
+                'type': 'string'
+            })
+
+        if tenant_data.get('business_address'):
+            default_configs.append({
+                'key': 'business.address',
+                'value': tenant_data['business_address'],
+                'type': 'json'
+            })
+
+        if tenant_data.get('regulatory_approvals'):
+            default_configs.append({
+                'key': 'regulatory.approvals',
+                'value': tenant_data['regulatory_approvals'],
+                'type': 'json'
+            })
+
+        if tenant_data.get('metadata'):
+            default_configs.append({
+                'key': 'tenant.metadata',
+                'value': tenant_data['metadata'],
+                'type': 'json'
+            })
 
         for config in default_configs:
             tenant_config = TenantConfig(
