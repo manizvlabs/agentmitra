@@ -9,11 +9,11 @@ class ApiService {
   // Get configuration instance
   static AppConfig get _config => AppConfig();
 
-  // Get full API URL - use relative URLs for web deployment
+  // Get full API URL - use absolute URL for web deployment to ensure requests go to nginx
   static String get apiUrl {
-    // TEMPORARILY FORCE empty string ALWAYS to debug the double URL issue
-    // This will help us isolate if the issue is in URL construction
-    return '';
+    // For web deployment, use absolute URL to reach nginx on port 80
+    // For mobile, this will be overridden by AppConfig
+    return 'http://localhost';
   }
 
   static String get baseUrl => _config.apiBaseUrl;
