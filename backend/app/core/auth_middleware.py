@@ -45,7 +45,28 @@ class UserContext:
 
     def has_permission(self, permission: str) -> bool:
         """Check if user has specific permission"""
-        return permission in self.permissions
+        # Check exact match first
+        if permission in self.permissions:
+            return True
+
+        # Check wildcard permissions
+        for user_perm in self.permissions:
+            if user_perm == "*":
+                return True
+            if user_perm.endswith(".*"):
+                prefix = user_perm[:-2]  # Remove .*
+                if permission.startswith(prefix + "."):
+                    return True
+            if user_perm.endswith(":*"):
+                prefix = user_perm[:-2]  # Remove :*
+                if permission.startswith(prefix + ":"):
+                    return True
+
+        # Debug: check if system.admin should match system:*
+        if permission == "system.admin" and "system:*" in self.permissions:
+            return True
+
+        return False
 
     def has_any_permission(self, permissions: List[str]) -> bool:
         """Check if user has any of the specified permissions"""

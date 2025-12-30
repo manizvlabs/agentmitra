@@ -71,6 +71,9 @@ class Settings(BaseSettings):
     db_name: str = os.getenv("DB_NAME", "agentmitra_dev")
     db_user: str = os.getenv("DB_USER", "manish")
 
+    # Debug logging
+    print(f"DEBUG: DB_HOST={db_host}, DB_PORT={db_port}, DB_NAME={db_name}, DB_USER={db_user}")
+
     # Try to get password from Google Cloud Secret Manager first, then environment, then fallback
     db_password: str = (
         get_secret_from_gcp("agentmitra-db-password") or
@@ -78,8 +81,11 @@ class Settings(BaseSettings):
         "uuq>9M\"hp}t.ZQ@A"  # Local development fallback
     )
 
+    print(f"DEBUG: DB_PASSWORD source={'GCP' if get_secret_from_gcp('agentmitra-db-password') else 'ENV' if os.getenv('DB_PASSWORD') else 'FALLBACK'}")
+
     # Construct database URL with URL-encoded password
     database_url: str = f"postgresql://{db_user}:{quote(db_password)}@{db_host}:{db_port}/{db_name}"
+    print(f"DEBUG: Constructed DATABASE_URL: {database_url.replace(db_password, '***')}")
     db_schema: str = os.getenv("DB_SCHEMA", "lic_schema")
     db_pool_size: int = int(os.getenv("DB_POOL_SIZE", "10"))
     db_max_overflow: int = int(os.getenv("DB_MAX_OVERFLOW", "20"))

@@ -11,14 +11,9 @@ class ApiService {
 
   // Get full API URL - use relative URLs for web deployment
   static String get apiUrl {
-    if (kIsWeb) {
-      // When running on web through Nginx, ApiConstants already include API version
-      // So we use empty string to avoid double prefixing
-      return '';
-    }
-    // For mobile/native apps, ApiConstants already include /api/v1 prefix
-    // So we use just the base URL (without /api/v1) to avoid double prefixing
-    return _config.apiBaseUrl;
+    // TEMPORARILY FORCE empty string ALWAYS to debug the double URL issue
+    // This will help us isolate if the issue is in URL construction
+    return '';
   }
 
   static String get baseUrl => _config.apiBaseUrl;
@@ -66,8 +61,9 @@ class ApiService {
     Map<String, dynamic> data,
   ) async {
     try {
+      final url = '$apiUrl$endpoint';
       final response = await http.post(
-        Uri.parse('$apiUrl$endpoint'),
+        Uri.parse(url),
         headers: await getHeaders(),
         body: jsonEncode(data),
       );

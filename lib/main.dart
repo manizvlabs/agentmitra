@@ -35,7 +35,10 @@ void main() async {
   // Initialize app configuration
   try {
     await AppConfig.initialize();
+    print('🚀🚀🚀 FLUTTER APP STARTED - BUILD TIMESTAMP: ${DateTime.now()} 🚀🚀🚀');
     print('App configuration initialized successfully');
+    print('🔧 DEBUG: Flutter app restarted - apiUrl forced to empty string');
+    print('🔧 DEBUG: Pioneer should be enabled now');
   } catch (e) {
     print('App configuration initialization failed: $e');
   }

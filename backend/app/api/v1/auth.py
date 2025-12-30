@@ -63,6 +63,7 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     expires_in: int = 900  # 15 minutes
     user: Optional[dict] = None
+    roles: Optional[List[str]] = None
     permissions: Optional[List[str]] = None
 
 
@@ -188,14 +189,46 @@ async def login(
                 )
 
         # Get user roles and permissions for JWT token
-        rbac_service = auth_service
-        user_roles = rbac_service.get_user_roles(str(user.user_id), db)
+        # For now, use the user's direct role field as fallback
+        user_roles = [user.role] if user.role else []
         user_permissions = []
 
         # Get permissions for all user roles
         for role in user_roles:
-            role_permissions = rbac_service.get_role_permissions(role, db)
-            user_permissions.extend(role_permissions)
+            if role == 'super_admin':
+                user_permissions = [
+                    'users:*', 'roles:*', 'permissions:*', 'agents:*', 'policies:*',
+                    'analytics:*', 'reports:*', 'settings:*', 'admin:*', 'system:*'
+                ]
+            elif role == 'insurance_provider_admin':
+                user_permissions = [
+                    'users:read', 'users:update', 'agents:*', 'policies:*',
+                    'analytics:read', 'reports:read', 'provider:*'
+                ]
+            elif role == 'regional_manager':
+                user_permissions = [
+                    'users:read', 'agents:read', 'agents:update', 'policies:read',
+                    'policies:update', 'analytics:read', 'reports:read', 'regional:*'
+                ]
+            elif role == 'senior_agent':
+                user_permissions = [
+                    'users:read', 'agents:read', 'policies:*', 'customers:*',
+                    'analytics:read', 'agent:*'
+                ]
+            elif role == 'junior_agent':
+                user_permissions = [
+                    'users:read', 'policies:read', 'policies:create', 'customers:read',
+                    'agent:basic'
+                ]
+            elif role == 'policyholder':
+                user_permissions = [
+                    'policies:read', 'profile:*', 'support:read'
+                ]
+            elif role == 'support_staff':
+                user_permissions = [
+                    'users:read', 'policies:read', 'customers:*', 'support:*',
+                    'analytics:read'
+                ]
 
         # Remove duplicates
         user_permissions = list(set(user_permissions))
@@ -242,6 +275,7 @@ async def login(
             access_token=access_token,
             refresh_token=refresh_token,
             user=user_response,
+            roles=user_roles,
             permissions=user_permissions
         )
 

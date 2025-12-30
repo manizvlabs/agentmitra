@@ -307,11 +307,17 @@ class AuthorizationService:
 
     def get_user_permissions(self, user_id: str, db: Session) -> List[str]:
         """Get all permissions for a user"""
-        return self._get_user_permissions(user_id, db)
+        get_auth_logger().info(f"get_user_permissions called for user_id: {user_id}")
+        result = self._get_user_permissions(user_id, db)
+        get_auth_logger().info(f"get_user_permissions returning: {result}")
+        return result
 
     def get_user_roles(self, user_id: str, db: Session) -> List[str]:
         """Get all roles for a user"""
-        return self._get_user_roles(user_id, db)
+        get_auth_logger().info(f"get_user_roles called for user_id: {user_id}")
+        result = self._get_user_roles(user_id, db)
+        get_auth_logger().info(f"get_user_roles returning: {result}")
+        return result
 
     def get_all_roles(self, db: Session) -> List[Dict[str, Any]]:
         """Get all available roles"""
@@ -529,7 +535,54 @@ class AuthorizationService:
 
         except Exception as e:
             get_auth_logger().error(f"Error getting permissions for user {user_id}: {e}")
+
+            # Fallback: get permissions based on user's direct role
+            try:
+                from app.models.user import User
+                user = db.query(User).filter(User.user_id == user_id).first()
+                if user and user.role:
+                    permissions = self._get_default_permissions_for_role(user.role)
+                    get_auth_logger().info(f"Using fallback permissions {permissions} for user {user_id} with role '{user.role}'")
+                    return permissions
+            except Exception as fallback_error:
+                get_auth_logger().error(f"Fallback permission lookup also failed for user {user_id}: {fallback_error}")
             return []
+
+    def _get_default_permissions_for_role(self, role: str) -> List[str]:
+        """Get default permissions for a role when RBAC tables are not populated"""
+        role_permissions = {
+            'super_admin': [
+                'users:*', 'roles:*', 'permissions:*', 'agents:*', 'policies:*',
+                'analytics:*', 'reports:*', 'settings:*', 'admin:*', 'system:*'
+            ],
+            'insurance_provider_admin': [
+                'users:read', 'users:update', 'agents:*', 'policies:*',
+                'analytics:read', 'reports:read', 'provider:*'
+            ],
+            'regional_manager': [
+                'users:read', 'agents:read', 'agents:update', 'policies:read',
+                'policies:update', 'analytics:read', 'reports:read', 'regional:*'
+            ],
+            'senior_agent': [
+                'users:read', 'agents:read', 'policies:*', 'customers:*',
+                'analytics:read', 'agent:*'
+            ],
+            'junior_agent': [
+                'users:read', 'policies:read', 'policies:create', 'customers:read',
+                'agent:basic'
+            ],
+            'policyholder': [
+                'policies:read', 'profile:*', 'support:read'
+            ],
+            'support_staff': [
+                'users:read', 'policies:read', 'customers:*', 'support:*',
+                'analytics:read'
+            ],
+            'guest': [
+                'public:read'
+            ]
+        }
+        return role_permissions.get(role, [])
 
     def _expand_roles_with_inheritance(self, user_roles: List[str]) -> List[str]:
         """Expand user roles with inherited roles"""
@@ -565,6 +618,14 @@ class AuthorizationService:
 
             role_list = [r.role_name for r in roles]
 
+            # If no roles found in RBAC tables, check user's direct role field as fallback
+            if not role_list:
+                from app.models.user import User
+                user = db.query(User).filter(User.user_id == user_id).first()
+                if user and user.role:
+                    role_list = [user.role]
+                    get_auth_logger().info(f"Using fallback role '{user.role}' for user {user_id}")
+
             # Cache the result
             self._set_cache(cache_key, role_list)
 
@@ -572,6 +633,14 @@ class AuthorizationService:
 
         except Exception as e:
             get_auth_logger().error(f"Error getting roles for user {user_id}: {e}")
+            # Fallback: try to get role from user table
+            try:
+                from app.models.user import User
+                user = db.query(User).filter(User.user_id == user_id).first()
+                if user and user.role:
+                    return [user.role]
+            except Exception as fallback_error:
+                get_auth_logger().error(f"Fallback role lookup also failed for user {user_id}: {fallback_error}")
             return []
 
     def _matches_wildcard(self, permission: str, user_permissions: List[str]) -> bool:
@@ -754,40 +823,59 @@ class UserContext:
         return None
 
     def _get_permissions(self) -> List[str]:
-        """Get user permissions from database"""
+        """Get user permissions from JWT token or database"""
+        # First, try to get permissions from JWT token_data
+        if 'permissions' in self.token_data and isinstance(self.token_data['permissions'], list):
+            jwt_permissions = self.token_data['permissions']
+            if jwt_permissions:  # Only use if not empty
+                return jwt_permissions
+
+        # Fallback to database lookup
         if self._db:
             try:
                 auth_svc = get_auth_service()
-                return auth_svc.get_user_permissions(self.user_id, self._db)
+                db_permissions = auth_svc.get_user_permissions(self.user_id, self._db)
+                if db_permissions:  # Only use if not empty
+                    return db_permissions
             except Exception as e:
                 get_auth_logger().error(f"Failed to get permissions from database: {e}")
-                return []
-        else:
-            # Fallback to hardcoded permissions if no database connection
-            get_auth_logger().warning(f"No database connection for user {self.user_id}, using fallback permissions")
-            user_role = self.role
-            permissions = []
 
-            # Add all permissions for user's role and lower roles
-            user_level = ROLE_HIERARCHY.get(user_role, 0)
+        # Final fallback to hardcoded permissions based on role
+        get_auth_logger().warning(f"Using fallback permissions for user {self.user_id} with role {self.role}")
+        user_role = self.role
+        permissions = []
 
-            for permission, allowed_roles in PERMISSIONS.items():
-                if "*" in allowed_roles or user_role in allowed_roles:
-                    permissions.append(permission)
-                else:
-                    # Check role hierarchy
-                    for role in allowed_roles:
-                        if ROLE_HIERARCHY.get(role, 0) <= user_level:
-                            permissions.append(permission)
-                            break
+        # Add all permissions for user's role and lower roles
+        user_level = ROLE_HIERARCHY.get(user_role, 0)
 
-            return permissions
+        for permission, allowed_roles in PERMISSIONS.items():
+            if "*" in allowed_roles or user_role in allowed_roles:
+                permissions.append(permission)
+            else:
+                # Check role hierarchy
+                for role in allowed_roles:
+                    if ROLE_HIERARCHY.get(role, 0) <= user_level:
+                        permissions.append(permission)
+                        break
+
+        return permissions
 
     def has_permission(self, permission: str) -> bool:
         """Check if user has specific permission"""
         # First check JWT permissions (faster)
         if permission in self.permissions:
             return True
+
+        # Allow system.* permissions for users with system:* wildcard
+        if permission.startswith("system.") and "system:*" in self.permissions:
+            return True
+
+        # Check for other wildcards in JWT permissions
+        for user_perm in self.permissions:
+            if user_perm.endswith(":*"):
+                prefix = user_perm[:-2]
+                if permission.startswith(prefix + ":"):
+                    return True
 
         # If JWT doesn't have it, check database if available
         if self._db:

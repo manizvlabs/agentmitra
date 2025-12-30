@@ -81,20 +81,20 @@ class PioneerService {
       throw Exception('Pioneer Scout URL not configured');
     }
 
-    // For web builds using nginx proxy, use the same URL for both scout and compass
+    // For web builds using nginx proxy, use the base URL for both scout and compass
     // nginx will route /pioneer/ requests to the actual Pioneer service
-    final compassUrl = _scoutUrl!.replaceAll(':4002', ':4001').replaceAll('/pioneer', '/pioneer');
-    final uri = Uri.parse('$compassUrl/api/flags');
+    final baseUrl = _scoutUrl!.replaceAll(':4002', '').replaceAll('/pioneer', '');
+    final compassUrl = '$baseUrl/pioneer';
 
-    final headers = <String, String>{};
+    // Pioneer API expects key as query parameter, not headers
+    final queryParams = <String, String>{};
     if (_sdkKey != null && _sdkKey!.isNotEmpty) {
-      headers['Authorization'] = 'Bearer $_sdkKey';
-      // Also try common header names
-      headers['X-API-Key'] = _sdkKey!;
-      headers['X-SDK-Key'] = _sdkKey!;
+      queryParams['key'] = _sdkKey!;
     }
 
-    final response = await http.get(uri, headers: headers);
+    final uri = Uri.parse('$compassUrl/api/flags').replace(queryParameters: queryParams);
+
+    final response = await http.get(uri);
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);

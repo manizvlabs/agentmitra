@@ -29,55 +29,57 @@ services:
   #   networks:
   #     - agentmitra_network
 
-  # Python Backend API - COMMENTED OUT - Running locally with uvicorn for hot reload
-  # Run backend locally with: cd backend && python main.py
-  # Or use: ./scripts/run_backend.sh
-  # backend:
-  #   build:
-  #     context: ./backend
-  #     dockerfile: Dockerfile
-  #   container_name: agentmitra_backend
-  #   restart: unless-stopped
-  #   environment:
-  #     - ENVIRONMENT=production
-  #     - DATABASE_URL=postgresql://manish:agentmitra_dev@host.docker.internal:5432/agentmitra_dev?sslmode=disable
-  #     - REDIS_URL=redis://host.docker.internal:6379
-  #     - JWT_SECRET_KEY=${JWT_SECRET_KEY:-dev-secret-key-change-in-production}
-  #     - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080,http://localhost:3000,http://localhost:8012,http://localhost:3013}
-  #     - USE_SSL=false
-  #     # - FEATUREHUB_URL=http://featurehub:8080
-  #     # - FEATUREHUB_API_KEY=${FEATUREHUB_API_KEY}
-  #     # - FEATUREHUB_SDK_KEY=${FEATUREHUB_SDK_KEY}
-  #     # - FEATUREHUB_ENVIRONMENT=${FEATUREHUB_ENVIRONMENT:-production}
-  #     - PIONEER_URL=http://pioneer:4001
-  #     - PIONEER_API_KEY=${PIONEER_API_KEY}
-  #     - OPENAI_API_KEY=${OPENAI_API_KEY:-sk-your-openai-api-key-here}
-  #     - OPENAI_MODEL=${OPENAI_MODEL:-gpt-3.5-turbo}
-  #     - OPENAI_MAX_TOKENS=${OPENAI_MAX_TOKENS:-500}
-  #     - OPENAI_TEMPERATURE=${OPENAI_TEMPERATURE:-0.7}
-  #     - MINIO_ENDPOINT=minio:9000
-  #     - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
-  #     - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
-  #     - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-agentmitra-media}
-  #     - MINIO_USE_SSL=false
-  #     - MINIO_CDN_BASE_URL=http://minio:9000/${MINIO_BUCKET_NAME:-agentmitra-media}
-  #   depends_on:
-  #     # - featurehub  # Commented out - FeatureHub disabled
-  #     # - pioneer-compass-server  # Commented out for minimal setup
-  #     - minio
-  #     # - pioneer  # Commented out - using separate pioneer services
-  #   ports:
-  #     - "8012:8012"
-  #   volumes:
-  #     - ./logs:/app/logs
-  #     - ./backend/ssl:/app/ssl:ro
-  #   networks:
-  #     - agentmitra_network
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:8012/health"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
+  # Python Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: agentmitra_backend
+    restart: unless-stopped
+    environment:
+      - ENVIRONMENT=production
+      - DB_HOST=35.228.130.213
+      - DB_PORT=5432
+      - DB_NAME=agentmitra_dev
+      - DB_USER=manish
+      - DB_PASSWORD=uuq>9M"hp}t.ZQ@A
+      - REDIS_URL=redis://host.docker.internal:6379
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-dev-secret-key-change-in-production}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080,http://localhost:3000,http://localhost:8012,http://localhost:3013}
+      - USE_SSL=false
+      # - FEATUREHUB_URL=http://featurehub:8080
+      # - FEATUREHUB_API_KEY=${FEATUREHUB_API_KEY}
+      # - FEATUREHUB_SDK_KEY=${FEATUREHUB_SDK_KEY}
+      # - FEATUREHUB_ENVIRONMENT=${FEATUREHUB_ENVIRONMENT:-production}
+      - PIONEER_URL=http://pioneer:4001
+      - PIONEER_API_KEY=${PIONEER_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-sk-your-openai-api-key-here}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-3.5-turbo}
+      - OPENAI_MAX_TOKENS=${OPENAI_MAX_TOKENS:-500}
+      - OPENAI_TEMPERATURE=${OPENAI_TEMPERATURE:-0.7}
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-agentmitra-media}
+      - MINIO_USE_SSL=false
+      - MINIO_CDN_BASE_URL=http://minio:9000/${MINIO_BUCKET_NAME:-agentmitra-media}
+    depends_on:
+      # - featurehub  # Commented out - FeatureHub disabled
+      # - pioneer-compass-server  # Commented out for minimal setup
+      - minio
+      # - pioneer  # Commented out - using separate pioneer services
+    ports:
+      - "8012:8012"
+    volumes:
+      - ./logs:/app/logs
+      - ./backend/ssl:/app/ssl:ro
+    networks:
+      - agentmitra_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8012/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # React Portal (Agent Configuration Portal)
   portal:
@@ -119,7 +121,7 @@ services:
       - ./config-portal/build:/var/www/portal:ro
       - ./build/web:/var/www/flutter:ro
     depends_on:
-      # - backend  # Commented out - backend running locally
+      - backend
       - portal
     networks:
       - agentmitra_network
@@ -236,10 +238,10 @@ services:
     container_name: agentmitra_pioneer_compass
     restart: unless-stopped
     environment:
-      - POSTGRES_HOST=host.docker.internal
+      - POSTGRES_HOST=35.228.130.213
       - POSTGRES_PORT=5432
       - POSTGRES_USER=pioneer
-      - POSTGRES_PASSWORD=pioneer123
+      - POSTGRES_PASSWORD=uuq>9M"hp}t.ZQ@A
       - POSTGRES_DB=pioneer
       - NATS_SERVER=pioneer-nats:4222
     ports:
@@ -258,10 +260,10 @@ services:
     container_name: agentmitra_pioneer_scout
     restart: unless-stopped
     environment:
-      - POSTGRES_HOST=host.docker.internal
+      - POSTGRES_HOST=35.228.130.213
       - POSTGRES_PORT=5432
       - POSTGRES_USER=pioneer
-      - POSTGRES_PASSWORD=pioneer123
+      - POSTGRES_PASSWORD=uuq>9M"hp}t.ZQ@A
       - POSTGRES_DB=pioneer
       - NATS_SERVER=pioneer-nats:4222
       - COMPASS_URL=http://pioneer-compass-server:3001
@@ -274,6 +276,21 @@ services:
       - agentmitra_network
     # Note: Pioneer Scout doesn't have a health endpoint
     # Service is considered healthy if container is running
+
+  cloudsql-proxy:
+    image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.0
+    container_name: agentmitra_cloudsql_proxy
+    restart: unless-stopped
+    command:
+      - "--address=0.0.0.0"
+      - "--port=5432"
+      - "vaulted-scholar-480715-u4:europe-north1:agentmitra-postgres"
+    ports:
+      - "127.0.0.1:5433:5432"  # Only expose to localhost, not to external
+    networks:
+      - agentmitra_network
+    volumes:
+      - ~/.config/gcloud:/root/.config/gcloud:ro
 
   pioneer-compass-client:
     image: pioneerio/compass-client:latest
