@@ -124,53 +124,53 @@ tenant_service = TenantService(
 )
 audit_service = AuditService(tenant_service=tenant_service)
 
-# Add rate limiting middleware - TEMPORARILY DISABLED
-# from app.core.rate_limiter import rate_limit_middleware
-# app.middleware("http")(rate_limit_middleware)
+# Add rate limiting middleware
+from app.core.rate_limiter import rate_limit_middleware
+app.middleware("http")(rate_limit_middleware)
 
-# Add authentication middleware (must be before tenant middleware) - TEMPORARILY DISABLED
-# from app.core.auth_middleware import auth_middleware
-# app.middleware("http")(auth_middleware)
+# Add authentication middleware (must be before tenant middleware)
+from app.core.auth_middleware import auth_middleware
+app.middleware("http")(auth_middleware)
 
 # Add tenant middleware (after authentication) - DISABLED for Cloud Run
 # app.add_middleware(TenantMiddleware, tenant_service=tenant_service, audit_service=audit_service)
 
-# Global exception handler for better error reporting - TEMPORARILY DISABLED
-# from fastapi.responses import JSONResponse
-# from fastapi.exceptions import RequestValidationError
-# from starlette.exceptions import HTTPException as StarletteHTTPException
+# Global exception handler for better error reporting
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
-# @app.exception_handler(Exception)
-# async def global_exception_handler(request, exc):
-#     """Global exception handler to catch all unhandled exceptions"""
-#     import traceback
-#     logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
-#     logger.error(f"Traceback: {traceback.format_exc()}")
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    """Global exception handler to catch all unhandled exceptions"""
+    import traceback
+    logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+    logger.error(f"Traceback: {traceback.format_exc()}")
 
-#     # Return JSON error response
-#     return JSONResponse(
-#         status_code=500,
-#         content={
-#             "detail": f"Internal server error: {str(exc)}",
-#             "error_type": type(exc).__name__
-#         }
-#     )
+    # Return JSON error response
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": f"Internal server error: {str(exc)}",
+            "error_type": type(exc).__name__
+        }
+    )
 
-# @app.exception_handler(StarletteHTTPException)
-# async def http_exception_handler(request, exc):
-#     """Handle HTTP exceptions"""
-#     return JSONResponse(
-#         status_code=exc.status_code,
-#         content={"detail": exc.detail}
-#     )
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request, exc):
+    """Handle HTTP exceptions"""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail}
+    )
 
-# @app.exception_handler(RequestValidationError)
-# async def validation_exception_handler(request, exc):
-#     """Handle validation errors"""
-#     return JSONResponse(
-#         status_code=422,
-#         content={"detail": exc.errors(), "body": exc.body}
-#     )
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    """Handle validation errors"""
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors(), "body": exc.body}
+    )
 
 # Authentication middleware moved earlier in the file
 
@@ -178,27 +178,27 @@ audit_service = AuditService(tenant_service=tenant_service)
 app.include_router(api_router)
 
 
-# @app.on_event("startup")  # TEMPORARILY DISABLED
-# async def startup_event():
-#     """Verify database connection on startup"""
-#     logger.info("Starting Agent Mitra API")
+@app.on_event("startup")
+async def startup_event():
+    """Verify database connection on startup"""
+    logger.info("Starting Agent Mitra API")
 
-#     # Configure SQLAlchemy mappers after all models are imported
-#     # This ensures all relationships can be resolved
-#     try:
-#         from app.models import configure_all_mappers
-#         configure_all_mappers()
-#         logger.info("SQLAlchemy mappers configured successfully")
-#     except Exception as e:
-#         logger.warning(f"Mapper configuration warning (non-critical): {e}")
+    # Configure SQLAlchemy mappers after all models are imported
+    # This ensures all relationships can be resolved
+    try:
+        from app.models import configure_all_mappers
+        configure_all_mappers()
+        logger.info("SQLAlchemy mappers configured successfully")
+    except Exception as e:
+        logger.warning(f"Mapper configuration warning (non-critical): {e}")
 
-#     # Verify database connection (schema managed by Flyway migrations)
-#     try:
-#         init_db()
-#         logger.info("Database connection verified (schema managed by Flyway)")
-#     except Exception as e:
-#         logger.error(f"Database connection failed: {e}")
-#         # Don't exit on database connection failure for debugging
+    # Verify database connection (schema managed by Flyway migrations)
+    try:
+        init_db()
+        logger.info("Database connection verified (schema managed by Flyway)")
+    except Exception as e:
+        logger.error(f"Database connection failed: {e}")
+        # Don't exit on database connection failure for debugging
         logger.warning("Continuing without database connection for debugging")
 
 
