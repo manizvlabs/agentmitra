@@ -16,7 +16,16 @@ class MultiTenantCacheService:
     """Multi-tenant caching service with tenant isolation"""
 
     def __init__(self, redis_url: str, default_ttl: int = 3600):
-        self.redis_client = redis.from_url(redis_url)
+        try:
+            self.redis_client = redis.from_url(redis_url)
+            # Test connection
+            self.redis_client.ping()
+            self._use_redis = True
+        except Exception as e:
+            logger.warning(f"Redis not available for tenant cache: {e}")
+            self.redis_client = None
+            self._use_redis = False
+
         self.default_ttl = default_ttl
         self.tenant_service = None  # Will be injected
 

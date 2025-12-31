@@ -22,7 +22,16 @@ class TenantService:
 
     def __init__(self, database_url: str, redis_url: str):
         self.database_url = database_url
-        self.redis_client = redis.from_url(redis_url)
+        try:
+            self.redis_client = redis.from_url(redis_url)
+            # Test connection
+            self.redis_client.ping()
+            self._use_redis = True
+        except Exception as e:
+            logger.warning(f"Redis not available for tenant caching: {e}")
+            self.redis_client = None
+            self._use_redis = False
+
         self._tenant_cache = {}
         self._cache_ttl = 300  # 5 minutes
 

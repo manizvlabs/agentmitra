@@ -38,6 +38,12 @@ def get_db_config() -> Dict[str, Any]:
         if "sslmode" not in settings.database_url:
             base_config["connect_args"]["sslmode"] = "require"
 
+        # Force TCP connections to avoid local Unix socket interference
+        if not settings.db_host.startswith('/'):
+            # For TCP connections, ensure we use the specified host and disable Unix sockets
+            base_config["connect_args"]["host"] = settings.db_host
+            base_config["connect_args"]["unix_sock"] = None
+
     elif settings.environment == "staging":
         # Staging configuration
         base_config.update({

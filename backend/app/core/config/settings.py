@@ -84,8 +84,15 @@ class Settings(BaseSettings):
     print(f"DEBUG: DB_PASSWORD source={'GCP' if get_secret_from_gcp('agentmitra-db-password') else 'ENV' if os.getenv('DB_PASSWORD') else 'FALLBACK'}")
 
     # Construct database URL with URL-encoded password
-    database_url: str = f"postgresql://{db_user}:{quote(db_password)}@{db_host}:{db_port}/{db_name}"
+    # Handle Cloud SQL socket connections
+    if db_host.startswith('/cloudsql/'):
+        # For Cloud SQL socket connections, the socket path goes directly as host
+        database_url: str = f"postgresql://{db_user}:{quote(db_password)}@{db_host}/{db_name}"
+    else:
+        # Force TCP connection by specifying connection parameters
+        database_url: str = f"postgresql://{db_user}:{quote(db_password)}@{db_host}:{db_port}/{db_name}"
     print(f"DEBUG: Constructed DATABASE_URL: {database_url.replace(db_password, '***')}")
+    print(f"DEBUG: DB_HOST={db_host}, DB_PORT={db_port}, DB_NAME={db_name}, DB_USER={db_user}")
     db_schema: str = os.getenv("DB_SCHEMA", "lic_schema")
     db_pool_size: int = int(os.getenv("DB_POOL_SIZE", "10"))
     db_max_overflow: int = int(os.getenv("DB_MAX_OVERFLOW", "20"))

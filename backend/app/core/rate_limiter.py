@@ -15,9 +15,12 @@ logger = get_logger(__name__)
 # Initialize Redis client for rate limiting
 try:
     redis_client = redis.from_url(settings.redis_url, decode_responses=True)
-except Exception:
+    # Test the connection
+    redis_client.ping()
+    logger.info("Redis connected successfully for rate limiting")
+except Exception as e:
     redis_client = None
-    logger.warning("Redis not available, using in-memory rate limiting (not shared across instances)")
+    logger.warning(f"Redis not available ({str(e)}), using in-memory rate limiting (not shared across instances)")
     # Fallback to in-memory storage
     _rate_limit_storage: Dict[str, Dict] = {}
 

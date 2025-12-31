@@ -47,7 +47,27 @@ echo -e "\n${BLUE}Step 5: Build and push backend image${NC}"
 docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME:latest ./backend
 docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME:latest
 
-echo -e "\n${BLUE}Step 6: Deploy to Cloud Run${NC}"
+echo -e "\n${BLUE}Step 6: Create environment variables file${NC}"
+cat > cloudrun-env-vars.yaml << EOF
+ENVIRONMENT: production
+DB_HOST: /cloudsql/vaulted-scholar-480715-u4:europe-north1:agentmitra-postgres
+DB_PORT: "5432"
+DB_NAME: agentmitra_dev
+DB_USER: manish
+DB_PASSWORD: uuq>9M"hp}t.ZQ@A
+REDIS_URL: redis://host.docker.internal:6379
+JWT_SECRET_KEY: dev-secret-key-change-in-production
+CORS_ORIGINS: http://localhost:8080,http://localhost:3000,http://localhost:8012,http://localhost:3013,https://agentmitra-backend-*.a.run.app
+USE_SSL: "false"
+PIONEER_URL: http://host.docker.internal:4001
+MINIO_ENDPOINT: host.docker.internal:9000
+MINIO_ACCESS_KEY: minioadmin
+MINIO_SECRET_KEY: minioadmin
+MINIO_BUCKET_NAME: agentmitra-media
+MINIO_USE_SSL: "false"
+EOF
+
+echo -e "\n${BLUE}Step 7: Deploy to Cloud Run${NC}"
 gcloud run deploy $SERVICE_NAME \
   --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME:latest \
   --platform managed \
@@ -59,22 +79,7 @@ gcloud run deploy $SERVICE_NAME \
   --max-instances 1 \
   --port 8080 \
   --add-cloudsql-instances $CLOUD_SQL_INSTANCE \
-  --set-env-vars "ENVIRONMENT=production" \
-  --set-env-vars "DB_HOST=/cloudsql/vaulted-scholar-480715-u4:europe-north1:agentmitra-postgres" \
-  --set-env-vars "DB_PORT=5432" \
-  --set-env-vars "DB_NAME=agentmitra_dev" \
-  --set-env-vars "DB_USER=manish" \
-  --set-env-vars "DB_PASSWORD=uuq>9M\"hp}t.ZQ@A" \
-  --set-env-vars "REDIS_URL=redis://host.docker.internal:6379" \
-  --set-env-vars "JWT_SECRET_KEY=dev-secret-key-change-in-production" \
-  --set-env-vars "CORS_ORIGINS=http://localhost:8080,http://localhost:3000,http://localhost:8012,http://localhost:3013,https://agentmitra-backend-*.a.run.app" \
-  --set-env-vars "USE_SSL=false" \
-  --set-env-vars "PIONEER_URL=http://host.docker.internal:4001" \
-  --set-env-vars "MINIO_ENDPOINT=host.docker.internal:9000" \
-  --set-env-vars "MINIO_ACCESS_KEY=minioadmin" \
-  --set-env-vars "MINIO_SECRET_KEY=minioadmin" \
-  --set-env-vars "MINIO_BUCKET_NAME=agentmitra-media" \
-  --set-env-vars "MINIO_USE_SSL=false"
+  --env-vars-file cloudrun-env-vars.yaml
 
 echo -e "\n${GREEN}🎉 DEPLOYMENT SUCCESSFUL!${NC}"
 echo ""

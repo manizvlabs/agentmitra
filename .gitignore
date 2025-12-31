@@ -109,3 +109,9 @@ temp/
 .env
 .env.local
 .env.*.local
+
+# Backup files
+*.bak
+
+# Cloud Run environment variables
+cloudrun-env-vars.yaml

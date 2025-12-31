@@ -29,50 +29,48 @@ services:
   #   networks:
   #     - agentmitra_network
 
-  # Python Backend API - MOVED TO GOOGLE CLOUD RUN
-  # backend:
-  #   build:
-  #     context: ./backend
-  #     dockerfile: Dockerfile
-  #   container_name: agentmitra_backend
-  #   restart: unless-stopped
-  #   environment:
-  #     - ENVIRONMENT=production
-  #     - DB_HOST=35.228.130.213
-  #     - DB_PORT=5432
-  #     - DB_NAME=agentmitra_dev
-  #     - DB_USER=manish
-  #     - DB_PASSWORD=uuq>9M"hp}t.ZQ@A
-  #     - REDIS_URL=redis://host.docker.internal:6379
-  #     - JWT_SECRET_KEY=${JWT_SECRET_KEY:-dev-secret-key-change-in-production}
-  #     - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080,http://localhost:3000,http://localhost:8012,http://localhost:3013}
-  #     - USE_SSL=false
-  #     - PIONEER_URL=http://pioneer:4001
-  #     - PIONEER_API_KEY=${PIONEER_API_KEY}
-  #     - OPENAI_API_KEY=${OPENAI_API_KEY:-sk-your-openai-api-key-here}
-  #     - OPENAI_MODEL=${OPENAI_MODEL:-gpt-3.5-turbo}
-  #     - OPENAI_MAX_TOKENS=${OPENAI_MAX_TOKENS:-500}
-  #     - OPENAI_TEMPERATURE=${OPENAI_TEMPERATURE:-0.7}
-  #     - MINIO_ENDPOINT=minio:9000
-  #     - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
-  #     - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
-  #     - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-agentmitra-media}
-  #     - MINIO_USE_SSL=false
-  #     - MINIO_CDN_BASE_URL=http://minio:9000/${MINIO_BUCKET_NAME:-agentmitra-media}
-  #   depends_on:
-  #     - minio
-  #   ports:
-  #     - "8012:8012"
-  #   volumes:
-  #     - ./logs:/app/logs
-  #     - ./backend/ssl:/app/ssl:ro
-  #   networks:
-  #     - agentmitra_network
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:8012/health"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
+  # Python Backend API - TEMPORARY LOCAL FOR TESTING
+  backend:
+    build: ./backend
+    container_name: agentmitra_backend
+    restart: unless-stopped
+    environment:
+      - ENVIRONMENT=production
+      - DB_HOST=35.228.130.213
+      - DB_PORT=5432
+      - DB_NAME=agentmitra_dev
+      - DB_USER=manish
+      - DB_PASSWORD=uuq>9M"hp}t.ZQ@A
+      - REDIS_URL=redis://host.docker.internal:6379
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-dev-secret-key-change-in-production}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080,http://localhost:3000,http://localhost:8012,http://localhost:3013}
+      - USE_SSL=false
+      - PIONEER_URL=http://pioneer:4001
+      - PIONEER_API_KEY=${PIONEER_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-sk-your-openai-api-key-here}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-3.5-turbo}
+      - OPENAI_MAX_TOKENS=${OPENAI_MAX_TOKENS:-500}
+      - OPENAI_TEMPERATURE=${OPENAI_TEMPERATURE:-0.7}
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-agentmitra-media}
+      - MINIO_USE_SSL=false
+      - MINIO_CDN_BASE_URL=http://minio:9000/${MINIO_BUCKET_NAME:-agentmitra-media}
+    depends_on:
+      - minio
+    ports:
+      - "8012:8012"
+    volumes:
+      - ./logs:/app/logs
+      - ./backend/ssl:/app/ssl:ro
+    networks:
+      - agentmitra_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8012/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # React Portal (Agent Configuration Portal)
   portal:
@@ -86,7 +84,7 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=development
-      - REACT_APP_API_URL=${PORTAL_API_URL:-https://agentmitra-backend-xxxxxxxxxx.a.run.app}
+      - REACT_APP_API_URL=${PORTAL_API_URL:-https://agentmitra-backend-589662249982.europe-north1.run.app}
       - REACT_APP_ENVIRONMENT=production
     ports:
       - "3013:80"

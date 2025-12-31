@@ -100,13 +100,18 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 # Add trusted host middleware - allow localhost and configured hosts
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=["localhost", "127.0.0.1", "*.localhost", "backend", "*.backend", "your-domain.com", "*.your-domain.com"]
+    allowed_hosts=["localhost", "127.0.0.1", "*.localhost", "backend", "*.backend", "your-domain.com", "*.your-domain.com", "*.run.app"]
 )
 
 # HTTPS redirect middleware is added conditionally in startup event
 
 # Add security middleware
 app.add_middleware(SecurityHeadersMiddleware)
+
+# Add HTTPS redirect middleware conditionally (before app starts)
+if os.getenv("ENVIRONMENT", "development") == "production" and os.getenv("USE_SSL", "true").lower() == "true":
+    app.add_middleware(HTTPSRedirectMiddleware)
+    logger.info("HTTPS redirect middleware enabled")
 
 # Initialize tenant and audit services
 from app.core.tenant_service import TenantService
@@ -127,8 +132,8 @@ app.middleware("http")(rate_limit_middleware)
 from app.core.auth_middleware import auth_middleware
 app.middleware("http")(auth_middleware)
 
-# Add tenant middleware (after authentication)
-app.add_middleware(TenantMiddleware, tenant_service=tenant_service, audit_service=audit_service)
+# Add tenant middleware (after authentication) - DISABLED for Cloud Run
+# app.add_middleware(TenantMiddleware, tenant_service=tenant_service, audit_service=audit_service)
 
 # Global exception handler for better error reporting
 from fastapi.responses import JSONResponse
@@ -178,11 +183,6 @@ async def startup_event():
     """Verify database connection on startup"""
     logger.info("Starting Agent Mitra API")
 
-    # Add HTTPS redirect middleware conditionally
-    if os.getenv("ENVIRONMENT", "development") == "production" and os.getenv("USE_SSL", "true").lower() == "true":
-        app.add_middleware(HTTPSRedirectMiddleware)
-        logger.info("HTTPS redirect middleware enabled")
-
     # Configure SQLAlchemy mappers after all models are imported
     # This ensures all relationships can be resolved
     try:
@@ -193,8 +193,13 @@ async def startup_event():
         logger.warning(f"Mapper configuration warning (non-critical): {e}")
 
     # Verify database connection (schema managed by Flyway migrations)
-    init_db()
-    logger.info("Database connection verified (schema managed by Flyway)")
+    try:
+        init_db()
+        logger.info("Database connection verified (schema managed by Flyway)")
+    except Exception as e:
+        logger.error(f"Database connection failed: {e}")
+        # Don't exit on database connection failure for debugging
+        logger.warning("Continuing without database connection for debugging")
 
 
 # Lifespan event handler (modern approach)
@@ -206,8 +211,13 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting Agent Mitra API with lifespan events")
     # Verify database connection (schema managed by Flyway migrations)
-    init_db()
-    logger.info("Database connection verified (schema managed by Flyway)")
+    try:
+        init_db()
+        logger.info("Database connection verified (schema managed by Flyway)")
+    except Exception as e:
+        logger.error(f"Database connection failed: {e}")
+        # Don't exit on database connection failure for debugging
+        logger.warning("Continuing without database connection for debugging")
 
     yield
 
