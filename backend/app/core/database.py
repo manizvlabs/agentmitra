@@ -43,6 +43,9 @@ def get_db_config() -> Dict[str, Any]:
             # For TCP connections, ensure we use the specified host and disable Unix sockets
             base_config["connect_args"]["host"] = settings.db_host
             base_config["connect_args"]["unix_sock"] = None
+        else:
+            # For socket connections (Cloud SQL), also disable local Unix sockets
+            base_config["connect_args"]["unix_sock"] = None
 
     elif settings.environment == "staging":
         # Staging configuration
