@@ -135,42 +135,42 @@ audit_service = AuditService(tenant_service=tenant_service)
 # Add tenant middleware (after authentication) - DISABLED for Cloud Run
 # app.add_middleware(TenantMiddleware, tenant_service=tenant_service, audit_service=audit_service)
 
-# Global exception handler for better error reporting
-from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
-from starlette.exceptions import HTTPException as StarletteHTTPException
+# Global exception handler for better error reporting - TEMPORARILY DISABLED
+# from fastapi.responses import JSONResponse
+# from fastapi.exceptions import RequestValidationError
+# from starlette.exceptions import HTTPException as StarletteHTTPException
 
-@app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
-    """Global exception handler to catch all unhandled exceptions"""
-    import traceback
-    logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
-    logger.error(f"Traceback: {traceback.format_exc()}")
+# @app.exception_handler(Exception)
+# async def global_exception_handler(request, exc):
+#     """Global exception handler to catch all unhandled exceptions"""
+#     import traceback
+#     logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+#     logger.error(f"Traceback: {traceback.format_exc()}")
 
-    # Return JSON error response
-    return JSONResponse(
-        status_code=500,
-        content={
-            "detail": f"Internal server error: {str(exc)}",
-            "error_type": type(exc).__name__
-        }
-    )
+#     # Return JSON error response
+#     return JSONResponse(
+#         status_code=500,
+#         content={
+#             "detail": f"Internal server error: {str(exc)}",
+#             "error_type": type(exc).__name__
+#         }
+#     )
 
-@app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(request, exc):
-    """Handle HTTP exceptions"""
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.detail}
-    )
+# @app.exception_handler(StarletteHTTPException)
+# async def http_exception_handler(request, exc):
+#     """Handle HTTP exceptions"""
+#     return JSONResponse(
+#         status_code=exc.status_code,
+#         content={"detail": exc.detail}
+#     )
 
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request, exc):
-    """Handle validation errors"""
-    return JSONResponse(
-        status_code=422,
-        content={"detail": exc.errors(), "body": exc.body}
-    )
+# @app.exception_handler(RequestValidationError)
+# async def validation_exception_handler(request, exc):
+#     """Handle validation errors"""
+#     return JSONResponse(
+#         status_code=422,
+#         content={"detail": exc.errors(), "body": exc.body}
+#     )
 
 # Authentication middleware moved earlier in the file
 
