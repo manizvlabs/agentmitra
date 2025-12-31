@@ -178,27 +178,27 @@ audit_service = AuditService(tenant_service=tenant_service)
 app.include_router(api_router)
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Verify database connection on startup"""
-    logger.info("Starting Agent Mitra API")
+# @app.on_event("startup")  # TEMPORARILY DISABLED
+# async def startup_event():
+#     """Verify database connection on startup"""
+#     logger.info("Starting Agent Mitra API")
 
-    # Configure SQLAlchemy mappers after all models are imported
-    # This ensures all relationships can be resolved
-    try:
-        from app.models import configure_all_mappers
-        configure_all_mappers()
-        logger.info("SQLAlchemy mappers configured successfully")
-    except Exception as e:
-        logger.warning(f"Mapper configuration warning (non-critical): {e}")
+#     # Configure SQLAlchemy mappers after all models are imported
+#     # This ensures all relationships can be resolved
+#     try:
+#         from app.models import configure_all_mappers
+#         configure_all_mappers()
+#         logger.info("SQLAlchemy mappers configured successfully")
+#     except Exception as e:
+#         logger.warning(f"Mapper configuration warning (non-critical): {e}")
 
-    # Verify database connection (schema managed by Flyway migrations)
-    try:
-        init_db()
-        logger.info("Database connection verified (schema managed by Flyway)")
-    except Exception as e:
-        logger.error(f"Database connection failed: {e}")
-        # Don't exit on database connection failure for debugging
+#     # Verify database connection (schema managed by Flyway migrations)
+#     try:
+#         init_db()
+#         logger.info("Database connection verified (schema managed by Flyway)")
+#     except Exception as e:
+#         logger.error(f"Database connection failed: {e}")
+#         # Don't exit on database connection failure for debugging
         logger.warning("Continuing without database connection for debugging")
 
 
@@ -251,21 +251,13 @@ async def root():
 @app.get("/health")
 async def health():
     """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "service": "agent-mitra-backend",
-        "version": "0.1.0"
-    }
+    return {"status": "healthy", "service": "agent-mitra-backend"}
 
 
 @app.get("/api/v1/health")
 async def api_health():
     """API health check endpoint"""
-    return {
-        "status": "healthy",
-        "api_version": "v1",
-        "service": "agent-mitra-backend"
-    }
+    return {"status": "healthy", "api_version": "v1", "service": "agent-mitra-backend"}
 
 
 if __name__ == "__main__":
