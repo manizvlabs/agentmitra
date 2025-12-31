@@ -63,7 +63,7 @@ class Settings(BaseSettings):
     
     # Server
     api_host: str = os.getenv("API_HOST", "0.0.0.0")
-    api_port: int = int(os.getenv("API_PORT", "8012"))
+    api_port: int = int(os.getenv("PORT", os.getenv("API_PORT", "8012")))
     
     # Database - construct URL from components for security
     db_host: str = os.getenv("DB_HOST", "localhost")

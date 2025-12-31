@@ -259,8 +259,8 @@ async def api_health():
 
 
 if __name__ == "__main__":
-    # Get port from environment or default to 8012
-    port = int(os.getenv("API_PORT", "8012"))
+    # Get port from environment (Cloud Run uses PORT, local uses API_PORT)
+    port = int(os.getenv("PORT", os.getenv("API_PORT", "8012")))
     reload_mode = os.getenv("ENVIRONMENT", "development") == "development"
     
     # SSL configuration
