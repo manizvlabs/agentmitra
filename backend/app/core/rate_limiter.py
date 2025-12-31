@@ -164,9 +164,8 @@ async def rate_limit_middleware(request: Request, call_next):
             return await call_next(request)
         except Exception as e:
             logger.error(f"Error in multipart request processing: {type(e).__name__}")
-            from fastapi.responses import JSONResponse
-            import status
-            return JSONResponse(
+            from fastapi.responses import JSONResponse as FastAPIJSONResponse
+            return FastAPIJSONResponse(
                 status_code=500,
                 content={"detail": "Internal server error"}
             )
