@@ -78,93 +78,110 @@ async def login(request_data: dict):
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(request: LoginRequest):
+async def login(request: LoginRequest, db: Session = Depends(get_db)):
     """
     Login endpoint - supports multiple authentication methods:
     1. Phone + Password (for registered users)
     2. Agent Code (for agents)
     """
-    from app.core.auth import create_access_token, create_refresh_token
-    import jwt
-    from datetime import timedelta
+    from app.core.security import create_access_token, create_refresh_token, verify_password
+    from app.repositories.user_repository import UserRepository
+    from app.services.rbac_service import RBACService
+    from app.repositories.agent_repository import AgentRepository
 
-    # Mock user authentication for testing
-    # Map phone numbers to user roles as specified
-    mock_users = {
-        "+919876543200": {"role": "super_admin", "permissions": ["policies:*", "analytics:*", "tenants:*", "agents:*", "users:*", "reports:*", "admin:*", "system:*", "permissions:*", "settings:*", "roles:*"]},
-        "+919876543201": {"role": "provider_admin", "permissions": ["policies:*", "analytics:read", "tenants:read", "agents:*", "reports:read"]},
-        "+919876543202": {"role": "regional_manager", "permissions": ["policies:*", "analytics:read", "tenants:read", "agents:*", "reports:*"]},
-        "+919876543203": {"role": "senior_agent", "permissions": ["policies:*", "analytics:read", "agents:read", "reports:read"]},
-        "+919876543204": {"role": "junior_agent", "permissions": ["policies:read", "agents:read"]},
-        "+919876543205": {"role": "policyholder", "permissions": ["policies:read"]},
-        "+919876543206": {"role": "support_staff", "permissions": ["users:read", "reports:read", "policies:read"]}
-    }
+    user = None
+    login_method = None
 
-    # Determine login method and validate credentials
-    if request.phone_number and request.password:
-        # Phone + Password login
-        if request.phone_number not in mock_users:
+    try:
+        if request.phone_number and request.password:
+            # Phone + Password login
+            user_repo = UserRepository(db)
+            user = user_repo.get_by_phone(request.phone_number)
+
+            if not user:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid phone number or password"
+                )
+
+            # Verify password
+            if not user.password_hash or not verify_password(request.password, user.password_hash):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid phone number or password"
+                )
+
+            login_method = "phone_password"
+
+        elif request.agent_code:
+            # Agent code login
+            agent_repo = AgentRepository(db)
+            agent = agent_repo.get_by_code(request.agent_code)
+
+            if not agent or not agent.user:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid agent code"
+                )
+
+            user = agent.user
+            login_method = "agent_code"
+
+        else:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid phone number or password"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Either phone_number with password or agent_code is required"
             )
 
-        # Check password (all users use "testpassword")
-        if request.password != "testpassword":
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid phone number or password"
-            )
+        # Get user permissions using RBAC service
+        rbac_service = RBACService(db)
+        user_permissions = list(await rbac_service.get_user_permissions(str(user.user_id)))
+        user_roles = list(await rbac_service.get_user_roles(str(user.user_id)))
 
-        user_role = mock_users[request.phone_number]["role"]
-        user_permissions = mock_users[request.phone_number]["permissions"]
-        login_method = "phone_password"
-
-    elif request.agent_code:
-        # Agent code login (mock implementation)
-        # For demo, any agent code starting with "AG" is valid
-        if not request.agent_code.startswith("AG"):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid agent code"
-            )
-
-        # Default to senior_agent role for agent login
-        user_role = "senior_agent"
-        user_permissions = ["policies:*", "analytics:read", "agents:read", "reports:read"]
-        login_method = "agent_code"
-
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Either phone_number with password or agent_code is required"
+        # Create JWT tokens
+        access_token = create_access_token(
+            data={"sub": str(user.user_id), "role": user.role}
+        )
+        refresh_token = create_refresh_token(
+            data={"sub": str(user.user_id)}
         )
 
-    # Create JWT tokens
-    access_token = create_access_token(
-        data={"sub": request.phone_number or request.agent_code, "role": user_role}
-    )
-    refresh_token = create_refresh_token(
-        data={"sub": request.phone_number or request.agent_code}
-    )
+        # Log successful login (temporarily disabled for production)
+        # await AuditLogger.log_login_attempt(
+        #     db=db,
+        #     user_id=str(user.user_id),
+        #     phone_number=user.phone_number,
+        #     ip_address=get_client_ip(request),
+        #     user_agent=request.headers.get("user-agent"),
+        #     success=True,
+        #     method=login_method
+        # )
 
-    # Log successful login
-    logger.info(f"User logged in successfully: {request.phone_number or request.agent_code} via {login_method}")
+        logger.info(f"User logged in successfully: {user.phone_number or request.agent_code} via {login_method}")
 
-    # Return token response
-    return TokenResponse(
-        access_token=access_token,
-        refresh_token=refresh_token,
-        user={
-            "user_id": f"user_{request.phone_number or request.agent_code}",
-            "phone_number": request.phone_number,
-            "role": user_role,
-            "permissions": user_permissions,
-            "is_active": True
-        },
-        roles=[user_role],
-        permissions=user_permissions
-    )
+        # Return token response with real user data
+        return TokenResponse(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            user={
+                "user_id": str(user.user_id),
+                "phone_number": user.phone_number,
+                "role": user.role,
+                "permissions": user_permissions,
+                "is_active": user.status == "active"
+            },
+            roles=user_roles,
+            permissions=user_permissions
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error during login: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error during authentication"
+        )
 
 # Temporarily disable exception handler for debugging
 # try:
