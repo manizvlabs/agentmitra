@@ -124,13 +124,13 @@ tenant_service = TenantService(
 )
 audit_service = AuditService(tenant_service=tenant_service)
 
-# Add rate limiting middleware
-from app.core.rate_limiter import rate_limit_middleware
-app.middleware("http")(rate_limit_middleware)
+# Add rate limiting middleware - TEMPORARILY DISABLED
+# from app.core.rate_limiter import rate_limit_middleware
+# app.middleware("http")(rate_limit_middleware)
 
-# Add authentication middleware (must be before tenant middleware)
-from app.core.auth_middleware import auth_middleware
-app.middleware("http")(auth_middleware)
+# Add authentication middleware (must be before tenant middleware) - TEMPORARILY DISABLED
+# from app.core.auth_middleware import auth_middleware
+# app.middleware("http")(auth_middleware)
 
 # Add tenant middleware (after authentication) - DISABLED for Cloud Run
 # app.add_middleware(TenantMiddleware, tenant_service=tenant_service, audit_service=audit_service)
