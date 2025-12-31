@@ -81,7 +81,7 @@ dependencies:
   file_picker: ^8.0.0
 
   # Charts & Analytics
-  fl_chart: ^0.70.0
+  fl_chart: 1.0.0
   pdf: ^3.10.7
   csv: ^6.0.0
 
@@ -118,7 +118,7 @@ flutter:
 
 # Platform-specific dependencies
 dependency_overrides:
-  win32: ^5.15.0
+  win32: ^5.0.0
 
 # Platform-specific configurations
 platforms:

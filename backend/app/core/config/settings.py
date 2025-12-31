@@ -7,6 +7,8 @@ import subprocess
 from pathlib import Path
 from urllib.parse import quote
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict, Field
+from typing import Any
 from dotenv import load_dotenv
 from typing import Optional
 
@@ -54,6 +56,7 @@ elif env_example.exists():
 
 class Settings(BaseSettings):
     """Application settings - all values externalized to .env"""
+
     
     # Application
     app_name: str = os.getenv("APP_NAME", "Agent Mitra API")
@@ -84,15 +87,20 @@ class Settings(BaseSettings):
     print(f"DEBUG: DB_PASSWORD source={'GCP' if get_secret_from_gcp('agentmitra-db-password') else 'ENV' if os.getenv('DB_PASSWORD') else 'FALLBACK'}")
 
     # Construct database URL with URL-encoded password
-    database_url: str = f"postgresql://{db_user}:{quote(db_password)}@{db_host}:{db_port}/{db_name}"
-    print(f"DEBUG: Constructed DATABASE_URL: {database_url.replace(db_password, '***')}")
+    print(f"DEBUG: Constructed DATABASE_URL will be set after class definition")
+    database_url: str = Field(default="", env="DB_URL")  # Use different env var name
     db_schema: str = os.getenv("DB_SCHEMA", "lic_schema")
     db_pool_size: int = int(os.getenv("DB_POOL_SIZE", "10"))
     db_max_overflow: int = int(os.getenv("DB_MAX_OVERFLOW", "20"))
     db_pool_timeout: int = int(os.getenv("DB_POOL_TIMEOUT", "30"))
     db_pool_recycle: int = int(os.getenv("DB_POOL_RECYCLE", "3600"))
     db_echo: bool = os.getenv("DB_ECHO", "false").lower() == "true"
-    
+
+    # SSL Configuration
+    use_ssl: bool = os.getenv("USE_SSL", "false").lower() == "true"
+    ssl_keyfile: Optional[str] = os.getenv("SSL_KEYFILE", "ssl/key.pem")
+    ssl_certfile: Optional[str] = os.getenv("SSL_CERTFILE", "ssl/cert.pem")
+
     # Redis
     redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379")
     redis_host: str = os.getenv("REDIS_HOST", "localhost")
@@ -279,11 +287,21 @@ class Settings(BaseSettings):
     video_analytics_enabled: bool = os.getenv("VIDEO_ANALYTICS_ENABLED", "true").lower() == "true"
     video_auto_tagging_enabled: bool = os.getenv("VIDEO_AUTO_TAGGING_ENABLED", "true").lower() == "true"
 
-    class Config:
-        env_file = str(env_local if env_local.exists() else env_file)
-        case_sensitive = False
+    model_config = ConfigDict(
+        extra='allow',
+        env_file=str(env_local if env_local.exists() else env_file),
+        case_sensitive=False
+    )
 
 
 # Create settings instance
 settings = Settings()
+
+# Construct database URL from components if not provided via DB_URL
+if not settings.database_url:
+    from urllib.parse import quote
+    encoded_password = quote(settings.db_password)
+    settings.database_url = f"postgresql://{settings.db_user}:{encoded_password}@{settings.db_host}:{settings.db_port}/{settings.db_name}"
+
+print(f"DEBUG: Final DATABASE_URL in settings: {settings.database_url}")
 

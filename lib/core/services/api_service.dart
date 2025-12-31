@@ -40,6 +40,7 @@ class ApiService {
   static Future<dynamic> get(String endpoint, {Map<String, dynamic>? queryParameters}) async {
     try {
       var url = '$apiUrl$endpoint';
+      print('DEBUG ApiService: apiUrl: $apiUrl, endpoint: $endpoint, full URL: $url');
       if (queryParameters != null && queryParameters.isNotEmpty) {
         final queryString = queryParameters.entries
             .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
