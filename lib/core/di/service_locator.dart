@@ -7,7 +7,9 @@ import '../../features/notifications/presentation/viewmodels/notification_viewmo
 import '../../features/onboarding/presentation/viewmodels/onboarding_viewmodel.dart';
 import '../../features/agent/presentation/viewmodels/agent_profile_viewmodel.dart';
 import '../../features/payments/presentation/viewmodels/claims_viewmodel.dart';
-import '../../features/payments/presentation/viewmodels/policies_viewmodel.dart';
+import '../../features/policies/presentation/viewmodels/policies_viewmodel.dart';
+import '../../features/policies/data/repositories/policy_repository.dart';
+import '../../features/policies/data/datasources/policy_remote_datasource.dart';
 import '../../features/chatbot/presentation/viewmodels/chatbot_viewmodel.dart';
 import '../../features/chatbot/data/repositories/chatbot_repository.dart';
 import '../../features/chatbot/data/datasources/chatbot_remote_datasource.dart';
@@ -52,8 +54,12 @@ class ServiceLocator {
     ClaimsViewModel();
 
   /// Policies ViewModel - connects to real policy APIs
-  static PoliciesViewModel get policiesViewModel =>
-    PoliciesViewModel();
+  static PoliciesViewModel get policiesViewModel {
+    final repository = PolicyRepositoryImpl(
+      PolicyRemoteDataSourceImpl(),
+    );
+    return PoliciesViewModel(repository);
+  }
 
   /// Chatbot ViewModel factory
   static ChatbotViewModel createChatbotViewModel() {

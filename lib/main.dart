@@ -16,7 +16,7 @@ import 'features/notifications/presentation/viewmodels/notification_viewmodel.da
 import 'features/onboarding/presentation/viewmodels/onboarding_viewmodel.dart';
 import 'features/agent/presentation/viewmodels/agent_profile_viewmodel.dart';
 import 'features/payments/presentation/viewmodels/claims_viewmodel.dart';
-import 'features/payments/presentation/viewmodels/policies_viewmodel.dart';
+import 'features/policies/presentation/viewmodels/policies_viewmodel.dart';
 import 'features/customers/presentation/viewmodels/customer_viewmodel.dart';
 
 
@@ -124,7 +124,7 @@ class AgentMitraApp extends ConsumerWidget {
         ),
         // Policies ViewModel (for New Claim page)
         provider.ChangeNotifierProvider(
-          create: (_) => PoliciesViewModel(),
+          create: (_) => ServiceLocator.policiesViewModel,
         ),
         // User Management ViewModel
         provider.ChangeNotifierProvider(

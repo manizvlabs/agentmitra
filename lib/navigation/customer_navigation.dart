@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../screens/customer_dashboard.dart';
-import '../features/payments/presentation/pages/policies_list_page.dart';
+import '../features/policies/presentation/pages/policies_tab_page.dart';
 import '../screens/whatsapp_integration_screen.dart';
 import '../screens/learning_center_screen.dart';
 import '../features/agent/presentation/pages/agent_profile_page.dart';
@@ -44,7 +44,7 @@ class _CustomerNavigationContainerState extends ConsumerState<CustomerNavigation
   // Tab content widgets
   final List<Widget> _tabWidgets = [
     const CustomerDashboard(),
-    const PoliciesListPage(),
+    const PoliciesTabPage(),
     const WhatsappIntegrationScreen(),
     const LearningCenterScreen(),
     const AgentProfilePage(), // Reusing agent profile page for customer profile

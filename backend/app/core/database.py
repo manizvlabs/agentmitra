@@ -98,7 +98,7 @@ def get_db():
 def init_db():
     """
     Verify database connection on startup.
-    
+
     NOTE: Database schema is managed strictly through Flyway migrations.
     Do NOT use SQLAlchemy's create_all() - all tables must be created via Flyway.
     Run migrations with: flyway -configFiles=flyway.conf migrate

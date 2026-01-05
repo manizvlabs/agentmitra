@@ -2,12 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as provider;
-import '../features/payments/presentation/viewmodels/policy_detail_viewmodel.dart';
-import '../features/payments/presentation/viewmodels/policies_viewmodel.dart';
-import '../features/payments/data/repositories/policy_repository.dart';
-import '../features/payments/data/datasources/policy_remote_datasource.dart';
-import '../features/payments/data/datasources/policy_local_datasource.dart';
-import '../features/payments/data/models/policy_model.dart';
+import '../features/policies/presentation/viewmodels/policies_viewmodel.dart';
+import '../features/policies/presentation/viewmodels/policy_detail_viewmodel.dart';
+import '../features/policies/data/models/policy_models.dart';
 
 class PolicyDetailsScreen extends ConsumerStatefulWidget {
   const PolicyDetailsScreen({super.key});
@@ -55,7 +52,7 @@ class _PolicyDetailsScreenState extends ConsumerState<PolicyDetailsScreen> {
   void _selectPolicyById(String policyId) {
     debugPrint('📄 PolicyDetailsScreen - _selectPolicyById called with policyId: $policyId');
     final policiesViewModel = context.read<PoliciesViewModel>();
-    final policies = policiesViewModel.policies;
+    final policies = policiesViewModel.state.policies;
 
     debugPrint('📄 PolicyDetailsScreen - Available policies count: ${policies.length}');
 
@@ -82,11 +79,7 @@ class _PolicyDetailsScreenState extends ConsumerState<PolicyDetailsScreen> {
   }
 
   PolicyDetailViewModel _createViewModel(String policyId) {
-    final repository = PolicyRepository(
-      PolicyRemoteDataSourceImpl(),
-      PolicyLocalDataSourceImpl(),
-    );
-    return PolicyDetailViewModel(repository, policyId);
+    return PolicyDetailViewModel(policyId);
   }
 
   @override
@@ -98,8 +91,8 @@ class _PolicyDetailsScreenState extends ConsumerState<PolicyDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final policiesViewModel = context.watch<PoliciesViewModel>();
-    final policies = policiesViewModel.policies;
-    final isLoadingPolicies = policiesViewModel.isLoading;
+    final policies = policiesViewModel.state.policies;
+    final isLoadingPolicies = policiesViewModel.state.isLoading;
 
     debugPrint('📄 PolicyDetailsScreen - Build: policies=${policies.length}, isLoading=$isLoadingPolicies, selectedPolicy=${_selectedPolicy?.policyId}, viewModel=${_viewModel != null}');
 

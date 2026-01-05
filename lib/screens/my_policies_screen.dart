@@ -3,8 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../core/widgets/offline_indicator.dart';
 import '../core/services/whatsapp_business_service.dart';
-import '../features/payments/presentation/viewmodels/policies_viewmodel.dart';
-import '../features/payments/data/models/policy_model.dart';
+import '../features/policies/presentation/viewmodels/policies_viewmodel.dart';
+import '../features/policies/data/models/policy_models.dart';
 import '../features/notifications/presentation/viewmodels/notification_viewmodel.dart';
 import '../features/notifications/data/models/notification_model.dart';
 import '../core/di/service_locator.dart';
@@ -74,13 +74,13 @@ class _MyPoliciesScreenState extends State<MyPoliciesScreen> with TickerProvider
   @override
   Widget build(BuildContext context) {
     final policiesViewModel = context.watch<PoliciesViewModel>();
-    final policies = policiesViewModel.policies;
-    final isLoading = policiesViewModel.isLoading;
-    final error = policiesViewModel.error;
+    final policies = policiesViewModel.state.policies;
+    final isLoading = policiesViewModel.state.isLoading;
+    final error = policiesViewModel.state.error;
 
     // Debug logs
     debugPrint('MyPoliciesScreen - Build: policies.length=${policies.length}, isLoading=$isLoading, error=$error');
-    debugPrint('MyPoliciesScreen - ViewModel state: selectedStatus=${policiesViewModel.selectedStatus}, selectedProvider=${policiesViewModel.selectedProviderId}, selectedPolicyType=${policiesViewModel.selectedPolicyType}');
+    debugPrint('MyPoliciesScreen - ViewModel state: filters=${policiesViewModel.state.filters}');
 
     // Debug user information
     _debugUserInfo();
